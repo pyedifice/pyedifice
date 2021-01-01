@@ -82,13 +82,17 @@ class Button(WidgetComponent):
         self.on_click = on_click
         self.underlying =  QtWidgets.QPushButton(self.title)
 
+    def set_on_click(self, on_click):
+        self.underlying.clicked.connect(on_click)
+
     def _qt_update_commands(self, children, newprops, newstate):
         commands = []
         for prop in newprops:
             if prop == "title":
                 commands.append((self.underlying.setText, newprops[prop]))
             elif prop == "on_click" and newprops[prop] is not None:
-                commands.append((self.underlying.clicked.connect, newprops[prop]))
+                connector = self.underlying.clicked.connect
+                commands.append((self.set_on_click, newprops[prop]))
         return commands
 
 
@@ -112,6 +116,7 @@ class View(LayoutComponent):
         self.children = children or []
 
         self._already_rendered = {}
+        self._old_rendered_children = []
         if layout == "column":
             self.underlying = QtWidgets.QVBoxLayout()
         elif layout == "row":
@@ -123,9 +128,26 @@ class View(LayoutComponent):
             if child.widget():
                 child.widget().deleteLater()
 
+    def delete_child(self, i):
+        child_node = self.underlying.takeAt(i)
+        if child_node.widget():
+            child_node.widget().deleteLater()
+
     def _qt_update_commands(self, children, newprops, newstate):
         commands = []
         new_children = set()
+        for child in children:
+            new_children.add(child.component)
+
+        for child in list(self._already_rendered.keys()):
+            if child not in new_children:
+                del self._already_rendered[child]
+
+        for i, old_child in reversed(list(enumerate(self._old_rendered_children))):
+            if old_child not in new_children:
+                commands += [(self.delete_child, i)]
+
+        self._old_rendered_children = [child.component for child in children]
         for i, child in enumerate(children):
             if child.component not in self._already_rendered:
                 if isinstance(child.component, LayoutComponent):
@@ -133,10 +155,6 @@ class View(LayoutComponent):
                 elif isinstance(child.component, WidgetComponent):
                     commands += [(self.underlying.insertWidget, i, child.component.underlying)]
             self._already_rendered[child.component] = True
-            new_children.add(child.component)
-        for child in list(self._already_rendered.keys()):
-            if child not in new_children:
-                del self._already_rendered[child]
         return commands
 
 
@@ -145,10 +163,10 @@ class QtTree(object):
         self.component = component
         self.children = children
 
-    def render(self):
+    def gen_qt_commands(self):
         commands = []
         for child in self.children:
-            rendered = child.render()
+            rendered = child.gen_qt_commands()
             commands.extend(rendered)
 
         commands.extend(self.component._qt_update_commands(self.children, self.component.props, {}))
@@ -233,7 +251,7 @@ class App(object):
                         self._component_to_qt_rendering[component] = QtTree(component, rendered_children) 
                     return self._component_to_qt_rendering[component]
                 else:
-                    if len(component.children) > 1:
+                    if len(component.children) > 1 or len(old_children) > 1:
                         for i, child in enumerate(component.children):
                             if not hasattr(child, "key"):
                                 child.key = "KEY" + str(i)
@@ -248,9 +266,6 @@ class App(object):
                     self._component_to_qt_rendering[component] = QtTree(component, rendered_children) 
                     component.children = children
                     return self._component_to_qt_rendering[component]
-
-        elif isinstance(component, list):
-            raise NotImplementedError
 
         sub_component = component.render()
         old_rendering = None
@@ -273,7 +288,7 @@ class App(object):
         qt_tree = self.render(component)
         qt_tree.print_tree()
 
-        qt_commands = qt_tree.render()
+        qt_commands = qt_tree.gen_qt_commands()
         print(qt_commands)
         for command in qt_commands:
             command[0](*command[1:])
@@ -285,46 +300,6 @@ class App(object):
         print()
         print()
         return root
-
-
-
-
-#     def _render_tree(component: Component, newprops: dict, newstate: dict, new_item = False):
-#         if isinstance(component, BaseComponent):
-#             if component not in self._refs:
-#                 self._refs[component] = component.to_qt_component()
-#             else:
-#                 component._update(self._refs[component], newprops, newstate)
-#             return component, component._qt_update_commands(newprops, newstate)
-# 
-#         if component not in self._refs:
-#             self._refs[component] = component.render()
-#         else:
-#             should_update = component.should_update(newprops, newstate)
-#             component._update(newprops, newstate)
-#             if should_update or new_item:
-#                 new_children = component.render()
-#                 if isinstance(new_children, Component):
-#                     if self._refs[component].__class__ != new_children.__class__:
-#                         new_child_props = new_children.props
-#                         return self._render_tree(self._refs[component], new_child_props, {})
-#                     else:
-#                         # TODO: NODE DELETION. INSERT CALLBACKS
-#                         self._refs[component] = new_children
-#                         self._render_tree(self._refs[component], new_child_props, {}, new_item=True)
-#                 elif isinstance(new_children, list):
-#                     for i, child in enumerate(new_children):
-#                         if not hasattr(child, "key"):
-#                             # TODO: Log warning
-#                             child.key = "REACTKEY" + str(i)
-#                     if not isinstance(self._refs[component], list):
-#                         # TODO: NODE DELETION
-#                         self._refs[component] = new_children
-#                         for child in new_children:
-#                             self._render_tree(child, child.props, {}, new_item=True)
-#                     else:
-#                         raise NotImplementedError
-
 
     def start(self):
         root = self.request_rerender(self._root, {}, {})
