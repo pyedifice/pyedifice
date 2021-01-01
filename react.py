@@ -2,9 +2,8 @@ from PyQt5 import QtWidgets
 
 class Component(object):
 
-    def __init__(self, props=None, state=None):
+    def __init__(self, props=None):
         self._props = props or []
-        self._state = state or []
 
     def set_key(self, k):
         self.key = k
@@ -14,22 +13,18 @@ class Component(object):
     def props(self):
         return {p: getattr(self, p) for p in self._props}
 
-    @property
-    def state(self):
-        return {s: getattr(self, s) for s in self._state}
-
     def set_state(self, **kwargs):
         should_update = False
         for s in kwargs:
-            if s not in self.state:
+            if not hasattr(self, s):
                 raise KeyError
-            if self.state[s] != kwargs[s]:
+            if getattr(self, s) != kwargs[s]:
                 should_update = True
             setattr(self, s, kwargs[s])
         if should_update:
             self.controller.request_rerender(self, {}, kwargs)
 
-    def should_update(self, newprops, newstate):
+    def should_update(self, newprops):
         for prop, new_obj in newprops.items():
             old_obj = getattr(self, prop)
             if isinstance(old_obj, Component) or isinstance(new_obj, Component):
@@ -61,25 +56,32 @@ class Component(object):
 
 class BaseComponent(Component):
 
-    def __init__(self, props, state):
-        super(BaseComponent, self).__init__(props, state)
+    def __init__(self, props):
+        super(BaseComponent, self).__init__(props)
 
 class WidgetComponent(BaseComponent):
 
-    def __init__(self, props, state):
-        super(WidgetComponent, self).__init__(props, state)
+    def __init__(self, props):
+        super(WidgetComponent, self).__init__(props)
 
 class LayoutComponent(BaseComponent):
 
-    def __init__(self, props, state):
-        super(LayoutComponent, self).__init__(props, state)
+    def __init__(self, props):
+        super(LayoutComponent, self).__init__(props)
+
+
+def dict_to_style(d, prefix="QWidget"):
+    stylesheet = prefix + "{%s}" % (";".join("%s: %s" % (k, v) for (k, v) in d.items()))
+    print(stylesheet)
+    return stylesheet
 
 class Button(WidgetComponent):
 
-    def __init__(self, title, on_click=None):
-        super(Button, self).__init__(["title", "on_click"], [])
+    def __init__(self, title, style=None, on_click=None):
+        super(Button, self).__init__(["title", "on_click", "style"])
         self.title = title
-        self.on_click = on_click
+        self.on_click = on_click or (lambda : None)
+        self.style = style or {}
         self.underlying =  QtWidgets.QPushButton(self.title)
 
     def set_on_click(self, on_click):
@@ -90,29 +92,62 @@ class Button(WidgetComponent):
         for prop in newprops:
             if prop == "title":
                 commands.append((self.underlying.setText, newprops[prop]))
-            elif prop == "on_click" and newprops[prop] is not None:
-                connector = self.underlying.clicked.connect
+            elif prop == "on_click":
                 commands.append((self.set_on_click, newprops[prop]))
+            elif prop == "style":
+                commands.append((self.underlying.setStyleSheet, dict_to_style(newprops[prop])))
         return commands
 
 
 class Label(WidgetComponent):
 
-    def __init__(self, text):
-        super(Label, self).__init__(["text"], [])
+    def __init__(self, text, style=None):
+        super(Label, self).__init__(["text", "style"])
         self.text = text
-        self.underlying =  QtWidgets.QLabel(self.text)
+        self.style = style or {}
+        self.underlying = QtWidgets.QLabel(self.text)
 
     def _qt_update_commands(self, children, newprops, newstate):
+        commands = []
         for prop in newprops:
             if prop == "text":
-                return [(self.underlying.setText, newprops[prop])]
+                commands += [(self.underlying.setText, newprops[prop])]
+            elif prop == "style":
+                commands += [(self.underlying.setStyleSheet, dict_to_style(newprops[prop]))]
+        return commands
+
+
+class TextInput(WidgetComponent):
+
+    def __init__(self, text, on_change=None, style=None):
+        super(TextInput, self).__init__(["text", "style", "on_change"])
+        self.text = text
+        self.current_text = text
+        self.style = style or {}
+        self.on_change = on_change or (lambda text: None)
+        self.underlying = QtWidgets.QLineEdit(self.text)
+
+    def set_on_change(self, on_change):
+        def on_change_fun(text):
+            self.current_text = text
+            return on_change(text)
+        self.underlying.textChanged[str].connect(on_change_fun)
+
+    def _qt_update_commands(self, children, newprops, newstate):
+        commands = []
+        commands += [(self.underlying.setText, self.current_text)]
+        for prop in newprops:
+            if prop == "on_change":
+                commands += [(self.set_on_change, newprops[prop])]
+            elif prop == "style":
+                commands += [(self.underlying.setStyleSheet, dict_to_style(newprops[prop]))]
+        return commands
 
 
 class View(LayoutComponent):
 
     def __init__(self, layout="column", children=None):
-        super(View, self).__init__(["children"], [])
+        super(View, self).__init__(["children"])
         self.children = children or []
 
         self._already_rendered = {}
@@ -185,10 +220,11 @@ class QtTree(object):
 
 class App(object):
 
-    def __init__(self, component):
+    def __init__(self, component, title="React App"):
         self._component_to_rendering = {}
         self._component_to_qt_rendering = {}
         self._root = component
+        self._title = title
 
         self.app = QtWidgets.QApplication([])
         self.window = QtWidgets.QWidget()
@@ -201,8 +237,8 @@ class App(object):
                 child.widget().deleteLater()
 
 
-    def _update_old_component(self, component, newprops, newstate):
-        if component.should_update(newprops, newstate):
+    def _update_old_component(self, component, newprops):
+        if component.should_update(newprops):
             for p, v in newprops.items():
                 setattr(component, p, v)
             return self.render(component)
@@ -215,7 +251,7 @@ class App(object):
             return newchild
         if d[key].__class__ != newchild.__class__:
             return newchild
-        self._update_old_component(d[key], newchild.props, newchild.state)
+        self._update_old_component(d[key], newchild.props)
         return d[key]
 
     def render(self, component: Component):
@@ -241,7 +277,7 @@ class App(object):
                 old_children = self._component_to_rendering[component]
                 if len(component.children) == 1 and len(old_children) == 1:
                     if component.children[0].__class__ == old_children[0].__class__:
-                        child_rendering = self._update_old_component(old_children[0], component.children[0].props, component.children[0].state)
+                        child_rendering = self._update_old_component(old_children[0], component.children[0].props)
 
                         rendered_children = [child_rendering]
                         self._component_to_qt_rendering[component] = QtTree(component, rendered_children) 
@@ -276,7 +312,7 @@ class App(object):
             # TODO: Update component will receive props
             # TODO figure out if its subcomponent state or old_rendering state
             self._component_to_qt_rendering[component] = self._update_old_component(
-                old_rendering, sub_component.props, sub_component.state)
+                old_rendering, sub_component.props)
         else:
             # TODO: delete old component
             self._component_to_rendering[component] = sub_component
@@ -308,5 +344,6 @@ class App(object):
         else:
             self.layout.addLayout(root.underlying)
         self.window.setLayout(self.layout)
+        self.window.setWindowTitle(self._title)
         self.window.show()
         self.app.exec_()

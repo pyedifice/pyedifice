@@ -16,7 +16,7 @@ class QtTreeTestCase(unittest.TestCase):
         print(qt_button.clicked)
         print(qt_button.clicked.connect)
         print(qt_button.clicked.connect)
-        self.assertCountEqual(commands, [(qt_button.setText, button_str), (button.set_on_click, on_click)])
+        self.assertCountEqual(commands, [(qt_button.setText, button_str), (qt_button.setStyle, {}), (button.set_on_click, on_click)])
 
     def test_view_layout(self):
         app = QtWidgets.QApplication([])
