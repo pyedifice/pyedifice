@@ -1,5 +1,11 @@
 import contextlib
+import itertools
 import logging
+import typing
+import inspect
+
+import numpy as np
+import pandas as pd
 
 from PyQt5 import QtWidgets
 
@@ -38,23 +44,85 @@ def _storage_manager():
         raise e
 
 
+class PropsDict(object):
+
+    def __init__(self, dictionary):
+        super().__setattr__("_d", dictionary)
+
+    def __getitem__(self, key):
+        return self._d[key]
+
+    def __setitem__(self, key, value):
+        raise ValueError("Props are immutable")
+
+    @property
+    def _keys(self):
+        return list(self._d.keys())
+
+    @property
+    def _items(self):
+        return list(self._d.items())
+
+    def __len__(self):
+        return len(self._d)
+
+    def __iter__(self):
+        return iter(self._d)
+
+    def __contains__(self, k):
+        return k in self._d
+
+    def __getattr__(self, key):
+        if key in self._d:
+            return self._d[key]
+        else:
+            raise KeyError("%s not in props" % key)
+
+    def __setattr__(self, key, value):
+        raise ValueError("Props are immutable")
+
+
+def register_props(f):
+    def func(self, *args, **kwargs):
+        varnames = f.__code__.co_varnames[1:]
+        defaults = {
+            k: v.default for k, v in inspect.signature(f).parameters.items() if v.default is not inspect.Parameter.empty and k[0] != "_"
+        }
+        name_to_val = defaults
+        name_to_val.update(dict(filter((lambda tup: (tup[0][0] != "_")), zip(varnames, args))))
+        name_to_val.update(dict((k, v) for (k, v) in kwargs.items() if k[0] != "_"))
+        print("register_props", name_to_val)
+        self.register_props(name_to_val)
+        f(self, *args, **kwargs)
+    return func
+
+
 class Component(object):
 
-    def __init__(self, props=None):
-        super().__setattr__("_render_changes_context", None)
+    _render_changes_context = None
+    _ignored_variables = set()
+
+    def __init__(self):
         super().__setattr__("_ignored_variables", set())
-        self._props = props or []
-        self.children = []
-        if "children" not in self._props:
-            self._props.append("children")
+        if not hasattr(self, "_props"):
+            self._props = {}
+
+    def register_props(self, props):
+        if "children" not in props:
+            props["children"] = {}
+        self._props = props
 
     def set_key(self, k):
         self._key = k
         return self
 
     @property
+    def children(self):
+        return self.props.children
+
+    @property
     def props(self):
-        return {p: getattr(self, p) for p in self._props}
+        return PropsDict(self._props)
 
     @contextlib.contextmanager
     def render_changes(self, ignored_variables=None):
@@ -97,39 +165,53 @@ class Component(object):
             super().__setattr__(k, v)
 
     def set_state(self, **kwargs):
-        should_update = False
+        should_update = self.should_update(PropsDict({}), kwargs)
         old_vals = {}
         try:
             for s in kwargs:
                 if not hasattr(self, s):
                     raise KeyError
                 old_val = super().__getattribute__(s)
-                if old_val != kwargs[s]:
-                    should_update = True
                 old_vals[s] = old_val
                 super().__setattr__(s, kwargs[s])
+            print("should_update", should_update)
             if should_update:
-                self._controller._request_rerender(self, {}, kwargs)
+                self._controller._request_rerender(self, PropsDict({}), kwargs)
         except Exception as e:
             for s in old_vals:
                 super().__setattr__(s, old_vals[s])
             raise e
 
-    def should_update(self, newprops):
-        for prop, new_obj in newprops.items():
-            old_obj = getattr(self, prop)
+    def should_update(self, newprops, newstate):
+        def should_update_helper(new_obj, old_obj):
             if isinstance(old_obj, Component) or isinstance(new_obj, Component):
                 if old_obj.__class__ != new_obj.__class__:
                     return True
                 if old_obj.should_update(new_obj.props, {}):
                     return True
-            elif old_obj != newprops[prop]:
+            elif isinstance(old_obj, np_classes) or isinstance(new_obj, np_classes):
+                if old_obj.__class__ != new_obj.__class__:
+                    return True
+                if not np.array_equal(old_obj, new_obj):
+                    return True
+            elif old_obj != new_obj:
+                return True
+            return False
+
+        np_classes = (np.ndarray, pd.Series, pd.DataFrame, pd.Index)
+        for prop, new_obj in newprops._items:
+            old_obj = self.props[prop]
+            if should_update_helper(new_obj, old_obj):
+                return True
+        for state, new_obj in newstate.items():
+            old_obj = getattr(self, state)
+            if should_update_helper(new_obj, old_obj):
                 return True
         return False
 
     def __call__(self, *args):
-        self.children = args
-        self._props.append("children")
+        children = [a for a in args if a]
+        self._props["children"] = children
         return self
 
     def __hash__(self):
@@ -138,9 +220,9 @@ class Component(object):
     def _tags(self):
         classname = self.__class__.__name__
         return [
-            "<%s id=%s %s>" % (classname, id(self), " ".join("%s=%s" % (p, val) for (p, val) in self.props.items())),
+            "<%s id=0x%x %s>" % (classname, id(self), " ".join("%s=%s" % (p, val) for (p, val) in self.props._items)),
             "</%s>" % (classname),
-            "<%s id=%s %s />" % (classname, id(self), " ".join("%s=%s" % (p, val) for (p, val) in self.props.items())),
+            "<%s id=0x%x %s />" % (classname, id(self), " ".join("%s=%s" % (p, val) for (p, val) in self.props._items)),
         ]
 
     def render(self):
@@ -148,55 +230,60 @@ class Component(object):
 
 class BaseComponent(Component):
 
-    def __init__(self, props):
-        super().__init__(props)
+    def __init__(self):
+        super().__init__()
 
 class WidgetComponent(BaseComponent):
 
-    def __init__(self, props):
-        super().__init__(props)
+    def __init__(self):
+        super().__init__()
 
 class LayoutComponent(BaseComponent):
 
-    def __init__(self, props):
-        super().__init__(props)
+    def __init__(self):
+        super().__init__()
 
 
 def dict_to_style(d, prefix="QWidget"):
+    d = d or {}
     stylesheet = prefix + "{%s}" % (";".join("%s: %s" % (k, v) for (k, v) in d.items()))
     return stylesheet
 
 class Button(WidgetComponent):
 
-    def __init__(self, title, style=None, on_click=None):
-        super(Button, self).__init__(["title", "on_click", "style"])
-        self.title = title
-        self.on_click = on_click or (lambda : None)
-        self.style = style or {}
-        self.underlying =  QtWidgets.QPushButton(self.title)
+    @register_props
+    def __init__(self, title, style=None, on_click=(lambda: None)):
+        super(Button, self).__init__()
+        self.underlying =  QtWidgets.QPushButton(self.props.title)
+        self.underlying.setObjectName(str(id(self)))
+        self._connected = False
 
     def set_on_click(self, on_click):
+        if self._connected:
+            self.underlying.clicked.disconnect()
         self.underlying.clicked.connect(on_click)
+        self._connected = True
 
     def _qt_update_commands(self, children, newprops, newstate):
         commands = []
         for prop in newprops:
             if prop == "title":
-                commands.append((self.underlying.setText, newprops[prop]))
+                commands.append((self.underlying.setText, newprops.title))
             elif prop == "on_click":
-                commands.append((self.set_on_click, newprops[prop]))
+                commands.append((self.set_on_click, newprops.on_click))
             elif prop == "style":
-                commands.append((self.underlying.setStyleSheet, dict_to_style(newprops[prop])))
+                commands.append((self.underlying.setStyleSheet,
+                                 dict_to_style(newprops.style or {}, "QWidget#" + str(id(self)))))
         return commands
 
 
 class Label(WidgetComponent):
 
+    @register_props
     def __init__(self, text, style=None):
-        super().__init__(["text", "style"])
-        self.text = text
-        self.style = style or {}
-        self.underlying = QtWidgets.QLabel(self.text)
+        super().__init__()
+        self.underlying = QtWidgets.QLabel(self.props.text)
+        self.underlying.setObjectName(str(id(self)))
 
     def _qt_update_commands(self, children, newprops, newstate):
         commands = []
@@ -204,25 +291,28 @@ class Label(WidgetComponent):
             if prop == "text":
                 commands += [(self.underlying.setText, newprops[prop])]
             elif prop == "style":
-                commands += [(self.underlying.setStyleSheet, dict_to_style(newprops[prop]))]
+                commands += [(self.underlying.setStyleSheet, dict_to_style(newprops[prop], "QWidget#" + str(id(self))))]
         return commands
 
 
 class TextInput(WidgetComponent):
 
-    def __init__(self, text, on_change=None, style=None):
-        super().__init__(["text", "style", "on_change"])
-        self.text = text
+    @register_props
+    def __init__(self, text="", on_change=(lambda text: None), style=None):
+        super().__init__()
         self.current_text = text
-        self.style = style or {}
-        self.on_change = on_change or (lambda text: None)
-        self.underlying = QtWidgets.QLineEdit(self.text)
+        self._connected = False
+        self.underlying = QtWidgets.QLineEdit(self.props.text)
+        self.underlying.setObjectName(str(id(self)))
 
     def set_on_change(self, on_change):
         def on_change_fun(text):
             self.current_text = text
             return on_change(text)
+        if self._connected:
+            self.underlying.textChanged[str].disconnect()
         self.underlying.textChanged[str].connect(on_change_fun)
+        self._connected = True
 
     def _qt_update_commands(self, children, newprops, newstate):
         commands = []
@@ -231,31 +321,36 @@ class TextInput(WidgetComponent):
             if prop == "on_change":
                 commands += [(self.set_on_change, newprops[prop])]
             elif prop == "style":
-                commands += [(self.underlying.setStyleSheet, dict_to_style(newprops[prop]))]
+                commands += [(self.underlying.setStyleSheet, dict_to_style(newprops[prop] or {},  "QWidget#" + str(id(self))))]
         return commands
 
 
-class View(LayoutComponent):
+class View(WidgetComponent):
 
-    def __init__(self, layout="column", children=None):
-        super().__init__(["children"])
-        self.children = children or []
+    @register_props
+    def __init__(self, layout="column", style=None):
+        super().__init__()
 
         self._already_rendered = {}
         self._old_rendered_children = []
         if layout == "column":
-            self.underlying = QtWidgets.QVBoxLayout()
+            self.underlying = QtWidgets.QWidget()
+            self.underlying_layout = QtWidgets.QVBoxLayout()
+            self.underlying.setLayout(self.underlying_layout)
         elif layout == "row":
-            self.underlying = QtWidgets.QHBoxLayout()
+            self.underlying = QtWidgets.QWidget()
+            self.underlying_layout = QtWidgets.QHBoxLayout()
+            self.underlying.setLayout(self.underlying_layout)
+        self.underlying.setObjectName(str(id(self)))
     
     def clear_layout(self):
-        while self.underlying.count():
-            child = self.underlying.takeAt(0)
+        while self.underlying_layout.count():
+            child = self.underlying_layout.takeAt(0)
             if child.widget():
                 child.widget().deleteLater()
 
     def delete_child(self, i):
-        child_node = self.underlying.takeAt(i)
+        child_node = self.underlying_layout.takeAt(i)
         if child_node.widget():
             child_node.widget().deleteLater()
 
@@ -276,10 +371,122 @@ class View(LayoutComponent):
         self._old_rendered_children = [child.component for child in children]
         for i, child in enumerate(children):
             if child.component not in self._already_rendered:
-                if isinstance(child.component, LayoutComponent):
-                    commands += [(self.underlying.insertLayout, i, child.component.underlying)]
-                elif isinstance(child.component, WidgetComponent):
-                    commands += [(self.underlying.insertWidget, i, child.component.underlying)]
+                commands += [(self.underlying_layout.insertWidget, i, child.component.underlying)]
+            self._already_rendered[child.component] = True
+
+        for prop in newprops:
+            if prop == "style":
+                commands += [(self.underlying.setStyleSheet, dict_to_style(newprops[prop] or {},  "QWidget#" + str(id(self))))]
+        return commands
+
+
+class List(BaseComponent):
+
+    @register_props
+    def __init__(self, children=None):
+        super().__init__()
+
+    def _qt_update_commands(self, children, newprops, newstate):
+        return []
+
+
+class Table(WidgetComponent):
+
+    @register_props
+    def __init__(self, rows, columns, row_headers=None, column_headers=None, style=None, children=None,
+                 alternating_row_colors=True):
+        super().__init__()
+
+        self._already_rendered = {}
+        self._old_rendered_children = []
+        self.underlying = QtWidgets.QTableWidget(rows, columns)
+        self.underlying.setObjectName(str(id(self)))
+    
+    def clear_layout(self):
+        while self.underlying_layout.count():
+            child = self.underlying_layout.takeAt(0)
+            if child.widget():
+                child.widget().deleteLater()
+
+    def delete_child(self, i):
+        child_node = self.underlying_layout.takeAt(i)
+        if child_node.widget():
+            child_node.widget().deleteLater()
+
+    def _qt_update_commands(self, children, newprops, newstate):
+        commands = []
+
+        for prop in newprops:
+            if prop == "style":
+                commands += [(self.underlying.setStyleSheet, dict_to_style(newprops[prop],  "QWidget#" + str(id(self))))]
+                print(dict_to_style(newprops[prop],  "QWidget#" + str(id(self))))
+            elif prop == "rows":
+                commands += [(self.underlying.setRowCount, newprops[prop])]
+            elif prop == "columns":
+                commands += [(self.underlying.setColumnCount, newprops[prop])]
+            elif prop == "alternating_row_colors":
+                commands += [(self.underlying.setAlternatingRowColors, newprops[prop])]
+            elif prop == "row_headers":
+                if newprops[prop] is not None:
+                    commands += [(self.underlying.setVerticalHeaderLabels, list(map(str, newprops[prop])))]
+                else:
+                    commands += [(self.underlying.setVerticalHeaderLabels, list(map(str, range(newprops.rows))))]
+            elif prop == "column_headers":
+                if newprops[prop] is not None:
+                    commands += [(self.underlying.setHorizontalHeaderLabels, list(map(str, newprops[prop])))]
+                else:
+                    commands += [(self.underlying.setHorizontalHeaderLabels, list(map(str, range(newprops.columns))))]
+
+        new_children = set()
+        for child in children:
+            new_children.add(child.component)
+
+        for child in list(self._already_rendered.keys()):
+            if child not in new_children:
+                del self._already_rendered[child]
+
+        for i, old_child in reversed(list(enumerate(self._old_rendered_children))):
+            if old_child not in new_children:
+                for j, el in enumerate(old_child.children):
+                    if el:
+                        commands += [(self.underlying.setCellWidget, i, j, QtWidgets.QWidget())]
+
+        self._old_rendered_children = [child.component for child in children]
+        for i, child in enumerate(children):
+            if child.component not in self._already_rendered:
+                for j, el in enumerate(child.children):
+                    commands += [(self.underlying.setCellWidget, i, j, el.component.underlying)]
+            self._already_rendered[child.component] = True
+        return commands
+
+
+
+class WindowManager(BaseComponent):
+
+    def __init__(self, children=None):
+        super().__init__()
+
+        self._already_rendered = {}
+        self._old_rendered_children = []
+
+    def _qt_update_commands(self, children, newprops, newstate):
+        commands = []
+        new_children = set()
+        for child in children:
+            new_children.add(child.component)
+
+        for child in list(self._already_rendered.keys()):
+            if child not in new_children:
+                del self._already_rendered[child]
+
+        for i, old_child in reversed(list(enumerate(self._old_rendered_children))):
+            if old_child not in new_children:
+                commands += [(old_child.underlying.close,)]
+
+        self._old_rendered_children = [child.component for child in children]
+        for i, child in enumerate(children):
+            if child.component not in self._already_rendered:
+                commands += [(child.component.underlying.show,)]
             self._already_rendered[child.component] = True
         return commands
 
@@ -289,14 +496,19 @@ class QtTree(object):
         self.component = component
         self.children = children
 
-    def gen_qt_commands(self):
+    def gen_qt_commands(self, render_context):
         commands = []
         for child in self.children:
-            rendered = child.gen_qt_commands()
+            rendered = child.gen_qt_commands(render_context)
             commands.extend(rendered)
 
+        if not render_context.need_rerender(self.component):
+            return commands
         commands.extend(self.component._qt_update_commands(self.children, self.component.props, {}))
         return commands
+
+    def __hash__(self):
+        return id(self)
 
     def print_tree(self, indent=0):
         tags = self.component._tags()
@@ -309,6 +521,46 @@ class QtTree(object):
             print("\t" * indent + tags[2])
 
 
+class _RenderContext(object):
+    def __init__(self, storage_manager):
+        self.storage_manager = storage_manager
+        self.need_qt_command_reissue = {}
+        self.component_to_new_props = {}
+        self.component_to_old_props = {}
+
+    def mark_props_change(self, component, newprops):
+        d = dict(newprops._items)
+        if "children" not in d:
+            d["children"] = []
+        self.component_to_new_props[component] = newprops
+        if component not in self.component_to_old_props:
+            self.component_to_old_props[component] = component.props
+        self.set(component, "_props", d)
+
+    def get_new_props(self, component):
+        if component in self.component_to_new_props:
+            return self.component_to_new_props[component]
+        return component.props
+
+    def get_old_props(self, component):
+        if component in self.component_to_old_props:
+            return self.component_to_old_props[component]
+        return component.props
+
+    def commit(self):
+        for component, newprops in self.component_to_new_props.items():
+            component.register_props(newprops)
+
+    def set(self, obj, k, v):
+        self.storage_manager.set(obj, k, v)
+
+    def mark_qt_rerender(self, component, need_rerender):
+        self.need_qt_command_reissue[component] = need_rerender
+
+    def need_rerender(self, component):
+        return self.need_qt_command_reissue.get(component, False)
+
+
 class App(object):
 
     def __init__(self, component, title="React App"):
@@ -318,8 +570,6 @@ class App(object):
         self._title = title
 
         self.app = QtWidgets.QApplication([])
-        self.window = QtWidgets.QWidget()
-        self.layout = QtWidgets.QHBoxLayout()
     
     def clear_layout(self):
         while self.layout.count():
@@ -328,66 +578,78 @@ class App(object):
                 child.widget().deleteLater()
 
 
-    def _update_old_component(self, component, newprops, storage_manager: ChangeManager):
-        if component.should_update(newprops):
-            print("Shouldupdate: ", newprops)
-            for p, v in newprops.items():
-                storage_manager.set(component, p, v)
-            return self.render(component, storage_manager)
-        for p, v in newprops.items():
-            storage_manager.set(component, p, v)
+    def _update_old_component(self, component, newprops, render_context: _RenderContext):
+        if component.should_update(newprops, {}):
+            render_context.mark_props_change(component, newprops)
+            rerendered_obj = self.render(component, render_context)
+
+            print("Marking rerender necessary: ", component)
+            render_context.mark_qt_rerender(rerendered_obj.component, True)
+            return rerendered_obj
+
+        render_context.mark_props_change(component, newprops)
+        render_context.mark_qt_rerender(component, False)
+        # need_qt_command_reissue[self._component_to_qt_rendering[component].component] = False
         return self._component_to_qt_rendering[component]
 
-    def _get_child_using_key(self, d, key, newchild, storage_manager: ChangeManager):
-        print("get_child", newchild.__dict__)
-        print("get_child", newchild.props)
-        if key not in d:
-            return newchild
-        if d[key].__class__ != newchild.__class__:
-            return newchild
-        self._update_old_component(d[key], newchild.props, storage_manager)
+    def _get_child_using_key(self, d, key, newchild, render_context: _RenderContext):
+        if key not in d or d[key].__class__ != newchild.__class__:
+            return newchild # self.render(newchild, storage_manager, need_qt_command_reissue)
+        self._update_old_component(d[key], newchild.props, render_context)
         return d[key]
 
-    def _attach_keys(self, component, storage_manager):
+    def _attach_keys(self, component, render_context: _RenderContext):
         for i, child in enumerate(component.children):
             if not hasattr(child, "_key"):
                 logging.warning("Setting child key to: KEY" + str(i))
-                storage_manager.set(child, "_key", "KEY" + str(i))
+                render_context.set(child, "_key", "KEY" + str(i))
 
-    def render(self, component: Component, storage_manager: ChangeManager):
+    def render(self, component: Component, render_context: _RenderContext):
         component._controller = self
         if isinstance(component, BaseComponent):
             if len(component.children) > 1:
-                self._attach_keys(component, storage_manager)
+                self._attach_keys(component, render_context)
             if component not in self._component_to_rendering:
                 self._component_to_rendering[component] = component.children
-                rendered_children = [self.render(child, storage_manager) for child in component.children]
+                rendered_children = [self.render(child, render_context) for child in component.children]
                 self._component_to_qt_rendering[component] = QtTree(component, rendered_children) 
+                render_context.mark_qt_rerender(component, True)
                 return self._component_to_qt_rendering[component]
             else:
                 old_children = self._component_to_rendering[component]
                 if len(old_children) > 1:
-                    self._attach_keys(component, storage_manager)
+                    self._attach_keys(component, render_context)
 
                 if len(component.children) == 1 and len(old_children) == 1:
                     if component.children[0].__class__ == old_children[0].__class__:
-                        self._update_old_component(old_children[0], component.children[0].props, storage_manager)
+                        self._update_old_component(old_children[0], component.children[0].props, render_context)
                         children = [old_children[0]]
                     else:
                         children = [component.children[0]]
                 else:
                     if len(old_children) == 1:
-                        if not hasattr(old_children[0]._key):
-                            storage_manager.set(old_children[0], "_key", "KEY0")
+                        if not hasattr(old_children[0], "_key"):
+                            render_context.set(old_children[0], "_key", "KEY0")
                     key_to_old_child = {child._key: child for child in old_children}
                     old_child_to_props = {child: child.props for child in old_children}
 
-                    children = [self._get_child_using_key(key_to_old_child, new_child._key, new_child, storage_manager)
+                    children = [self._get_child_using_key(key_to_old_child, new_child._key, new_child, render_context)
                                 for new_child in component.children]
-                rendered_children = [self.render(child, storage_manager) for child in children]
+                parent_needs_rerendering = False
+                rendered_children = []
+                for child1, child2 in zip(children, component.children):
+                    if child1 != child2:
+                        rendered_children.append(self._component_to_qt_rendering[child1])
+                    else:
+                        parent_needs_rerendering = True
+                        rendered_children.append(self.render(child1, render_context))
+                render_context.mark_qt_rerender(component, parent_needs_rerendering)
+
                 self._component_to_rendering[component] = children
                 self._component_to_qt_rendering[component] = QtTree(component, rendered_children) 
-                storage_manager.set(component, "children", children)
+                props_dict = dict(component.props._items)
+                props_dict["children"] = children
+                render_context.mark_props_change(component, PropsDict(props_dict))
                 return self._component_to_qt_rendering[component]
 
         sub_component = component.render()
@@ -399,26 +661,27 @@ class App(object):
             # TODO: Update component will receive props
             # TODO figure out if its subcomponent state or old_rendering state
             self._component_to_qt_rendering[component] = self._update_old_component(
-                old_rendering, sub_component.props, storage_manager)
+                old_rendering, sub_component.props, render_context)
         else:
             # TODO: delete old component
             self._component_to_rendering[component] = sub_component
-            self._component_to_qt_rendering[component] = self.render(sub_component, storage_manager)
+            self._component_to_qt_rendering[component] = self.render(sub_component, render_context)
 
         return self._component_to_qt_rendering[component]
 
     def _request_rerender(self, component, newprops, newstate):
         print(component.__dict__)
         with _storage_manager() as storage_manager:
-            qt_tree = self.render(component, storage_manager)
-        qt_tree.print_tree()
+            render_context = _RenderContext(storage_manager)
+            qt_tree = self.render(component, render_context)
 
-        qt_commands = qt_tree.gen_qt_commands()
+        qt_tree.print_tree()
+        print("need rerendering for: ", render_context.need_qt_command_reissue)
+        qt_commands = qt_tree.gen_qt_commands(render_context)
+        root = qt_tree.component
         print(qt_commands)
         for command in qt_commands:
             command[0](*command[1:])
-
-        root = qt_tree.component
 
         print()
         print()
@@ -428,11 +691,4 @@ class App(object):
 
     def start(self):
         root = self._request_rerender(self._root, {}, {})
-        if isinstance(root, WidgetComponent):
-            self.layout.addWidget(root.underlying)
-        else:
-            self.layout.addLayout(root.underlying)
-        self.window.setLayout(self.layout)
-        self.window.setWindowTitle(self._title)
-        self.window.show()
         self.app.exec_()
