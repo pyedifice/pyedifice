@@ -5,7 +5,7 @@ import pandas as pd
 class ViewWrapper(react.Component):
 
     def render(self):
-        return react.View(layout="row", style={"border": "1px solid black"}) (
+        return react.View(layout="row", style={"border": "1px solid black", "min-width": "500px"}) (
             *self.children
         )
 
@@ -38,8 +38,9 @@ class Test2(react.Component):
 
 class Table(react.Component):
 
+    @react.register_props
     def __init__(self, rows, columns, style=None, column_headers=None):
-        super().__init__(["rows", "columns", "style", "column_headers"])
+        pass
 
 
 
@@ -48,34 +49,38 @@ class SmartTable(react.Component):
     @react.register_props
     def __init__(self, data, style=None):
         super().__init__()
-        self.data = data
-        self.displayed_data = data
-        self.style = style or {
-            "width": "500px",
-            "height": "300px",
+        self.key = None
+        self.filter_text = None
+
+    def on_change(self, i, text):
+        with self.render_changes():
+            self.key = self.props.data.keys()[i]
+            self.filter_text = text
+
+    def render(self):
+        displayed_data = self.props.data
+        if self.key is not None:
+            displayed_data = self.props.data[self.props.data[self.key].astype(str).str.startswith(self.filter_text)]
+        default_style = {
+            "min-width": "500px",
+            "min-height": "300px",
             "border-radius": "10px",
             "border": "1px solid black",
         }
-
-    def on_change(self, i, text):
-        key = self.data.keys()[i]
-        with self.render_changes():
-            self.displayed_data = self.data[self.data[key].astype(str).str.startswith(text)]
-
-    def render(self):
-        rows, columns = self.displayed_data.shape
-        return react.Table(rows=rows + 1, columns=columns, style=self.style, column_headers=list(self.displayed_data.keys()))(
+        rows, columns = displayed_data.shape
+        return react.Table(rows=rows + 1, columns=columns, style=self.props.style or default_style, column_headers=list(displayed_data.keys()))(
             react.List()(
                 *[react.TextInput(on_change=lambda text, i=i: self.on_change(i, text)).set_key("filter_%s" % i) for i in range(columns)]
             ),
             *[react.List()(*[
-                react.Label(str(self.displayed_data.iloc[i, j])).set_key("%s_%s" % (i, j))
+                react.Label(str(displayed_data.iloc[i, j])).set_key("%s_%s" % (i, j))
                 for j in range(columns)])
                 for i in range(rows)]
         )
 
 class Test(react.Component):
 
+    @react.register_props
     def __init__(self):
         super().__init__()
         self.text = ""
@@ -97,11 +102,8 @@ class Test(react.Component):
     def render(self):
         return react.WindowManager()(
             react.View() (
-                react.Label("Hello world: " + self.text),
-                react.TextInput(self.text, on_change=self.on_change),
-                Test2("Bonjour"),
                 SmartTable(self.data),
-                react.Button("Add 5", on_click=self.on_click)
+                react.Button("Add 5", on_click=self.on_click),
             ),
         )
 

@@ -91,7 +91,6 @@ def register_props(f):
         name_to_val = defaults
         name_to_val.update(dict(filter((lambda tup: (tup[0][0] != "_")), zip(varnames, args))))
         name_to_val.update(dict((k, v) for (k, v) in kwargs.items() if k[0] != "_"))
-        print("register_props", name_to_val)
         self.register_props(name_to_val)
         f(self, *args, **kwargs)
     return func
@@ -160,7 +159,6 @@ class Component(object):
         ignored_variables = super().__getattribute__("_ignored_variables")
         if changes_context is not None and k not in ignored_variables:
             changes_context[k] = v
-            print("setattr", changes_context)
         else:
             super().__setattr__(k, v)
 
@@ -174,7 +172,6 @@ class Component(object):
                 old_val = super().__getattribute__(s)
                 old_vals[s] = old_val
                 super().__setattr__(s, kwargs[s])
-            print("should_update", should_update)
             if should_update:
                 self._controller._request_rerender(self, PropsDict({}), kwargs)
         except Exception as e:
@@ -220,10 +217,16 @@ class Component(object):
     def _tags(self):
         classname = self.__class__.__name__
         return [
-            "<%s id=0x%x %s>" % (classname, id(self), " ".join("%s=%s" % (p, val) for (p, val) in self.props._items)),
+            "<%s id=0x%x %s>" % (classname, id(self), " ".join("%s=%s" % (p, val) for (p, val) in self.props._items if p != "children")),
             "</%s>" % (classname),
-            "<%s id=0x%x %s />" % (classname, id(self), " ".join("%s=%s" % (p, val) for (p, val) in self.props._items)),
+            "<%s id=0x%x %s />" % (classname, id(self), " ".join("%s=%s" % (p, val) for (p, val) in self.props._items if p != "children")),
         ]
+
+    def __str__(self):
+        tags = self._tags()
+        if self.children:
+            return "%s\n\t%s\n%s" % (tags[0], "\t\n".join(str(child) for child in self.children), tags[1])
+        return tags[2]
 
     def render(self):
         raise NotImplementedError
@@ -254,7 +257,7 @@ class Button(WidgetComponent):
     @register_props
     def __init__(self, title, style=None, on_click=(lambda: None)):
         super(Button, self).__init__()
-        self.underlying =  QtWidgets.QPushButton(self.props.title)
+        self.underlying =  QtWidgets.QPushButton(str(self.props.title))
         self.underlying.setObjectName(str(id(self)))
         self._connected = False
 
@@ -268,12 +271,12 @@ class Button(WidgetComponent):
         commands = []
         for prop in newprops:
             if prop == "title":
-                commands.append((self.underlying.setText, newprops.title))
+                commands.append((self.underlying.setText, str(newprops.title)))
             elif prop == "on_click":
                 commands.append((self.set_on_click, newprops.on_click))
             elif prop == "style":
                 commands.append((self.underlying.setStyleSheet,
-                                 dict_to_style(newprops.style or {}, "QWidget#" + str(id(self)))))
+                                 dict_to_style(newprops.style, "QWidget#" + str(id(self)))))
         return commands
 
 
@@ -282,14 +285,14 @@ class Label(WidgetComponent):
     @register_props
     def __init__(self, text, style=None):
         super().__init__()
-        self.underlying = QtWidgets.QLabel(self.props.text)
+        self.underlying = QtWidgets.QLabel(str(self.props.text))
         self.underlying.setObjectName(str(id(self)))
 
     def _qt_update_commands(self, children, newprops, newstate):
         commands = []
         for prop in newprops:
             if prop == "text":
-                commands += [(self.underlying.setText, newprops[prop])]
+                commands += [(self.underlying.setText, str(newprops[prop]))]
             elif prop == "style":
                 commands += [(self.underlying.setStyleSheet, dict_to_style(newprops[prop], "QWidget#" + str(id(self))))]
         return commands
@@ -302,7 +305,7 @@ class TextInput(WidgetComponent):
         super().__init__()
         self.current_text = text
         self._connected = False
-        self.underlying = QtWidgets.QLineEdit(self.props.text)
+        self.underlying = QtWidgets.QLineEdit(str(self.props.text))
         self.underlying.setObjectName(str(id(self)))
 
     def set_on_change(self, on_change):
@@ -316,12 +319,12 @@ class TextInput(WidgetComponent):
 
     def _qt_update_commands(self, children, newprops, newstate):
         commands = []
-        commands += [(self.underlying.setText, self.current_text)]
+        commands += [(self.underlying.setText, str(self.current_text))]
         for prop in newprops:
             if prop == "on_change":
                 commands += [(self.set_on_change, newprops[prop])]
             elif prop == "style":
-                commands += [(self.underlying.setStyleSheet, dict_to_style(newprops[prop] or {},  "QWidget#" + str(id(self))))]
+                commands += [(self.underlying.setStyleSheet, dict_to_style(newprops[prop],  "QWidget#" + str(id(self))))]
         return commands
 
 
@@ -333,21 +336,13 @@ class View(WidgetComponent):
 
         self._already_rendered = {}
         self._old_rendered_children = []
+        self.underlying = QtWidgets.QWidget()
         if layout == "column":
-            self.underlying = QtWidgets.QWidget()
             self.underlying_layout = QtWidgets.QVBoxLayout()
-            self.underlying.setLayout(self.underlying_layout)
         elif layout == "row":
-            self.underlying = QtWidgets.QWidget()
             self.underlying_layout = QtWidgets.QHBoxLayout()
-            self.underlying.setLayout(self.underlying_layout)
+        self.underlying.setLayout(self.underlying_layout)
         self.underlying.setObjectName(str(id(self)))
-    
-    def clear_layout(self):
-        while self.underlying_layout.count():
-            child = self.underlying_layout.takeAt(0)
-            if child.widget():
-                child.widget().deleteLater()
 
     def delete_child(self, i):
         child_node = self.underlying_layout.takeAt(i)
@@ -376,9 +371,58 @@ class View(WidgetComponent):
 
         for prop in newprops:
             if prop == "style":
-                commands += [(self.underlying.setStyleSheet, dict_to_style(newprops[prop] or {},  "QWidget#" + str(id(self))))]
+                commands += [(self.underlying.setStyleSheet, dict_to_style(newprops[prop],  "QWidget#" + str(id(self))))]
         return commands
 
+
+class ScrollView(WidgetComponent):
+
+    @register_props
+    def __init__(self, layout="column", style=None):
+        super().__init__()
+
+        self._already_rendered = {}
+        self._old_rendered_children = []
+        self.underlying = QtWidgets.QScrollArea()
+        self.scroll_area = QtWidgets.QWidget()
+        if layout == "column":
+            self.scroll_area_layout = QtWidgets.QVBoxLayout()
+        elif layout == "row":
+            self.scroll_area_layout = QtWidgets.QHBoxLayout()
+        self.scroll_area.setLayout(self.scroll_area_layout)
+        self.underlying.setWidget(self.scroll_area)
+        
+        self.underlying.setObjectName(str(id(self)))
+
+    def delete_child(self, i):
+        child_node = self.scroll_area_layout.takeAt(i)
+        if child_node.widget():
+            child_node.widget().deleteLater()
+
+    def _qt_update_commands(self, children, newprops, newstate):
+        commands = []
+        new_children = set()
+        for child in children:
+            new_children.add(child.component)
+
+        for child in list(self._already_rendered.keys()):
+            if child not in new_children:
+                del self._already_rendered[child]
+
+        for i, old_child in reversed(list(enumerate(self._old_rendered_children))):
+            if old_child not in new_children:
+                commands += [(self.delete_child, i)]
+
+        self._old_rendered_children = [child.component for child in children]
+        for i, child in enumerate(children):
+            if child.component not in self._already_rendered:
+                commands += [(self.scroll_area_layout.insertWidget, i, child.component.underlying)]
+            self._already_rendered[child.component] = True
+
+        for prop in newprops:
+            if prop == "style":
+                commands += [(self.underlying.setStyleSheet, dict_to_style(newprops[prop],  "QWidget#" + str(id(self))))]
+        return commands
 
 class List(BaseComponent):
 
@@ -388,6 +432,7 @@ class List(BaseComponent):
 
     def _qt_update_commands(self, children, newprops, newstate):
         return []
+
 
 
 class Table(WidgetComponent):
@@ -401,12 +446,6 @@ class Table(WidgetComponent):
         self._old_rendered_children = []
         self.underlying = QtWidgets.QTableWidget(rows, columns)
         self.underlying.setObjectName(str(id(self)))
-    
-    def clear_layout(self):
-        while self.underlying_layout.count():
-            child = self.underlying_layout.takeAt(0)
-            if child.widget():
-                child.widget().deleteLater()
 
     def delete_child(self, i):
         child_node = self.underlying_layout.takeAt(i)
@@ -419,7 +458,6 @@ class Table(WidgetComponent):
         for prop in newprops:
             if prop == "style":
                 commands += [(self.underlying.setStyleSheet, dict_to_style(newprops[prop],  "QWidget#" + str(id(self))))]
-                print(dict_to_style(newprops[prop],  "QWidget#" + str(id(self))))
             elif prop == "rows":
                 commands += [(self.underlying.setRowCount, newprops[prop])]
             elif prop == "columns":
@@ -570,12 +608,6 @@ class App(object):
         self._title = title
 
         self.app = QtWidgets.QApplication([])
-    
-    def clear_layout(self):
-        while self.layout.count():
-            child = self.layout.takeAt(0)
-            if child.widget():
-                child.widget().deleteLater()
 
 
     def _update_old_component(self, component, newprops, render_context: _RenderContext):
@@ -583,7 +615,6 @@ class App(object):
             render_context.mark_props_change(component, newprops)
             rerendered_obj = self.render(component, render_context)
 
-            print("Marking rerender necessary: ", component)
             render_context.mark_qt_rerender(rerendered_obj.component, True)
             return rerendered_obj
 
@@ -670,7 +701,6 @@ class App(object):
         return self._component_to_qt_rendering[component]
 
     def _request_rerender(self, component, newprops, newstate):
-        print(component.__dict__)
         with _storage_manager() as storage_manager:
             render_context = _RenderContext(storage_manager)
             qt_tree = self.render(component, render_context)
