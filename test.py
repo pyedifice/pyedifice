@@ -1,6 +1,104 @@
 import unittest
+import unittest.mock
 import react
 from PyQt5 import QtWidgets
+
+class MockComponent(react.Component):
+    def __init__(self):
+        super().__init__()
+        class MockController(object):
+            _request_rerender = unittest.mock.MagicMock()
+        self._controller = MockController()
+
+class MockBrokenComponent(react.Component):
+    def __init__(self):
+        super().__init__()
+        class MockController(object):
+            def _request_rerender(*args, **kwargs):
+                raise ValueError("I am broken")
+        self._controller = MockController()
+
+
+class StorageManagerTestCase(unittest.TestCase):
+
+    def test_record(self):
+        class A(object):
+            value = 0
+        obj = A()
+        with react._storage_manager() as storage_manager:
+            storage_manager.set(obj, "value", 1)
+            self.assertEqual(obj.value, 1)
+        self.assertEqual(obj.value, 1)
+
+    def test_record(self):
+        class A(object):
+            value = 0
+        obj = A()
+        try:
+            with react._storage_manager() as storage_manager:
+                storage_manager.set(obj, "value", 1)
+                self.assertEqual(obj.value, 1)
+                raise ValueError
+        except ValueError:
+            pass
+        self.assertEqual(obj.value, 0)
+
+
+class ComponentTestCase(unittest.TestCase):
+
+    def test_render_changes(self):
+        a = MockComponent()
+        a.foo = 1
+        a.bar = 2
+        with a.render_changes():
+            a.foo = 3
+            self.assertEqual(a.foo, 3)
+            a.bar = 0
+        self.assertEqual(a.foo, 3)
+        self.assertEqual(a.bar, 0)
+        a._controller._request_rerender.assert_called_once_with(
+            a, {}, dict(foo=3, bar=0))
+        a._controller._request_rerender.reset_mock()
+        try:
+            with a.render_changes():
+                a.bar = 1
+                self.assertEqual(a.bar, 1)
+                a.foo = 1 / 0
+        except ZeroDivisionError:
+            pass
+        self.assertEqual(a.foo, 3)
+        self.assertEqual(a.bar, 0)
+        a._controller._request_rerender.assert_not_called()
+
+    def test_state_change_unwind(self):
+        a = MockBrokenComponent()
+        a.foo = 1
+        a.bar = 2
+
+        exception_thrown = False
+        try:
+            with a.render_changes():
+                a.foo = 3
+                self.assertEqual(a.foo, 3)
+                a.bar = 0
+        except ValueError as e:
+            if str(e) == "I am broken":
+                exception_thrown = True
+
+        self.assertTrue(exception_thrown)
+        self.assertEqual(a.foo, 1)
+        self.assertEqual(a.bar, 2)
+
+        exception_thrown = False
+        try:
+            a.set_state(foo=3, bar=0)
+        except ValueError as e:
+            if str(e) == "I am broken":
+                exception_thrown = True
+
+        self.assertTrue(exception_thrown)
+        self.assertEqual(a.foo, 1)
+        self.assertEqual(a.bar, 2)
 
 class QtTreeTestCase(unittest.TestCase):
 
@@ -16,7 +114,7 @@ class QtTreeTestCase(unittest.TestCase):
         print(qt_button.clicked)
         print(qt_button.clicked.connect)
         print(qt_button.clicked.connect)
-        self.assertCountEqual(commands, [(qt_button.setText, button_str), (qt_button.setStyle, {}), (button.set_on_click, on_click)])
+        self.assertCountEqual(commands, [(qt_button.setText, button_str), (qt_button.setStyleSheet, "QWidget{}"), (button.set_on_click, on_click)])
 
     def test_view_layout(self):
         app = QtWidgets.QApplication([])
