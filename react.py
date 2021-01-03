@@ -91,6 +91,10 @@ class PropsDict(object):
 
     By convention, all PropsDict methods will start with _ to
     not conflict with keys.
+
+    .. document private functions
+    .. autoproperty:: _keys
+    .. autoproperty:: _items
     """
 
     def __init__(self, dictionary: tp.Mapping[tp.Text, tp.Any]):
@@ -103,11 +107,13 @@ class PropsDict(object):
         raise ValueError("Props are immutable")
 
     @property
-    def _keys(self):
+    def _keys(self) -> tp.List[tp.Text]:
+        """Returns the keys of the props dict as a list."""
         return list(self._d.keys())
 
     @property
-    def _items(self):
+    def _items(self) -> tp.List[tp.Any]:
+        """Returns the (key, value) of the props dict as a list."""
         return list(self._d.items())
 
     def __len__(self):
@@ -238,6 +244,11 @@ class Component(object):
             self._props = {"children": []}
 
     def register_props(self, props: tp.Union[tp.Mapping[tp.Text, tp.Any], PropsDict]):
+        """Register props.
+
+        Call this function if you do not use the register_props decorator and you have
+        props to register.
+        """
         if "children" not in props:
             props["children"] = {}
         self._props = props
@@ -256,6 +267,19 @@ class Component(object):
 
     @contextlib.contextmanager
     def render_changes(self, ignored_variables: tp.Optional[tp.Sequence[tp.Text]] = None):
+        """Context manager for managing changes to state.
+
+        This context manager provides two functions:
+        - Make a group of assignments to state atomically: if an exception occurs,
+        all changes will be rolled back.
+        - Renders changes to the state upon successful completion.
+
+        Note that this context manager will not keep track of changes to mutable objects.
+
+        Args:
+            ignored_variables: an optional sequence of variables for the manager to ignore.
+            These changes will not be reverted upon exception.
+        """
         entered = False
         ignored_variables = ignored_variables or set()
         ignored_variables = set(ignored_variables)
@@ -294,6 +318,14 @@ class Component(object):
             super().__setattr__(k, v)
 
     def set_state(self, **kwargs):
+        """Set state and render changes.
+
+        The keywords are the names of the state attributes of the class, e.g.
+        for the state self.mystate, you call set_state with set_state(mystate=2).
+        At the end of this call, all changes will be rendered.
+        All changes are guaranteed to appear atomically: upon exception,
+        no changes to state will occur.
+        """
         should_update = self.should_update(PropsDict({}), kwargs)
         old_vals = {}
         try:
@@ -311,6 +343,23 @@ class Component(object):
             raise e
 
     def should_update(self, newprops: PropsDict, newstate: tp.Mapping[tp.Text, tp.Any]) -> bool:
+        """Determines if the component should rerender upon receiving new props and state.
+
+        The arguments, newprops and newstate, reflect the props and state that change: they
+        may be a subset of the props and the state. When this function is called,
+        all props and state of this Component are the old values, so you can compare
+        `component.props` and `newprops` to determine changes.
+
+        By default, all changes to props and state will trigger a re-render. This behavior
+        is probably desirable most of the time, but if you want custom re-rendering logic,
+        you can override this function.
+
+        Args:
+            newprops: the new set of props
+            newstate: the new set of state
+        Returns:
+            Whether or not the Component should be rerendered.
+        """
         def should_update_helper(new_obj, old_obj):
             if isinstance(old_obj, Component) or isinstance(new_obj, Component):
                 if old_obj.__class__ != new_obj.__class__:
@@ -360,6 +409,12 @@ class Component(object):
         return tags[2]
 
     def render(self):
+        """Logic for rendering, must be overridden.
+
+        The render logic for this component, not implemented for this abstract class.
+        The render function itself should be purely stateless, because the application
+        state should not depend on whether or not the render function is called.
+        """
         raise NotImplementedError
 
 

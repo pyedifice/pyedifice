@@ -63,6 +63,27 @@ attribute (props.myprop).
 By convention, all PropsDict methods will start with _ to
 not conflict with keys.
 
+<!-- document private functions -->
+
+#### property _keys()
+Returns the keys of the props dict as a list.
+
+
+* **Return type**
+
+    `List`[`str`]
+
+
+
+#### property _items()
+Returns the (key, value) of the props dict as a list.
+
+
+* **Return type**
+
+    `List`[`Any`]
+
+
 
 * **Parameters**
 
@@ -189,6 +210,11 @@ Initialize self.  See help(type(self)) for accurate signature.
 
 
 #### register_props(props)
+Register props.
+
+Call this function if you do not use the register_props decorator and you have
+props to register.
+
 
 * **Parameters**
 
@@ -215,6 +241,20 @@ Initialize self.  See help(type(self)) for accurate signature.
 
 
 #### render_changes(ignored_variables=None)
+Context manager for managing changes to state.
+
+This context manager provides two functions:
+- Make a group of assignments to state atomically: if an exception occurs,
+all changes will be rolled back.
+- Renders changes to the state upon successful completion.
+
+Note that this context manager will not keep track of changes to mutable objects.
+
+Args:
+
+    ignored_variables: an optional sequence of variables for the manager to ignore.
+    These changes will not be reverted upon exception.
+
 
 * **Parameters**
 
@@ -223,8 +263,36 @@ Initialize self.  See help(type(self)) for accurate signature.
 
 
 #### set_state(\*\*kwargs)
+Set state and render changes.
+
+The keywords are the names of the state attributes of the class, e.g.
+for the state self.mystate, you call set_state with set_state(mystate=2).
+At the end of this call, all changes will be rendered.
+All changes are guaranteed to appear atomically: upon exception,
+no changes to state will occur.
+
 
 #### should_update(newprops, newstate)
+Determines if the component should rerender upon receiving new props and state.
+
+The arguments, newprops and newstate, reflect the props and state that change: they
+may be a subset of the props and the state. When this function is called,
+all props and state of this Component are the old values, so you can compare
+component.props and newprops to determine changes.
+
+By default, all changes to props and state will trigger a re-render. This behavior
+is probably desirable most of the time, but if you want custom re-rendering logic,
+you can override this function.
+
+Args:
+
+    newprops: the new set of props
+    newstate: the new set of state
+
+Returns:
+
+    Whether or not the Component should be rerendered.
+
 
 * **Parameters**
 
@@ -243,6 +311,12 @@ Initialize self.  See help(type(self)) for accurate signature.
 
 
 #### render()
+Logic for rendering, must be overridden.
+
+The render logic for this component, not implemented for this abstract class.
+The render function itself should be purely stateless, because the application
+state should not depend on whether or not the render function is called.
+
 
 ### react.register_props(f)
 Decorator for __init__ function to record props.
