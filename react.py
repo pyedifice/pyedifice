@@ -8,6 +8,22 @@ import numpy as np
 import pandas as pd
 
 from PyQt5 import QtWidgets
+from PyQt5.QtCore import pyqtRemoveInputHook, pyqtRestoreInputHook
+
+
+def set_trace():
+    '''Set a tracepoint in the Python debugger that works with Qt'''
+    import pdb
+    import sys
+    pyqtRemoveInputHook()
+    # set up the debugger
+    debugger = pdb.Pdb()
+    debugger.reset()
+    # custom next to get outside of function scope
+    debugger.do_next(None) # run the next command
+    users_frame = sys._getframe().f_back # frame where the user invoked `pyqt_set_trace()`
+    debugger.interaction(users_frame, None)
+    pyqtRestoreInputHook()
 
 
 class _ChangeManager(object):
@@ -106,7 +122,8 @@ def register_props(f):
 
     Arguments that begin with an underscore will be ignored.
 
-    Example:
+    Example::
+
         class MyComponent(Component):
 
             @register_props
@@ -120,8 +137,8 @@ def register_props(f):
                     Label(self.props.c),
                 )
 
-        MyComponent(5, c="w") will then have props.a=5, props.b=2, and props.c="w".
-        props._d is undefined
+    MyComponent(5, c="w") will then have props.a=5, props.b=2, and props.c="w".
+    props._d is undefined
 
     Args:
         f: the __init__ function of a Component subclass
@@ -166,12 +183,16 @@ class Component(object):
 
     In most cases, changes in state would ideally trigger a rerender.
     There are two ways to ensure this.
-    First, you may use the set_state function to set the state:
+    First, you may use the set_state function to set the state::
+
         self.set_state(mystate=1, myotherstate=2)
-    You may also use the self.render_changes() context manager:
+
+    You may also use the self.render_changes() context manager::
+
         with self.render_changes():
             self.mystate = 1
             self.myotherstate = 2
+
     When the context manager exits, a state change will be triggered.
     The render_changes() context manager also ensures that all state changes
     happen atomically: if an exception occurs inside the context manager,
@@ -187,7 +208,8 @@ class Component(object):
     the core Components, such as Label, Button, and View.
     Components may be composed in a tree like fashion:
     one special prop is children, which will always be defined (defaults to an
-    empty list). The children prop can be set by calling another Component:
+    empty list). The children prop can be set by calling another Component::
+
         View(layout="column")(
             View(layout="row")(
                 Label("Username: "),
@@ -218,11 +240,13 @@ class Component(object):
     When comparing a list of Components, the Component's **_key** attribute will
     be compared. Components with the same _key and same class are assumed to be
     the same. You can set the key using the set_key method, which returns the component
-    to allow for chaining:
+    to allow for chaining::
+
         View(layout="row")(
             MyComponent("Hello").set_key("hello"),
             MyComponent("World").set_key("world"),
         )
+
     If the _key is not provided, the diff algorithm will assign automatic keys
     based on index, which could result in subpar performance due to unnecessary rerenders.
     To ensure control over the rerender process, it is recommended to set_keys
@@ -235,7 +259,7 @@ class Component(object):
     def __init__(self):
         super().__setattr__("_ignored_variables", set())
         if not hasattr(self, "_props"):
-            self._props = {}
+            self._props = {"children": []}
 
     def register_props(self, props):
         if "children" not in props:
@@ -522,13 +546,15 @@ class ScrollView(WidgetComponent):
         self._already_rendered = {}
         self._old_rendered_children = []
         self.underlying = QtWidgets.QScrollArea()
-        self.scroll_area = QtWidgets.QWidget()
+        self.underlying.setWidgetResizable(True)
+
+        self.inner_widget = QtWidgets.QWidget()
         if layout == "column":
             self.scroll_area_layout = QtWidgets.QVBoxLayout()
         elif layout == "row":
             self.scroll_area_layout = QtWidgets.QHBoxLayout()
-        self.scroll_area.setLayout(self.scroll_area_layout)
-        self.underlying.setWidget(self.scroll_area)
+        self.inner_widget.setLayout(self.scroll_area_layout)
+        self.underlying.setWidget(self.inner_widget)
         
         self.underlying.setObjectName(str(id(self)))
 

@@ -104,7 +104,11 @@ class Test(react.Component):
             react.View() (
                 SmartTable(self.data),
                 react.Button("Add 5", on_click=self.on_click),
+                react.ScrollView(style={"min-width": 100, "min-height": 100, "max-height": 100, "height": 100})(
+                    *[react.Label(i) for i in range(20)]
+                )
             ),
         )
 
-react.App(Test()).start()
+if __name__ == "__main__":
+    react.App(Test()).start()
