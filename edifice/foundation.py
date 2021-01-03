@@ -1,4 +1,4 @@
-"""react
+"""The Edifice UI library
 
 The two main classes of this module are Component and App.
 
@@ -872,7 +872,7 @@ class _RenderContext(object):
 
 class App(object):
 
-    def __init__(self, component: Component, title: tp.Text = "React App"):
+    def __init__(self, component: Component, title: tp.Text = "Edifice App"):
         self._component_to_rendering = {}
         self._component_to_qt_rendering = {}
         self._root = component

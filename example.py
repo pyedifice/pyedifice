@@ -1,15 +1,15 @@
-import react
+import edifice as ed
 import pandas as pd
 
 
-class ViewWrapper(react.Component):
+class ViewWrapper(ed.Component):
 
     def render(self):
-        return react.View(layout="row", style={"border": "1px solid black", "min-width": "500px"}) (
+        return ed.View(layout="row", style={"border": "1px solid black", "min-width": "500px"}) (
             *self.children
         )
 
-class Test2(react.Component):
+class Test2(ed.Component):
     
     def __init__(self, initial_text):
         super().__init__()
@@ -24,29 +24,29 @@ class Test2(react.Component):
 
     def render(self):
         children = [
-            react.Label(self.text, style={"color": self.color}).set_key("hi_text"),
-            react.Button("Toggle", on_click=lambda: self.on_click()).set_key("toggle button"),
+            ed.Label(self.text, style={"color": self.color}).set_key("hi_text"),
+            ed.Button("Toggle", on_click=lambda: self.on_click()).set_key("toggle button"),
         ]
         if self.vm_state == 1:
             children = [
-                react.Label(self.text, style={"color": "red"}).set_key("hi_text"),
-                react.Label("See this", style={"color": self.color}).set_key("vm_state"),
-                react.Button("Toggle", on_click=self.on_click).set_key("toggle button"),
+                ed.Label(self.text, style={"color": "red"}).set_key("hi_text"),
+                ed.Label("See this", style={"color": self.color}).set_key("vm_state"),
+                ed.Button("Toggle", on_click=self.on_click).set_key("toggle button"),
             ]
         return ViewWrapper()(*children)
 
 
-class Table(react.Component):
+class Table(ed.Component):
 
-    @react.register_props
+    @ed.register_props
     def __init__(self, rows, columns, style=None, column_headers=None):
         pass
 
 
 
-class SmartTable(react.Component):
+class SmartTable(ed.Component):
 
-    @react.register_props
+    @ed.register_props
     def __init__(self, data, style=None):
         super().__init__()
         self.key = None
@@ -68,19 +68,19 @@ class SmartTable(react.Component):
             "border": "1px solid black",
         }
         rows, columns = displayed_data.shape
-        return react.Table(rows=rows + 1, columns=columns, style=self.props.style or default_style, column_headers=list(displayed_data.keys()))(
-            react.List()(
-                *[react.TextInput(on_change=lambda text, i=i: self.on_change(i, text)).set_key("filter_%s" % i) for i in range(columns)]
+        return ed.Table(rows=rows + 1, columns=columns, style=self.props.style or default_style, column_headers=list(displayed_data.keys()))(
+            ed.List()(
+                *[ed.TextInput(on_change=lambda text, i=i: self.on_change(i, text)).set_key("filter_%s" % i) for i in range(columns)]
             ),
-            *[react.List()(*[
-                react.Label(str(displayed_data.iloc[i, j])).set_key("%s_%s" % (i, j))
+            *[ed.List()(*[
+                ed.Label(str(displayed_data.iloc[i, j])).set_key("%s_%s" % (i, j))
                 for j in range(columns)])
                 for i in range(rows)]
         )
 
-class Test(react.Component):
+class Test(ed.Component):
 
-    @react.register_props
+    @ed.register_props
     def __init__(self):
         super().__init__()
         self.text = ""
@@ -100,15 +100,15 @@ class Test(react.Component):
             self.data = self.data + 5
 
     def render(self):
-        return react.WindowManager()(
-            react.View() (
+        return ed.WindowManager()(
+            ed.View() (
                 SmartTable(self.data),
-                react.Button("Add 5", on_click=self.on_click),
-                react.ScrollView(style={"min-width": 100, "min-height": 100, "max-height": 100, "height": 100})(
-                    *[react.Label(i) for i in range(20)]
+                ed.Button("Add 5", on_click=self.on_click),
+                ed.ScrollView(style={"min-width": 100, "min-height": 100, "max-height": 100, "height": 100})(
+                    *[ed.Label(i) for i in range(20)]
                 )
             ),
         )
 
 if __name__ == "__main__":
-    react.App(Test()).start()
+    ed.App(Test()).start()

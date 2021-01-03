@@ -1,20 +1,20 @@
 import unittest
 import unittest.mock
-import react
+import foundation
 from PyQt5 import QtWidgets
 
-class MockComponent(react.Component):
+class MockComponent(foundation.Component):
 
-    @react.register_props
+    @foundation.register_props
     def __init__(self):
         super().__init__()
         class MockController(object):
             _request_rerender = unittest.mock.MagicMock()
         self._controller = MockController()
 
-class MockBrokenComponent(react.Component):
+class MockBrokenComponent(foundation.Component):
 
-    @react.register_props
+    @foundation.register_props
     def __init__(self):
         super().__init__()
         class MockController(object):
@@ -29,7 +29,7 @@ class StorageManagerTestCase(unittest.TestCase):
         class A(object):
             value = 0
         obj = A()
-        with react._storage_manager() as storage_manager:
+        with foundation._storage_manager() as storage_manager:
             storage_manager.set(obj, "value", 1)
             self.assertEqual(obj.value, 1)
         self.assertEqual(obj.value, 1)
@@ -39,7 +39,7 @@ class StorageManagerTestCase(unittest.TestCase):
             value = 0
         obj = A()
         try:
-            with react._storage_manager() as storage_manager:
+            with foundation._storage_manager() as storage_manager:
                 storage_manager.set(obj, "value", 1)
                 self.assertEqual(obj.value, 1)
                 raise ValueError
@@ -47,7 +47,7 @@ class StorageManagerTestCase(unittest.TestCase):
             pass
         self.assertEqual(obj.value, 0)
 
-class MockRenderContext(react._RenderContext):
+class MockRenderContext(foundation._RenderContext):
 
     def need_rerender(self, component):
         return True
@@ -115,10 +115,10 @@ class QtTreeTestCase(unittest.TestCase):
         def on_click():
             pass
         button_str = "asdf"
-        button = react.Button(title=button_str, on_click=on_click)
-        button_tree = react._QtTree(button, [])
+        button = foundation.Button(title=button_str, on_click=on_click)
+        button_tree = foundation._QtTree(button, [])
         qt_button = button.underlying
-        with react._storage_manager() as manager:
+        with foundation._storage_manager() as manager:
             commands = button_tree.gen_qt_commands(MockRenderContext(manager))
         print(qt_button.clicked)
         print(qt_button.clicked.connect)
@@ -127,40 +127,40 @@ class QtTreeTestCase(unittest.TestCase):
 
     def test_view_layout(self):
         app = QtWidgets.QApplication([])
-        view_c = react.View(layout="column")
+        view_c = foundation.View(layout="column")
         self.assertEqual(view_c.underlying_layout.__class__, QtWidgets.QVBoxLayout)
-        view_r = react.View(layout="row")
+        view_r = foundation.View(layout="row")
         self.assertEqual(view_r.underlying_layout.__class__, QtWidgets.QHBoxLayout)
 
 
     def test_view_change(self):
         app = QtWidgets.QApplication([])
-        label1 = react.Label(text="A")
-        label2 = react.Label(text="B")
-        view = react.View()(label1)
+        label1 = foundation.Label(text="A")
+        label2 = foundation.Label(text="B")
+        view = foundation.View()(label1)
 
         def label_tree(label):
-            tree = react._QtTree(label, [])
-            with react._storage_manager() as manager:
+            tree = foundation._QtTree(label, [])
+            with foundation._storage_manager() as manager:
                 return tree, tree.gen_qt_commands(MockRenderContext(manager))
 
         label1_tree, label1_commands = label_tree(label1)
         label2_tree, label2_commands = label_tree(label2)
-        view_tree = react._QtTree(view, [label1_tree])
-        with react._storage_manager() as manager:
+        view_tree = foundation._QtTree(view, [label1_tree])
+        with foundation._storage_manager() as manager:
             commands = view_tree.gen_qt_commands(MockRenderContext(manager))
 
         self.assertCountEqual(commands, label1_commands + [(view.underlying.setStyleSheet, "QWidget#%s{}" % id(view)), (view.underlying_layout.insertWidget, 0, label1.underlying)])
 
-        view_tree = react._QtTree(view, [label1_tree, label2_tree])
-        with react._storage_manager() as manager:
+        view_tree = foundation._QtTree(view, [label1_tree, label2_tree])
+        with foundation._storage_manager() as manager:
             commands = view_tree.gen_qt_commands(MockRenderContext(manager))
         self.assertCountEqual(commands, label1_commands + label2_commands + [(view.underlying.setStyleSheet, "QWidget#%s{}" % id(view)), (view.underlying_layout.insertWidget, 1, label2.underlying)])
 
-        inner_view = react.View()
+        inner_view = foundation.View()
 
-        view_tree = react._QtTree(view, [label2_tree, react._QtTree(inner_view, [])])
-        with react._storage_manager() as manager:
+        view_tree = foundation._QtTree(view, [label2_tree, foundation._QtTree(inner_view, [])])
+        with foundation._storage_manager() as manager:
             commands = view_tree.gen_qt_commands(MockRenderContext(manager))
         self.assertCountEqual(commands, label2_commands + [(view.underlying.setStyleSheet, "QWidget#%s{}" % id(view)), (inner_view.underlying.setStyleSheet, "QWidget#%s{}" % id(inner_view)), (view.delete_child, 0), (view.underlying_layout.insertWidget, 1, inner_view.underlying)])
 

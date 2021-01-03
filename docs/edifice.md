@@ -1,6 +1,10 @@
-# react module
+# edifice package
 
-react
+## Submodules
+
+## edifice.foundation module
+
+The Edifice UI library
 
 The two main classes of this module are Component and App.
 
@@ -52,7 +56,7 @@ Some useful utilities are also provided:
     debugging experience). Use this set_trace if you want to set breakpoings.
 
 
-### class react.PropsDict(dictionary)
+### class edifice.foundation.PropsDict(dictionary)
 Bases: `object`
 
 An immutable dictionary for storing props.
@@ -101,7 +105,7 @@ Initialize self.  See help(type(self)) for accurate signature.
 
 
 
-### class react.Component()
+### class edifice.foundation.Component()
 Bases: `object`
 
 Component.
@@ -318,7 +322,7 @@ The render function itself should be purely stateless, because the application
 state should not depend on whether or not the render function is called.
 
 
-### react.register_props(f)
+### edifice.foundation.register_props(f)
 Decorator for __init__ function to record props.
 
 This decorator will record all arguments (both vector and keyword arguments)
@@ -357,32 +361,32 @@ Returns:
     decorated function
 
 
-### class react.BaseComponent()
-Bases: `react.Component`
+### class edifice.foundation.BaseComponent()
+Bases: `edifice.foundation.Component`
 
 
 #### \__init__()
 Initialize self.  See help(type(self)) for accurate signature.
 
 
-### class react.WidgetComponent()
-Bases: `react.BaseComponent`
+### class edifice.foundation.WidgetComponent()
+Bases: `edifice.foundation.BaseComponent`
 
 
 #### \__init__()
 Initialize self.  See help(type(self)) for accurate signature.
 
 
-### class react.LayoutComponent()
-Bases: `react.BaseComponent`
+### class edifice.foundation.LayoutComponent()
+Bases: `edifice.foundation.BaseComponent`
 
 
 #### \__init__()
 Initialize self.  See help(type(self)) for accurate signature.
 
 
-### class react.WindowManager()
-Bases: `react.BaseComponent`
+### class edifice.foundation.WindowManager()
+Bases: `edifice.foundation.BaseComponent`
 
 Window manager: the root component.
 
@@ -418,10 +422,10 @@ if __name__ == "__main__":
 Initialize self.  See help(type(self)) for accurate signature.
 
 
-### react.dict_to_style(d, prefix='QWidget')
+### edifice.foundation.dict_to_style(d, prefix='QWidget')
 
-### class react.Button(title='', style=None, on_click=<function Button.<lambda>>)
-Bases: `react.WidgetComponent`
+### class edifice.foundation.Button(title='', style=None, on_click=<function Button.<lambda>>)
+Bases: `edifice.foundation.WidgetComponent`
 
 Basic Button
 
@@ -462,8 +466,8 @@ Initialize self.  See help(type(self)) for accurate signature.
 
 
 
-### class react.Label(text='', style=None)
-Bases: `react.WidgetComponent`
+### class edifice.foundation.Label(text='', style=None)
+Bases: `edifice.foundation.WidgetComponent`
 
 
 * **Parameters**
@@ -490,8 +494,8 @@ Initialize self.  See help(type(self)) for accurate signature.
 
 
 
-### class react.TextInput(text='', on_change=<function TextInput.<lambda>>, style=None)
-Bases: `react.WidgetComponent`
+### class edifice.foundation.TextInput(text='', on_change=<function TextInput.<lambda>>, style=None)
+Bases: `edifice.foundation.WidgetComponent`
 
 
 * **Parameters**
@@ -526,8 +530,8 @@ Initialize self.  See help(type(self)) for accurate signature.
 
 #### set_on_change(on_change)
 
-### class react.View(layout='column', style=None)
-Bases: `react.WidgetComponent`
+### class edifice.foundation.View(layout='column', style=None)
+Bases: `edifice.foundation.WidgetComponent`
 
 
 * **Parameters**
@@ -554,24 +558,24 @@ Initialize self.  See help(type(self)) for accurate signature.
 
 
 
-### class react.ScrollView(layout='column', style=None)
-Bases: `react.WidgetComponent`
+### class edifice.foundation.ScrollView(layout='column', style=None)
+Bases: `edifice.foundation.WidgetComponent`
 
 
 #### \__init__(layout='column', style=None)
 Initialize self.  See help(type(self)) for accurate signature.
 
 
-### class react.List()
-Bases: `react.BaseComponent`
+### class edifice.foundation.List()
+Bases: `edifice.foundation.BaseComponent`
 
 
 #### \__init__()
 Initialize self.  See help(type(self)) for accurate signature.
 
 
-### class react.Table(rows, columns, row_headers=None, column_headers=None, style=None, alternating_row_colors=True)
-Bases: `react.WidgetComponent`
+### class edifice.foundation.Table(rows, columns, row_headers=None, column_headers=None, style=None, alternating_row_colors=True)
+Bases: `edifice.foundation.WidgetComponent`
 
 
 * **Parameters**
@@ -622,7 +626,7 @@ Initialize self.  See help(type(self)) for accurate signature.
 
 
 
-### class react.App(component, title='React App')
+### class edifice.foundation.App(component, title='Edifice App')
 Bases: `object`
 
 
@@ -636,7 +640,7 @@ Bases: `object`
 
 
 
-#### \__init__(component, title='React App')
+#### \__init__(component, title='Edifice App')
 Initialize self.  See help(type(self)) for accurate signature.
 
 
@@ -652,5 +656,9 @@ Initialize self.  See help(type(self)) for accurate signature.
 
 #### start()
 
-### react.set_trace()
+### edifice.foundation.set_trace()
 Set a tracepoint in the Python debugger that works with Qt
+
+## edifice.test module
+
+## Module contents
