@@ -1,8 +1,43 @@
+"""react
+
+The two main classes of this module are Component and App.
+
+The Component class is the basic building block of your GUI.
+Your components will be composed of other components:
+native components (View, Button, Text) as well as other composite
+components created by you or others.
+
+The root component should be a WindowManager, whose children are distinct windows.
+Creating a new window is as simple as adding a new child to WindowManager.
+
+To display your component, create an App object and call start::
+
+    if __name__ == "__main__":
+        App(MyApp()).start()
+
+These native components are supported:
+    * Label: A basic text label
+    * TextInput: A one-line text input box
+    * Button: A clickable button
+    * View: A box allowing you to position child components in a row or column
+    * ScrollView: A scrollable view
+    * List: A list of components with no inherent semantics. This may be
+      passed to other Components, e.g. those that require lists of lists.
+
+Some useful utilities are also provided:
+    * register_props: A decorator for the __init__ function that records
+      all arguments as props
+    * set_trace: An analogue of pdb.set_trace that works with Qt
+      (pdb.set_trace interrupts the Qt event flow, causing an unpleasant
+      debugging experience). Use this set_trace if you want to set breakpoings.
+"""
+
 import contextlib
+import functools
+import inspect
 import itertools
 import logging
-import typing
-import inspect
+import typing as tp
 
 import numpy as np
 import pandas as pd
@@ -11,19 +46,7 @@ from PyQt5 import QtWidgets
 from PyQt5.QtCore import pyqtRemoveInputHook, pyqtRestoreInputHook
 
 
-def set_trace():
-    '''Set a tracepoint in the Python debugger that works with Qt'''
-    import pdb
-    import sys
-    pyqtRemoveInputHook()
-    # set up the debugger
-    debugger = pdb.Pdb()
-    debugger.reset()
-    # custom next to get outside of function scope
-    debugger.do_next(None) # run the next command
-    users_frame = sys._getframe().f_back # frame where the user invoked `pyqt_set_trace()`
-    debugger.interaction(users_frame, None)
-    pyqtRestoreInputHook()
+StyleType = tp.Optional[tp.Mapping[tp.Text, tp.Text]]
 
 
 class _ChangeManager(object):
@@ -70,7 +93,7 @@ class PropsDict(object):
     not conflict with keys.
     """
 
-    def __init__(self, dictionary):
+    def __init__(self, dictionary: tp.Mapping[tp.Text, tp.Any]):
         super().__setattr__("_d", dictionary)
 
     def __getitem__(self, key):
@@ -110,53 +133,6 @@ class PropsDict(object):
 
     def __setattr__(self, key, value):
         raise ValueError("Props are immutable")
-
-
-def register_props(f):
-    """Decorator for __init__ function to record props.
-
-    This decorator will record all arguments (both vector and keyword arguments)
-    of the __init__ function as belonging to the props of the component.
-    It will call Component.register_props to store these arguments in the
-    props field of the Component.
-
-    Arguments that begin with an underscore will be ignored.
-
-    Example::
-
-        class MyComponent(Component):
-
-            @register_props
-            def __init__(self, a, b=2, c="xyz", _d=None):
-                pass
-
-            def render(self):
-                return View()(
-                    Label(self.props.a),
-                    Label(self.props.b),
-                    Label(self.props.c),
-                )
-
-    MyComponent(5, c="w") will then have props.a=5, props.b=2, and props.c="w".
-    props._d is undefined
-
-    Args:
-        f: the __init__ function of a Component subclass
-    Returns:
-        decorated function
-
-    """
-    def func(self, *args, **kwargs):
-        varnames = f.__code__.co_varnames[1:]
-        defaults = {
-            k: v.default for k, v in inspect.signature(f).parameters.items() if v.default is not inspect.Parameter.empty and k[0] != "_"
-        }
-        name_to_val = defaults
-        name_to_val.update(dict(filter((lambda tup: (tup[0][0] != "_")), zip(varnames, args))))
-        name_to_val.update(dict((k, v) for (k, v) in kwargs.items() if k[0] != "_"))
-        self.register_props(name_to_val)
-        f(self, *args, **kwargs)
-    return func
 
 
 class Component(object):
@@ -261,12 +237,12 @@ class Component(object):
         if not hasattr(self, "_props"):
             self._props = {"children": []}
 
-    def register_props(self, props):
+    def register_props(self, props: tp.Union[tp.Mapping[tp.Text, tp.Any], PropsDict]):
         if "children" not in props:
             props["children"] = {}
         self._props = props
 
-    def set_key(self, k):
+    def set_key(self, k: tp.Text):
         self._key = k
         return self
 
@@ -275,11 +251,11 @@ class Component(object):
         return self.props.children
 
     @property
-    def props(self):
+    def props(self) -> PropsDict:
         return PropsDict(self._props)
 
     @contextlib.contextmanager
-    def render_changes(self, ignored_variables=None):
+    def render_changes(self, ignored_variables: tp.Optional[tp.Sequence[tp.Text]] = None):
         entered = False
         ignored_variables = ignored_variables or set()
         ignored_variables = set(ignored_variables)
@@ -334,7 +310,7 @@ class Component(object):
                 super().__setattr__(s, old_vals[s])
             raise e
 
-    def should_update(self, newprops, newstate):
+    def should_update(self, newprops: PropsDict, newstate: tp.Mapping[tp.Text, tp.Any]) -> bool:
         def should_update_helper(new_obj, old_obj):
             if isinstance(old_obj, Component) or isinstance(new_obj, Component):
                 if old_obj.__class__ != new_obj.__class__:
@@ -386,6 +362,55 @@ class Component(object):
     def render(self):
         raise NotImplementedError
 
+
+def register_props(f):
+    """Decorator for __init__ function to record props.
+
+    This decorator will record all arguments (both vector and keyword arguments)
+    of the __init__ function as belonging to the props of the component.
+    It will call Component.register_props to store these arguments in the
+    props field of the Component.
+
+    Arguments that begin with an underscore will be ignored.
+
+    Example::
+
+        class MyComponent(Component):
+
+            @register_props
+            def __init__(self, a, b=2, c="xyz", _d=None):
+                pass
+
+            def render(self):
+                return View()(
+                    Label(self.props.a),
+                    Label(self.props.b),
+                    Label(self.props.c),
+                )
+
+    MyComponent(5, c="w") will then have props.a=5, props.b=2, and props.c="w".
+    props._d is undefined
+
+    Args:
+        f: the __init__ function of a Component subclass
+    Returns:
+        decorated function
+
+    """
+    @functools.wraps(f)
+    def func(self, *args, **kwargs):
+        varnames = f.__code__.co_varnames[1:]
+        defaults = {
+            k: v.default for k, v in inspect.signature(f).parameters.items() if v.default is not inspect.Parameter.empty and k[0] != "_"
+        }
+        name_to_val = defaults
+        name_to_val.update(dict(filter((lambda tup: (tup[0][0] != "_")), zip(varnames, args))))
+        name_to_val.update(dict((k, v) for (k, v) in kwargs.items() if k[0] != "_"))
+        self.register_props(name_to_val)
+        f(self, *args, **kwargs)
+
+    return func
+
 class BaseComponent(Component):
 
     def __init__(self):
@@ -400,6 +425,63 @@ class LayoutComponent(BaseComponent):
 
     def __init__(self):
         super().__init__()
+
+
+class WindowManager(BaseComponent):
+    """Window manager: the root component.
+
+    The WindowManager should lie at the root of your component Tree.
+    The children of WindowManager are each displayed in its own window.
+    To create a new window, simply append to the list of children::
+
+        class MyApp(Component):
+
+            @register_props
+            def __init__(self):
+                self.window_texts = []
+
+            def create_window(self):
+                nwindows = len(self.window_texts)
+                self.set_state(window_texts=self.window_texts + ["Window %s" % (nwindows + 1)])
+
+            def render(self):
+                return WindowManager()(
+                    View()(
+                        Button(title="Create new window", on_click=self.create_window)
+                    ),
+                    *[Label(s) for s in self.window_texts]
+                )
+
+        if __name__ == "__main__":
+            App(MyApp()).start()
+    """
+
+    def __init__(self):
+        super().__init__()
+
+        self._already_rendered = {}
+        self._old_rendered_children = []
+
+    def _qt_update_commands(self, children, newprops, newstate):
+        commands = []
+        new_children = set()
+        for child in children:
+            new_children.add(child.component)
+
+        for child in list(self._already_rendered.keys()):
+            if child not in new_children:
+                del self._already_rendered[child]
+
+        for i, old_child in reversed(list(enumerate(self._old_rendered_children))):
+            if old_child not in new_children:
+                commands += [(old_child.underlying.close,)]
+
+        self._old_rendered_children = [child.component for child in children]
+        for i, child in enumerate(children):
+            if child.component not in self._already_rendered:
+                commands += [(child.component.underlying.show,)]
+            self._already_rendered[child.component] = True
+        return commands
 
 
 def dict_to_style(d, prefix="QWidget"):
@@ -417,13 +499,13 @@ class Button(WidgetComponent):
     """
 
     @register_props
-    def __init__(self, title, style=None, on_click=(lambda: None)):
+    def __init__(self, title: tp.Any = "", style: StyleType = None, on_click: tp.Callable[[], None]=(lambda: None)):
         super(Button, self).__init__()
         self.underlying =  QtWidgets.QPushButton(str(self.props.title))
         self.underlying.setObjectName(str(id(self)))
         self._connected = False
 
-    def set_on_click(self, on_click):
+    def _set_on_click(self, on_click):
         if self._connected:
             self.underlying.clicked.disconnect()
         self.underlying.clicked.connect(on_click)
@@ -435,7 +517,7 @@ class Button(WidgetComponent):
             if prop == "title":
                 commands.append((self.underlying.setText, str(newprops.title)))
             elif prop == "on_click":
-                commands.append((self.set_on_click, newprops.on_click))
+                commands.append((self._set_on_click, newprops.on_click))
             elif prop == "style":
                 commands.append((self.underlying.setStyleSheet,
                                  dict_to_style(newprops.style, "QWidget#" + str(id(self)))))
@@ -445,7 +527,7 @@ class Button(WidgetComponent):
 class Label(WidgetComponent):
 
     @register_props
-    def __init__(self, text, style=None):
+    def __init__(self, text: tp.Any = "", style: StyleType = None):
         super().__init__()
         self.underlying = QtWidgets.QLabel(str(self.props.text))
         self.underlying.setObjectName(str(id(self)))
@@ -463,7 +545,7 @@ class Label(WidgetComponent):
 class TextInput(WidgetComponent):
 
     @register_props
-    def __init__(self, text="", on_change=(lambda text: None), style=None):
+    def __init__(self, text: tp.Any = "", on_change: tp.Callable[[tp.Text], None] = (lambda text: None), style: StyleType = None):
         super().__init__()
         self.current_text = text
         self._connected = False
@@ -493,7 +575,7 @@ class TextInput(WidgetComponent):
 class View(WidgetComponent):
 
     @register_props
-    def __init__(self, layout="column", style=None):
+    def __init__(self, layout: tp.Text = "column", style: StyleType = None):
         super().__init__()
 
         self._already_rendered = {}
@@ -506,7 +588,7 @@ class View(WidgetComponent):
         self.underlying.setLayout(self.underlying_layout)
         self.underlying.setObjectName(str(id(self)))
 
-    def delete_child(self, i):
+    def _delete_child(self, i):
         child_node = self.underlying_layout.takeAt(i)
         if child_node.widget():
             child_node.widget().deleteLater()
@@ -523,7 +605,7 @@ class View(WidgetComponent):
 
         for i, old_child in reversed(list(enumerate(self._old_rendered_children))):
             if old_child not in new_children:
-                commands += [(self.delete_child, i)]
+                commands += [(self._delete_child, i)]
 
         self._old_rendered_children = [child.component for child in children]
         for i, child in enumerate(children):
@@ -558,7 +640,7 @@ class ScrollView(WidgetComponent):
         
         self.underlying.setObjectName(str(id(self)))
 
-    def delete_child(self, i):
+    def _delete_child(self, i):
         child_node = self.scroll_area_layout.takeAt(i)
         if child_node.widget():
             child_node.widget().deleteLater()
@@ -575,7 +657,7 @@ class ScrollView(WidgetComponent):
 
         for i, old_child in reversed(list(enumerate(self._old_rendered_children))):
             if old_child not in new_children:
-                commands += [(self.delete_child, i)]
+                commands += [(self._delete_child, i)]
 
         self._old_rendered_children = [child.component for child in children]
         for i, child in enumerate(children):
@@ -591,7 +673,7 @@ class ScrollView(WidgetComponent):
 class List(BaseComponent):
 
     @register_props
-    def __init__(self, children=None):
+    def __init__(self):
         super().__init__()
 
     def _qt_update_commands(self, children, newprops, newstate):
@@ -602,8 +684,9 @@ class List(BaseComponent):
 class Table(WidgetComponent):
 
     @register_props
-    def __init__(self, rows, columns, row_headers=None, column_headers=None, style=None, children=None,
-                 alternating_row_colors=True):
+    def __init__(self, rows: int, columns: int,
+                 row_headers: tp.Sequence[tp.Any] = None, column_headers: tp.Sequence[tp.Any] = None,
+                 style: StyleType = None, alternating_row_colors:bool = True):
         super().__init__()
 
         self._already_rendered = {}
@@ -611,7 +694,7 @@ class Table(WidgetComponent):
         self.underlying = QtWidgets.QTableWidget(rows, columns)
         self.underlying.setObjectName(str(id(self)))
 
-    def delete_child(self, i):
+    def _delete_child(self, i):
         child_node = self.underlying_layout.takeAt(i)
         if child_node.widget():
             child_node.widget().deleteLater()
@@ -662,38 +745,7 @@ class Table(WidgetComponent):
         return commands
 
 
-
-class WindowManager(BaseComponent):
-
-    def __init__(self, children=None):
-        super().__init__()
-
-        self._already_rendered = {}
-        self._old_rendered_children = []
-
-    def _qt_update_commands(self, children, newprops, newstate):
-        commands = []
-        new_children = set()
-        for child in children:
-            new_children.add(child.component)
-
-        for child in list(self._already_rendered.keys()):
-            if child not in new_children:
-                del self._already_rendered[child]
-
-        for i, old_child in reversed(list(enumerate(self._old_rendered_children))):
-            if old_child not in new_children:
-                commands += [(old_child.underlying.close,)]
-
-        self._old_rendered_children = [child.component for child in children]
-        for i, child in enumerate(children):
-            if child.component not in self._already_rendered:
-                commands += [(child.component.underlying.show,)]
-            self._already_rendered[child.component] = True
-        return commands
-
-
-class QtTree(object):
+class _QtTree(object):
     def __init__(self, component, children):
         self.component = component
         self.children = children
@@ -765,7 +817,7 @@ class _RenderContext(object):
 
 class App(object):
 
-    def __init__(self, component, title="React App"):
+    def __init__(self, component: Component, title: tp.Text = "React App"):
         self._component_to_rendering = {}
         self._component_to_qt_rendering = {}
         self._root = component
@@ -777,7 +829,7 @@ class App(object):
     def _update_old_component(self, component, newprops, render_context: _RenderContext):
         if component.should_update(newprops, {}):
             render_context.mark_props_change(component, newprops)
-            rerendered_obj = self.render(component, render_context)
+            rerendered_obj = self._render(component, render_context)
 
             render_context.mark_qt_rerender(rerendered_obj.component, True)
             return rerendered_obj
@@ -789,7 +841,7 @@ class App(object):
 
     def _get_child_using_key(self, d, key, newchild, render_context: _RenderContext):
         if key not in d or d[key].__class__ != newchild.__class__:
-            return newchild # self.render(newchild, storage_manager, need_qt_command_reissue)
+            return newchild # self._render(newchild, storage_manager, need_qt_command_reissue)
         self._update_old_component(d[key], newchild.props, render_context)
         return d[key]
 
@@ -799,15 +851,15 @@ class App(object):
                 logging.warning("Setting child key to: KEY" + str(i))
                 render_context.set(child, "_key", "KEY" + str(i))
 
-    def render(self, component: Component, render_context: _RenderContext):
+    def _render(self, component: Component, render_context: _RenderContext):
         component._controller = self
         if isinstance(component, BaseComponent):
             if len(component.children) > 1:
                 self._attach_keys(component, render_context)
             if component not in self._component_to_rendering:
                 self._component_to_rendering[component] = component.children
-                rendered_children = [self.render(child, render_context) for child in component.children]
-                self._component_to_qt_rendering[component] = QtTree(component, rendered_children) 
+                rendered_children = [self._render(child, render_context) for child in component.children]
+                self._component_to_qt_rendering[component] = _QtTree(component, rendered_children) 
                 render_context.mark_qt_rerender(component, True)
                 return self._component_to_qt_rendering[component]
             else:
@@ -837,11 +889,11 @@ class App(object):
                         rendered_children.append(self._component_to_qt_rendering[child1])
                     else:
                         parent_needs_rerendering = True
-                        rendered_children.append(self.render(child1, render_context))
+                        rendered_children.append(self._render(child1, render_context))
                 render_context.mark_qt_rerender(component, parent_needs_rerendering)
 
                 self._component_to_rendering[component] = children
-                self._component_to_qt_rendering[component] = QtTree(component, rendered_children) 
+                self._component_to_qt_rendering[component] = _QtTree(component, rendered_children) 
                 props_dict = dict(component.props._items)
                 props_dict["children"] = children
                 render_context.mark_props_change(component, PropsDict(props_dict))
@@ -860,14 +912,14 @@ class App(object):
         else:
             # TODO: delete old component
             self._component_to_rendering[component] = sub_component
-            self._component_to_qt_rendering[component] = self.render(sub_component, render_context)
+            self._component_to_qt_rendering[component] = self._render(sub_component, render_context)
 
         return self._component_to_qt_rendering[component]
 
     def _request_rerender(self, component, newprops, newstate):
         with _storage_manager() as storage_manager:
             render_context = _RenderContext(storage_manager)
-            qt_tree = self.render(component, render_context)
+            qt_tree = self._render(component, render_context)
 
         qt_tree.print_tree()
         print("need rerendering for: ", render_context.need_qt_command_reissue)
@@ -886,3 +938,18 @@ class App(object):
     def start(self):
         root = self._request_rerender(self._root, {}, {})
         self.app.exec_()
+
+
+def set_trace():
+    '''Set a tracepoint in the Python debugger that works with Qt'''
+    import pdb
+    import sys
+    pyqtRemoveInputHook()
+    # set up the debugger
+    debugger = pdb.Pdb()
+    debugger.reset()
+    # custom next to get outside of function scope
+    debugger.do_next(None) # run the next command
+    users_frame = sys._getframe().f_back # frame where the user invoked `pyqt_set_trace()`
+    debugger.interaction(users_frame, None)
+    pyqtRestoreInputHook()

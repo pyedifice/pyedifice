@@ -1,43 +1,84 @@
 # react module
 
+react
 
-### class react.App(component, title='React App')
+The two main classes of this module are Component and App.
+
+The Component class is the basic building block of your GUI.
+Your components will be composed of other components:
+native components (View, Button, Text) as well as other composite
+components created by you or others.
+
+The root component should be a WindowManager, whose children are distinct windows.
+Creating a new window is as simple as adding a new child to WindowManager.
+
+To display your component, create an App object and call start:
+
+```
+if __name__ == "__main__":
+    App(MyApp()).start()
+```
+
+These native components are supported:
+
+    
+    * Label: A basic text label
+
+
+    * TextInput: A one-line text input box
+
+
+    * Button: A clickable button
+
+
+    * View: A box allowing you to position child components in a row or column
+
+
+    * ScrollView: A scrollable view
+
+
+    * List: A list of components with no inherent semantics. This may be
+    passed to other Components, e.g. those that require lists of lists.
+
+Some useful utilities are also provided:
+
+    
+    * register_props: A decorator for the __init__ function that records
+    all arguments as props
+
+
+    * set_trace: An analogue of pdb.set_trace that works with Qt
+    (pdb.set_trace interrupts the Qt event flow, causing an unpleasant
+    debugging experience). Use this set_trace if you want to set breakpoings.
+
+
+### class react.PropsDict(dictionary)
 Bases: `object`
 
+An immutable dictionary for storing props.
 
-#### \__init__(component, title='React App')
+Props may be accessed either by indexing (props[“myprop”]) or by
+attribute (props.myprop).
+
+By convention, all PropsDict methods will start with _ to
+not conflict with keys.
+
+
+* **Parameters**
+
+    **dictionary** (`Mapping`[`str`, `Any`]) – 
+
+
+
+#### \__init__(dictionary)
 Initialize self.  See help(type(self)) for accurate signature.
 
 
-#### render(component, render_context)
+* **Parameters**
 
-#### start()
-
-### class react.BaseComponent()
-Bases: `react.Component`
+    **dictionary** (`Mapping`[`str`, `Any`]) – 
 
 
-#### \__init__()
-Initialize self.  See help(type(self)) for accurate signature.
-
-
-### class react.Button(\*args, \*\*kwargs)
-Bases: `react.WidgetComponent`
-
-Basic Button
-
-Props:
-
-    title: the button text
-    style: the styling of the button
-    on_click: a function that will be called when the button is clicked
-
-
-#### \__init__(\*args, \*\*kwargs)
-Initialize self.  See help(type(self)) for accurate signature.
-
-
-#### set_on_click(on_click)
 
 ### class react.Component()
 Bases: `object`
@@ -147,131 +188,61 @@ whenever you have a list of children.
 Initialize self.  See help(type(self)) for accurate signature.
 
 
+#### register_props(props)
+
+* **Parameters**
+
+    **props** (`Union`[`Mapping`[`str`, `Any`], `PropsDict`]) – 
+
+
+
+#### set_key(k)
+
+* **Parameters**
+
+    **k** (`str`) – 
+
+
+
 #### property children()
 
 #### property props()
 
-#### register_props(props)
+* **Return type**
 
-#### render()
+    `PropsDict`
+
+
 
 #### render_changes(ignored_variables=None)
 
-#### set_key(k)
+* **Parameters**
+
+    **ignored_variables** (`Optional`[`Sequence`[`str`]]) – 
+
+
 
 #### set_state(\*\*kwargs)
 
 #### should_update(newprops, newstate)
 
-### class react.Label(\*args, \*\*kwargs)
-Bases: `react.WidgetComponent`
+* **Parameters**
+
+    
+    * **newprops** (`PropsDict`) – 
 
 
-#### \__init__(\*args, \*\*kwargs)
-Initialize self.  See help(type(self)) for accurate signature.
+    * **newstate** (`Mapping`[`str`, `Any`]) – 
 
 
-### class react.LayoutComponent()
-Bases: `react.BaseComponent`
+
+* **Return type**
+
+    `bool`
 
 
-#### \__init__()
-Initialize self.  See help(type(self)) for accurate signature.
 
-
-### class react.List(\*args, \*\*kwargs)
-Bases: `react.BaseComponent`
-
-
-#### \__init__(\*args, \*\*kwargs)
-Initialize self.  See help(type(self)) for accurate signature.
-
-
-### class react.PropsDict(dictionary)
-Bases: `object`
-
-An immutable dictionary for storing props.
-
-Props may be accessed either by indexing (props[“myprop”]) or by
-attribute (props.myprop).
-
-By convention, all PropsDict methods will start with _ to
-not conflict with keys.
-
-
-#### \__init__(dictionary)
-Initialize self.  See help(type(self)) for accurate signature.
-
-
-### class react.QtTree(component, children)
-Bases: `object`
-
-
-#### \__init__(component, children)
-Initialize self.  See help(type(self)) for accurate signature.
-
-
-#### gen_qt_commands(render_context)
-
-#### print_tree(indent=0)
-
-### class react.ScrollView(\*args, \*\*kwargs)
-Bases: `react.WidgetComponent`
-
-
-#### \__init__(\*args, \*\*kwargs)
-Initialize self.  See help(type(self)) for accurate signature.
-
-
-#### delete_child(i)
-
-### class react.Table(\*args, \*\*kwargs)
-Bases: `react.WidgetComponent`
-
-
-#### \__init__(\*args, \*\*kwargs)
-Initialize self.  See help(type(self)) for accurate signature.
-
-
-#### delete_child(i)
-
-### class react.TextInput(\*args, \*\*kwargs)
-Bases: `react.WidgetComponent`
-
-
-#### \__init__(\*args, \*\*kwargs)
-Initialize self.  See help(type(self)) for accurate signature.
-
-
-#### set_on_change(on_change)
-
-### class react.View(\*args, \*\*kwargs)
-Bases: `react.WidgetComponent`
-
-
-#### \__init__(\*args, \*\*kwargs)
-Initialize self.  See help(type(self)) for accurate signature.
-
-
-#### delete_child(i)
-
-### class react.WidgetComponent()
-Bases: `react.BaseComponent`
-
-
-#### \__init__()
-Initialize self.  See help(type(self)) for accurate signature.
-
-
-### class react.WindowManager(children=None)
-Bases: `react.BaseComponent`
-
-
-#### \__init__(children=None)
-Initialize self.  See help(type(self)) for accurate signature.
-
-
-### react.dict_to_style(d, prefix='QWidget')
+#### render()
 
 ### react.register_props(f)
 Decorator for __init__ function to record props.
@@ -311,6 +282,301 @@ Returns:
 
     decorated function
 
+
+### class react.BaseComponent()
+Bases: `react.Component`
+
+
+#### \__init__()
+Initialize self.  See help(type(self)) for accurate signature.
+
+
+### class react.WidgetComponent()
+Bases: `react.BaseComponent`
+
+
+#### \__init__()
+Initialize self.  See help(type(self)) for accurate signature.
+
+
+### class react.LayoutComponent()
+Bases: `react.BaseComponent`
+
+
+#### \__init__()
+Initialize self.  See help(type(self)) for accurate signature.
+
+
+### class react.WindowManager()
+Bases: `react.BaseComponent`
+
+Window manager: the root component.
+
+The WindowManager should lie at the root of your component Tree.
+The children of WindowManager are each displayed in its own window.
+To create a new window, simply append to the list of children:
+
+```
+class MyApp(Component):
+
+    @register_props
+    def __init__(self):
+        self.window_texts = []
+
+    def create_window(self):
+        nwindows = len(self.window_texts)
+        self.set_state(window_texts=self.window_texts + ["Window %s" % (nwindows + 1)])
+
+    def render(self):
+        return WindowManager()(
+            View()(
+                Button(title="Create new window", on_click=self.create_window)
+            ),
+            *[Label(s) for s in self.window_texts]
+        )
+
+if __name__ == "__main__":
+    App(MyApp()).start()
+```
+
+
+#### \__init__()
+Initialize self.  See help(type(self)) for accurate signature.
+
+
+### react.dict_to_style(d, prefix='QWidget')
+
+### class react.Button(title='', style=None, on_click=<function Button.<lambda>>)
+Bases: `react.WidgetComponent`
+
+Basic Button
+
+Props:
+
+    title: the button text
+    style: the styling of the button
+    on_click: a function that will be called when the button is clicked
+
+
+* **Parameters**
+
+    
+    * **title** (`Any`) – 
+
+
+    * **style** (`Optional`[`Mapping`[`str`, `str`]]) – 
+
+
+    * **on_click** (`Callable`[[], `None`]) – 
+
+
+
+#### \__init__(title='', style=None, on_click=<function Button.<lambda>>)
+Initialize self.  See help(type(self)) for accurate signature.
+
+
+* **Parameters**
+
+    
+    * **title** (`Any`) – 
+
+
+    * **style** (`Optional`[`Mapping`[`str`, `str`]]) – 
+
+
+    * **on_click** (`Callable`[[], `None`]) – 
+
+
+
+### class react.Label(text='', style=None)
+Bases: `react.WidgetComponent`
+
+
+* **Parameters**
+
+    
+    * **text** (`Any`) – 
+
+
+    * **style** (`Optional`[`Mapping`[`str`, `str`]]) – 
+
+
+
+#### \__init__(text='', style=None)
+Initialize self.  See help(type(self)) for accurate signature.
+
+
+* **Parameters**
+
+    
+    * **text** (`Any`) – 
+
+
+    * **style** (`Optional`[`Mapping`[`str`, `str`]]) – 
+
+
+
+### class react.TextInput(text='', on_change=<function TextInput.<lambda>>, style=None)
+Bases: `react.WidgetComponent`
+
+
+* **Parameters**
+
+    
+    * **text** (`Any`) – 
+
+
+    * **on_change** (`Callable`[[`str`], `None`]) – 
+
+
+    * **style** (`Optional`[`Mapping`[`str`, `str`]]) – 
+
+
+
+#### \__init__(text='', on_change=<function TextInput.<lambda>>, style=None)
+Initialize self.  See help(type(self)) for accurate signature.
+
+
+* **Parameters**
+
+    
+    * **text** (`Any`) – 
+
+
+    * **on_change** (`Callable`[[`str`], `None`]) – 
+
+
+    * **style** (`Optional`[`Mapping`[`str`, `str`]]) – 
+
+
+
+#### set_on_change(on_change)
+
+### class react.View(layout='column', style=None)
+Bases: `react.WidgetComponent`
+
+
+* **Parameters**
+
+    
+    * **layout** (`str`) – 
+
+
+    * **style** (`Optional`[`Mapping`[`str`, `str`]]) – 
+
+
+
+#### \__init__(layout='column', style=None)
+Initialize self.  See help(type(self)) for accurate signature.
+
+
+* **Parameters**
+
+    
+    * **layout** (`str`) – 
+
+
+    * **style** (`Optional`[`Mapping`[`str`, `str`]]) – 
+
+
+
+### class react.ScrollView(layout='column', style=None)
+Bases: `react.WidgetComponent`
+
+
+#### \__init__(layout='column', style=None)
+Initialize self.  See help(type(self)) for accurate signature.
+
+
+### class react.List()
+Bases: `react.BaseComponent`
+
+
+#### \__init__()
+Initialize self.  See help(type(self)) for accurate signature.
+
+
+### class react.Table(rows, columns, row_headers=None, column_headers=None, style=None, alternating_row_colors=True)
+Bases: `react.WidgetComponent`
+
+
+* **Parameters**
+
+    
+    * **rows** (`int`) – 
+
+
+    * **columns** (`int`) – 
+
+
+    * **row_headers** (`Optional`[`Sequence`[`Any`]]) – 
+
+
+    * **column_headers** (`Optional`[`Sequence`[`Any`]]) – 
+
+
+    * **style** (`Optional`[`Mapping`[`str`, `str`]]) – 
+
+
+    * **alternating_row_colors** (`bool`) – 
+
+
+
+#### \__init__(rows, columns, row_headers=None, column_headers=None, style=None, alternating_row_colors=True)
+Initialize self.  See help(type(self)) for accurate signature.
+
+
+* **Parameters**
+
+    
+    * **rows** (`int`) – 
+
+
+    * **columns** (`int`) – 
+
+
+    * **row_headers** (`Optional`[`Sequence`[`Any`]]) – 
+
+
+    * **column_headers** (`Optional`[`Sequence`[`Any`]]) – 
+
+
+    * **style** (`Optional`[`Mapping`[`str`, `str`]]) – 
+
+
+    * **alternating_row_colors** (`bool`) – 
+
+
+
+### class react.App(component, title='React App')
+Bases: `object`
+
+
+* **Parameters**
+
+    
+    * **component** (`Component`) – 
+
+
+    * **title** (`str`) – 
+
+
+
+#### \__init__(component, title='React App')
+Initialize self.  See help(type(self)) for accurate signature.
+
+
+* **Parameters**
+
+    
+    * **component** (`Component`) – 
+
+
+    * **title** (`str`) – 
+
+
+
+#### start()
 
 ### react.set_trace()
 Set a tracepoint in the Python debugger that works with Qt
