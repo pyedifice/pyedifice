@@ -1,7 +1,11 @@
-from .foundation import BaseComponent, WidgetComponent, LayoutComponent, Component, register_props
+import functools
+import os
 import typing as tp
 
+from .foundation import BaseComponent, WidgetComponent, LayoutComponent, Component, register_props
+
 from PyQt5 import QtWidgets
+from PyQt5 import QtSvg, QtGui
 
 
 StyleType = tp.Optional[tp.Mapping[tp.Text, tp.Text]]
@@ -69,6 +73,43 @@ def dict_to_style(d, prefix="QWidget"):
     stylesheet = prefix + "{%s}" % (";".join("%s: %s" % (k, v) for (k, v) in d.items()))
     return stylesheet
 
+
+@functools.lru_cache(100)
+def _get_svg_image(icon_path, size):
+    svg_renderer = QtSvg.QSvgRenderer(icon_path)
+    image = QtGui.QImage(size, size, QtGui.QImage.Format_ARGB32)
+    image.fill(0x00000000)
+    svg_renderer.render(QtGui.QPainter(image))
+    pixmap = QtGui.QPixmap.fromImage(image)
+    return pixmap
+
+
+class Icon(WidgetComponent):
+
+    @register_props
+    def __init__(self, name, size=10, collection="font-awesome", sub_collection="solid"):
+        icon_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                                 "icons",
+                                 collection, sub_collection, name + ".svg")
+        # self.underlying = QtSvg.QSvgWidget(icon_path)
+        self.underlying = QtWidgets.QLabel("")
+
+    def _qt_update_commands(self, children, newprops, newstate):
+        commands = []
+        icon_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                                 "icons",
+                                 newprops.collection, newprops.sub_collection, newprops.name + ".svg")
+
+        def render_image(icon_path, size):
+            pixmap = _get_svg_image(icon_path, size)
+            self.underlying.setPixmap(pixmap)
+
+        if "name" in newprops or "size" in newprops or "collection" in newprops or "sub_collection" in newprops:
+            commands += [(render_image, icon_path, newprops.size)]
+
+        return commands
+
+
 class Button(WidgetComponent):
     """Basic Button
 
@@ -79,7 +120,7 @@ class Button(WidgetComponent):
     """
 
     @register_props
-    def __init__(self, title: tp.Any = "", style: StyleType = None, on_click: tp.Callable[[], None]=(lambda: None)):
+    def __init__(self, title: tp.Any = "", style: StyleType = None, on_click: tp.Callable[[], None] = (lambda: None)):
         super(Button, self).__init__()
         self.underlying =  QtWidgets.QPushButton(str(self.props.title))
         self.underlying.setObjectName(str(id(self)))
@@ -101,6 +142,33 @@ class Button(WidgetComponent):
             elif prop == "style":
                 commands.append((self.underlying.setStyleSheet,
                                  dict_to_style(newprops.style, "QWidget#" + str(id(self)))))
+        return commands
+
+
+class IconButton(Button):
+
+    def __init__(self, name, size=10, collection="font-awesome", sub_collection="solid", **kwargs):
+        super().__init__(**kwargs)
+        self._props.update(dict(
+            name=name,
+            size=size,
+            collection=collection,
+            sub_collection=sub_collection,
+        ))
+
+    def _qt_update_commands(self, children, newprops, newstate):
+        commands = super()._qt_update_commands(children, newprops, newstate)
+        icon_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                                 "icons",
+                                 newprops.collection, newprops.sub_collection, newprops.name + ".svg")
+
+        def render_image(icon_path, size):
+            pixmap = _get_svg_image(icon_path, size)
+            self.underlying.setIcon(QtGui.QIcon(pixmap))
+
+        if "name" in newprops or "size" in newprops or "collection" in newprops or "sub_collection" in newprops:
+            commands += [(render_image, icon_path, newprops.size)]
+
         return commands
 
 

@@ -656,7 +656,9 @@ class App(object):
             qt_tree = self._render(component, render_context)
 
         qt_tree.print_tree()
-        print("need rerendering for: ", render_context.need_qt_command_reissue)
+        # for component, need_rerendering in render_context.need_qt_command_reissue.items():
+        #     if need_rerendering:
+        #         logging.warn("Rerendering: %s", component)
         qt_commands = qt_tree.gen_qt_commands(render_context)
         root = qt_tree.component
         print(qt_commands)

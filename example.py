@@ -85,6 +85,7 @@ class Test(ed.Component):
         super().__init__()
         self.text = ""
         self.open = True
+        self.hi_text = "Hi"
         self.dimensions = (1, 3)
         self.data = pd.DataFrame({
             "a": [2, 5, 6, 3, 21],
@@ -102,11 +103,14 @@ class Test(ed.Component):
     def render(self):
         return ed.WindowManager()(
             ed.View() (
-                SmartTable(self.data),
-                ed.Button("Add 5", on_click=self.on_click),
-                ed.ScrollView(style={"min-width": 100, "min-height": 100, "max-height": 100, "height": 100})(
-                    *[ed.Label(i) for i in range(20)]
-                )
+                # SmartTable(self.data),
+                ed.Label(self.hi_text),
+                ed.Icon("play"),
+                ed.IconButton(name="play", title="Change", on_click=lambda: self.set_state(hi_text="Hello")),
+                # ed.Button("Add 5", on_click=self.on_click),
+                # ed.ScrollView(style={"min-width": 100, "min-height": 100, "max-height": 100, "height": 100})(
+                #     *[ed.Label(i) for i in range(20)]
+                # )
             ),
         )
 
