@@ -1,5 +1,5 @@
 # Edifice: a declarative GUI framework for Python
-
+![tests](https://github.com/fding/pyreact/workflows/Python%20package/badge.svg)
 ## Why Edifice?
 The premise of Edifice is that GUIs should be specified in a declarative way, not via drawing commands.
 Fundamentally, a GUI designer cares about *what* is rendered on the screen,
