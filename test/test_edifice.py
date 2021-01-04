@@ -3,9 +3,9 @@ import unittest
 import unittest.mock
 import edifice.foundation as foundation
 import edifice.base_components as base_components
-from PyQt5 import QtWidgets
+from PyQt5 import QtWidgets, QtCore
 
-app = QtWidgets.QApplication([])
+app = QtWidgets.QApplication(["-platform", "offscreen"])
 
 class MockApp(foundation.App):
     def __init__(self, component, title="Edifice App"):
@@ -312,7 +312,6 @@ class RenderTestCase(unittest.TestCase):
         component = _TestComponentOuterList(True)
         app = MockApp(component)
         _, (qt_tree, qt_commands) = app._request_rerender(component, {}, {}, execute=False)
-        print(list(child.component for child in qt_tree.children))
 
         def C(*args):
             return _commands_for_address(qt_tree, args)
@@ -332,16 +331,12 @@ class RenderTestCase(unittest.TestCase):
                              [(qt_tree.component.underlying_layout.insertWidget, 2, _new_qt_tree.children[2].component.underlying)]
                              + C())
 
-        print(qt_commands)
-        print(expected_commands)
-
         self.assertEqual(qt_commands, expected_commands)
 
     def test_keyed_list_reshuffle(self):
         component = _TestComponentOuterList(True)
         app = MockApp(component)
         _, (qt_tree, qt_commands) = app._request_rerender(component, {}, {}, execute=False)
-        print(list(child.component for child in qt_tree.children))
 
         def C(*args):
             return _commands_for_address(qt_tree, args)
@@ -358,8 +353,6 @@ class RenderTestCase(unittest.TestCase):
                              + [(qt_tree.component.underlying_layout.insertWidget, 2, qt_tree.children[0].component.underlying)]
                              + C())
 
-        print(qt_commands)
-        print(expected_commands)
         self.assertEqual(qt_commands, expected_commands)
 
 
