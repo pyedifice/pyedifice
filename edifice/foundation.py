@@ -484,6 +484,12 @@ class _QtTree(object):
         self.component = component
         self.children = children
 
+    def _dereference(self, address):
+        qt_tree = self
+        for index in address:
+            qt_tree = qt_tree.children[index]
+        return qt_tree
+
     def gen_qt_commands(self, render_context):
         commands = []
         for child in self.children:
@@ -650,29 +656,26 @@ class App(object):
 
         return self._component_to_qt_rendering[component]
 
-    def _request_rerender(self, component, newprops, newstate):
+    def _request_rerender(self, component, newprops, newstate, execute=True):
         with _storage_manager() as storage_manager:
             render_context = _RenderContext(storage_manager)
             qt_tree = self._render(component, render_context)
 
-        qt_tree.print_tree()
+        # qt_tree.print_tree()
         # for component, need_rerendering in render_context.need_qt_command_reissue.items():
         #     if need_rerendering:
         #         logging.warn("Rerendering: %s", component)
         qt_commands = qt_tree.gen_qt_commands(render_context)
         root = qt_tree.component
-        print(qt_commands)
-        for command in qt_commands:
-            command[0](*command[1:])
+        if execute:
+            print(qt_commands)
+            for command in qt_commands:
+                command[0](*command[1:])
 
-        print()
-        print()
-        print()
-        print()
-        return root
+        return root, (qt_tree, qt_commands)
 
     def start(self):
-        root = self._request_rerender(self._root, {}, {})
+        root, _ = self._request_rerender(self._root, {}, {})
         self.app.exec_()
 
 

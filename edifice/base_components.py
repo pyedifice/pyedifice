@@ -2,7 +2,7 @@ import functools
 import os
 import typing as tp
 
-from .foundation import BaseComponent, WidgetComponent, LayoutComponent, Component, register_props
+from .foundation import BaseComponent, WidgetComponent, LayoutComponent, Component, register_props, set_trace
 
 from PyQt5 import QtWidgets
 from PyQt5 import QtSvg, QtGui
@@ -220,28 +220,23 @@ class TextInput(WidgetComponent):
         return commands
 
 
-class View(WidgetComponent):
+class _LinearView(WidgetComponent):
 
-    @register_props
-    def __init__(self, layout: tp.Text = "column", style: StyleType = None):
+    def __init__(self):
         super().__init__()
 
         self._already_rendered = {}
         self._old_rendered_children = []
-        self.underlying = QtWidgets.QWidget()
-        if layout == "column":
-            self.underlying_layout = QtWidgets.QVBoxLayout()
-        elif layout == "row":
-            self.underlying_layout = QtWidgets.QHBoxLayout()
-        self.underlying.setLayout(self.underlying_layout)
-        self.underlying.setObjectName(str(id(self)))
 
     def _delete_child(self, i):
         child_node = self.underlying_layout.takeAt(i)
         if child_node.widget():
             child_node.widget().deleteLater()
 
-    def _qt_update_commands(self, children, newprops, newstate):
+    def _soft_delete_child(self, i):
+        self.underlying_layout.takeAt(i)
+
+    def _recompute_children(self, children):
         commands = []
         new_children = set()
         for child in children:
@@ -254,20 +249,59 @@ class View(WidgetComponent):
         for i, old_child in reversed(list(enumerate(self._old_rendered_children))):
             if old_child not in new_children:
                 commands += [(self._delete_child, i)]
+                del self._old_rendered_children[i]
 
-        self._old_rendered_children = [child.component for child in children]
+        old_child_index = 0
         for i, child in enumerate(children):
-            if child.component not in self._already_rendered:
-                commands += [(self.underlying_layout.insertWidget, i, child.component.underlying)]
+            old_child = None
+            if old_child_index < len(self._old_rendered_children):
+                old_child = self._old_rendered_children[old_child_index]
+
+            if old_child is None or child.component != old_child:
+                if child.component not in self._already_rendered:
+                    commands += [(self.underlying_layout.insertWidget, i, child.component.underlying)]
+                    old_child_index -= 1
+                else:
+                    commands += [(self._soft_delete_child, i,), (self.underlying_layout.insertWidget, i, child.component.underlying)]
+
+            old_child_index += 1
             self._already_rendered[child.component] = True
 
+        self._old_rendered_children = [child.component for child in children]
+
+        return commands
+
+
+class View(_LinearView):
+
+    @register_props
+    def __init__(self, layout: tp.Text = "column", style: StyleType = None):
+        super().__init__()
+
+        self.underlying = QtWidgets.QWidget()
+        if layout == "column":
+            self.underlying_layout = QtWidgets.QVBoxLayout()
+        elif layout == "row":
+            self.underlying_layout = QtWidgets.QHBoxLayout()
+        self.underlying.setLayout(self.underlying_layout)
+        self.underlying.setObjectName(str(id(self)))
+
+    def _qt_update_commands(self, children, newprops, newstate):
+        commands = self._recompute_children(children)
+        commands += self._qt_stateless_commands(children, newprops, newstate)
+        return commands
+
+    def _qt_stateless_commands(self, children, newprops, newstate):
+        # This stateless render command is used to test rendering
+        commands = []
         for prop in newprops:
             if prop == "style":
                 commands += [(self.underlying.setStyleSheet, dict_to_style(newprops[prop],  "QWidget#" + str(id(self))))]
         return commands
 
 
-class ScrollView(WidgetComponent):
+
+class ScrollView(_LinearView):
 
     @register_props
     def __init__(self, layout="column", style=None):
@@ -280,38 +314,21 @@ class ScrollView(WidgetComponent):
 
         self.inner_widget = QtWidgets.QWidget()
         if layout == "column":
-            self.scroll_area_layout = QtWidgets.QVBoxLayout()
+            self.underlying_layout = QtWidgets.QVBoxLayout()
         elif layout == "row":
-            self.scroll_area_layout = QtWidgets.QHBoxLayout()
-        self.inner_widget.setLayout(self.scroll_area_layout)
+            self.underlying_layout = QtWidgets.QHBoxLayout()
+        self.inner_widget.setLayout(self.underlying_layout)
         self.underlying.setWidget(self.inner_widget)
         
         self.underlying.setObjectName(str(id(self)))
 
     def _delete_child(self, i):
-        child_node = self.scroll_area_layout.takeAt(i)
+        child_node = self.underlying_layout.takeAt(i)
         if child_node.widget():
             child_node.widget().deleteLater()
 
     def _qt_update_commands(self, children, newprops, newstate):
-        commands = []
-        new_children = set()
-        for child in children:
-            new_children.add(child.component)
-
-        for child in list(self._already_rendered.keys()):
-            if child not in new_children:
-                del self._already_rendered[child]
-
-        for i, old_child in reversed(list(enumerate(self._old_rendered_children))):
-            if old_child not in new_children:
-                commands += [(self._delete_child, i)]
-
-        self._old_rendered_children = [child.component for child in children]
-        for i, child in enumerate(children):
-            if child.component not in self._already_rendered:
-                commands += [(self.scroll_area_layout.insertWidget, i, child.component.underlying)]
-            self._already_rendered[child.component] = True
+        commands = self._recompute_children(children)
 
         for prop in newprops:
             if prop == "style":

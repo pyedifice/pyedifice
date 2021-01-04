@@ -114,5 +114,80 @@ class Test(ed.Component):
             ),
         )
 
+class Test(ed.Component):
+
+    @ed.register_props
+    def __init__(self):
+        super().__init__()
+        self.text = ""
+        self.open = True
+        self.hi_text = "Hi"
+        self.dimensions = (1, 3)
+        self.data = pd.DataFrame({
+            "a": [2, 5, 6, 3, 21],
+            "b": [3, 3, 1, 8, 11],
+            "c": [4, 7, 1, 0, 10],
+        })
+
+    def on_change(self, text):
+        self.set_state(text=text)
+
+    def on_click(self):
+        with self.render_changes():
+            self.data = self.data + 5
+
+    def render(self):
+        return ed.WindowManager()(
+            ed.View() (
+                # SmartTable(self.data),
+                ed.Label(self.hi_text),
+                ed.Icon("play"),
+                ed.IconButton(name="play", title="Change", on_click=lambda: self.set_state(hi_text="Hello")),
+                # ed.Button("Add 5", on_click=self.on_click),
+                # ed.ScrollView(style={"min-width": 100, "min-height": 100, "max-height": 100, "height": 100})(
+                #     *[ed.Label(i) for i in range(20)]
+                # )
+            ),
+        )
+
+
+class _TestComponentInner(ed.Component):
+
+    @ed.register_props
+    def __init__(self, prop_a):
+        self.state_a = "A"
+
+    def render(self):
+        return ed.View(layout="row")(
+            ed.Label(self.props.prop_a),
+            ed.Label(self.state_a),
+            ed.Button("MarkState", on_click = (lambda: self.set_state(state_a=self.state_a + self.props.prop_a)))
+        )
+
+
+class _TestComponentOuterList(ed.Component):
+    """
+    The rendered tree should be (with index address):
+        View(               # []
+            View(           # [0]
+                Label,      # [0, 0]
+                Label)      # [0, 1]
+            View(           # [1]
+                Label,      # [1, 0]
+                Label)      # [1, 1]
+            ...
+        )
+    """
+
+    @ed.register_props
+    def __init__(self):
+        self.state = ["A", "B", "C"]
+
+    def render(self):
+        return ed.WindowManager()(ed.View()(
+            ed.Button("Reshuffle", on_click=(lambda: self.set_state(state=["C", "D", "B", "A"]))),
+            *[_TestComponentInner(text).set_key(text) for text in self.state]
+        ))
+
 if __name__ == "__main__":
     ed.App(Test()).start()
