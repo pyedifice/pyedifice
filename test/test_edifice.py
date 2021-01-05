@@ -262,7 +262,7 @@ class RenderTestCase(unittest.TestCase):
     def test_basic_render(self):
         component = _TestComponentOuter()
         app = MockApp(component)
-        _, (qt_tree, qt_commands) = app._request_rerender(component, {}, {}, execute=False)
+        _, (qt_tree, qt_commands) = app._request_rerender([component], {}, {}, execute=False)[0]
 
         def C(*args):
             return _commands_for_address(qt_tree, args)
@@ -277,19 +277,19 @@ class RenderTestCase(unittest.TestCase):
 
         # After everything rendered, a rerender shouldn't involve any commands
         # TODO: make sure this is actually true!
-        _, (_, qt_commands) = app._request_rerender(component, {}, {}, execute=False)
+        _, (_, qt_commands) = app._request_rerender([component], {}, {}, execute=False)[0]
         self.assertEqual(qt_commands, C())
 
     def test_state_changes(self):
         component = _TestComponentOuter()
         app = MockApp(component)
-        _, (qt_tree, qt_commands) = app._request_rerender(component, {}, {}, execute=False)
+        _, (qt_tree, qt_commands) = app._request_rerender([component], {}, {}, execute=False)[0]
 
         def C(*args):
             return _commands_for_address(qt_tree, args)
 
         component.state_a = "AChanged"
-        _, (_new_qt_tree, qt_commands) = app._request_rerender(component, {}, {}, execute=False)
+        _, (_new_qt_tree, qt_commands) = app._request_rerender([component], {}, {}, execute=False)[0]
         # TODO: Make it so that only the label (0, 0) needs to update!
         expected_commands = C(0, 0) + C(0) + C()
         self.assertEqual(qt_commands, expected_commands)
@@ -297,12 +297,12 @@ class RenderTestCase(unittest.TestCase):
         self.assertTrue((_new_qt_tree._dereference([0, 0]).component.underlying.setText, "AChanged") in C(0, 0))
 
         component.state_b = "BChanged"
-        _, (_, qt_commands) = app._request_rerender(component, {}, {}, execute=False)
+        _, (_, qt_commands) = app._request_rerender([component], {}, {}, execute=False)[0]
         expected_commands = C(1, 0) + C(1) + C()
         self.assertEqual(qt_commands, expected_commands)
 
         component.state_c = "CChanged"
-        _, (_new_qt_tree, qt_commands) = app._request_rerender(component, {}, {}, execute=False)
+        _, (_new_qt_tree, qt_commands) = app._request_rerender([component], {}, {}, execute=False)[0]
         expected_commands = C(2) + C()
         self.assertEqual(qt_commands, expected_commands)
         self.assertEqual(_new_qt_tree._dereference([2]).component.props.text, "CChanged")
@@ -311,13 +311,13 @@ class RenderTestCase(unittest.TestCase):
     def test_keyed_list_add(self):
         component = _TestComponentOuterList(True)
         app = MockApp(component)
-        _, (qt_tree, qt_commands) = app._request_rerender(component, {}, {}, execute=False)
+        _, (qt_tree, qt_commands) = app._request_rerender([component], {}, {}, execute=False)[0]
 
         def C(*args):
             return _commands_for_address(qt_tree, args)
 
         component.state = ["A", "B", "D", "C"]
-        _, (_new_qt_tree, qt_commands) = app._request_rerender(component, {}, {}, execute=False)
+        _, (_new_qt_tree, qt_commands) = app._request_rerender([component], {}, {}, execute=False)[0]
 
         def new_V(*args):
             view = _new_qt_tree._dereference(args)
@@ -336,13 +336,13 @@ class RenderTestCase(unittest.TestCase):
     def test_keyed_list_reshuffle(self):
         component = _TestComponentOuterList(True)
         app = MockApp(component)
-        _, (qt_tree, qt_commands) = app._request_rerender(component, {}, {}, execute=False)
+        _, (qt_tree, qt_commands) = app._request_rerender([component], {}, {}, execute=False)[0]
 
         def C(*args):
             return _commands_for_address(qt_tree, args)
 
         component.state = ["C", "B", "A"]
-        _, (_new_qt_tree, qt_commands) = app._request_rerender(component, {}, {}, execute=False)
+        _, (_new_qt_tree, qt_commands) = app._request_rerender([component], {}, {}, execute=False)[0]
 
         def new_C(*args):
             return _commands_for_address(_new_qt_tree, args)

@@ -37,12 +37,13 @@ import functools
 import inspect
 import itertools
 import logging
+import queue
 import typing as tp
 
 import numpy as np
 import pandas as pd
 
-from PyQt5 import QtWidgets
+from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtCore import pyqtRemoveInputHook, pyqtRestoreInputHook
 
 
@@ -333,7 +334,7 @@ class Component(object):
                 old_vals[s] = old_val
                 super().__setattr__(s, kwargs[s])
             if should_update:
-                self._controller._request_rerender(self, PropsDict({}), kwargs)
+                self._controller._request_rerender([self], PropsDict({}), kwargs)
         except Exception as e:
             for s in old_vals:
                 super().__setattr__(s, old_vals[s])
@@ -478,6 +479,69 @@ class LayoutComponent(BaseComponent):
     def __init__(self):
         super().__init__()
 
+class RootComponent(BaseComponent):
+
+    def __init__(self):
+        super().__init__()
+
+
+class WindowManager(RootComponent):
+    """Window manager: the root component.
+
+    The WindowManager should lie at the root of your component Tree.
+    The children of WindowManager are each displayed in its own window.
+    To create a new window, simply append to the list of children::
+
+        class MyApp(Component):
+
+            @register_props
+            def __init__(self):
+                self.window_texts = []
+
+            def create_window(self):
+                nwindows = len(self.window_texts)
+                self.set_state(window_texts=self.window_texts + ["Window %s" % (nwindows + 1)])
+
+            def render(self):
+                return WindowManager()(
+                    View()(
+                        Button(title="Create new window", on_click=self.create_window)
+                    ),
+                    *[Label(s) for s in self.window_texts]
+                )
+
+        if __name__ == "__main__":
+            App(MyApp()).start()
+    """
+
+    def __init__(self):
+        super().__init__()
+
+        self._already_rendered = {}
+        self._old_rendered_children = []
+
+    def _qt_update_commands(self, children, newprops, newstate):
+        commands = []
+        new_children = set()
+        for child in children:
+            new_children.add(child.component)
+
+        for child in list(self._already_rendered.keys()):
+            if child not in new_children:
+                del self._already_rendered[child]
+
+        for i, old_child in reversed(list(enumerate(self._old_rendered_children))):
+            if old_child not in new_children:
+                commands += [(old_child.underlying.close,)]
+
+        for i, child in enumerate(children):
+            if child.component not in self._already_rendered:
+                commands += [(child.component.underlying.show,)]
+            self._already_rendered[child.component] = True
+
+        self._old_rendered_children = [child.component for child in children]
+        return commands
+
 
 class _QtTree(object):
     def __init__(self, component, children):
@@ -516,11 +580,12 @@ class _QtTree(object):
 
 
 class _RenderContext(object):
-    def __init__(self, storage_manager):
+    def __init__(self, storage_manager, force_refresh=False):
         self.storage_manager = storage_manager
         self.need_qt_command_reissue = {}
         self.component_to_new_props = {}
         self.component_to_old_props = {}
+        self.force_refresh = force_refresh
 
     def mark_props_change(self, component, newprops):
         d = dict(newprops._items)
@@ -560,10 +625,95 @@ class App(object):
     def __init__(self, component: Component, title: tp.Text = "Edifice App"):
         self._component_to_rendering = {}
         self._component_to_qt_rendering = {}
-        self._root = component
+        if isinstance(component, RootComponent):
+            self._root = component
+        else:
+            self._root = WindowManager()(component)
         self._title = title
 
         self.app = QtWidgets.QApplication([])
+        # Support for reloading on file change
+        self._file_change_rerender_event_type = QtCore.QEvent.registerEventType()
+
+        class EventReceiverWidget(QtWidgets.QWidget):
+            def event(_self, e):
+                if e.type() == self._file_change_rerender_event_type:
+                    e.accept()
+                    while not self._class_rerender_queue.empty():
+                        file_name, classes = self._class_rerender_queue.get_nowait()
+                        self._refresh_by_class(classes)
+                        self._class_rerender_queue.task_done()
+                        logging.info("Rerendering Components in %s due to source change", file_name)
+                    return True
+                else:
+                    return super().event(e)
+
+        self._event_receiver = EventReceiverWidget()
+        self._class_rerender_queue = queue.Queue()
+
+    def _delete_component(self, component, recursive):
+        # Delete component from render trees
+        sub_components = self._component_to_rendering[component]
+        if recursive:
+            if isinstance(sub_components, Component):
+                self._delete_component(sub_components, recursive)
+            else:
+                for sub_comp in sub_components:
+                    self._delete_component(sub_comp, recursive)
+            # Node deletion
+        del self._component_to_rendering[component]
+        del self._component_to_qt_rendering[component]
+
+    def _refresh_by_class(self, classes):
+        # Algorithm:
+        # 1) Find all old components that's not a child of another component
+
+        # TODO: handle changes in the tree root
+        components_to_replace = [] # List of pairs: (old_component, new_component_class, parent component, new_component)
+        old_components = [cls for cls, _ in classes]
+        new_components = [cls for _, cls in classes]
+        def traverse(comp, parent):
+            if comp.__class__ in old_components:
+                new_component_class = [new_cls for old_cls, new_cls in classes if old_cls == comp.__class__][0]
+                if new_component_class is None:
+                    raise ValueError("Error after updating code: cannot find class %s" % comp.__class__)
+                components_to_replace.append([comp, new_component_class, parent, None])
+                return
+            sub_components = self._component_to_rendering[comp]
+            if isinstance(sub_components, list):
+                for sub_comp in sub_components:
+                    traverse(sub_comp, comp)
+            else:
+                traverse(sub_components, comp)
+
+        traverse(self._root, None)
+        # 2) For all such old components, construct a new component and merge in old component props
+        for parts in components_to_replace:
+            old_comp, new_comp_class, _, _ = parts
+
+            try:
+                kwargs = {k: old_comp.props[k] for k, v in list(inspect.signature(new_comp_class.__init__).parameters.items())[1:]
+                          if v.default is inspect.Parameter.empty and k[0] != "_"}
+            except KeyError:
+                raise ValueError("Error while reloading %s: New class expects props not present in old class" % old_comp)
+            parts[3] = new_comp_class(**kwargs)
+            parts[3]._props.update(old_comp._props)
+            if hasattr(old_comp, "_key"):
+                parts[3]._key = old_comp._key
+
+        # 3) Replace old component in the place in the tree where they first appear, with a reference to new component
+        for old_comp, _, parent_comp, new_comp in components_to_replace:
+            if isinstance(self._component_to_rendering[parent_comp], list):
+                for i, comp in enumerate(parent_comp.children):
+                    if comp is old_comp:
+                        parent_comp._props["children"][i] = new_comp
+
+        # 5) call _render for all new component parents
+        self._request_rerender([parent_comp for _, _, parent_comp, _ in components_to_replace], PropsDict({}), {})
+
+        # 4) Delete all old_components from the tree, and do this recursively
+        for old_comp, _, _, _ in components_to_replace:
+            self._delete_component(old_comp, recursive=True)
 
 
     def _update_old_component(self, component, newprops, render_context: _RenderContext):
@@ -597,7 +747,7 @@ class App(object):
             if len(component.children) > 1:
                 self._attach_keys(component, render_context)
             if component not in self._component_to_rendering:
-                self._component_to_rendering[component] = component.children
+                self._component_to_rendering[component] = list(component.children)
                 rendered_children = [self._render(child, render_context) for child in component.children]
                 self._component_to_qt_rendering[component] = _QtTree(component, rendered_children) 
                 render_context.mark_qt_rerender(component, True)
@@ -635,7 +785,7 @@ class App(object):
                 self._component_to_rendering[component] = children
                 self._component_to_qt_rendering[component] = _QtTree(component, rendered_children) 
                 props_dict = dict(component.props._items)
-                props_dict["children"] = children
+                props_dict["children"] = list(children)
                 render_context.mark_props_change(component, PropsDict(props_dict))
                 return self._component_to_qt_rendering[component]
 
@@ -656,26 +806,32 @@ class App(object):
 
         return self._component_to_qt_rendering[component]
 
-    def _request_rerender(self, component, newprops, newstate, execute=True):
+    def _request_rerender(self, components, newprops, newstate, execute=True):
+        ret = []
+        qt_trees = []
         with _storage_manager() as storage_manager:
             render_context = _RenderContext(storage_manager)
-            qt_tree = self._render(component, render_context)
+            for component in components:
+                qt_tree = self._render(component, render_context)
+                qt_trees.append(qt_tree)
 
         # qt_tree.print_tree()
         # for component, need_rerendering in render_context.need_qt_command_reissue.items():
         #     if need_rerendering:
         #         logging.warn("Rerendering: %s", component)
-        qt_commands = qt_tree.gen_qt_commands(render_context)
-        root = qt_tree.component
-        if execute:
-            print(qt_commands)
-            for command in qt_commands:
-                command[0](*command[1:])
+        for qt_tree in qt_trees:
+            qt_commands = qt_tree.gen_qt_commands(render_context)
+            root = qt_tree.component
+            if execute:
+                print(qt_commands)
+                for command in qt_commands:
+                    command[0](*command[1:])
+            ret.append((root, (qt_tree, qt_commands)))
 
-        return root, (qt_tree, qt_commands)
+        return ret
 
     def start(self):
-        root, _ = self._request_rerender(self._root, {}, {})
+        self._request_rerender([self._root], {}, {})
         self.app.exec_()
 
 
