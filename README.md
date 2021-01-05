@@ -96,5 +96,30 @@ All this logic is handled by the library, and the Components need not care about
 
 Currently, Edifice uses Qt under the hood, though it could be adapated to delegate to other imperative GUI frameworks as well.
 
+## Development Tools
+
+Edifices also offers a few tools to aid in development.
+
+### set_trace
+PDB does not work well with Q applications. edifice.set_trace is equivalent to pdb.set_trace(), but it can properly pause the Q event loop
+to enable use of the debugger.
+
+### Dynamic reload
+One other advantage of declarative code is that it is easier for humans and machines to reason about.
+Edifice takes advantage of this by offering dynamic reloading of Components.
+When a file in your application is changed, the dynamic loader will reload all components in that file
+with preserved props (since that state comes from the caller) and reset state.
+Because rendering is abstracted away, it is simple to diff the UI trees and have the Edifice renderer figure out
+what to do using its normal logic.
+
+To run your application with dynamic reload, run:
+
+`python -m edifice path/to/app.py RootComponent`.
+
+This will run app.py with RootComponent mounted as the root.
+A separate thread will listen to changes in all Python files in the directory containing `app.py` (recursing into subdirectories),
+and will reload and trigger a re-render in the main thread.
+You can customize which directory to listen to using the `--dir` flag.
+
 ## Detailed Documentation
 [Read the docs](docs/edifice.md)
