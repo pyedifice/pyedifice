@@ -1,13 +1,14 @@
 import functools
 import unittest
 import unittest.mock
-import edifice.foundation as foundation
+import edifice.component as component
+import edifice.engine as engine
 import edifice.base_components as base_components
 from PyQt5 import QtWidgets, QtCore
 
 app = QtWidgets.QApplication(["-platform", "offscreen"])
 
-class MockApp(foundation.App):
+class MockApp(engine.App):
     def __init__(self, component, title="Edifice App"):
         self._component_to_rendering = {}
         self._component_to_qt_rendering = {}
@@ -15,18 +16,18 @@ class MockApp(foundation.App):
         self._title = title
         # self.app = QtWidgets.QApplication([])
 
-class MockComponent(foundation.Component):
+class MockComponent(component.Component):
 
-    @foundation.register_props
+    @component.register_props
     def __init__(self):
         super().__init__()
         class MockController(object):
             _request_rerender = unittest.mock.MagicMock()
         self._controller = MockController()
 
-class MockBrokenComponent(foundation.Component):
+class MockBrokenComponent(component.Component):
 
-    @foundation.register_props
+    @component.register_props
     def __init__(self):
         super().__init__()
         class MockController(object):
@@ -41,7 +42,7 @@ class StorageManagerTestCase(unittest.TestCase):
         class A(object):
             value = 0
         obj = A()
-        with foundation._storage_manager() as storage_manager:
+        with engine._storage_manager() as storage_manager:
             storage_manager.set(obj, "value", 1)
             self.assertEqual(obj.value, 1)
         self.assertEqual(obj.value, 1)
@@ -51,7 +52,7 @@ class StorageManagerTestCase(unittest.TestCase):
             value = 0
         obj = A()
         try:
-            with foundation._storage_manager() as storage_manager:
+            with engine._storage_manager() as storage_manager:
                 storage_manager.set(obj, "value", 1)
                 self.assertEqual(obj.value, 1)
                 raise ValueError
@@ -59,7 +60,7 @@ class StorageManagerTestCase(unittest.TestCase):
             pass
         self.assertEqual(obj.value, 0)
 
-class MockRenderContext(foundation._RenderContext):
+class MockRenderContext(engine._RenderContext):
 
     def need_rerender(self, component):
         return True
@@ -128,9 +129,9 @@ class QtTreeTestCase(unittest.TestCase):
         # app = QtWidgets.QApplication([])
         button_str = "asdf"
         button = base_components.Button(title=button_str, on_click=on_click)
-        button_tree = foundation._QtTree(button, [])
+        button_tree = engine._QtTree(button, [])
         qt_button = button.underlying
-        with foundation._storage_manager() as manager:
+        with engine._storage_manager() as manager:
             commands = button_tree.gen_qt_commands(MockRenderContext(manager))
         self.assertCountEqual(commands, [(qt_button.setText, button_str), (qt_button.setStyleSheet, "QWidget#%s{}" % id(button)), (button._set_on_click, on_click)])
 
@@ -149,27 +150,27 @@ class QtTreeTestCase(unittest.TestCase):
         view = base_components.View()(label1)
 
         def label_tree(label):
-            tree = foundation._QtTree(label, [])
-            with foundation._storage_manager() as manager:
+            tree = engine._QtTree(label, [])
+            with engine._storage_manager() as manager:
                 return tree, tree.gen_qt_commands(MockRenderContext(manager))
 
         label1_tree, label1_commands = label_tree(label1)
         label2_tree, label2_commands = label_tree(label2)
-        view_tree = foundation._QtTree(view, [label1_tree])
-        with foundation._storage_manager() as manager:
+        view_tree = engine._QtTree(view, [label1_tree])
+        with engine._storage_manager() as manager:
             commands = view_tree.gen_qt_commands(MockRenderContext(manager))
 
         self.assertCountEqual(commands, label1_commands + [(view.underlying.setStyleSheet, "QWidget#%s{}" % id(view)), (view.underlying_layout.insertWidget, 0, label1.underlying)])
 
-        view_tree = foundation._QtTree(view, [label1_tree, label2_tree])
-        with foundation._storage_manager() as manager:
+        view_tree = engine._QtTree(view, [label1_tree, label2_tree])
+        with engine._storage_manager() as manager:
             commands = view_tree.gen_qt_commands(MockRenderContext(manager))
         self.assertCountEqual(commands, label1_commands + label2_commands + [(view.underlying.setStyleSheet, "QWidget#%s{}" % id(view)), (view.underlying_layout.insertWidget, 1, label2.underlying)])
 
         inner_view = base_components.View()
 
-        view_tree = foundation._QtTree(view, [label2_tree, foundation._QtTree(inner_view, [])])
-        with foundation._storage_manager() as manager:
+        view_tree = engine._QtTree(view, [label2_tree, engine._QtTree(inner_view, [])])
+        with engine._storage_manager() as manager:
             commands = view_tree.gen_qt_commands(MockRenderContext(manager))
         self.assertCountEqual(
             commands, 
@@ -182,9 +183,9 @@ class QtTreeTestCase(unittest.TestCase):
 
 
 
-class _TestComponentInner(foundation.Component):
+class _TestComponentInner(component.Component):
 
-    @foundation.register_props
+    @component.register_props
     def __init__(self, prop_a):
         self.state_a = "A"
 
@@ -194,7 +195,7 @@ class _TestComponentInner(foundation.Component):
             base_components.Label(self.state_a),
         )
 
-class _TestComponentOuter(foundation.Component):
+class _TestComponentOuter(component.Component):
     """
     The rendered tree should be (with index address):
         View(               # []
@@ -208,7 +209,7 @@ class _TestComponentOuter(foundation.Component):
         )
     """
 
-    @foundation.register_props
+    @component.register_props
     def __init__(self):
         self.state_a = "A"
         self.state_b = "B"
@@ -221,7 +222,7 @@ class _TestComponentOuter(foundation.Component):
             base_components.Label(self.state_c),
         )
 
-class _TestComponentOuterList(foundation.Component):
+class _TestComponentOuterList(component.Component):
     """
     The rendered tree should be (with index address):
         View(               # []

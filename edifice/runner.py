@@ -11,7 +11,8 @@ from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 from watchdog.observers.fsevents import FSEventsObserver
 
-from .foundation import App, Component
+from .component import Component
+from .engine import App
 
 from PyQt5 import QtCore
 

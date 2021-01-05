@@ -1,8 +1,4 @@
-# edifice package
-
-## Submodules
-
-## edifice.foundation module
+# Edifice: A Declarative UI Framework
 
 The Edifice UI library
 
@@ -56,7 +52,7 @@ Some useful utilities are also provided:
     debugging experience). Use this set_trace if you want to set breakpoings.
 
 
-### class edifice.foundation.PropsDict(dictionary)
+### class edifice.component.PropsDict(dictionary)
 Bases: `object`
 
 An immutable dictionary for storing props.
@@ -105,7 +101,7 @@ Initialize self.  See help(type(self)) for accurate signature.
 
 
 
-### class edifice.foundation.Component()
+### class edifice.component.Component()
 Bases: `object`
 
 Component.
@@ -254,15 +250,11 @@ all changes will be rolled back.
 
 Note that this context manager will not keep track of changes to mutable objects.
 
-Args:
-
-    ignored_variables: an optional sequence of variables for the manager to ignore.
-    These changes will not be reverted upon exception.
-
 
 * **Parameters**
 
-    **ignored_variables** (`Optional`[`Sequence`[`str`]]) – 
+    **ignored_variables** (`Optional`[`Sequence`[`str`]]) – an optional sequence of variables for the manager to ignore.
+    These changes will not be reverted upon exception.
 
 
 
@@ -288,29 +280,26 @@ By default, all changes to props and state will trigger a re-render. This behavi
 is probably desirable most of the time, but if you want custom re-rendering logic,
 you can override this function.
 
-Args:
-
-    newprops: the new set of props
-    newstate: the new set of state
-
-Returns:
-
-    Whether or not the Component should be rerendered.
-
 
 * **Parameters**
 
     
-    * **newprops** (`PropsDict`) – 
+    * **newprops** (`PropsDict`) – the new set of props
 
 
-    * **newstate** (`Mapping`[`str`, `Any`]) – 
+    * **newstate** (`Mapping`[`str`, `Any`]) – the new set of state
 
 
 
 * **Return type**
 
     `bool`
+
+
+
+* **Returns**
+
+    Whether or not the Component should be rerendered.
 
 
 
@@ -322,7 +311,7 @@ The render function itself should be purely stateless, because the application
 state should not depend on whether or not the render function is called.
 
 
-### edifice.foundation.register_props(f)
+### edifice.component.register_props(f)
 Decorator for __init__ function to record props.
 
 This decorator will record all arguments (both vector and keyword arguments)
@@ -352,41 +341,89 @@ class MyComponent(Component):
 MyComponent(5, c=”w”) will then have props.a=5, props.b=2, and props.c=”w”.
 props._d is undefined
 
-Args:
 
-    f: the __init__ function of a Component subclass
+* **Parameters**
 
-Returns:
+    **f** – the __init__ function of a Component subclass
+
+
+
+* **Returns**
 
     decorated function
 
 
-### class edifice.foundation.BaseComponent()
-Bases: `edifice.foundation.Component`
+
+### class edifice.component.BaseComponent()
+Bases: `edifice.component.Component`
 
 
 #### \__init__()
 Initialize self.  See help(type(self)) for accurate signature.
 
 
-### class edifice.foundation.WidgetComponent()
-Bases: `edifice.foundation.BaseComponent`
+### class edifice.component.WidgetComponent()
+Bases: `edifice.component.BaseComponent`
 
 
 #### \__init__()
 Initialize self.  See help(type(self)) for accurate signature.
 
 
-### class edifice.foundation.LayoutComponent()
-Bases: `edifice.foundation.BaseComponent`
+### class edifice.component.LayoutComponent()
+Bases: `edifice.component.BaseComponent`
 
 
 #### \__init__()
 Initialize self.  See help(type(self)) for accurate signature.
 
 
-### class edifice.foundation.WindowManager()
-Bases: `edifice.foundation.BaseComponent`
+### class edifice.component.RootComponent()
+Bases: `edifice.component.BaseComponent`
+
+
+#### \__init__()
+Initialize self.  See help(type(self)) for accurate signature.
+
+
+### class edifice.engine.App(component, title='Edifice App')
+Bases: `object`
+
+
+* **Parameters**
+
+    
+    * **component** (`Component`) – 
+
+
+    * **title** (`str`) – 
+
+
+
+#### \__init__(component, title='Edifice App')
+Initialize self.  See help(type(self)) for accurate signature.
+
+
+* **Parameters**
+
+    
+    * **component** (`Component`) – 
+
+
+    * **title** (`str`) – 
+
+
+
+#### start()
+
+### edifice.engine.set_trace()
+Set a tracepoint in the Python debugger that works with Qt
+
+## Basic Components
+
+
+### class edifice.base_components.WindowManager()
+Bases: `edifice.component.RootComponent`
 
 Window manager: the root component.
 
@@ -422,10 +459,33 @@ if __name__ == "__main__":
 Initialize self.  See help(type(self)) for accurate signature.
 
 
-### edifice.foundation.dict_to_style(d, prefix='QWidget')
+### class edifice.base_components.Icon(name, size=10, collection='font-awesome', sub_collection='solid')
+Bases: `edifice.component.WidgetComponent`
 
-### class edifice.foundation.Button(title='', style=None, on_click=<function Button.<lambda>>)
-Bases: `edifice.foundation.WidgetComponent`
+Display an Icon
+
+Icons are fairly central to modern-looking UI design.
+Edifice comes with the Font Awesome ([https://fontawesome.com](https://fontawesome.com)) regular and solid
+icon sets, to save you time from looking up your own icon set.
+You can specify an icon simplify using its name (and optionally the sub_collection).
+
+Example:
+
+```
+Icon(name="share")
+```
+
+will create a classic share icon.
+
+You can browse and search for icons here: [https://fontawesome.com/icons?d=gallery&s=regular,solid](https://fontawesome.com/icons?d=gallery&s=regular,solid)
+
+
+#### \__init__(name, size=10, collection='font-awesome', sub_collection='solid')
+Initialize self.  See help(type(self)) for accurate signature.
+
+
+### class edifice.base_components.Button(title='', style=None, on_click=<function Button.<lambda>>)
+Bases: `edifice.component.WidgetComponent`
 
 Basic Button
 
@@ -466,8 +526,16 @@ Initialize self.  See help(type(self)) for accurate signature.
 
 
 
-### class edifice.foundation.Label(text='', style=None)
-Bases: `edifice.foundation.WidgetComponent`
+### class edifice.base_components.IconButton(name, size=10, collection='font-awesome', sub_collection='solid', \*\*kwargs)
+Bases: `edifice.base_components.Button`
+
+
+#### \__init__(name, size=10, collection='font-awesome', sub_collection='solid', \*\*kwargs)
+Initialize self.  See help(type(self)) for accurate signature.
+
+
+### class edifice.base_components.Label(text='', style=None)
+Bases: `edifice.component.WidgetComponent`
 
 
 * **Parameters**
@@ -494,8 +562,8 @@ Initialize self.  See help(type(self)) for accurate signature.
 
 
 
-### class edifice.foundation.TextInput(text='', on_change=<function TextInput.<lambda>>, style=None)
-Bases: `edifice.foundation.WidgetComponent`
+### class edifice.base_components.TextInput(text='', on_change=<function TextInput.<lambda>>, style=None)
+Bases: `edifice.component.WidgetComponent`
 
 
 * **Parameters**
@@ -530,8 +598,8 @@ Initialize self.  See help(type(self)) for accurate signature.
 
 #### set_on_change(on_change)
 
-### class edifice.foundation.View(layout='column', style=None)
-Bases: `edifice.foundation.WidgetComponent`
+### class edifice.base_components.View(layout='column', style=None)
+Bases: `edifice.base_components._LinearView`
 
 
 * **Parameters**
@@ -558,24 +626,24 @@ Initialize self.  See help(type(self)) for accurate signature.
 
 
 
-### class edifice.foundation.ScrollView(layout='column', style=None)
-Bases: `edifice.foundation.WidgetComponent`
+### class edifice.base_components.ScrollView(layout='column', style=None)
+Bases: `edifice.base_components._LinearView`
 
 
 #### \__init__(layout='column', style=None)
 Initialize self.  See help(type(self)) for accurate signature.
 
 
-### class edifice.foundation.List()
-Bases: `edifice.foundation.BaseComponent`
+### class edifice.base_components.List()
+Bases: `edifice.component.BaseComponent`
 
 
 #### \__init__()
 Initialize self.  See help(type(self)) for accurate signature.
 
 
-### class edifice.foundation.Table(rows, columns, row_headers=None, column_headers=None, style=None, alternating_row_colors=True)
-Bases: `edifice.foundation.WidgetComponent`
+### class edifice.base_components.Table(rows, columns, row_headers=None, column_headers=None, style=None, alternating_row_colors=True)
+Bases: `edifice.component.WidgetComponent`
 
 
 * **Parameters**
@@ -622,43 +690,4 @@ Initialize self.  See help(type(self)) for accurate signature.
     * **style** (`Optional`[`Mapping`[`str`, `str`]]) – 
 
 
-    * **alternating_row_colors** (`bool`) – 
-
-
-
-### class edifice.foundation.App(component, title='Edifice App')
-Bases: `object`
-
-
-* **Parameters**
-
-    
-    * **component** (`Component`) – 
-
-
-    * **title** (`str`) – 
-
-
-
-#### \__init__(component, title='Edifice App')
-Initialize self.  See help(type(self)) for accurate signature.
-
-
-* **Parameters**
-
-    
-    * **component** (`Component`) – 
-
-
-    * **title** (`str`) – 
-
-
-
-#### start()
-
-### edifice.foundation.set_trace()
-Set a tracepoint in the Python debugger that works with Qt
-
-## edifice.test module
-
-## Module contents
+    * **alternating_row_colors** (`bool`) –

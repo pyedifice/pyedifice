@@ -2,7 +2,7 @@ import functools
 import os
 import typing as tp
 
-from .foundation import BaseComponent, WidgetComponent, LayoutComponent, Component, register_props, set_trace
+from .component import BaseComponent, WidgetComponent, LayoutComponent, RootComponent, Component, register_props 
 
 from PyQt5 import QtWidgets
 from PyQt5 import QtSvg, QtGui
@@ -11,7 +11,7 @@ from PyQt5 import QtSvg, QtGui
 StyleType = tp.Optional[tp.Mapping[tp.Text, tp.Text]]
 
 
-def dict_to_style(d, prefix="QWidget"):
+def _dict_to_style(d, prefix="QWidget"):
     d = d or {}
     stylesheet = prefix + "{%s}" % (";".join("%s: %s" % (k, v) for (k, v) in d.items()))
     return stylesheet
@@ -27,14 +27,86 @@ def _get_svg_image(icon_path, size):
     return pixmap
 
 
+class WindowManager(RootComponent):
+    """Window manager: the root component.
+
+    The WindowManager should lie at the root of your component Tree.
+    The children of WindowManager are each displayed in its own window.
+    To create a new window, simply append to the list of children::
+
+        class MyApp(Component):
+
+            @register_props
+            def __init__(self):
+                self.window_texts = []
+
+            def create_window(self):
+                nwindows = len(self.window_texts)
+                self.set_state(window_texts=self.window_texts + ["Window %s" % (nwindows + 1)])
+
+            def render(self):
+                return WindowManager()(
+                    View()(
+                        Button(title="Create new window", on_click=self.create_window)
+                    ),
+                    *[Label(s) for s in self.window_texts]
+                )
+
+        if __name__ == "__main__":
+            App(MyApp()).start()
+    """
+
+    def __init__(self):
+        super().__init__()
+
+        self._already_rendered = {}
+        self._old_rendered_children = []
+
+    def _qt_update_commands(self, children, newprops, newstate):
+        commands = []
+        new_children = set()
+        for child in children:
+            new_children.add(child.component)
+
+        for child in list(self._already_rendered.keys()):
+            if child not in new_children:
+                del self._already_rendered[child]
+
+        for i, old_child in reversed(list(enumerate(self._old_rendered_children))):
+            if old_child not in new_children:
+                commands += [(old_child.underlying.close,)]
+
+        for i, child in enumerate(children):
+            if child.component not in self._already_rendered:
+                commands += [(child.component.underlying.show,)]
+            self._already_rendered[child.component] = True
+
+        self._old_rendered_children = [child.component for child in children]
+        return commands
+
+
 class Icon(WidgetComponent):
+    """Display an Icon
+
+    Icons are fairly central to modern-looking UI design.
+    Edifice comes with the Font Awesome (https://fontawesome.com) regular and solid
+    icon sets, to save you time from looking up your own icon set.
+    You can specify an icon simplify using its name (and optionally the sub_collection).
+    
+    Example::
+
+        Icon(name="share")
+
+    will create a classic share icon.
+
+    You can browse and search for icons here: https://fontawesome.com/icons?d=gallery&s=regular,solid
+    """
 
     @register_props
     def __init__(self, name, size=10, collection="font-awesome", sub_collection="solid"):
         icon_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                                  "icons",
                                  collection, sub_collection, name + ".svg")
-        # self.underlying = QtSvg.QSvgWidget(icon_path)
         self.underlying = QtWidgets.QLabel("")
 
     def _qt_update_commands(self, children, newprops, newstate):
@@ -84,7 +156,7 @@ class Button(WidgetComponent):
                 commands.append((self._set_on_click, newprops.on_click))
             elif prop == "style":
                 commands.append((self.underlying.setStyleSheet,
-                                 dict_to_style(newprops.style, "QWidget#" + str(id(self)))))
+                                 _dict_to_style(newprops.style, "QWidget#" + str(id(self)))))
         return commands
 
 
@@ -129,7 +201,7 @@ class Label(WidgetComponent):
             if prop == "text":
                 commands += [(self.underlying.setText, str(newprops[prop]))]
             elif prop == "style":
-                commands += [(self.underlying.setStyleSheet, dict_to_style(newprops[prop], "QWidget#" + str(id(self))))]
+                commands += [(self.underlying.setStyleSheet, _dict_to_style(newprops[prop], "QWidget#" + str(id(self))))]
         return commands
 
 
@@ -159,7 +231,7 @@ class TextInput(WidgetComponent):
             if prop == "on_change":
                 commands += [(self.set_on_change, newprops[prop])]
             elif prop == "style":
-                commands += [(self.underlying.setStyleSheet, dict_to_style(newprops[prop],  "QWidget#" + str(id(self))))]
+                commands += [(self.underlying.setStyleSheet, _dict_to_style(newprops[prop],  "QWidget#" + str(id(self))))]
         return commands
 
 
@@ -239,7 +311,7 @@ class View(_LinearView):
         commands = []
         for prop in newprops:
             if prop == "style":
-                commands += [(self.underlying.setStyleSheet, dict_to_style(newprops[prop],  "QWidget#" + str(id(self))))]
+                commands += [(self.underlying.setStyleSheet, _dict_to_style(newprops[prop],  "QWidget#" + str(id(self))))]
         return commands
 
 
@@ -275,7 +347,7 @@ class ScrollView(_LinearView):
 
         for prop in newprops:
             if prop == "style":
-                commands += [(self.underlying.setStyleSheet, dict_to_style(newprops[prop],  "QWidget#" + str(id(self))))]
+                commands += [(self.underlying.setStyleSheet, _dict_to_style(newprops[prop],  "QWidget#" + str(id(self))))]
         return commands
 
 class List(BaseComponent):
@@ -312,7 +384,7 @@ class Table(WidgetComponent):
 
         for prop in newprops:
             if prop == "style":
-                commands += [(self.underlying.setStyleSheet, dict_to_style(newprops[prop],  "QWidget#" + str(id(self))))]
+                commands += [(self.underlying.setStyleSheet, _dict_to_style(newprops[prop],  "QWidget#" + str(id(self))))]
             elif prop == "rows":
                 commands += [(self.underlying.setRowCount, newprops[prop])]
             elif prop == "columns":
