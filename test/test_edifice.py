@@ -10,8 +10,8 @@ app = QtWidgets.QApplication(["-platform", "offscreen"])
 
 class MockApp(engine.App):
     def __init__(self, component, title="Edifice App"):
-        self._component_to_rendering = {}
-        self._component_to_qt_rendering = {}
+        self._component_tree = {}
+        self._widget_tree = {}
         self._root = component
         self._title = title
         # self.app = QtWidgets.QApplication([])
@@ -121,7 +121,7 @@ class ComponentTestCase(unittest.TestCase):
         self.assertEqual(a.foo, 1)
         self.assertEqual(a.bar, 2)
 
-class QtTreeTestCase(unittest.TestCase):
+class WidgetTreeTestCase(unittest.TestCase):
 
     def test_button(self):
         def on_click():
@@ -129,7 +129,7 @@ class QtTreeTestCase(unittest.TestCase):
         # app = QtWidgets.QApplication([])
         button_str = "asdf"
         button = base_components.Button(title=button_str, on_click=on_click)
-        button_tree = engine._QtTree(button, [])
+        button_tree = engine._WidgetTree(button, [])
         qt_button = button.underlying
         with engine._storage_manager() as manager:
             commands = button_tree.gen_qt_commands(MockRenderContext(manager))
@@ -150,26 +150,26 @@ class QtTreeTestCase(unittest.TestCase):
         view = base_components.View()(label1)
 
         def label_tree(label):
-            tree = engine._QtTree(label, [])
+            tree = engine._WidgetTree(label, [])
             with engine._storage_manager() as manager:
                 return tree, tree.gen_qt_commands(MockRenderContext(manager))
 
         label1_tree, label1_commands = label_tree(label1)
         label2_tree, label2_commands = label_tree(label2)
-        view_tree = engine._QtTree(view, [label1_tree])
+        view_tree = engine._WidgetTree(view, [label1_tree])
         with engine._storage_manager() as manager:
             commands = view_tree.gen_qt_commands(MockRenderContext(manager))
 
         self.assertCountEqual(commands, label1_commands + [(view.underlying.setStyleSheet, "QWidget#%s{}" % id(view)), (view.underlying_layout.insertWidget, 0, label1.underlying)])
 
-        view_tree = engine._QtTree(view, [label1_tree, label2_tree])
+        view_tree = engine._WidgetTree(view, [label1_tree, label2_tree])
         with engine._storage_manager() as manager:
             commands = view_tree.gen_qt_commands(MockRenderContext(manager))
         self.assertCountEqual(commands, label1_commands + label2_commands + [(view.underlying.setStyleSheet, "QWidget#%s{}" % id(view)), (view.underlying_layout.insertWidget, 1, label2.underlying)])
 
         inner_view = base_components.View()
 
-        view_tree = engine._QtTree(view, [label2_tree, engine._QtTree(inner_view, [])])
+        view_tree = engine._WidgetTree(view, [label2_tree, engine._WidgetTree(inner_view, [])])
         with engine._storage_manager() as manager:
             commands = view_tree.gen_qt_commands(MockRenderContext(manager))
         self.assertCountEqual(
