@@ -101,7 +101,7 @@ class Test(ed.Component):
             self.data = self.data + 5
 
     def render(self):
-        return ed.View() (
+        return ed.WindowManager()(ed.View() (
                 # SmartTable(self.data),
                 ed.Label(self.hi_text),
                 ed.Icon("play"),
@@ -110,7 +110,7 @@ class Test(ed.Component):
                 # ed.ScrollView(style={"min-width": 100, "min-height": 100, "max-height": 100, "height": 100})(
                 #     *[ed.Label(i) for i in range(20)]
                 # )
-            )
+            ))
 
 
 if __name__ == "__main__":

@@ -125,15 +125,17 @@ class _RenderContext(object):
 class App(object):
 
     def __init__(self, component: Component, title: tp.Text = "Edifice App"):
+        self.app = QtWidgets.QApplication([])
+
         self._component_tree = {}
         self._widget_tree = {}
-        if isinstance(component, RootComponent):
-            self._root = component
+        rendered_component = component.render()
+        if isinstance(rendered_component, RootComponent):
+            self._root = RootComponent()(component)
         else:
             self._root = WindowManager()(component)
         self._title = title
 
-        self.app = QtWidgets.QApplication([])
         # Support for reloading on file change
         self._file_change_rerender_event_type = QtCore.QEvent.registerEventType()
 

@@ -409,3 +409,7 @@ class RootComponent(BaseComponent):
 
     def __init__(self):
         super().__init__()
+
+    def _qt_update_commands(self, children, newprops, newstate):
+        # Dummy
+        return []
