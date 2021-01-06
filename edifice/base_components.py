@@ -298,6 +298,8 @@ class View(_LinearView):
             self.underlying_layout = QtWidgets.QVBoxLayout()
         elif layout == "row":
             self.underlying_layout = QtWidgets.QHBoxLayout()
+        else:
+            raise ValueError("Layout must be row or column, got %s instead", layout)
         self.underlying.setLayout(self.underlying_layout)
         self.underlying.setObjectName(str(id(self)))
 

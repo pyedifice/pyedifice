@@ -93,6 +93,17 @@ class _RenderContext(object):
         self.component_to_old_props = {}
         self.force_refresh = force_refresh
 
+        self._callback_queue = []
+
+    def schedule_callback(self, callback, args=None, kwargs=None):
+        args = args or []
+        kwargs = kwargs or {}
+        self._callback_queue.append((callback, args, kwargs))
+
+    def run_callbacks(self):
+        for callback, args, kwargs in self._callback_queue:
+            callback(*args, **kwargs)
+
     def mark_props_change(self, component, newprops, new_component=False):
         d = dict(newprops._items)
         if "children" not in d:
@@ -334,6 +345,8 @@ class App(object):
         else:
             if old_rendering is not None:
                 self._delete_component(sub_component, True)
+            else:
+                render_context.schedule_callback(component.did_mount)
             self._component_tree[component] = sub_component
             self._widget_tree[component] = self._render(sub_component, render_context)
 
@@ -375,24 +388,10 @@ class App(object):
                              self._nrenders, 1000 * self._render_time / self._nrenders, 1000 * self._worst_render_time)
                 self._last_render_time = end_time
 
+        render_context.run_callbacks()
         return ret
 
     def start(self):
         self._request_rerender([self._root], {}, {})
         self._first_render = False
         self.app.exec_()
-
-
-def set_trace():
-    '''Set a tracepoint in the Python debugger that works with Qt'''
-    import pdb
-    import sys
-    pyqtRemoveInputHook()
-    # set up the debugger
-    debugger = pdb.Pdb()
-    debugger.reset()
-    # custom next to get outside of function scope
-    debugger.do_next(None) # run the next command
-    users_frame = sys._getframe().f_back # frame where the user invoked `pyqt_set_trace()`
-    debugger.interaction(users_frame, None)
-    pyqtRestoreInputHook()

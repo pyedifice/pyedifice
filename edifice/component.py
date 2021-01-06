@@ -310,6 +310,9 @@ class Component(object):
                 return True
         return False
 
+    def did_mount(self):
+        pass
+
     def will_unmount(self):
         pass
 

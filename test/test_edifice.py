@@ -1,4 +1,3 @@
-import functools
 import unittest
 import unittest.mock
 import edifice.component as component
@@ -15,6 +14,7 @@ class MockApp(engine.App):
         self._root = component
         self._title = title
 
+        self._first_render = True
         self._nrenders = 0
         self._render_time = 0
         self._last_render_time = 0
@@ -372,7 +372,6 @@ class RenderTestCase(unittest.TestCase):
         expected_commands = [(qt_tree.component._delete_child, 2,)]
 
         self.assertEqual(qt_commands, expected_commands)
-
 
 
 if __name__ == "__main__":
