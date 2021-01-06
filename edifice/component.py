@@ -310,6 +310,9 @@ class Component(object):
                 return True
         return False
 
+    def will_unmount(self):
+        pass
+
     def __call__(self, *args):
         children = [a for a in args if a]
         self._props["children"] = children

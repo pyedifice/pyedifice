@@ -14,6 +14,11 @@ class MockApp(engine.App):
         self._widget_tree = {}
         self._root = component
         self._title = title
+
+        self._nrenders = 0
+        self._render_time = 0
+        self._last_render_time = 0
+        self._worst_render_time = 0
         # self.app = QtWidgets.QApplication([])
 
 class MockComponent(component.Component):
@@ -236,16 +241,22 @@ class _TestComponentOuterList(component.Component):
         )
     """
 
-    def __init__(self, use_keys):
+    def __init__(self, use_keys, use_state_as_key):
         super().__init__()
         self.use_keys = use_keys
+        self.use_state_as_key = use_state_as_key
         self.state = ["A", "B", "C"]
 
     def render(self):
         if self.use_keys:
-            return base_components.View()(
-                *[_TestComponentInner(text).set_key(text) for text in self.state]
-            )
+            if self.use_state_as_key:
+                return base_components.View()(
+                    *[_TestComponentInner(text).set_key(text) for text in self.state]
+                )
+            else:
+                return base_components.View()(
+                    *[_TestComponentInner(text).set_key(str(i)) for i, text in enumerate(self.state)]
+                )
         return base_components.View()(
             *[_TestComponentInner(text) for text in self.state]
         )
@@ -310,7 +321,7 @@ class RenderTestCase(unittest.TestCase):
         self.assertTrue((_new_qt_tree._dereference([2]).component.underlying.setText, "CChanged") in C(2))
 
     def test_keyed_list_add(self):
-        component = _TestComponentOuterList(True)
+        component = _TestComponentOuterList(True, True)
         app = MockApp(component)
         _, (qt_tree, qt_commands) = app._request_rerender([component], {}, {}, execute=False)[0]
 
@@ -335,7 +346,7 @@ class RenderTestCase(unittest.TestCase):
         self.assertEqual(qt_commands, expected_commands)
 
     def test_keyed_list_reshuffle(self):
-        component = _TestComponentOuterList(True)
+        component = _TestComponentOuterList(True, True)
         app = MockApp(component)
         _, (qt_tree, qt_commands) = app._request_rerender([component], {}, {}, execute=False)[0]
 
@@ -353,6 +364,40 @@ class RenderTestCase(unittest.TestCase):
                              + [(qt_tree.component._soft_delete_child, 2,)]
                              + [(qt_tree.component.underlying_layout.insertWidget, 2, qt_tree.children[0].component.underlying)]
                              + C())
+
+        self.assertEqual(qt_commands, expected_commands)
+
+    def test_keyed_list_nochange(self):
+        component = _TestComponentOuterList(True, False)
+        app = MockApp(component)
+        _, (qt_tree, qt_commands) = app._request_rerender([component], {}, {}, execute=False)[0]
+
+        def C(*args):
+            return _commands_for_address(qt_tree, args)
+
+        component.state = ["C", "B", "A"]
+        _, (_new_qt_tree, qt_commands) = app._request_rerender([component], {}, {}, execute=False)[0]
+
+        def new_C(*args):
+            return _commands_for_address(_new_qt_tree, args)
+        expected_commands = C(0, 0) + C(0) + C(2, 0) + C(2)  + C()
+
+        self.assertEqual(qt_commands, expected_commands)
+
+    def test_keyed_list_delete_child(self):
+        component = _TestComponentOuterList(True, True)
+        app = MockApp(component)
+        _, (qt_tree, qt_commands) = app._request_rerender([component], {}, {}, execute=False)[0]
+
+        def C(*args):
+            return _commands_for_address(qt_tree, args)
+
+        component.state = ["A", "B"]
+        _, (_new_qt_tree, qt_commands) = app._request_rerender([component], {}, {}, execute=False)[0]
+
+        def new_C(*args):
+            return _commands_for_address(_new_qt_tree, args)
+        expected_commands = [(qt_tree.component._delete_child, 2,)] + C()
 
         self.assertEqual(qt_commands, expected_commands)
 

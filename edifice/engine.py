@@ -2,6 +2,7 @@ import contextlib
 import inspect
 import logging
 import queue
+import time
 import typing as tp
 
 from PyQt5 import QtCore, QtWidgets
@@ -136,6 +137,11 @@ class App(object):
             self._root = WindowManager()(component)
         self._title = title
 
+        self._nrenders = 0
+        self._render_time = 0
+        self._last_render_time = 0
+        self._worst_render_time = 0
+
         # Support for reloading on file change
         self._file_change_rerender_event_type = QtCore.QEvent.registerEventType()
 
@@ -165,6 +171,11 @@ class App(object):
                 for sub_comp in sub_components:
                     self._delete_component(sub_comp, recursive)
             # Node deletion
+        if isinstance(sub_components, list):
+            for comp in sub_components:
+                comp.will_unmount()
+        else:
+            sub_components.will_unmount()
         del self._component_tree[component]
         del self._widget_tree[component]
 
@@ -251,12 +262,14 @@ class App(object):
             if len(component.children) > 1:
                 self._attach_keys(component, render_context)
             if component not in self._component_tree:
+                # New component, simply render everything
                 self._component_tree[component] = list(component.children)
                 rendered_children = [self._render(child, render_context) for child in component.children]
                 self._widget_tree[component] = _WidgetTree(component, rendered_children) 
                 render_context.mark_qt_rerender(component, True)
                 return self._widget_tree[component]
             else:
+                # Figure out which children are pre-existing
                 old_children = self._component_tree[component]
                 if len(old_children) > 1:
                     self._attach_keys(component, render_context)
@@ -274,17 +287,25 @@ class App(object):
                     key_to_old_child = {child._key: child for child in old_children}
                     old_child_to_props = {child: child.props for child in old_children}
 
+                    # Children contains all the future children of the component:
+                    # a mixture of old components (if they can be updated) and new ones
                     children = [self._get_child_using_key(key_to_old_child, new_child._key, new_child, render_context)
                                 for new_child in component.children]
-                parent_needs_rerendering = False
+                # TODO: What if children key order changed??
                 rendered_children = []
                 for child1, child2 in zip(children, component.children):
+                    # child1 == child2 if they are both new, i.e. no old child matches child1
+                    # This component would then need to be updated to draw said new child
+                    # Otherwise, no component has been added, so no re-rendering is necessary
                     if child1 != child2:
                         rendered_children.append(self._widget_tree[child1])
                     else:
-                        parent_needs_rerendering = True
                         rendered_children.append(self._render(child1, render_context))
-                render_context.mark_qt_rerender(component, parent_needs_rerendering)
+
+                children_set = set(children)
+                for old_child in old_children:
+                    if old_child not in children_set:
+                        self._delete_component(old_child, True)
 
                 self._component_tree[component] = children
                 self._widget_tree[component] = _WidgetTree(component, rendered_children) 
@@ -304,13 +325,15 @@ class App(object):
             self._widget_tree[component] = self._update_old_component(
                 old_rendering, sub_component.props, render_context)
         else:
-            # TODO: delete old component
+            if old_rendering is not None:
+                self._delete_component(sub_component, True)
             self._component_tree[component] = sub_component
             self._widget_tree[component] = self._render(sub_component, render_context)
 
         return self._widget_tree[component]
 
     def _request_rerender(self, components, newprops, newstate, execute=True):
+        start_time = time.process_time()
         ret = []
         qt_trees = []
         with _storage_manager() as storage_manager:
@@ -323,14 +346,25 @@ class App(object):
         # for component, need_rerendering in render_context.need_qt_command_reissue.items():
         #     if need_rerendering:
         #         logging.warn("Rerendering: %s", component)
+        if start_time - self._last_render_time > 1:
+            logging.info("Time without rendering: %.2f ms", (time.process_time() - start_time) * 1000)
         for qt_tree in qt_trees:
             qt_commands = qt_tree.gen_qt_commands(render_context)
             root = qt_tree.component
             if execute:
-                print(qt_commands)
+                # print(qt_commands)
                 for command in qt_commands:
                     command[0](*command[1:])
             ret.append((root, (qt_tree, qt_commands)))
+
+        end_time = time.process_time()
+        self._render_time += (end_time - start_time)
+        self._worst_render_time = max(end_time - start_time, self._worst_render_time)
+        self._nrenders += 1
+
+        if end_time - self._last_render_time > 1:
+            logging.info("Rendered %d times, with average render time of %.2f ms and worst render time of %.2f ms",
+                         self._nrenders, 1000 * self._render_time / self._nrenders, 1000 * self._worst_render_time)
 
         return ret
 
