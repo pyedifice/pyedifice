@@ -65,7 +65,10 @@ class _WidgetTree(object):
 
         if not render_context.need_rerender(self.component):
             return commands
-        commands.extend(self.component._qt_update_commands(self.children, self.component.props, {}))
+
+        old_props = render_context.get_old_props(self.component)
+        new_props = PropsDict({k: v for k, v in self.component.props._items if k not in old_props or old_props[k] != v})
+        commands.extend(self.component._qt_update_commands(self.children, new_props, {}))
         return commands
 
     def __hash__(self):
@@ -90,13 +93,16 @@ class _RenderContext(object):
         self.component_to_old_props = {}
         self.force_refresh = force_refresh
 
-    def mark_props_change(self, component, newprops):
+    def mark_props_change(self, component, newprops, new_component=False):
         d = dict(newprops._items)
         if "children" not in d:
             d["children"] = []
         self.component_to_new_props[component] = newprops
         if component not in self.component_to_old_props:
-            self.component_to_old_props[component] = component.props
+            if new_component:
+                self.component_to_old_props[component] = PropsDict({})
+            else:
+                self.component_to_old_props[component] = component.props
         self.set(component, "_props", d)
 
     def get_new_props(self, component):
@@ -107,7 +113,7 @@ class _RenderContext(object):
     def get_old_props(self, component):
         if component in self.component_to_old_props:
             return self.component_to_old_props[component]
-        return component.props
+        return PropsDict({})
 
     def commit(self):
         for component, newprops in self.component_to_new_props.items():
@@ -137,6 +143,7 @@ class App(object):
             self._root = WindowManager()(component)
         self._title = title
 
+        self._first_render = True
         self._nrenders = 0
         self._render_time = 0
         self._last_render_time = 0
@@ -357,19 +364,22 @@ class App(object):
                     command[0](*command[1:])
             ret.append((root, (qt_tree, qt_commands)))
 
-        end_time = time.process_time()
-        self._render_time += (end_time - start_time)
-        self._worst_render_time = max(end_time - start_time, self._worst_render_time)
-        self._nrenders += 1
+        if not self._first_render:
+            end_time = time.process_time()
+            self._render_time += (end_time - start_time)
+            self._worst_render_time = max(end_time - start_time, self._worst_render_time)
+            self._nrenders += 1
 
-        if end_time - self._last_render_time > 1:
-            logging.info("Rendered %d times, with average render time of %.2f ms and worst render time of %.2f ms",
-                         self._nrenders, 1000 * self._render_time / self._nrenders, 1000 * self._worst_render_time)
+            if end_time - self._last_render_time > 1:
+                logging.info("Rendered %d times, with average render time of %.2f ms and worst render time of %.2f ms",
+                             self._nrenders, 1000 * self._render_time / self._nrenders, 1000 * self._worst_render_time)
+                self._last_render_time = end_time
 
         return ret
 
     def start(self):
         self._request_rerender([self._root], {}, {})
+        self._first_render = False
         self.app.exec_()
 
 

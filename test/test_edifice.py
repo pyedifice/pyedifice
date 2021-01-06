@@ -290,43 +290,33 @@ class RenderTestCase(unittest.TestCase):
         # After everything rendered, a rerender shouldn't involve any commands
         # TODO: make sure this is actually true!
         _, (_, qt_commands) = app._request_rerender([component], {}, {}, execute=False)[0]
-        self.assertEqual(qt_commands, C())
+        self.assertEqual(qt_commands, [])
 
     def test_state_changes(self):
         component = _TestComponentOuter()
         app = MockApp(component)
         _, (qt_tree, qt_commands) = app._request_rerender([component], {}, {}, execute=False)[0]
 
-        def C(*args):
-            return _commands_for_address(qt_tree, args)
-
         component.state_a = "AChanged"
         _, (_new_qt_tree, qt_commands) = app._request_rerender([component], {}, {}, execute=False)[0]
         # TODO: Make it so that only the label (0, 0) needs to update!
-        expected_commands = C(0, 0) + C(0) + C()
+        expected_commands = [(qt_tree._dereference([0, 0]).component.underlying.setText, "AChanged")]
         self.assertEqual(qt_commands, expected_commands)
-        self.assertEqual(_new_qt_tree._dereference([0, 0]).component.props.text, "AChanged")
-        self.assertTrue((_new_qt_tree._dereference([0, 0]).component.underlying.setText, "AChanged") in C(0, 0))
 
         component.state_b = "BChanged"
         _, (_, qt_commands) = app._request_rerender([component], {}, {}, execute=False)[0]
-        expected_commands = C(1, 0) + C(1) + C()
+        expected_commands = [(qt_tree._dereference([1, 0]).component.underlying.setText, "BChanged")]
         self.assertEqual(qt_commands, expected_commands)
 
         component.state_c = "CChanged"
         _, (_new_qt_tree, qt_commands) = app._request_rerender([component], {}, {}, execute=False)[0]
-        expected_commands = C(2) + C()
+        expected_commands = [(qt_tree._dereference([2]).component.underlying.setText, "CChanged")]
         self.assertEqual(qt_commands, expected_commands)
-        self.assertEqual(_new_qt_tree._dereference([2]).component.props.text, "CChanged")
-        self.assertTrue((_new_qt_tree._dereference([2]).component.underlying.setText, "CChanged") in C(2))
 
     def test_keyed_list_add(self):
         component = _TestComponentOuterList(True, True)
         app = MockApp(component)
         _, (qt_tree, qt_commands) = app._request_rerender([component], {}, {}, execute=False)[0]
-
-        def C(*args):
-            return _commands_for_address(qt_tree, args)
 
         component.state = ["A", "B", "D", "C"]
         _, (_new_qt_tree, qt_commands) = app._request_rerender([component], {}, {}, execute=False)[0]
@@ -340,8 +330,7 @@ class RenderTestCase(unittest.TestCase):
         def new_C(*args):
             return _commands_for_address(_new_qt_tree, args)
         expected_commands = (new_C(2, 0) + new_C(2, 1) + new_V(2) + new_C(2) +
-                             [(qt_tree.component.underlying_layout.insertWidget, 2, _new_qt_tree.children[2].component.underlying)]
-                             + C())
+                             [(qt_tree.component.underlying_layout.insertWidget, 2, _new_qt_tree.children[2].component.underlying)])
 
         self.assertEqual(qt_commands, expected_commands)
 
@@ -350,20 +339,14 @@ class RenderTestCase(unittest.TestCase):
         app = MockApp(component)
         _, (qt_tree, qt_commands) = app._request_rerender([component], {}, {}, execute=False)[0]
 
-        def C(*args):
-            return _commands_for_address(qt_tree, args)
-
         component.state = ["C", "B", "A"]
         _, (_new_qt_tree, qt_commands) = app._request_rerender([component], {}, {}, execute=False)[0]
 
-        def new_C(*args):
-            return _commands_for_address(_new_qt_tree, args)
         expected_commands = (
                              [(qt_tree.component._soft_delete_child, 0,)]
                              + [(qt_tree.component.underlying_layout.insertWidget, 0, qt_tree.children[2].component.underlying)]
                              + [(qt_tree.component._soft_delete_child, 2,)]
-                             + [(qt_tree.component.underlying_layout.insertWidget, 2, qt_tree.children[0].component.underlying)]
-                             + C())
+                             + [(qt_tree.component.underlying_layout.insertWidget, 2, qt_tree.children[0].component.underlying)])
 
         self.assertEqual(qt_commands, expected_commands)
 
@@ -372,16 +355,10 @@ class RenderTestCase(unittest.TestCase):
         app = MockApp(component)
         _, (qt_tree, qt_commands) = app._request_rerender([component], {}, {}, execute=False)[0]
 
-        def C(*args):
-            return _commands_for_address(qt_tree, args)
-
         component.state = ["C", "B", "A"]
         _, (_new_qt_tree, qt_commands) = app._request_rerender([component], {}, {}, execute=False)[0]
 
-        def new_C(*args):
-            return _commands_for_address(_new_qt_tree, args)
-        expected_commands = C(0, 0) + C(0) + C(2, 0) + C(2)  + C()
-
+        expected_commands = [(qt_tree._dereference([0, 0]).component.underlying.setText, "C"), (qt_tree._dereference([2, 0]).component.underlying.setText, "A")]
         self.assertEqual(qt_commands, expected_commands)
 
     def test_keyed_list_delete_child(self):
@@ -389,15 +366,10 @@ class RenderTestCase(unittest.TestCase):
         app = MockApp(component)
         _, (qt_tree, qt_commands) = app._request_rerender([component], {}, {}, execute=False)[0]
 
-        def C(*args):
-            return _commands_for_address(qt_tree, args)
-
         component.state = ["A", "B"]
         _, (_new_qt_tree, qt_commands) = app._request_rerender([component], {}, {}, execute=False)[0]
 
-        def new_C(*args):
-            return _commands_for_address(_new_qt_tree, args)
-        expected_commands = [(qt_tree.component._delete_child, 2,)] + C()
+        expected_commands = [(qt_tree.component._delete_child, 2,)]
 
         self.assertEqual(qt_commands, expected_commands)
 
