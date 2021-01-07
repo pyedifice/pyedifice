@@ -36,12 +36,12 @@ class PropsDict(object):
         raise ValueError("Props are immutable")
 
     @property
-    def _keys(self) -> Iterator[tp.Text]:
+    def _keys(self) -> Iterator:
         """Returns the keys of the props dict as a list."""
         return self._d.keys()
 
     @property
-    def _items(self) -> Iterator[tp.Any]:
+    def _items(self) -> Iterator:
         """Returns the (key, value) of the props dict as a list."""
         return self._d.items()
 
@@ -238,9 +238,9 @@ class Component(object):
 
     def __setattr__(self, k, v):
         changes_context = self._render_changes_context
-        unwind_context = self._render_unwind_context
         ignored_variables = self._ignored_variables
         if changes_context is not None and k not in ignored_variables:
+            unwind_context = self._render_unwind_context
             if k not in unwind_context:
                 unwind_context[k] = super().__getattribute__(k)
             changes_context[k] = v

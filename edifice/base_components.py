@@ -283,17 +283,18 @@ class _LinearView(WidgetComponent):
                 del self._old_rendered_children[i]
 
         old_child_index = 0
+        old_children_len = len(self._old_rendered_children)
         for i, child in enumerate(children):
             old_child = None
-            if old_child_index < len(self._old_rendered_children):
+            if old_child_index < old_children_len:
                 old_child = self._old_rendered_children[old_child_index]
 
-            if old_child is None or child.component != old_child:
+            if old_child is None or child.component is not old_child:
                 if child.component not in self._already_rendered:
-                    commands += [(self.underlying_layout.insertWidget, i, child.component.underlying)]
+                    commands.append((self.underlying_layout.insertWidget, i, child.component.underlying))
                     old_child_index -= 1
                 else:
-                    commands += [(self._soft_delete_child, i,), (self.underlying_layout.insertWidget, i, child.component.underlying)]
+                    commands.extend([(self._soft_delete_child, i,), (self.underlying_layout.insertWidget, i, child.component.underlying)])
 
             old_child_index += 1
             self._already_rendered[child.component] = True

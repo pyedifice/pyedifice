@@ -210,12 +210,12 @@ class RenderEngine(object):
                         parent_comp._props["children"][i] = new_comp
 
         # 5) call _render for all new component parents
-        render_commands = self._request_rerender([parent_comp for _, _, parent_comp, _ in components_to_replace], PropsDict({}), {})
+        ret = self._request_rerender([parent_comp for _, _, parent_comp, _ in components_to_replace], PropsDict({}), {})
         # 4) Delete all old_components from the tree, and do this recursively
         for old_comp, _, _, _ in components_to_replace:
             if old_comp in self._component_tree:
                 self._delete_component(old_comp, recursive=True)
-        return render_commands
+        return ret
 
 
     def _update_old_component(self, component, newprops, render_context: _RenderContext):

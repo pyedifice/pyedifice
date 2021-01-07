@@ -7,7 +7,7 @@ class RecurseTree(ed.Component):
 
     @ed.register_props
     def __init__(self, level, t):
-        pass
+        super().__init__()
 
     def render(self):
         if self.props.level > 0:
@@ -28,6 +28,7 @@ class MainComponent(ed.Component):
 
     @ed.register_props
     def __init__(self, level=2):
+        super().__init__()
         self.t = 5
 
     def did_mount(self):
@@ -45,7 +46,7 @@ class MainComponent(ed.Component):
         self.set_state(t=self.t + 0.016)
 
     def render(self):
-        return RecurseTree(level=6, t=self.t)
+        return RecurseTree(level=7, t=self.t)
 
 if __name__ == "__main__":
     ed.App(MainComponent()).start()

@@ -38,13 +38,10 @@ class App(object):
                     e.accept()
                     while not self._class_rerender_queue.empty():
                         file_name, classes = self._class_rerender_queue.get_nowait()
-                        commands = []
                         ret = self._refresh_by_class(classes)
-                        ret = self._render_engine._request_rerender(components, newprops, newstate)
-                        for _, (_, _commands) in ret:
-                            commands.extend(_commands)
-                        for command in commands:
-                            command[0](*command[1:])
+                        for _, (_, commands) in ret:
+                            for command in commands:
+                                command[0](*command[1:])
                         self._class_rerender_queue.task_done()
                         logging.info("Rerendering Components in %s due to source change", file_name)
                     return True
