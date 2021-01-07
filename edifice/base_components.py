@@ -72,12 +72,21 @@ class WindowManager(RootComponent):
             if child not in new_children:
                 del self._already_rendered[child]
 
+        old_positions = []
+        for old_child in self._old_rendered_children:
+            old_positions.append(old_child.underlying.pos())
+
         for i, old_child in reversed(list(enumerate(self._old_rendered_children))):
             if old_child not in new_children:
                 commands += [(old_child.underlying.close,)]
 
         for i, child in enumerate(children):
+            old_pos = None
+            if i < len(old_positions):
+                old_pos = old_positions[i]
             if child.component not in self._already_rendered:
+                if old_pos is not None:
+                    commands += [(child.component.underlying.move, old_pos)]
                 commands += [(child.component.underlying.show,)]
             self._already_rendered[child.component] = True
 

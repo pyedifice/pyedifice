@@ -35,6 +35,7 @@ def _reload(module):
 
 
 def runner():
+    logging.basicConfig(level=logging.INFO)
     parser = argparse.ArgumentParser(description="Edifice app runner.")
     parser.add_argument("main_file", help="Main file containing app")
     parser.add_argument("root_component", help="The root component, should be in main file")
@@ -133,5 +134,4 @@ def runner():
     observer.join()
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.INFO)
     runner()

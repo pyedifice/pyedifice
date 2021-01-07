@@ -85,7 +85,7 @@ class Test(ed.Component):
         super().__init__()
         self.text = ""
         self.open = True
-        self.hi_text = "Hi 5"
+        self.hi_text = "Hi 2"
         self.dimensions = (1, 3)
         self.data = pd.DataFrame({
             "a": [2, 5, 6, 3, 21],

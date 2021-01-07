@@ -10,6 +10,7 @@ from PyQt5.QtCore import pyqtRemoveInputHook, pyqtRestoreInputHook
 
 from .component import Component, PropsDict, register_props, BaseComponent, RootComponent
 from .base_components import WindowManager
+from .utilities import set_trace
 
 
 class _ChangeManager(object):
@@ -189,11 +190,8 @@ class App(object):
                 for sub_comp in sub_components:
                     self._delete_component(sub_comp, recursive)
             # Node deletion
-        if isinstance(sub_components, list):
-            for comp in sub_components:
-                comp.will_unmount()
-        else:
-            sub_components.will_unmount()
+
+        component.will_unmount()
         del self._component_tree[component]
         del self._widget_tree[component]
 
@@ -243,10 +241,10 @@ class App(object):
 
         # 5) call _render for all new component parents
         self._request_rerender([parent_comp for _, _, parent_comp, _ in components_to_replace], PropsDict({}), {})
-
         # 4) Delete all old_components from the tree, and do this recursively
         for old_comp, _, _, _ in components_to_replace:
-            self._delete_component(old_comp, recursive=True)
+            if old_comp in self._component_tree:
+                self._delete_component(old_comp, recursive=True)
 
 
     def _update_old_component(self, component, newprops, render_context: _RenderContext):
@@ -311,6 +309,7 @@ class App(object):
                                 for new_child in component.children]
                 # TODO: What if children key order changed??
                 rendered_children = []
+                parent_needs_rerendering = False
                 for child1, child2 in zip(children, component.children):
                     # child1 == child2 if they are both new, i.e. no old child matches child1
                     # This component would then need to be updated to draw said new child
@@ -318,7 +317,10 @@ class App(object):
                     if child1 != child2:
                         rendered_children.append(self._widget_tree[child1])
                     else:
+                        parent_needs_rerendering = True
                         rendered_children.append(self._render(child1, render_context))
+                if parent_needs_rerendering:
+                    render_context.mark_qt_rerender(component, True)
 
                 children_set = set(children)
                 for old_child in old_children:
