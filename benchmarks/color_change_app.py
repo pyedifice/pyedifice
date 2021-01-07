@@ -48,3 +48,6 @@ class MainComponent(ed.Component):
 
     def render(self):
         return RecurseTree(level=6, t=self.t)
+
+if __name__ == "__main__":
+    ed.App(MainComponent()).start()

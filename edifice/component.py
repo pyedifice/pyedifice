@@ -161,6 +161,7 @@ class Component(object):
     """
 
     _render_changes_context = None
+    _render_unwind_context = None
     _ignored_variables = set()
 
     def __init__(self):
@@ -209,8 +210,9 @@ class Component(object):
         ignored_variables = ignored_variables or set()
         ignored_variables = set(ignored_variables)
         exception_raised = False
-        if super().__getattribute__("_render_changes_context") is None:
+        if self._render_changes_context is None:
             super().__setattr__("_render_changes_context", {})
+            super().__setattr__("_render_unwind_context", {})
             super().__setattr__("_ignored_variables", ignored_variables)
             entered = True
         try:
@@ -220,27 +222,25 @@ class Component(object):
             raise e
         finally:
             if entered:
-                changes_context = super().__getattribute__("_render_changes_context")
+                changes_context = self._render_changes_context
+                unwind_context = self._render_unwind_context
                 super().__setattr__("_render_changes_context", None)
+                super().__setattr__("_render_unwind_context", None)
                 super().__setattr__("_ignored_variables", set())
+                for k, v in unwind_context.items():
+                    super().__setattr__(k, v)
                 if not exception_raised:
                     self.set_state(**changes_context)
 
-    def __getattribute__(self, k):
-        changes_context = super().__getattribute__("_render_changes_context")
-        ignored_variables = super().__getattribute__("_ignored_variables")
-        if changes_context is not None and k in changes_context and k not in ignored_variables:
-            return changes_context[k]
-        return super().__getattribute__(k)
-
-
     def __setattr__(self, k, v):
-        changes_context = super().__getattribute__("_render_changes_context")
-        ignored_variables = super().__getattribute__("_ignored_variables")
+        changes_context = self._render_changes_context
+        unwind_context = self._render_unwind_context
+        ignored_variables = self._ignored_variables
         if changes_context is not None and k not in ignored_variables:
+            if k not in unwind_context:
+                unwind_context[k] = super().__getattribute__(k)
             changes_context[k] = v
-        else:
-            super().__setattr__(k, v)
+        super().__setattr__(k, v)
 
     def set_state(self, **kwargs):
         """Set state and render changes.
