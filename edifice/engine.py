@@ -256,9 +256,6 @@ class RenderEngine(object):
         else:
             # Figure out which children are pre-existing
             old_children = self._component_tree[component]
-            if len(old_children) > 1:
-                self._attach_keys(component, render_context)
-
             if len(component.children) == 1 and len(old_children) == 1:
                 if component.children[0].__class__ == old_children[0].__class__:
                     self._update_old_component(old_children[0], component.children[0].props, render_context)
@@ -270,8 +267,6 @@ class RenderEngine(object):
                     if not hasattr(old_children[0], "_key"):
                         render_context.set(old_children[0], "_key", "KEY0")
                 key_to_old_child = {child._key: child for child in old_children}
-                old_child_to_props = {child: child.props for child in old_children}
-
                 # Children contains all the future children of the component:
                 # a mixture of old components (if they can be updated) and new ones
                 children = [self._get_child_using_key(key_to_old_child, new_child._key, new_child, render_context)
@@ -283,7 +278,7 @@ class RenderEngine(object):
                 # child1 == child2 if they are both new, i.e. no old child matches child1
                 # This component would then need to be updated to draw said new child
                 # Otherwise, no component has been added, so no re-rendering is necessary
-                if child1 != child2:
+                if child1 is not child2:
                     rendered_children.append(self._widget_tree[child1])
                 else:
                     parent_needs_rerendering = True
@@ -306,7 +301,7 @@ class RenderEngine(object):
     def _render(self, component: Component, render_context: _RenderContext):
         component._controller = self._app
         if isinstance(component, BaseComponent):
-            self._render_base_component(component, render_context)
+            return self._render_base_component(component, render_context)
 
         sub_component = component.render()
         old_rendering = None
@@ -345,9 +340,10 @@ class RenderEngine(object):
                 qt_trees.append(qt_tree)
         return qt_trees, render_context
 
-    def _do_otherstuff(self, components):
+    def _request_rerender(self, components, newprops, newstate, execute=True):
         start_time = time.process_time()
         qt_trees, render_context = self._gen_widget_trees(components)
+        ret = self._gen_all_commands(qt_trees, render_context)
 
         # qt_tree.print_tree()
         # for component, need_rerendering in render_context.need_qt_command_reissue.items():
@@ -370,8 +366,6 @@ class RenderEngine(object):
         self._first_render = False
 
         render_context.run_callbacks()
-        return ret
 
-    def _request_rerender(self, components, newprops, newstate, execute=True):
-        self._do_otherstuff(components)
+        return ret
 

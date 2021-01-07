@@ -1,3 +1,4 @@
+from collections.abc import Iterator
 import contextlib
 import functools
 import inspect
@@ -35,14 +36,14 @@ class PropsDict(object):
         raise ValueError("Props are immutable")
 
     @property
-    def _keys(self) -> tp.List[tp.Text]:
+    def _keys(self) -> Iterator[tp.Text]:
         """Returns the keys of the props dict as a list."""
-        return list(self._d.keys())
+        return self._d.keys()
 
     @property
-    def _items(self) -> tp.List[tp.Any]:
+    def _items(self) -> Iterator[tp.Any]:
         """Returns the (key, value) of the props dict as a list."""
-        return list(self._d.items())
+        return self._d.items()
 
     def __len__(self):
         return len(self._d)
