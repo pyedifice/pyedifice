@@ -7,6 +7,8 @@ import typing as tp
 import numpy as np
 import pandas as pd
 
+_NP_CLASSES = (np.ndarray, pd.Series, pd.DataFrame, pd.Index)
+
 
 class PropsDict(object):
     """An immutable dictionary for storing props.
@@ -21,6 +23,7 @@ class PropsDict(object):
     .. autoproperty:: _keys
     .. autoproperty:: _items
     """
+    _d = None
 
     def __init__(self, dictionary: tp.Mapping[tp.Text, tp.Any]):
         super().__setattr__("_d", dictionary)
@@ -185,7 +188,7 @@ class Component(object):
 
     @property
     def children(self):
-        return self.props.children
+        return self._props["children"]
 
     @property
     def props(self) -> PropsDict:
@@ -267,6 +270,20 @@ class Component(object):
                 super().__setattr__(s, old_vals[s])
             raise e
 
+    def _should_update_helper(self, new_obj, old_obj):
+        # It suffices to look at class of old_obj since
+        # if new obj is an instance of the class and old obj isn't
+        # the equality check would fail
+        if isinstance(old_obj, Component):
+            if old_obj.__class__ != new_obj.__class__:
+                return True
+            return old_obj.should_update(new_obj.props, {})
+        elif isinstance(old_obj, _NP_CLASSES):
+            if old_obj.__class__ != new_obj.__class__:
+                return True
+            return not np.array_equal(old_obj, new_obj)
+        return old_obj != new_obj
+
     def should_update(self, newprops: PropsDict, newstate: tp.Mapping[tp.Text, tp.Any]) -> bool:
         """Determines if the component should rerender upon receiving new props and state.
 
@@ -285,29 +302,13 @@ class Component(object):
         Returns:
             Whether or not the Component should be rerendered.
         """
-        def should_update_helper(new_obj, old_obj):
-            if isinstance(old_obj, Component) or isinstance(new_obj, Component):
-                if old_obj.__class__ != new_obj.__class__:
-                    return True
-                if old_obj.should_update(new_obj.props, {}):
-                    return True
-            elif isinstance(old_obj, np_classes) or isinstance(new_obj, np_classes):
-                if old_obj.__class__ != new_obj.__class__:
-                    return True
-                if not np.array_equal(old_obj, new_obj):
-                    return True
-            elif old_obj != new_obj:
-                return True
-            return False
-
-        np_classes = (np.ndarray, pd.Series, pd.DataFrame, pd.Index)
         for prop, new_obj in newprops._items:
             old_obj = self.props[prop]
-            if should_update_helper(new_obj, old_obj):
+            if self._should_update_helper(new_obj, old_obj):
                 return True
         for state, new_obj in newstate.items():
             old_obj = getattr(self, state)
-            if should_update_helper(new_obj, old_obj):
+            if self._should_update_helper(new_obj, old_obj):
                 return True
         return False
 
@@ -383,15 +384,17 @@ def register_props(f):
         decorated function
 
     """
+    varnames = f.__code__.co_varnames[1:]
+    signature = inspect.signature(f).parameters
+    defaults = {
+        k: v.default for k, v in signature.items() if v.default is not inspect.Parameter.empty and k[0] != "_"
+    }
+
     @functools.wraps(f)
     def func(self, *args, **kwargs):
-        varnames = f.__code__.co_varnames[1:]
-        defaults = {
-            k: v.default for k, v in inspect.signature(f).parameters.items() if v.default is not inspect.Parameter.empty and k[0] != "_"
-        }
-        name_to_val = defaults
-        name_to_val.update(dict(filter((lambda tup: (tup[0][0] != "_")), zip(varnames, args))))
-        name_to_val.update(dict((k, v) for (k, v) in kwargs.items() if k[0] != "_"))
+        name_to_val = defaults.copy()
+        name_to_val.update(filter((lambda tup: (tup[0][0] != "_")), zip(varnames, args)))
+        name_to_val.update(((k, v) for (k, v) in kwargs.items() if k[0] != "_"))
         self.register_props(name_to_val)
         f(self, *args, **kwargs)
 

@@ -55,12 +55,10 @@ class App(object):
         self._class_rerender_queue = queue.Queue()
 
     def _request_rerender(self, components, newprops, newstate, execute=True):
-        commands = []
         ret = self._render_engine._request_rerender(components, newprops, newstate)
-        for _, (_, _commands) in ret:
-            commands.extend(_commands)
-        for command in commands:
-            command[0](*command[1:])
+        for _, (_, commands) in ret:
+            for command in commands:
+                command[0](*command[1:])
 
     def start(self):
         self._request_rerender([self._root], {}, {})

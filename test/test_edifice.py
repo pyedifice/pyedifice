@@ -130,8 +130,10 @@ class WidgetTreeTestCase(unittest.TestCase):
 
     def test_view_layout(self):
         view_c = base_components.View(layout="column")
+        view_c._initialize()
         self.assertEqual(view_c.underlying_layout.__class__, QtWidgets.QVBoxLayout)
         view_r = base_components.View(layout="row")
+        view_r._initialize()
         self.assertEqual(view_r.underlying_layout.__class__, QtWidgets.QHBoxLayout)
 
 

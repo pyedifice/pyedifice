@@ -201,10 +201,17 @@ class Label(WidgetComponent):
     @register_props
     def __init__(self, text: tp.Any = "", style: StyleType = None):
         super().__init__()
+        self._initialized = False
+
+    def _initialize(self):
         self.underlying = QtWidgets.QLabel(str(self.props.text))
         self.underlying.setObjectName(str(id(self)))
 
     def _qt_update_commands(self, children, newprops, newstate):
+        if not self._initialized:
+            self._initialized = True
+            self._initialize()
+
         commands = []
         for prop in newprops:
             if prop == "text":
@@ -301,8 +308,11 @@ class View(_LinearView):
     @register_props
     def __init__(self, layout: tp.Text = "column", style: StyleType = None):
         super().__init__()
+        self._initialized = False
 
+    def _initialize(self):
         self.underlying = QtWidgets.QWidget()
+        layout = self.props.layout
         if layout == "column":
             self.underlying_layout = QtWidgets.QVBoxLayout()
         elif layout == "row":
@@ -313,6 +323,9 @@ class View(_LinearView):
         self.underlying.setObjectName(str(id(self)))
 
     def _qt_update_commands(self, children, newprops, newstate):
+        if not self._initialized:
+            self._initialized = True
+            self._initialize()
         commands = self._recompute_children(children)
         commands += self._qt_stateless_commands(children, newprops, newstate)
         return commands
