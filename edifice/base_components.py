@@ -122,7 +122,7 @@ class Icon(WidgetComponent):
         commands = []
         icon_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                                  "icons",
-                                 newprops.collection, newprops.sub_collection, newprops.name + ".svg")
+                                 self.props.collection, self.props.sub_collection, self.props.name + ".svg")
 
         def render_image(icon_path, size):
             pixmap = _get_svg_image(icon_path, size)
@@ -184,7 +184,7 @@ class IconButton(Button):
         commands = super()._qt_update_commands(children, newprops, newstate)
         icon_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                                  "icons",
-                                 newprops.collection, newprops.sub_collection, newprops.name + ".svg")
+                                 self.props.collection, self.props.sub_collection, self.props.name + ".svg")
 
         def render_image(icon_path, size):
             pixmap = _get_svg_image(icon_path, size)

@@ -10,8 +10,6 @@ class RecurseTree(ed.Component):
         pass
 
     def render(self):
-        color = np.array([255, 255, 0])
-        color = color * self.props.t
         if self.props.level > 0:
             layout = "row" if self.props.level % 2 == 0 else "column"
             return ed.View(layout=layout)(
