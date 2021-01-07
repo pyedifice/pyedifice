@@ -34,7 +34,7 @@ Some useful utilities are also provided:
 
 
 from .component import PropsDict, Component, register_props
-from .engine import App
+from .app import App
 from .base_components import *
 from .utilities import Timer, set_trace
 

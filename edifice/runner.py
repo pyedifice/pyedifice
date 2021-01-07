@@ -12,7 +12,7 @@ from watchdog.events import FileSystemEventHandler
 from watchdog.observers.fsevents import FSEventsObserver
 
 from .component import Component
-from .engine import App
+from .app import App
 
 from PyQt5 import QtCore
 

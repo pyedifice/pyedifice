@@ -7,19 +7,8 @@ from PyQt5 import QtWidgets, QtCore
 
 app = QtWidgets.QApplication(["-platform", "offscreen"])
 
-class MockApp(engine.App):
-    def __init__(self, component, title="Edifice App"):
-        self._component_tree = {}
-        self._widget_tree = {}
-        self._root = component
-        self._title = title
-
-        self._first_render = True
-        self._nrenders = 0
-        self._render_time = 0
-        self._last_render_time = 0
-        self._worst_render_time = 0
-        # self.app = QtWidgets.QApplication([])
+class MockApp(engine.RenderEngine):
+    pass
 
 class MockComponent(component.Component):
 
@@ -131,7 +120,6 @@ class WidgetTreeTestCase(unittest.TestCase):
     def test_button(self):
         def on_click():
             pass
-        # app = QtWidgets.QApplication([])
         button_str = "asdf"
         button = base_components.Button(title=button_str, on_click=on_click)
         button_tree = engine._WidgetTree(button, [])
@@ -141,7 +129,6 @@ class WidgetTreeTestCase(unittest.TestCase):
         self.assertCountEqual(commands, [(qt_button.setText, button_str), (qt_button.setStyleSheet, "QWidget#%s{}" % id(button)), (button._set_on_click, on_click)])
 
     def test_view_layout(self):
-        # app = QtWidgets.QApplication([])
         view_c = base_components.View(layout="column")
         self.assertEqual(view_c.underlying_layout.__class__, QtWidgets.QVBoxLayout)
         view_r = base_components.View(layout="row")
@@ -149,7 +136,6 @@ class WidgetTreeTestCase(unittest.TestCase):
 
 
     def test_view_change(self):
-        # app = QtWidgets.QApplication([])
         label1 = base_components.Label(text="A")
         label2 = base_components.Label(text="B")
         view = base_components.View()(label1)

@@ -5,12 +5,7 @@ import queue
 import time
 import typing as tp
 
-from PyQt5 import QtCore, QtWidgets
-from PyQt5.QtCore import pyqtRemoveInputHook, pyqtRestoreInputHook
-
 from .component import Component, PropsDict, register_props, BaseComponent, RootComponent
-from .base_components import WindowManager
-from .utilities import set_trace
 
 
 class _ChangeManager(object):
@@ -141,44 +136,19 @@ class _RenderContext(object):
         return self.need_qt_command_reissue.get(component, False)
 
 
-class App(object):
+class RenderEngine(object):
 
-    def __init__(self, component: Component, title: tp.Text = "Edifice App"):
-        self.app = QtWidgets.QApplication([])
-
+    def __init__(self, root, app=None):
         self._component_tree = {}
         self._widget_tree = {}
-        rendered_component = component.render()
-        if isinstance(rendered_component, RootComponent):
-            self._root = RootComponent()(component)
-        else:
-            self._root = WindowManager()(component)
-        self._title = title
+        self._root = root
 
+        self._app = app
         self._first_render = True
         self._nrenders = 0
         self._render_time = 0
         self._last_render_time = 0
         self._worst_render_time = 0
-
-        # Support for reloading on file change
-        self._file_change_rerender_event_type = QtCore.QEvent.registerEventType()
-
-        class EventReceiverWidget(QtWidgets.QWidget):
-            def event(_self, e):
-                if e.type() == self._file_change_rerender_event_type:
-                    e.accept()
-                    while not self._class_rerender_queue.empty():
-                        file_name, classes = self._class_rerender_queue.get_nowait()
-                        self._refresh_by_class(classes)
-                        self._class_rerender_queue.task_done()
-                        logging.info("Rerendering Components in %s due to source change", file_name)
-                    return True
-                else:
-                    return super().event(e)
-
-        self._event_receiver = EventReceiverWidget()
-        self._class_rerender_queue = queue.Queue()
 
     def _delete_component(self, component, recursive):
         # Delete component from render trees
@@ -240,11 +210,12 @@ class App(object):
                         parent_comp._props["children"][i] = new_comp
 
         # 5) call _render for all new component parents
-        self._request_rerender([parent_comp for _, _, parent_comp, _ in components_to_replace], PropsDict({}), {})
+        render_commands = self._request_rerender([parent_comp for _, _, parent_comp, _ in components_to_replace], PropsDict({}), {})
         # 4) Delete all old_components from the tree, and do this recursively
         for old_comp, _, _, _ in components_to_replace:
             if old_comp in self._component_tree:
                 self._delete_component(old_comp, recursive=True)
+        return render_commands
 
 
     def _update_old_component(self, component, newprops, render_context: _RenderContext):
@@ -273,7 +244,7 @@ class App(object):
                 render_context.set(child, "_key", "KEY" + str(i))
 
     def _render(self, component: Component, render_context: _RenderContext):
-        component._controller = self
+        component._controller = self._app
         if isinstance(component, BaseComponent):
             if len(component.children) > 1:
                 self._attach_keys(component, render_context)
@@ -370,13 +341,10 @@ class App(object):
         #         logging.warn("Rerendering: %s", component)
         if start_time - self._last_render_time > 1:
             logging.info("Time without rendering: %.2f ms", (time.process_time() - start_time) * 1000)
+
         for qt_tree in qt_trees:
             qt_commands = qt_tree.gen_qt_commands(render_context)
             root = qt_tree.component
-            if execute:
-                # print(qt_commands)
-                for command in qt_commands:
-                    command[0](*command[1:])
             ret.append((root, (qt_tree, qt_commands)))
 
         if not self._first_render:
@@ -389,11 +357,7 @@ class App(object):
                 logging.info("Rendered %d times, with average render time of %.2f ms and worst render time of %.2f ms",
                              self._nrenders, 1000 * self._render_time / self._nrenders, 1000 * self._worst_render_time)
                 self._last_render_time = end_time
+        self._first_render = False
 
         render_context.run_callbacks()
         return ret
-
-    def start(self):
-        self._request_rerender([self._root], {}, {})
-        self._first_render = False
-        self.app.exec_()

@@ -11,3 +11,4 @@ requests==2.25.1
 six==1.15.0
 snowballstemmer==2.0.0
 urllib3==1.26.2
+watchdog==1.0.2
