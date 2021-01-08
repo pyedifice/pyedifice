@@ -97,7 +97,11 @@ def runner():
             # Reload the old module and get old and new Components
             module = sys.modules[old_file_mapping[src_path]]
             old_components = _module_to_components(module)
-            _reload(module)
+            try:
+                _reload(module)
+            except Exception as e:
+                logging.warn("Encountered exception while reloading module: %s", e)
+                return
             new_components = _module_to_components(module)
 
             # Create all pairs of (old component, new component) that share the same names
