@@ -3,6 +3,7 @@ import inspect
 import logging
 import queue
 import time
+import traceback
 import typing as tp
 
 from PyQt5 import QtCore, QtWidgets
@@ -38,11 +39,19 @@ class App(object):
                     e.accept()
                     while not self._class_rerender_queue.empty():
                         file_name, classes = self._class_rerender_queue.get_nowait()
-                        ret = self._refresh_by_class(classes)
+                        try:
+                            ret = self._render_engine._refresh_by_class(classes)
+                        except Exception as e:
+                            logging.warn("Encountered exception while reloading: %s" % e)
+                            self._class_rerender_response_queue.put_nowait(False)
+                            traceback.print_exc()
+                            continue
+
                         for _, (_, commands) in ret:
                             for command in commands:
                                 command[0](*command[1:])
                         self._class_rerender_queue.task_done()
+                        self._class_rerender_response_queue.put_nowait(True)
                         logging.info("Rerendering Components in %s due to source change", file_name)
                     return True
                 else:
@@ -50,6 +59,7 @@ class App(object):
 
         self._event_receiver = EventReceiverWidget()
         self._class_rerender_queue = queue.Queue()
+        self._class_rerender_response_queue = queue.Queue()
 
     def _request_rerender(self, components, newprops, newstate, execute=True):
         ret = self._render_engine._request_rerender(components, newprops, newstate)

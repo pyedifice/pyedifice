@@ -27,6 +27,8 @@ def _file_to_module_name():
             d[os.path.abspath(module.__file__)] = name
     return d
 
+MODULE_CLASS_CACHE = {}
+
 def _module_to_components(module):
     return inspect.getmembers(module, lambda x: inspect.isclass(x) and issubclass(x, Component))
 
@@ -96,13 +98,19 @@ def runner():
 
             # Reload the old module and get old and new Components
             module = sys.modules[old_file_mapping[src_path]]
-            old_components = _module_to_components(module)
+
+            if module in MODULE_CLASS_CACHE:
+                old_components = MODULE_CLASS_CACHE[module]
+            else:
+                old_components = list(_module_to_components(module))
+            MODULE_CLASS_CACHE[module] = old_components
+
             try:
                 _reload(module)
             except Exception as e:
                 logging.warn("Encountered exception while reloading module: %s", e)
                 return
-            new_components = _module_to_components(module)
+            new_components = list(_module_to_components(module))
 
             # Create all pairs of (old component, new component) that share the same names
             components_list = []
@@ -121,8 +129,11 @@ def runner():
 
             # Alert the main QThread about the change
             app._class_rerender_queue.put_nowait((src_path, components_list))
-            app.app.postEvent(app._event_receiver, QtCore.QEvent(app._file_change_rerender_event_type))
             logging.info("Detected change in %s.", src_path)
+            app.app.postEvent(app._event_receiver, QtCore.QEvent(app._file_change_rerender_event_type))
+            success = app._class_rerender_response_queue.get()
+            if success:
+                MODULE_CLASS_CACHE[module] = new_components
 
     event_handler = EventHandler()
 

@@ -20,8 +20,10 @@ class _ChangeManager(object):
         setattr(obj, key, value)
 
     def unwind(self):
+        logging.warn("Encountered error while rendering. Unwinding changes.")
         for obj, key, had_key, old_value, new_value in reversed(self.changes):
             if had_key:
+                logging.info("Resetting %s.%s to %s", obj, key, old_value)
                 setattr(obj, key, old_value)
             else:
                 try:
@@ -88,6 +90,10 @@ class _RenderContext(object):
         self.component_to_new_props = {}
         self.component_to_old_props = {}
         self.force_refresh = force_refresh
+
+        self.component_tree = {}
+        self.widget_tree = {}
+        self.enqueued_deletions = []
 
         self._callback_queue = []
 
@@ -203,18 +209,34 @@ class RenderEngine(object):
                 parts[3]._key = old_comp._key
 
         # 3) Replace old component in the place in the tree where they first appear, with a reference to new component
+
+        def serialize_comp(comp):
+            widget = self._widget_tree[comp]
+            serialization = [id(widget.component)]
+            return serialization + [serialize_comp(sc.component) for sc in widget.children]
+
+        backup = {}
         for old_comp, _, parent_comp, new_comp in components_to_replace:
             if isinstance(self._component_tree[parent_comp], list):
+                backup[parent_comp] = list(parent_comp.children)
                 for i, comp in enumerate(parent_comp.children):
                     if comp is old_comp:
                         parent_comp._props["children"][i] = new_comp
 
         # 5) call _render for all new component parents
-        ret = self._request_rerender([parent_comp for _, _, parent_comp, _ in components_to_replace], PropsDict({}), {})
-        # 4) Delete all old_components from the tree, and do this recursively
-        for old_comp, _, _, _ in components_to_replace:
-            if old_comp in self._component_tree:
-                self._delete_component(old_comp, recursive=True)
+        try:
+            logging.info("Rerendering: %s", [parent for _, _, parent, _ in components_to_replace])
+            ret = self._request_rerender([parent_comp for _, _, parent_comp, _ in components_to_replace], PropsDict({}), {})
+        except Exception as e:
+            # Restore components
+            for parent_comp in backup:
+                parent_comp._props["children"] = backup[parent_comp]
+
+            raise e
+        # # 4) Delete all old_components from the tree, and do this recursively
+        # for old_comp, _, _, _ in components_to_replace:
+        #     if old_comp in self._component_tree:
+        #         self._delete_component(old_comp, recursive=True)
         return ret
 
 
@@ -248,11 +270,11 @@ class RenderEngine(object):
             self._attach_keys(component, render_context)
         if component not in self._component_tree:
             # New component, simply render everything
-            self._component_tree[component] = list(component.children)
+            render_context.component_tree[component] = list(component.children)
             rendered_children = [self._render(child, render_context) for child in component.children]
-            self._widget_tree[component] = _WidgetTree(component, rendered_children) 
+            render_context.widget_tree[component] = _WidgetTree(component, rendered_children) 
             render_context.mark_qt_rerender(component, True)
-            return self._widget_tree[component]
+            return render_context.widget_tree[component]
         else:
             # Figure out which children are pre-existing
             old_children = self._component_tree[component]
@@ -289,14 +311,14 @@ class RenderEngine(object):
             children_set = set(children)
             for old_child in old_children:
                 if old_child not in children_set:
-                    self._delete_component(old_child, True)
+                    render_context.enqueued_deletions.append(old_child)
 
-            self._component_tree[component] = children
-            self._widget_tree[component] = _WidgetTree(component, rendered_children) 
+            render_context.component_tree[component] = children
+            render_context.widget_tree[component] = _WidgetTree(component, rendered_children) 
             props_dict = dict(component.props._items)
             props_dict["children"] = list(children)
             render_context.mark_props_change(component, PropsDict(props_dict))
-            return self._widget_tree[component]
+            return render_context.widget_tree[component]
 
     def _render(self, component: Component, render_context: _RenderContext):
         component._controller = self._app
@@ -311,17 +333,17 @@ class RenderEngine(object):
         if sub_component.__class__ == old_rendering.__class__:
             # TODO: Update component will receive props
             # TODO figure out if its subcomponent state or old_rendering state
-            self._widget_tree[component] = self._update_old_component(
+            render_context.widget_tree[component] = self._update_old_component(
                 old_rendering, sub_component.props, render_context)
         else:
             if old_rendering is not None:
-                self._delete_component(sub_component, True)
+                render_context.enqueued_deletions.append(sub_component)
             else:
                 render_context.schedule_callback(component.did_mount)
-            self._component_tree[component] = sub_component
-            self._widget_tree[component] = self._render(sub_component, render_context)
+            render_context.component_tree[component] = sub_component
+            render_context.widget_tree[component] = self._render(sub_component, render_context)
 
-        return self._widget_tree[component]
+        return render_context.widget_tree[component]
 
     def _gen_all_commands(self, qt_trees, render_context):
         ret = []
@@ -345,13 +367,14 @@ class RenderEngine(object):
         qt_trees, render_context = self._gen_widget_trees(components)
         ret = self._gen_all_commands(qt_trees, render_context)
 
-        # qt_tree.print_tree()
-        # for component, need_rerendering in render_context.need_qt_command_reissue.items():
-        #     if need_rerendering:
-        #         logging.warn("Rerendering: %s", component)
+        self._component_tree.update(render_context.component_tree)
+        self._widget_tree.update(render_context.widget_tree)
+        for component in render_context.enqueued_deletions:
+            self._delete_component(component, True)
+
+        # qt_trees[0].print_tree()
         if start_time - self._last_render_time > 1:
             logging.info("Time without rendering: %.2f ms", (time.process_time() - start_time) * 1000)
-
 
         if not self._first_render:
             end_time = time.process_time()
