@@ -1,0 +1,1 @@
+QT_VERSION = "PySide2"
