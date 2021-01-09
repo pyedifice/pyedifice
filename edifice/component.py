@@ -173,15 +173,15 @@ class Component(object):
         if not hasattr(self, "_props"):
             self._props = {"children": []}
 
-    def register_props(self, props: tp.Union[tp.Mapping[tp.Text, tp.Any], PropsDict]):
+    def register_props(self, props: tp.Mapping[tp.Text, tp.Any]):
         """Register props.
 
         Call this function if you do not use the register_props decorator and you have
         props to register.
         """
-        if "children" not in props:
-            props["children"] = {}
-        self._props = props
+        if not hasattr(self, "_props"):
+            self._props = {"children": []}
+        self._props.update(props)
 
     def set_key(self, k: tp.Text):
         self._key = k

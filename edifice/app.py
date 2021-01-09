@@ -6,8 +6,11 @@ import time
 import traceback
 import typing as tp
 
-from PyQt5 import QtCore, QtWidgets
-from PyQt5.QtCore import pyqtRemoveInputHook, pyqtRestoreInputHook
+from .qt import QT_VERSION
+if QT_VERSION == "PyQt5":
+    from PyQt5 import QtCore, QtWidgets
+else:
+    from PySide2 import QtCore, QtWidgets
 
 from .component import Component, PropsDict, register_props, BaseComponent, RootComponent
 from .base_components import WindowManager

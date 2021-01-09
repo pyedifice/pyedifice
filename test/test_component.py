@@ -3,9 +3,17 @@ import unittest.mock
 import edifice.component as component
 import edifice.engine as engine
 import edifice.base_components as base_components
-from PyQt5 import QtWidgets, QtCore
 
-app = QtWidgets.QApplication(["-platform", "offscreen"])
+from edifice.qt import QT_VERSION
+if QT_VERSION == "PyQt5":
+    from PyQt5 import QtCore, QtWidgets
+else:
+    from PySide2 import QtCore, QtWidgets
+
+try:
+    app = QtWidgets.QApplication(["-platform", "offscreen"])
+except:
+    pass
 
 class MockApp(engine.RenderEngine):
     pass

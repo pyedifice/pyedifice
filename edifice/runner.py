@@ -14,7 +14,11 @@ from watchdog.observers.fsevents import FSEventsObserver
 from .component import Component
 from .app import App
 
-from PyQt5 import QtCore
+from edifice.qt import QT_VERSION
+if QT_VERSION == "PyQt5":
+    from PyQt5 import QtCore
+else:
+    from PySide2 import QtCore
 
 
 def _reload():
