@@ -1,0 +1,27 @@
+codecov:
+  strict_yaml_branch: master
+  notify:
+    require_ci_to_pass: true
+comment: off
+ignore:
+  - "benchmarks/**/*"
+  - "docs/**/*"
+  - "examples/**/*"
+  - "test/**/*"
+coverage:
+  precision: 2
+  range: 0...100
+  round: down
+  status:
+    changes: off
+    project: off
+    patch: off
+parsers:
+  gcov:
+    branch_detection:
+      conditional: true
+      loop: true
+      macro: false
+      method: false
+  javascript:
+    enable_partials: false
