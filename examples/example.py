@@ -101,16 +101,19 @@ class Test(ed.Component):
             self.data = self.data + 5
 
     def render(self):
-        return ed.WindowManager()(ed.View() (
+        return ed.View()((ed.View(layout="none", style={}) (
+            ed.Label(self.hi_text, style={"top": 10, "left": 30, "font-size": "20px"}),
+            ed.IconButton(name="play", title="Changer", on_click=lambda: self.set_state(hi_text="Hello"),
+                          style={"top": 50, "left": 20}),
                 # SmartTable(self.data),
-                ed.Label(self.hi_text),
-                ed.Icon("play"),
-                ed.IconButton(name="play", title="Changer", on_click=lambda: self.set_state(hi_text="Hello")),
+                # ed.Label(self.hi_text),
+                # ed.Icon("play"),
+                # ed.IconButton(name="play", title="Changer", on_click=lambda: self.set_state(hi_text="Hello")),
                 # ed.Button("Add 5", on_click=self.on_click),
                 # ed.ScrollView(style={"min-width": 100, "min-height": 100, "max-height": 100, "height": 100})(
                 #     *[ed.Label(i) for i in range(20)]
                 # )
-            ))
+            )))
 
 
 if __name__ == "__main__":

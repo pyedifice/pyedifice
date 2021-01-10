@@ -40,7 +40,8 @@ def _css_to_number(a):
     return float(a)
 
 
-class _QtWidgetComponent(WidgetComponent):
+class QtWidgetComponent(WidgetComponent):
+    """Shared properties of QT widgets."""
 
     @register_props
     def __init__(self, style=None):
@@ -257,7 +258,7 @@ class WindowManager(RootComponent):
         return commands
 
 
-class Icon(_QtWidgetComponent):
+class Icon(QtWidgetComponent):
     """Display an Icon
 
     Icons are fairly central to modern-looking UI design.
@@ -304,7 +305,7 @@ class Icon(_QtWidgetComponent):
         return commands
 
 
-class Button(_QtWidgetComponent):
+class Button(QtWidgetComponent):
     """Basic Button
 
     Props:
@@ -372,7 +373,7 @@ class IconButton(Button):
         return commands
 
 
-class Label(_QtWidgetComponent):
+class Label(QtWidgetComponent):
 
     @register_props
     def __init__(self, text: tp.Any = "", **kwargs):
@@ -397,7 +398,7 @@ class Label(_QtWidgetComponent):
         return commands
 
 
-class TextInput(_QtWidgetComponent):
+class TextInput(QtWidgetComponent):
 
     @register_props
     def __init__(self, text: tp.Any = "", on_change: tp.Callable[[tp.Text], None] = (lambda text: None), **kwargs):
@@ -429,7 +430,7 @@ class TextInput(_QtWidgetComponent):
         return commands
 
 
-class _LinearView(_QtWidgetComponent):
+class _LinearView(QtWidgetComponent):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -575,12 +576,12 @@ class List(BaseComponent):
 
 
 
-class Table(WidgetComponent):
+class Table(QtWidgetComponent):
 
     @register_props
     def __init__(self, rows: int, columns: int,
                  row_headers: tp.Sequence[tp.Any] = None, column_headers: tp.Sequence[tp.Any] = None,
-                 style: StyleType = None, alternating_row_colors:bool = True):
+                 alternating_row_colors:bool = True):
         super().__init__()
 
         self._already_rendered = {}
@@ -594,7 +595,7 @@ class Table(WidgetComponent):
             child_node.widget().deleteLater()
 
     def _qt_update_commands(self, children, newprops, newstate):
-        commands = []
+        commands = super()._qt_update_commands(children, newprops, newstate, self.underlying, None)
 
         for prop in newprops:
             if prop == "style":
