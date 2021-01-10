@@ -32,6 +32,163 @@ def _get_svg_image(icon_path, size):
     return pixmap
 
 
+def _css_to_number(a):
+    if not isinstance(a, str):
+        return a
+    if a.endswith("px"):
+        return float(a[:-2])
+    return float(a)
+
+
+class _QtWidgetComponent(WidgetComponent):
+
+    @register_props
+    def __init__(self, style=None):
+        super().__init__()
+        self._height = 0
+        self._width = 0
+        self._top = 0
+        self._left = 0
+        self._size_from_font = None
+
+    def _set_size(self, width, height, size_from_font=None):
+        self._height = height
+        self._width = width
+        self._size_from_font = size_from_font
+
+    def _get_width(self, children):
+        if self._width:
+            return self._width
+        return sum(max(0, child.component._width + child.component._left) for child in children)
+
+    def _get_height(self, children):
+        if self._height:
+            return self._height
+        return sum(max(0, child.component._height + child.component._top) for child in children)
+
+    def _gen_styling_commands(self, children, style, underlying, underlying_layout=None):
+        commands = []
+
+        if underlying_layout is not None:
+            set_margin = False
+            new_margin=[0, 0, 0, 0]
+            if "margin" in style:
+                new_margin = [_css_to_number(style["margin"])] * 4
+                style.pop("margin")
+                set_margin = True
+            if "margin-left" in style:
+                new_margin[0] = _css_to_number(style["margin-left"])
+                style.pop("margin-left")
+                set_margin = True
+            if "margin-right" in style:
+                new_margin[2] = _css_to_number(style["margin-right"])
+                style.pop("margin-right")
+                set_margin = True
+            if "margin-top" in style:
+                new_margin[1] = _css_to_number(style["margin-top"])
+                style.pop("margin-top")
+                set_margin = True
+            if "margin-bottom" in style:
+                new_margin[3] = _css_to_number(style["margin-bottom"])
+                style.pop("margin-bottom")
+                set_margin = True
+
+            set_align = None
+            if "align" in style:
+                if style["align"] == "left":
+                    set_align = QtCore.Qt.AlignLeft
+                elif style["align"] == "center":
+                    set_align = QtCore.Qt.AlignCenter
+                elif style["align"] == "right":
+                    set_align = QtCore.Qt.AlignRight
+                elif style["align"] == "justify":
+                    set_align = QtCore.Qt.AlignJustify
+                else:
+                    logging.warn("Unknown alignment: %s", style["align"])
+                style.pop("align")
+
+            if set_margin:
+                commands += [(underlying_layout.setContentsMargins, new_margin[0], new_margin[0], new_margin[0], new_margin[0])]
+            if set_align:
+                commands += [(underlying_layout.setAlignment, set_align)]
+        else:
+            if "align" in style:
+                if style["align"] == "left":
+                    set_align = "AlignLeft"
+                elif style["align"] == "center":
+                    set_align = "AlignCenter"
+                elif style["align"] == "right":
+                    set_align = "AlignRight"
+                elif style["align"] == "justify":
+                    set_align = "AlignJustify"
+                else:
+                    logging.warn("Unknown alignment: %s", style["align"])
+                style.pop("align")
+                style["qproperty-alignment"] = set_align
+
+
+        if "font-size" in style:
+            font_size = _css_to_number(style["font-size"])
+            if self._size_from_font is not None:
+                size = self._size_from_font(font_size)
+                self._width = size[0]
+                self._height = size[1]
+        if "width" in style:
+            if "min-width" not in style:
+                style["min-width"] = style["width"]
+            if "max-width" not in style:
+                style["max-width"] = style["width"]
+        else:
+            if "min-width" not in style:
+                style["min-width"] = self._get_width(children)
+            print("Setting width for %s to %s" % (self, style["min-width"]))
+
+        if "height" in style:
+            if "min-height" not in style:
+                style["min-height"] = style["height"]
+            if "max-height" not in style:
+                style["max-height"] = style["height"]
+        else:
+            if "min-height" not in style:
+                style["min-height"] = self._get_height(children)
+                print("Setting height for %s to %s" % (self, style["min-height"]))
+
+        set_move = False
+        move_coords = [0, 0]
+        if "top" in style:
+            set_move = True
+            move_coords[1] = _css_to_number(style["top"])
+            self._top = move_coords[1]
+        if "left" in style:
+            set_move = True
+            move_coords[0] = _css_to_number(style["left"])
+            self._left = move_coords[0]
+
+        if set_move:
+            commands += [(self.underlying.move, move_coords[0], move_coords[1])]
+
+        commands += [(self.underlying.setStyleSheet, _dict_to_style(style,  "QWidget#" + str(id(self))))]
+        return commands
+
+    def _qt_update_commands(self, children, newprops, newstate, underlying, underlying_layout=None):
+        commands = []
+        for prop in newprops:
+            if prop == "style":
+                style = newprops[prop] or {}
+                if isinstance(style, list):
+                    # style is nonempty since otherwise the or statement would make it a dict
+                    first_style = style[0]
+                    for next_style in style[1:]:
+                        first_style.update(next_style)
+                    style = first_style
+                else:
+                    style = dict(style)
+
+                commands += self._gen_styling_commands(children, style, underlying, underlying_layout)
+        return commands
+
+
+
 class WindowManager(RootComponent):
     """Window manager: the root component.
 
@@ -91,6 +248,7 @@ class WindowManager(RootComponent):
                 old_pos = old_positions[i]
             if child.component not in self._already_rendered:
                 if old_pos is not None:
+                    print("Moving to: ", old_pos)
                     commands += [(child.component.underlying.move, old_pos)]
                 commands += [(child.component.underlying.show,)]
             self._already_rendered[child.component] = True
@@ -99,7 +257,7 @@ class WindowManager(RootComponent):
         return commands
 
 
-class Icon(WidgetComponent):
+class Icon(_QtWidgetComponent):
     """Display an Icon
 
     Icons are fairly central to modern-looking UI design.
@@ -117,14 +275,21 @@ class Icon(WidgetComponent):
     """
 
     @register_props
-    def __init__(self, name, size=10, collection="font-awesome", sub_collection="solid"):
-        icon_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                                 "icons",
-                                 collection, sub_collection, name + ".svg")
+    def __init__(self, name, size=10, collection="font-awesome", sub_collection="solid", **kwargs):
+        super().__init__(**kwargs)
+        self._initialized = False
+
+    def _initialize(self):
         self.underlying = QtWidgets.QLabel("")
+        self.underlying.setObjectName(str(id(self)))
 
     def _qt_update_commands(self, children, newprops, newstate):
-        commands = []
+        if not self._initialized:
+            self._initialized = True
+            self._initialize()
+
+        self._set_size(self.props.size, self.props.size)
+        commands = super()._qt_update_commands(children, newprops, newstate, self.underlying)
         icon_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                                  "icons",
                                  self.props.collection, self.props.sub_collection, self.props.name + ".svg")
@@ -139,7 +304,7 @@ class Icon(WidgetComponent):
         return commands
 
 
-class Button(WidgetComponent):
+class Button(_QtWidgetComponent):
     """Basic Button
 
     Props:
@@ -149,11 +314,14 @@ class Button(WidgetComponent):
     """
 
     @register_props
-    def __init__(self, title: tp.Any = "", style: StyleType = None, on_click: tp.Callable[[], None] = (lambda: None)):
-        super(Button, self).__init__()
+    def __init__(self, title: tp.Any = "", on_click: tp.Callable[[], None] = (lambda: None), **kwargs):
+        super(Button, self).__init__(**kwargs)
+        self._initialized = False
+        self._connected = False
+
+    def _initialize(self):
         self.underlying =  QtWidgets.QPushButton(str(self.props.title))
         self.underlying.setObjectName(str(id(self)))
-        self._connected = False
 
     def _set_on_click(self, on_click):
         if self._connected:
@@ -162,7 +330,12 @@ class Button(WidgetComponent):
         self._connected = True
 
     def _qt_update_commands(self, children, newprops, newstate):
-        commands = []
+        if not self._initialized:
+            self._initialized = True
+            self._initialize()
+        size = self.underlying.font().pointSize()
+        self._set_size(size * len(self.props.title), size, lambda size: (size * len(self.props.title), size))
+        commands = super()._qt_update_commands(children, newprops, newstate, self.underlying)
         for prop in newprops:
             if prop == "title":
                 commands.append((self.underlying.setText, str(newprops.title)))
@@ -186,6 +359,9 @@ class IconButton(Button):
                                  "icons",
                                  self.props.collection, self.props.sub_collection, self.props.name + ".svg")
 
+        size = self.underlying.font().pointSize()
+        self._set_size(self.props.size + 3 + size * len(self.props.title), size,  lambda size: (self.props.size + 3 + size * len(self.props.title), size))
+
         def render_image(icon_path, size):
             pixmap = _get_svg_image(icon_path, size)
             self.underlying.setIcon(QtGui.QIcon(pixmap))
@@ -196,11 +372,11 @@ class IconButton(Button):
         return commands
 
 
-class Label(WidgetComponent):
+class Label(_QtWidgetComponent):
 
     @register_props
-    def __init__(self, text: tp.Any = "", style: StyleType = None):
-        super().__init__()
+    def __init__(self, text: tp.Any = "", **kwargs):
+        super().__init__(**kwargs)
         self._initialized = False
 
     def _initialize(self):
@@ -211,24 +387,26 @@ class Label(WidgetComponent):
         if not self._initialized:
             self._initialized = True
             self._initialize()
+        size = self.underlying.font().pointSize()
+        self._set_size(size * len(self.props.text), size, lambda size: (size * len(self.props.text), size))
 
-        commands = []
+        commands = super()._qt_update_commands(children, newprops, newstate, self.underlying, None)
         for prop in newprops:
             if prop == "text":
                 commands += [(self.underlying.setText, str(newprops[prop]))]
-            elif prop == "style":
-                commands += [(self.underlying.setStyleSheet, _dict_to_style(newprops[prop], "QWidget#" + str(id(self))))]
         return commands
 
 
-class TextInput(WidgetComponent):
+class TextInput(_QtWidgetComponent):
 
     @register_props
-    def __init__(self, text: tp.Any = "", on_change: tp.Callable[[tp.Text], None] = (lambda text: None), style: StyleType = None):
-        super().__init__()
+    def __init__(self, text: tp.Any = "", on_change: tp.Callable[[tp.Text], None] = (lambda text: None), **kwargs):
+        super().__init__(**kwargs)
         self.current_text = text
         self._connected = False
         self.underlying = QtWidgets.QLineEdit(str(self.props.text))
+        size = self.underlying.font().pointSize()
+        self._set_size(size * len(self.props.text), size)
         self.underlying.setObjectName(str(id(self)))
 
     def set_on_change(self, on_change):
@@ -241,7 +419,7 @@ class TextInput(WidgetComponent):
         self._connected = True
 
     def _qt_update_commands(self, children, newprops, newstate):
-        commands = []
+        commands = super()._qt_update_commands(children, newprops, newstate, self.underlying)
         commands += [(self.underlying.setText, str(self.current_text))]
         for prop in newprops:
             if prop == "on_change":
@@ -251,10 +429,10 @@ class TextInput(WidgetComponent):
         return commands
 
 
-class _LinearView(WidgetComponent):
+class _LinearView(_QtWidgetComponent):
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
 
         self._already_rendered = {}
         self._old_rendered_children = []
@@ -279,7 +457,10 @@ class _LinearView(WidgetComponent):
 
         for i, old_child in reversed(list(enumerate(self._old_rendered_children))):
             if old_child not in new_children:
-                commands += [(self._delete_child, i)]
+                if self.underlying_layout is not None:
+                    commands += [(self._delete_child, i)]
+                else:
+                    commands += [(old_child.underlying.setParent, None)]
                 del self._old_rendered_children[i]
 
         old_child_index = 0
@@ -291,10 +472,16 @@ class _LinearView(WidgetComponent):
 
             if old_child is None or child.component is not old_child:
                 if child.component not in self._already_rendered:
-                    commands.append((self.underlying_layout.insertWidget, i, child.component.underlying))
+                    if self.underlying_layout is not None:
+                        commands.append((self.underlying_layout.insertWidget, i, child.component.underlying))
+                    else:
+                        commands.append((child.component.underlying.setParent, self.underlying))
                     old_child_index -= 1
                 else:
-                    commands.extend([(self._soft_delete_child, i,), (self.underlying_layout.insertWidget, i, child.component.underlying)])
+                    if self.underlying_layout is not None:
+                        commands.extend([(self._soft_delete_child, i,), (self.underlying_layout.insertWidget, i, child.component.underlying)])
+                    else:
+                        commands.extend([(old_child.underlying.setParent, None), (child.component.underlying.setParent, self.underlying)])
 
             old_child_index += 1
             self._already_rendered[child.component] = True
@@ -304,16 +491,11 @@ class _LinearView(WidgetComponent):
         return commands
 
 
-def _css_to_number(a):
-    if a.endswith("px"):
-        return float(a[:-2])
-    return float(a)
-
 class View(_LinearView):
 
     @register_props
-    def __init__(self, layout: tp.Text = "column", style: StyleType = None):
-        super().__init__()
+    def __init__(self, layout: tp.Text = "column", **kwargs):
+        super().__init__(**kwargs)
         self._initialized = False
 
     def _initialize(self):
@@ -323,12 +505,18 @@ class View(_LinearView):
             self.underlying_layout = QtWidgets.QVBoxLayout()
         elif layout == "row":
             self.underlying_layout = QtWidgets.QHBoxLayout()
+        elif layout == "none":
+            self.underlying_layout = None
         else:
-            raise ValueError("Layout must be row or column, got %s instead", layout)
-        self.underlying.setLayout(self.underlying_layout)
+            raise ValueError("Layout must be row, column or none, got %s instead", layout)
+
         self.underlying.setObjectName(str(id(self)))
-        self.underlying_layout.setContentsMargins(0, 0, 0, 0)
-        self.underlying_layout.setSpacing(0)
+        if self.underlying_layout:
+            self.underlying.setLayout(self.underlying_layout)
+            self.underlying_layout.setContentsMargins(0, 0, 0, 0)
+            self.underlying_layout.setSpacing(0)
+        else:
+            self.underlying.setMinimumSize(100, 100)
 
     def _qt_update_commands(self, children, newprops, newstate):
         if not self._initialized:
@@ -340,43 +528,7 @@ class View(_LinearView):
 
     def _qt_stateless_commands(self, children, newprops, newstate):
         # This stateless render command is used to test rendering
-        commands = []
-        for prop in newprops:
-            if prop == "style":
-                style = newprops[prop] or {}
-                new_margin=[0,0,0,0]
-                set_margin = False
-                if "margin" in style:
-                    new_margin = [_css_to_number(style["margin"])] * 4
-                    set_margin = True
-                if "margin-left" in style:
-                    new_margin[0] = _css_to_number(style["margin-left"])
-                    set_margin = True
-                if "margin-right" in style:
-                    new_margin[1] = _css_to_number(style["margin-right"])
-                    set_margin = True
-                if "margin-top" in style:
-                    new_margin[2] = _css_to_number(style["margin-top"])
-                    set_margin = True
-                if "margin-bottom" in style:
-                    new_margin[3] = _css_to_number(style["margin-bottom"])
-                    set_margin = True
-
-                set_align = None
-                if "align" in style:
-                    if style["align"] == "left":
-                        set_align = QtCore.Qt.AlignLeft
-                    elif style["align"] == "center":
-                        set_align = QtCore.Qt.AlignCenter
-                    elif style["align"] == "right":
-                        set_align = QtCore.Qt.AlignRight
-                    style.pop("align")
-
-                if set_margin:
-                    commands += [(self.underlying_layout.setContentsMargins, new_margin[0], new_margin[0], new_margin[0], new_margin[0])]
-                if set_align:
-                    commands += [(self.underlying_layout.setAlignment, set_align)]
-                commands += [(self.underlying.setStyleSheet, _dict_to_style(newprops[prop],  "QWidget#" + str(id(self))))]
+        commands = super()._qt_update_commands(children, newprops, newstate, self.underlying, self.underlying_layout)
         return commands
 
 
@@ -384,7 +536,7 @@ class View(_LinearView):
 class ScrollView(_LinearView):
 
     @register_props
-    def __init__(self, layout="column", style=None):
+    def __init__(self, layout="column"):
         super().__init__()
 
         self._already_rendered = {}
@@ -409,10 +561,7 @@ class ScrollView(_LinearView):
 
     def _qt_update_commands(self, children, newprops, newstate):
         commands = self._recompute_children(children)
-
-        for prop in newprops:
-            if prop == "style":
-                commands += [(self.underlying.setStyleSheet, _dict_to_style(newprops[prop],  "QWidget#" + str(id(self))))]
+        commands += super()._qt_update_commands(children, newprops, newstate, self.underlying, self.underlying_layout)
         return commands
 
 class List(BaseComponent):

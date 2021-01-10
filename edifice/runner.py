@@ -134,7 +134,7 @@ def runner():
             # Alert the main QThread about the change
             app._class_rerender_queue.put_nowait((src_path, components_list))
             logging.info("Detected change in %s.", src_path)
-            app.app.postEvent(app._event_receiver, QtCore.QEvent(app._file_change_rerender_event_type))
+            app.app.postEvent(app._event_receiver, QtCore.QEvent(QtCore.QEvent.Type(app._file_change_rerender_event_type)))
             success = app._class_rerender_response_queue.get()
             if success:
                 MODULE_CLASS_CACHE[module] = new_components
