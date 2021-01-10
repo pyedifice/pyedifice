@@ -16,7 +16,6 @@ else:
 
 StyleType = tp.Optional[tp.Mapping[tp.Text, tp.Text]]
 
-
 def _dict_to_style(d, prefix="QWidget"):
     d = d or {}
     stylesheet = prefix + "{%s}" % (";".join("%s: %s" % (k, v) for (k, v) in d.items()))
@@ -45,13 +44,14 @@ class QtWidgetComponent(WidgetComponent):
     """Shared properties of QT widgets."""
 
     @register_props
-    def __init__(self, style=None):
+    def __init__(self, style=None, on_click: tp.Optional[tp.Callable[[QtGui.QMouseEvent], tp.Any]] = None):
         super().__init__()
         self._height = 0
         self._width = 0
         self._top = 0
         self._left = 0
         self._size_from_font = None
+        self._on_click = None
 
     def _set_size(self, width, height, size_from_font=None):
         self._height = height
@@ -67,6 +67,26 @@ class QtWidgetComponent(WidgetComponent):
         if self._height:
             return self._height
         return sum(max(0, child.component._height + child.component._top) for child in children)
+
+    def _mouse_press(self, ev):
+        pass
+
+    def _mouse_release(self, ev):
+        event_pos = ev.pos()
+        geometry = self.underlying.geometry()
+
+        if 0 <= event_pos.x() <= geometry.width() and 0 <= event_pos.y() <= geometry.height():
+            self._mouse_clicked(ev)
+        self._mouse_pressed = False
+
+    def _mouse_clicked(self, ev):
+        if self._on_click:
+            self._on_click(ev)
+
+    def _set_on_click(self, underlying, on_click):
+        self._on_click = on_click
+        self.underlying.mousePressEvent = self._mouse_press
+        self.underlying.mouseReleaseEvent = self._mouse_release
 
     def _gen_styling_commands(self, children, style, underlying, underlying_layout=None):
         commands = []
@@ -183,8 +203,11 @@ class QtWidgetComponent(WidgetComponent):
                     style = first_style
                 else:
                     style = dict(style)
-
                 commands += self._gen_styling_commands(children, style, underlying, underlying_layout)
+            elif prop == "on_click":
+                if newprops.on_click is not None:
+                    commands.append((self._set_on_click, underlying, newprops.on_click))
+                    commands.append((underlying.setCursor, QtCore.Qt.PointingHandCursor))
         return commands
 
 
@@ -309,11 +332,10 @@ class Button(QtWidgetComponent):
     Props:
         title: the button text
         style: the styling of the button
-        on_click: a function that will be called when the button is clicked
     """
 
     @register_props
-    def __init__(self, title: tp.Any = "", on_click: tp.Callable[[], None] = (lambda: None), **kwargs):
+    def __init__(self, title: tp.Any = "", **kwargs):
         super(Button, self).__init__(**kwargs)
         self._initialized = False
         self._connected = False
@@ -321,12 +343,6 @@ class Button(QtWidgetComponent):
     def _initialize(self):
         self.underlying =  QtWidgets.QPushButton(str(self.props.title))
         self.underlying.setObjectName(str(id(self)))
-
-    def _set_on_click(self, on_click):
-        if self._connected:
-            self.underlying.clicked.disconnect()
-        self.underlying.clicked.connect(on_click)
-        self._connected = True
 
     def _qt_update_commands(self, children, newprops, newstate):
         if not self._initialized:
@@ -338,8 +354,6 @@ class Button(QtWidgetComponent):
         for prop in newprops:
             if prop == "title":
                 commands.append((self.underlying.setText, str(newprops.title)))
-            elif prop == "on_click":
-                commands.append((self._set_on_click, newprops.on_click))
 
         return commands
 
