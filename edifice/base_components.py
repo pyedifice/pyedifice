@@ -23,12 +23,30 @@ def _dict_to_style(d, prefix="QWidget"):
 
 
 @functools.lru_cache(100)
-def _get_svg_image(icon_path, size):
+def _get_svg_image_raw(icon_path, size):
     svg_renderer = QtSvg.QSvgRenderer(icon_path)
     image = QtGui.QImage(size, size, QtGui.QImage.Format_ARGB32)
     image.fill(0x00000000)
     svg_renderer.render(QtGui.QPainter(image))
     pixmap = QtGui.QPixmap.fromImage(image)
+    return pixmap
+
+
+@functools.lru_cache(100)
+def _get_svg_image(icon_path, size, rotation=0, color=(0, 0, 0, 1)):
+    pixmap = _get_svg_image_raw(icon_path, size)
+    if color == (0, 0, 0, 1) and rotation == 0:
+        return pixmap
+    pixmap = pixmap.copy()
+    if color != (0, 0, 0, 1):
+        mask = pixmap.mask()
+        pixmap.fill(QtGui.QColor(*color))
+        pixmap.setMask(mask)
+    if rotation != 0:
+        w, h = pixmap.width(), pixmap.height()
+        pixmap = pixmap.transformed(QtGui.QTransform().rotate(rotation))
+        new_w, new_h = pixmap.width(), pixmap.height()
+        pixmap = pixmap.copy((new_w - w) // 2, (new_h - h) // 2, w, h)
     return pixmap
 
 
@@ -52,6 +70,12 @@ class QtWidgetComponent(WidgetComponent):
         self._left = 0
         self._size_from_font = None
         self._on_click = None
+        self._widget_children = []
+
+    def _destroy_widgets(self):
+        self.underlying = None
+        for child in self._widget_children:
+            child._destroy_widgets()
 
     def _set_size(self, width, height, size_from_font=None):
         self._height = height
@@ -125,6 +149,10 @@ class QtWidgetComponent(WidgetComponent):
                     set_align = QtCore.Qt.AlignRight
                 elif style["align"] == "justify":
                     set_align = QtCore.Qt.AlignJustify
+                elif style["align"] == "top":
+                    set_align = QtCore.Qt.AlignTop
+                elif style["align"] == "bottom":
+                    set_align = QtCore.Qt.AlignBottom
                 else:
                     logging.warn("Unknown alignment: %s", style["align"])
                 style.pop("align")
@@ -143,6 +171,10 @@ class QtWidgetComponent(WidgetComponent):
                     set_align = "AlignRight"
                 elif style["align"] == "justify":
                     set_align = "AlignJustify"
+                elif style["align"] == "top":
+                    set_align = "AlignTop"
+                elif style["align"] == "bottom":
+                    set_align = "AlignBottom"
                 else:
                     logging.warn("Unknown alignment: %s", style["align"])
                 style.pop("align")
@@ -245,7 +277,7 @@ class WindowManager(RootComponent):
         super().__init__()
 
         self._already_rendered = {}
-        self._old_rendered_children = []
+        self._widget_children = []
 
     def _qt_update_commands(self, children, newprops, newstate):
         commands = []
@@ -258,10 +290,10 @@ class WindowManager(RootComponent):
                 del self._already_rendered[child]
 
         old_positions = []
-        for old_child in self._old_rendered_children:
+        for old_child in self._widget_children:
             old_positions.append(old_child.underlying.pos())
 
-        for i, old_child in reversed(list(enumerate(self._old_rendered_children))):
+        for i, old_child in reversed(list(enumerate(self._widget_children))):
             if old_child not in new_children:
                 commands += [(old_child.underlying.close,)]
 
@@ -275,7 +307,7 @@ class WindowManager(RootComponent):
                 commands += [(child.component.underlying.show,)]
             self._already_rendered[child.component] = True
 
-        self._old_rendered_children = [child.component for child in children]
+        self._widget_children = [child.component for child in children]
         return commands
 
 
@@ -297,17 +329,17 @@ class Icon(QtWidgetComponent):
     """
 
     @register_props
-    def __init__(self, name, size=10, collection="font-awesome", sub_collection="solid", **kwargs):
+    def __init__(self, name, size=10, collection="font-awesome", sub_collection="solid",
+                 color=(0,0,0,1), rotation=0, **kwargs):
         super().__init__(**kwargs)
-        self._initialized = False
+        self.underlying = None
 
     def _initialize(self):
         self.underlying = QtWidgets.QLabel("")
         self.underlying.setObjectName(str(id(self)))
 
     def _qt_update_commands(self, children, newprops, newstate):
-        if not self._initialized:
-            self._initialized = True
+        if self.underlying is None:
             self._initialize()
 
         self._set_size(self.props.size, self.props.size)
@@ -316,12 +348,12 @@ class Icon(QtWidgetComponent):
                                  "icons",
                                  self.props.collection, self.props.sub_collection, self.props.name + ".svg")
 
-        def render_image(icon_path, size):
-            pixmap = _get_svg_image(icon_path, size)
+        def render_image(icon_path, size, color, rotation):
+            pixmap = _get_svg_image(icon_path, size, color=color, rotation=rotation)
             self.underlying.setPixmap(pixmap)
 
-        if "name" in newprops or "size" in newprops or "collection" in newprops or "sub_collection" in newprops:
-            commands += [(render_image, icon_path, self.props.size)]
+        if "name" in newprops or "size" in newprops or "collection" in newprops or "sub_collection" in newprops or "color" in newprops or "rotation" in newprops:
+            commands += [(render_image, icon_path, self.props.size, self.props.color, self.props.rotation)]
 
         return commands
 
@@ -337,16 +369,15 @@ class Button(QtWidgetComponent):
     @register_props
     def __init__(self, title: tp.Any = "", **kwargs):
         super(Button, self).__init__(**kwargs)
-        self._initialized = False
         self._connected = False
+        self.underlying = None
 
     def _initialize(self):
         self.underlying =  QtWidgets.QPushButton(str(self.props.title))
         self.underlying.setObjectName(str(id(self)))
 
     def _qt_update_commands(self, children, newprops, newstate):
-        if not self._initialized:
-            self._initialized = True
+        if self.underlying is None:
             self._initialize()
         size = self.underlying.font().pointSize()
         self._set_size(size * len(self.props.title), size, lambda size: (size * len(self.props.title), size))
@@ -361,7 +392,8 @@ class Button(QtWidgetComponent):
 class IconButton(Button):
 
     @register_props
-    def __init__(self, name, size=10, collection="font-awesome", sub_collection="solid", **kwargs):
+    def __init__(self, name, size=10, collection="font-awesome", sub_collection="solid",
+                 color=(0, 0, 0, 1), rotation=0, **kwargs):
         super().__init__(**kwargs)
 
     def _qt_update_commands(self, children, newprops, newstate):
@@ -373,12 +405,12 @@ class IconButton(Button):
         size = self.underlying.font().pointSize()
         self._set_size(self.props.size + 3 + size * len(self.props.title), size,  lambda size: (self.props.size + 3 + size * len(self.props.title), size))
 
-        def render_image(icon_path, size):
-            pixmap = _get_svg_image(icon_path, size)
+        def render_image(icon_path, size, color, rotation):
+            pixmap = _get_svg_image(icon_path, size, color=color, rotation=rotation)
             self.underlying.setIcon(QtGui.QIcon(pixmap))
 
-        if "name" in newprops or "size" in newprops or "collection" in newprops or "sub_collection" in newprops:
-            commands += [(render_image, icon_path, self.props.size)]
+        if "name" in newprops or "size" in newprops or "collection" in newprops or "sub_collection" in newprops or "color" in newprops or "rotation" in newprops:
+            commands += [(render_image, icon_path, self.props.size, self.props.color, self.props.rotation)]
 
         return commands
 
@@ -388,18 +420,17 @@ class Label(QtWidgetComponent):
     @register_props
     def __init__(self, text: tp.Any = "", **kwargs):
         super().__init__(**kwargs)
-        self._initialized = False
+        self.underlying = None
 
     def _initialize(self):
         self.underlying = QtWidgets.QLabel(str(self.props.text))
         self.underlying.setObjectName(str(id(self)))
 
     def _qt_update_commands(self, children, newprops, newstate):
-        if not self._initialized:
-            self._initialized = True
+        if self.underlying is None:
             self._initialize()
         size = self.underlying.font().pointSize()
-        self._set_size(size * len(self.props.text), size, lambda size: (size * len(self.props.text), size))
+        self._set_size(size * len(str(self.props.text)), size, lambda size: (size * len(str(self.props.text)), size))
 
         commands = super()._qt_update_commands(children, newprops, newstate, self.underlying, None)
         for prop in newprops:
@@ -444,12 +475,15 @@ class _LinearView(QtWidgetComponent):
         super().__init__(**kwargs)
 
         self._already_rendered = {}
-        self._old_rendered_children = []
+        self._widget_children = []
+
+    def __del__(self):
+        pass
 
     def _delete_child(self, i):
         child_node = self.underlying_layout.takeAt(i)
         if child_node.widget():
-            child_node.widget().deleteLater()
+            child_node.widget().deleteLater() # setParent(self._garbage_collector)
 
     def _soft_delete_child(self, i):
         self.underlying_layout.takeAt(i)
@@ -464,20 +498,21 @@ class _LinearView(QtWidgetComponent):
             if child not in new_children:
                 del self._already_rendered[child]
 
-        for i, old_child in reversed(list(enumerate(self._old_rendered_children))):
+        for i, old_child in reversed(list(enumerate(self._widget_children))):
             if old_child not in new_children:
                 if self.underlying_layout is not None:
                     commands += [(self._delete_child, i)]
+                    old_child._destroy_widgets()
                 else:
                     commands += [(old_child.underlying.setParent, None)]
-                del self._old_rendered_children[i]
+                del self._widget_children[i]
 
         old_child_index = 0
-        old_children_len = len(self._old_rendered_children)
+        old_children_len = len(self._widget_children)
         for i, child in enumerate(children):
             old_child = None
             if old_child_index < old_children_len:
-                old_child = self._old_rendered_children[old_child_index]
+                old_child = self._widget_children[old_child_index]
 
             if old_child is None or child.component is not old_child:
                 if child.component not in self._already_rendered:
@@ -495,8 +530,7 @@ class _LinearView(QtWidgetComponent):
             old_child_index += 1
             self._already_rendered[child.component] = True
 
-        self._old_rendered_children = [child.component for child in children]
-
+        self._widget_children = [child.component for child in children]
         return commands
 
 
@@ -505,7 +539,7 @@ class View(_LinearView):
     @register_props
     def __init__(self, layout: tp.Text = "column", **kwargs):
         super().__init__(**kwargs)
-        self._initialized = False
+        self.underlying = None
 
     def _initialize(self):
         self.underlying = QtWidgets.QWidget()
@@ -520,7 +554,7 @@ class View(_LinearView):
             raise ValueError("Layout must be row, column or none, got %s instead", layout)
 
         self.underlying.setObjectName(str(id(self)))
-        if self.underlying_layout:
+        if self.underlying_layout is not None:
             self.underlying.setLayout(self.underlying_layout)
             self.underlying_layout.setContentsMargins(0, 0, 0, 0)
             self.underlying_layout.setSpacing(0)
@@ -528,8 +562,7 @@ class View(_LinearView):
             self.underlying.setMinimumSize(100, 100)
 
     def _qt_update_commands(self, children, newprops, newstate):
-        if not self._initialized:
-            self._initialized = True
+        if self.underlying is None:
             self._initialize()
         commands = self._recompute_children(children)
         commands += self._qt_stateless_commands(children, newprops, newstate)
@@ -545,30 +578,28 @@ class View(_LinearView):
 class ScrollView(_LinearView):
 
     @register_props
-    def __init__(self, layout="column"):
-        super().__init__()
+    def __init__(self, layout="column", **kwargs):
+        super().__init__(**kwargs)
 
-        self._already_rendered = {}
-        self._old_rendered_children = []
+        self.underlying = None
+
+    def _initialize(self):
         self.underlying = QtWidgets.QScrollArea()
         self.underlying.setWidgetResizable(True)
 
         self.inner_widget = QtWidgets.QWidget()
-        if layout == "column":
+        if self.props.layout == "column":
             self.underlying_layout = QtWidgets.QVBoxLayout()
-        elif layout == "row":
+        elif self.props.layout == "row":
             self.underlying_layout = QtWidgets.QHBoxLayout()
         self.inner_widget.setLayout(self.underlying_layout)
         self.underlying.setWidget(self.inner_widget)
         
         self.underlying.setObjectName(str(id(self)))
 
-    def _delete_child(self, i):
-        child_node = self.underlying_layout.takeAt(i)
-        if child_node.widget():
-            child_node.widget().deleteLater()
-
     def _qt_update_commands(self, children, newprops, newstate):
+        if self.underlying is None:
+            self._initialize()
         commands = self._recompute_children(children)
         commands += super()._qt_update_commands(children, newprops, newstate, self.underlying, self.underlying_layout)
         return commands
@@ -584,6 +615,9 @@ class List(BaseComponent):
 
 
 
+
+### TODO: Tables are not well tested
+
 class Table(QtWidgetComponent):
 
     @register_props
@@ -593,14 +627,9 @@ class Table(QtWidgetComponent):
         super().__init__()
 
         self._already_rendered = {}
-        self._old_rendered_children = []
+        self._widget_children = []
         self.underlying = QtWidgets.QTableWidget(rows, columns)
         self.underlying.setObjectName(str(id(self)))
-
-    def _delete_child(self, i):
-        child_node = self.underlying_layout.takeAt(i)
-        if child_node.widget():
-            child_node.widget().deleteLater()
 
     def _qt_update_commands(self, children, newprops, newstate):
         commands = super()._qt_update_commands(children, newprops, newstate, self.underlying, None)
@@ -631,13 +660,13 @@ class Table(QtWidgetComponent):
             if child not in new_children:
                 del self._already_rendered[child]
 
-        for i, old_child in reversed(list(enumerate(self._old_rendered_children))):
+        for i, old_child in reversed(list(enumerate(self._widget_children))):
             if old_child not in new_children:
                 for j, el in enumerate(old_child.children):
                     if el:
                         commands += [(self.underlying.setCellWidget, i, j, QtWidgets.QWidget())]
 
-        self._old_rendered_children = [child.component for child in children]
+        self._widget_children = [child.component for child in children]
         for i, child in enumerate(children):
             if child.component not in self._already_rendered:
                 for j, el in enumerate(child.children):

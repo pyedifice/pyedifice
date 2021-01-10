@@ -96,14 +96,16 @@ class Test(ed.Component):
     def on_change(self, text):
         self.set_state(text=text)
 
-    def on_click(self):
-        with self.render_changes():
-            self.data = self.data + 5
+    def on_click(self, ev):
+        print("HI", ev.pos())
+        # with self.render_changes():
+        #     self.data = self.data + 5
 
     def render(self):
-        return ed.View()((ed.View(layout="none", style={}) (
-            ed.Label(self.hi_text, style={"top": 10, "left": 30, "font-size": "20px"}),
-            ed.IconButton(name="play", title="Changer", on_click=lambda: self.set_state(hi_text="Hello"),
+        return ed.View()((ed.View(layout="column", style={}) (
+            ed.Label(self.hi_text, style={"top": 10, "left": 30, "font-size": "20px"}, on_click=self.on_click),
+            ed.Label(self.hi_text + "no click", style={"top": 10, "left": 30, "font-size": "20px"}),
+            ed.IconButton(name="play", title="Changer", on_click=lambda ev: self.set_state(hi_text="Hello"),
                           style={"top": 50, "left": 20}),
                 # SmartTable(self.data),
                 # ed.Label(self.hi_text),

@@ -20,7 +20,7 @@ class _ChangeManager(object):
         setattr(obj, key, value)
 
     def unwind(self):
-        logging.warn("Encountered error while rendering. Unwinding changes.")
+        logging.warning("Encountered error while rendering. Unwinding changes.")
         for obj, key, had_key, old_value, new_value in reversed(self.changes):
             if had_key:
                 logging.info("Resetting %s.%s to %s", obj, key, old_value)
@@ -285,6 +285,8 @@ class RenderEngine(object):
                 else:
                     children = [component.children[0]]
             else:
+                if len(component.children) <= 1:
+                    self._attach_keys(component, render_context)
                 if len(old_children) == 1:
                     if not hasattr(old_children[0], "_key"):
                         render_context.set(old_children[0], "_key", "KEY0")
@@ -301,7 +303,7 @@ class RenderEngine(object):
                 # This component would then need to be updated to draw said new child
                 # Otherwise, no component has been added, so no re-rendering is necessary
                 if child1 is not child2:
-                    rendered_children.append(self._widget_tree[child1])
+                    rendered_children.append(render_context.widget_tree.get(child1, self._widget_tree[child1])) # , self._widget_tree[child1])
                 else:
                     parent_needs_rerendering = True
                     rendered_children.append(self._render(child1, render_context))
@@ -339,6 +341,7 @@ class RenderEngine(object):
             if old_rendering is not None:
                 render_context.enqueued_deletions.append(sub_component)
             else:
+                # TODO: Should we call did mount above as well?
                 render_context.schedule_callback(component.did_mount)
             render_context.component_tree[component] = sub_component
             render_context.widget_tree[component] = self._render(sub_component, render_context)
@@ -372,7 +375,6 @@ class RenderEngine(object):
         for component in render_context.enqueued_deletions:
             self._delete_component(component, True)
 
-        # qt_trees[0].print_tree()
         if start_time - self._last_render_time > 1:
             logging.info("Time without rendering: %.2f ms", (time.process_time() - start_time) * 1000)
 
