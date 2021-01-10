@@ -131,10 +131,10 @@ class WidgetTreeTestCase(unittest.TestCase):
         button_str = "asdf"
         button = base_components.Button(title=button_str, on_click=on_click)
         button_tree = engine._WidgetTree(button, [])
-        qt_button = button.underlying
         with engine._storage_manager() as manager:
             commands = button_tree.gen_qt_commands(MockRenderContext(manager))
-        self.assertCountEqual(commands, [(qt_button.setText, button_str), (qt_button.setStyleSheet, "QWidget#%s{}" % id(button)), (button._set_on_click, on_click)])
+        qt_button = button.underlying
+        self.assertCountEqual(commands, [(qt_button.setText, button_str), (qt_button.setStyleSheet, "QWidget#%s{min-width: 52;min-height: 13}" % id(button)), (button._set_on_click, on_click)])
 
     def test_view_layout(self):
         view_c = base_components.View(layout="column")
@@ -161,12 +161,12 @@ class WidgetTreeTestCase(unittest.TestCase):
         with engine._storage_manager() as manager:
             commands = view_tree.gen_qt_commands(MockRenderContext(manager))
 
-        self.assertCountEqual(commands, label1_commands + [(view.underlying.setStyleSheet, "QWidget#%s{}" % id(view)), (view.underlying_layout.insertWidget, 0, label1.underlying)])
+        self.assertCountEqual(commands, label1_commands + [(view.underlying.setStyleSheet, "QWidget#%s{min-width: 13;min-height: 13}" % id(view)), (view.underlying_layout.insertWidget, 0, label1.underlying)])
 
         view_tree = engine._WidgetTree(view, [label1_tree, label2_tree])
         with engine._storage_manager() as manager:
             commands = view_tree.gen_qt_commands(MockRenderContext(manager))
-        self.assertCountEqual(commands, label1_commands + label2_commands + [(view.underlying.setStyleSheet, "QWidget#%s{}" % id(view)), (view.underlying_layout.insertWidget, 1, label2.underlying)])
+        self.assertCountEqual(commands, label1_commands + label2_commands + [(view.underlying.setStyleSheet, "QWidget#%s{min-width: 26;min-height: 26}" % id(view)), (view.underlying_layout.insertWidget, 1, label2.underlying)])
 
         inner_view = base_components.View()
 
@@ -176,8 +176,8 @@ class WidgetTreeTestCase(unittest.TestCase):
         self.assertCountEqual(
             commands, 
             label2_commands + [
-                (view.underlying.setStyleSheet, "QWidget#%s{}" % id(view)),
-                (inner_view.underlying.setStyleSheet, "QWidget#%s{}" % id(inner_view)),
+                (view.underlying.setStyleSheet, "QWidget#%s{min-width: 13;min-height: 13}" % id(view)),
+                (inner_view.underlying.setStyleSheet, "QWidget#%s{min-width: 0;min-height: 0}" % id(inner_view)),
                 (view._delete_child, 0),
                 (view.underlying_layout.insertWidget, 1, inner_view.underlying)
             ])

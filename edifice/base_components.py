@@ -1,4 +1,5 @@
 import functools
+import logging
 import os
 import typing as tp
 
@@ -142,7 +143,6 @@ class QtWidgetComponent(WidgetComponent):
         else:
             if "min-width" not in style:
                 style["min-width"] = self._get_width(children)
-            print("Setting width for %s to %s" % (self, style["min-width"]))
 
         if "height" in style:
             if "min-height" not in style:
@@ -152,7 +152,6 @@ class QtWidgetComponent(WidgetComponent):
         else:
             if "min-height" not in style:
                 style["min-height"] = self._get_height(children)
-                print("Setting height for %s to %s" % (self, style["min-height"]))
 
         set_move = False
         move_coords = [0, 0]
@@ -249,7 +248,6 @@ class WindowManager(RootComponent):
                 old_pos = old_positions[i]
             if child.component not in self._already_rendered:
                 if old_pos is not None:
-                    print("Moving to: ", old_pos)
                     commands += [(child.component.underlying.move, old_pos)]
                 commands += [(child.component.underlying.show,)]
             self._already_rendered[child.component] = True
@@ -342,9 +340,7 @@ class Button(QtWidgetComponent):
                 commands.append((self.underlying.setText, str(newprops.title)))
             elif prop == "on_click":
                 commands.append((self._set_on_click, newprops.on_click))
-            elif prop == "style":
-                commands.append((self.underlying.setStyleSheet,
-                                 _dict_to_style(newprops.style, "QWidget#" + str(id(self)))))
+
         return commands
 
 
@@ -425,8 +421,6 @@ class TextInput(QtWidgetComponent):
         for prop in newprops:
             if prop == "on_change":
                 commands += [(self.set_on_change, newprops[prop])]
-            elif prop == "style":
-                commands += [(self.underlying.setStyleSheet, _dict_to_style(newprops[prop],  "QWidget#" + str(id(self))))]
         return commands
 
 
@@ -598,9 +592,7 @@ class Table(QtWidgetComponent):
         commands = super()._qt_update_commands(children, newprops, newstate, self.underlying, None)
 
         for prop in newprops:
-            if prop == "style":
-                commands += [(self.underlying.setStyleSheet, _dict_to_style(newprops[prop],  "QWidget#" + str(id(self))))]
-            elif prop == "rows":
+            if prop == "rows":
                 commands += [(self.underlying.setRowCount, newprops[prop])]
             elif prop == "columns":
                 commands += [(self.underlying.setColumnCount, newprops[prop])]
