@@ -71,7 +71,7 @@ Returns the keys of the props dict as a list.
 
 * **Return type**
 
-    `List`[`str`]
+    `Iterator`
 
 
 
@@ -81,7 +81,7 @@ Returns the (key, value) of the props dict as a list.
 
 * **Return type**
 
-    `List`[`Any`]
+    `Iterator`
 
 
 
@@ -218,7 +218,7 @@ props to register.
 
 * **Parameters**
 
-    **props** (`Union`[`Mapping`[`str`, `Any`], `PropsDict`]) – 
+    **props** (`Mapping`[`str`, `Any`]) – 
 
 
 
@@ -303,6 +303,10 @@ you can override this function.
 
 
 
+#### did_mount()
+
+#### will_unmount()
+
 #### render()
 Logic for rendering, must be overridden.
 
@@ -386,7 +390,7 @@ Bases: `edifice.component.BaseComponent`
 Initialize self.  See help(type(self)) for accurate signature.
 
 
-### class edifice.engine.App(component, title='Edifice App')
+### class edifice.app.App(component, title='Edifice App', inspector=False)
 Bases: `object`
 
 
@@ -400,7 +404,7 @@ Bases: `object`
 
 
 
-#### \__init__(component, title='Edifice App')
+#### \__init__(component, title='Edifice App', inspector=False)
 Initialize self.  See help(type(self)) for accurate signature.
 
 
@@ -416,278 +420,40 @@ Initialize self.  See help(type(self)) for accurate signature.
 
 #### start()
 
-### edifice.engine.set_trace()
+### class edifice.utilities.Timer(function)
+Bases: `object`
+
+
+* **Parameters**
+
+    **function** (`Callable`[[], `Any`]) – 
+
+
+
+#### \__init__(function)
+Initialize self.  See help(type(self)) for accurate signature.
+
+
+* **Parameters**
+
+    **function** (`Callable`[[], `Any`]) – 
+
+
+
+#### start(time_in_ms)
+
+* **Parameters**
+
+    **time_in_ms** (`int`) – 
+
+
+
+#### stop()
+
+### edifice.utilities.set_trace()
 Set a tracepoint in the Python debugger that works with Qt
 
-## Basic Components
+## Base Components
 
-
-### class edifice.base_components.WindowManager()
-Bases: `edifice.component.RootComponent`
-
-Window manager: the root component.
-
-The WindowManager should lie at the root of your component Tree.
-The children of WindowManager are each displayed in its own window.
-To create a new window, simply append to the list of children:
-
-```
-class MyApp(Component):
-
-    @register_props
-    def __init__(self):
-        self.window_texts = []
-
-    def create_window(self):
-        nwindows = len(self.window_texts)
-        self.set_state(window_texts=self.window_texts + ["Window %s" % (nwindows + 1)])
-
-    def render(self):
-        return WindowManager()(
-            View()(
-                Button(title="Create new window", on_click=self.create_window)
-            ),
-            *[Label(s) for s in self.window_texts]
-        )
-
-if __name__ == "__main__":
-    App(MyApp()).start()
-```
-
-
-#### \__init__()
-Initialize self.  See help(type(self)) for accurate signature.
-
-
-### class edifice.base_components.Icon(name, size=10, collection='font-awesome', sub_collection='solid')
-Bases: `edifice.component.WidgetComponent`
-
-Display an Icon
-
-Icons are fairly central to modern-looking UI design.
-Edifice comes with the Font Awesome ([https://fontawesome.com](https://fontawesome.com)) regular and solid
-icon sets, to save you time from looking up your own icon set.
-You can specify an icon simplify using its name (and optionally the sub_collection).
-
-Example:
-
-```
-Icon(name="share")
-```
-
-will create a classic share icon.
-
-You can browse and search for icons here: [https://fontawesome.com/icons?d=gallery&s=regular,solid](https://fontawesome.com/icons?d=gallery&s=regular,solid)
-
-
-#### \__init__(name, size=10, collection='font-awesome', sub_collection='solid')
-Initialize self.  See help(type(self)) for accurate signature.
-
-
-### class edifice.base_components.Button(title='', style=None, on_click=<function Button.<lambda>>)
-Bases: `edifice.component.WidgetComponent`
-
-Basic Button
-
-Props:
-
-    title: the button text
-    style: the styling of the button
-    on_click: a function that will be called when the button is clicked
-
-
-* **Parameters**
-
-    
-    * **title** (`Any`) – 
-
-
-    * **style** (`Optional`[`Mapping`[`str`, `str`]]) – 
-
-
-    * **on_click** (`Callable`[[], `None`]) – 
-
-
-
-#### \__init__(title='', style=None, on_click=<function Button.<lambda>>)
-Initialize self.  See help(type(self)) for accurate signature.
-
-
-* **Parameters**
-
-    
-    * **title** (`Any`) – 
-
-
-    * **style** (`Optional`[`Mapping`[`str`, `str`]]) – 
-
-
-    * **on_click** (`Callable`[[], `None`]) – 
-
-
-
-### class edifice.base_components.IconButton(name, size=10, collection='font-awesome', sub_collection='solid', \*\*kwargs)
-Bases: `edifice.base_components.Button`
-
-
-#### \__init__(name, size=10, collection='font-awesome', sub_collection='solid', \*\*kwargs)
-Initialize self.  See help(type(self)) for accurate signature.
-
-
-### class edifice.base_components.Label(text='', style=None)
-Bases: `edifice.component.WidgetComponent`
-
-
-* **Parameters**
-
-    
-    * **text** (`Any`) – 
-
-
-    * **style** (`Optional`[`Mapping`[`str`, `str`]]) – 
-
-
-
-#### \__init__(text='', style=None)
-Initialize self.  See help(type(self)) for accurate signature.
-
-
-* **Parameters**
-
-    
-    * **text** (`Any`) – 
-
-
-    * **style** (`Optional`[`Mapping`[`str`, `str`]]) – 
-
-
-
-### class edifice.base_components.TextInput(text='', on_change=<function TextInput.<lambda>>, style=None)
-Bases: `edifice.component.WidgetComponent`
-
-
-* **Parameters**
-
-    
-    * **text** (`Any`) – 
-
-
-    * **on_change** (`Callable`[[`str`], `None`]) – 
-
-
-    * **style** (`Optional`[`Mapping`[`str`, `str`]]) – 
-
-
-
-#### \__init__(text='', on_change=<function TextInput.<lambda>>, style=None)
-Initialize self.  See help(type(self)) for accurate signature.
-
-
-* **Parameters**
-
-    
-    * **text** (`Any`) – 
-
-
-    * **on_change** (`Callable`[[`str`], `None`]) – 
-
-
-    * **style** (`Optional`[`Mapping`[`str`, `str`]]) – 
-
-
-
-#### set_on_change(on_change)
-
-### class edifice.base_components.View(layout='column', style=None)
-Bases: `edifice.base_components._LinearView`
-
-
-* **Parameters**
-
-    
-    * **layout** (`str`) – 
-
-
-    * **style** (`Optional`[`Mapping`[`str`, `str`]]) – 
-
-
-
-#### \__init__(layout='column', style=None)
-Initialize self.  See help(type(self)) for accurate signature.
-
-
-* **Parameters**
-
-    
-    * **layout** (`str`) – 
-
-
-    * **style** (`Optional`[`Mapping`[`str`, `str`]]) – 
-
-
-
-### class edifice.base_components.ScrollView(layout='column', style=None)
-Bases: `edifice.base_components._LinearView`
-
-
-#### \__init__(layout='column', style=None)
-Initialize self.  See help(type(self)) for accurate signature.
-
-
-### class edifice.base_components.List()
-Bases: `edifice.component.BaseComponent`
-
-
-#### \__init__()
-Initialize self.  See help(type(self)) for accurate signature.
-
-
-### class edifice.base_components.Table(rows, columns, row_headers=None, column_headers=None, style=None, alternating_row_colors=True)
-Bases: `edifice.component.WidgetComponent`
-
-
-* **Parameters**
-
-    
-    * **rows** (`int`) – 
-
-
-    * **columns** (`int`) – 
-
-
-    * **row_headers** (`Optional`[`Sequence`[`Any`]]) – 
-
-
-    * **column_headers** (`Optional`[`Sequence`[`Any`]]) – 
-
-
-    * **style** (`Optional`[`Mapping`[`str`, `str`]]) – 
-
-
-    * **alternating_row_colors** (`bool`) – 
-
-
-
-#### \__init__(rows, columns, row_headers=None, column_headers=None, style=None, alternating_row_colors=True)
-Initialize self.  See help(type(self)) for accurate signature.
-
-
-* **Parameters**
-
-    
-    * **rows** (`int`) – 
-
-
-    * **columns** (`int`) – 
-
-
-    * **row_headers** (`Optional`[`Sequence`[`Any`]]) – 
-
-
-    * **column_headers** (`Optional`[`Sequence`[`Any`]]) – 
-
-
-    * **style** (`Optional`[`Mapping`[`str`, `str`]]) – 
-
-
-    * **alternating_row_colors** (`bool`) –
+Base components are the building blocks of an Edifice application.
+[Read the docs for Edifice base components.](docs/base_components.md)

@@ -1,3 +1,37 @@
+"""Basic Edifice components.
+
+The components defined in this file are the building blocks for your Edifice application.
+These components may all be imported from the edifice namespace::
+
+    import edifice
+    from edifice import View, Label
+
+    # you can now access edifice.Button, View, etc.
+
+All components in this module inherit from QtWidgetComponent and its props, such as `style` and `on_click`.
+This means that all widgets could potentially respond to clicks and are stylable using css-like stylesheets.
+
+The components here can roughly be divided into layout components and content components.
+
+Layout components take a list of children and function as a container for its children;
+it is most analogous to the `<div>` html tag.
+The two basic layout components are `View` and `ScrollView`,
+They take a layout prop, which controls whether children are laid out in a row,
+a column, or without any preset layout.
+A layout component without children will appear as an empty spot in the window;
+of course, you could still set the background color, borders,
+and size, making this a handy way of reserving blank spot on the screen
+or drawing an empty rectangle.
+
+Content components display some information or control on the window.
+The basic component for displaying text is `Label`,
+which simply displays the given text (or any Python object).
+The font can be controlled using the `style` prop.
+The `Icon` component is another handy component, displaying an icon from the
+Font Awesome icon set.
+Finally, the `Button` and `TextInput` components allow you to collect input from the user.
+"""
+
 import functools
 import logging
 import os
@@ -14,7 +48,8 @@ else:
     from PySide2 import QtCore, QtWidgets, QtSvg, QtGui, QtCore
 
 
-StyleType = tp.Optional[tp.Mapping[tp.Text, tp.Text]]
+StyleType = tp.Optional[tp.Union[tp.Mapping[tp.Text, tp.Any], tp.Sequence[tp.Mapping[tp.Text, tp.Any]]]]
+RGBAType = tuple[int, int, int, int]
 
 def _dict_to_style(d, prefix="QWidget"):
     d = d or {}
@@ -33,12 +68,12 @@ def _get_svg_image_raw(icon_path, size):
 
 
 @functools.lru_cache(100)
-def _get_svg_image(icon_path, size, rotation=0, color=(0, 0, 0, 1)):
+def _get_svg_image(icon_path, size, rotation=0, color=(0, 0, 0, 255)):
     pixmap = _get_svg_image_raw(icon_path, size)
-    if color == (0, 0, 0, 1) and rotation == 0:
+    if color == (0, 0, 0, 255) and rotation == 0:
         return pixmap
     pixmap = pixmap.copy()
-    if color != (0, 0, 0, 1):
+    if color != (0, 0, 0, 255):
         mask = pixmap.mask()
         pixmap.fill(QtGui.QColor(*color))
         pixmap.setMask(mask)
@@ -62,7 +97,15 @@ class QtWidgetComponent(WidgetComponent):
     """Shared properties of QT widgets."""
 
     @register_props
-    def __init__(self, style=None, on_click: tp.Optional[tp.Callable[[QtGui.QMouseEvent], tp.Any]] = None):
+    def __init__(self, style: StyleType = None, on_click: tp.Optional[tp.Callable[[QtGui.QMouseEvent], tp.Any]] = None):
+        """
+        Shared props for Qt-based widgets.
+
+        Args:
+            style: style for the widget. Could either be a dictionary or a list of dictionaries.
+                See docs/style.md for a primer on styling.
+            on_click: on click callback for the widget. Takes a QMouseEvent object as argument
+        """
         super().__init__()
         self._height = 0
         self._width = 0
@@ -344,8 +387,18 @@ class Icon(QtWidgetComponent):
     """
 
     @register_props
-    def __init__(self, name, size=10, collection="font-awesome", sub_collection="solid",
-                 color=(0,0,0,1), rotation=0, **kwargs):
+    def __init__(self, name: tp.Text, size: int = 10, collection: tp.Text = "font-awesome",
+                 sub_collection: tp.Text = "solid",
+                 color: RGBAType = (0,0,0,255), rotation: float = 0, **kwargs):
+        """
+        Args:
+            name: name of the icon. Search for the name on https://fontawesome.com/icons?d=gallery&s=regular,solid
+            size: size of the icon.
+            collection: the icon package. Currently only font-awesome is supported.
+            sub_collection: for font awesome, either solid or regular
+            color: the RGBA value for the icon color
+            rotation: an angle (in degrees) for the icon rotation
+        """
         super().__init__(**kwargs)
         self.underlying = None
 
@@ -374,15 +427,16 @@ class Icon(QtWidgetComponent):
 
 
 class Button(QtWidgetComponent):
-    """Basic Button
-
-    Props:
-        title: the button text
-        style: the styling of the button
+    """Basic Button.
     """
 
     @register_props
     def __init__(self, title: tp.Any = "", **kwargs):
+        """
+        Args:
+            title: the button text
+            style: the styling of the button
+        """
         super(Button, self).__init__(**kwargs)
         self._connected = False
         self.underlying = None
@@ -408,7 +462,7 @@ class IconButton(Button):
 
     @register_props
     def __init__(self, name, size=10, collection="font-awesome", sub_collection="solid",
-                 color=(0, 0, 0, 1), rotation=0, **kwargs):
+                 color=(0, 0, 0, 255), rotation=0, **kwargs):
         super().__init__(**kwargs)
 
     def _qt_update_commands(self, children, newprops, newstate):
@@ -458,6 +512,12 @@ class TextInput(QtWidgetComponent):
 
     @register_props
     def __init__(self, text: tp.Any = "", on_change: tp.Callable[[tp.Text], None] = (lambda text: None), **kwargs):
+        """
+        Args:
+            text: Initial text of the text input
+            on_change: callback for the value of the text input changes. The callback is passed the changed
+                value of the text
+        """
         super().__init__(**kwargs)
         self.current_text = text
         self._connected = False
@@ -553,6 +613,15 @@ class View(_LinearView):
 
     @register_props
     def __init__(self, layout: tp.Text = "column", **kwargs):
+        """
+        Args:
+            layout: one of column, row, or none.
+                A row layout will lay its children in a row and a column layout will lay its children in a column.
+                When row or column layout are set, the position of their children is not adjustable.
+                If layout is none, then all children by default will be positioend at the upper left-hand corner
+                of the View (x=0, y=0). Children can set the `top` and `left` attributes of their style
+                to position themselves relevative to their parent.
+        """
         super().__init__(**kwargs)
         self.underlying = None
 
