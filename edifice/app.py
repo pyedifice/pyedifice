@@ -79,7 +79,7 @@ class App(object):
             print("Running inspector")
             self._inspector_component = WindowManager()(
                 inspector.Inspector(self._render_engine._component_tree, self._root,
-                                    refresh=(lambda: (self._render_engine._component_tree, self_root))
+                                    refresh=(lambda: (self._render_engine._component_tree, self._root))
                                    ))
             self._request_rerender([self._inspector_component], {}, {})
         self.app.exec_()
