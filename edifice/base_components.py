@@ -85,12 +85,25 @@ class QtWidgetComponent(WidgetComponent):
     def _get_width(self, children):
         if self._width:
             return self._width
-        return sum(max(0, child.component._width + child.component._left) for child in children)
+        layout = self.props._get("layout", "none")
+        if layout == "row":
+            return sum(max(0, child.component._width + child.component._left) for child in children)
+        try:
+            return max(max(0, child.component._width + child.component._left) for child in children)
+        except ValueError:
+            return 0
+
 
     def _get_height(self, children):
         if self._height:
             return self._height
-        return sum(max(0, child.component._height + child.component._top) for child in children)
+        layout = self.props._get("layout", "none")
+        if layout == "column":
+            return sum(max(0, child.component._height + child.component._top) for child in children)
+        try:
+            return max(max(0, child.component._height + child.component._top) for child in children)
+        except ValueError:
+            return 0
 
     def _mouse_press(self, ev):
         pass
@@ -187,6 +200,8 @@ class QtWidgetComponent(WidgetComponent):
                 size = self._size_from_font(font_size)
                 self._width = size[0]
                 self._height = size[1]
+            if not isinstance(style["font-size"], str):
+                style["font-size"] = "%dpx" % font_size
         if "width" in style:
             if "min-width" not in style:
                 style["min-width"] = style["width"]
@@ -592,6 +607,8 @@ class ScrollView(_LinearView):
             self.underlying_layout = QtWidgets.QVBoxLayout()
         elif self.props.layout == "row":
             self.underlying_layout = QtWidgets.QHBoxLayout()
+        self.underlying_layout.setContentsMargins(0, 0, 0, 0)
+        self.underlying_layout.setSpacing(0)
         self.inner_widget.setLayout(self.underlying_layout)
         self.underlying.setWidget(self.inner_widget)
         

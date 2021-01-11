@@ -262,7 +262,7 @@ class RenderEngine(object):
     def _attach_keys(self, component, render_context: _RenderContext):
         for i, child in enumerate(component.children):
             if not hasattr(child, "_key"):
-                logging.warning("Setting child key to: KEY" + str(i))
+                logging.warning("Setting child key of %s to: %s", component, "KEY" + str(i))
                 render_context.set(child, "_key", "KEY" + str(i))
 
     def _render_base_component(self, component, render_context):
@@ -287,6 +287,8 @@ class RenderEngine(object):
             else:
                 if len(component.children) <= 1:
                     self._attach_keys(component, render_context)
+                if len(component.children) != len(set(child._key for child in component.children)):
+                    raise ValueError("Duplicate keys found in %s" % component)
                 if len(old_children) == 1:
                     if not hasattr(old_children[0], "_key"):
                         render_context.set(old_children[0], "_key", "KEY0")

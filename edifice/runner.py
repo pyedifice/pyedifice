@@ -63,7 +63,7 @@ def runner():
     main_module = importlib.import_module(module_name)
     root_component = getattr(main_module, args.root_component)
 
-    app = App(root_component())
+    app = App(root_component(), inspector=True)
 
     class EventHandler(FileSystemEventHandler):
 

@@ -175,7 +175,7 @@ class WidgetTreeTestCase(unittest.TestCase):
         view_tree = engine._WidgetTree(view, [label1_tree, label2_tree])
         with engine._storage_manager() as manager:
             commands = view_tree.gen_qt_commands(MockRenderContext(manager))
-        self.assertCountEqual(commands, label1_commands + label2_commands + [(view.underlying.setStyleSheet, "QWidget#%s{min-width: %s;min-height: %s}" % (id(view), font_size*2, font_size*2)),
+        self.assertCountEqual(commands, label1_commands + label2_commands + [(view.underlying.setStyleSheet, "QWidget#%s{min-width: %s;min-height: %s}" % (id(view), font_size, font_size * 2)),
                                                                              (view.underlying_layout.insertWidget, 1, label2.underlying)])
 
         inner_view = base_components.View()

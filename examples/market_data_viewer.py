@@ -51,7 +51,7 @@ class PriceLevel(ed.Component):
         size_box_style["background-color"] = color
         size_bar_style.update({
             "background-color": color,
-            "min-width": "%spx" % (self.props.size / 5), "max-width": "%spx" % (self.props.size / 5)
+            "width": "%spx" % (self.props.size / 5),
         })
         if self.props.last:
             price_box_style["border-bottom"] = "1px solid black"
@@ -102,7 +102,7 @@ class App(ed.Component):
     def will_unmount(self):
         self.timer.stop()
 
-    def play(self):
+    def play(self, e):
         if self.playing:
             self.timer.stop()
         else:
@@ -122,4 +122,4 @@ class App(ed.Component):
         )
 
 if __name__ == "__main__":
-    ed.app(App()).start()
+    ed.App(App(), inspector=True).start()

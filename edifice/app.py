@@ -20,9 +20,8 @@ from .utilities import set_trace
 
 class App(object):
 
-    def __init__(self, component: Component, title: tp.Text = "Edifice App"):
+    def __init__(self, component: Component, title: tp.Text = "Edifice App", inspector=False):
         self.app = QtWidgets.QApplication([])
-
 
         rendered_component = component.render()
         if isinstance(rendered_component, RootComponent):
@@ -64,6 +63,9 @@ class App(object):
         self._class_rerender_queue = queue.Queue()
         self._class_rerender_response_queue = queue.Queue()
 
+        self._inspector = inspector
+        self._inspector_component = None
+
     def _request_rerender(self, components, newprops, newstate, execute=True):
         ret = self._render_engine._request_rerender(components, newprops, newstate)
         for _, (_, commands) in ret:
@@ -72,4 +74,12 @@ class App(object):
 
     def start(self):
         self._request_rerender([self._root], {}, {})
+        if self._inspector:
+            from .inspector import inspector
+            print("Running inspector")
+            self._inspector_component = WindowManager()(
+                inspector.Inspector(self._render_engine._component_tree, self._root,
+                                    refresh=(lambda: (self._render_engine._component_tree, self_root))
+                                   ))
+            self._request_rerender([self._inspector_component], {}, {})
         self.app.exec_()

@@ -45,6 +45,9 @@ class PropsDict(object):
         """Returns the (key, value) of the props dict as a list."""
         return self._d.items()
 
+    def _get(self, key: tp.Text, default: tp.Optional[tp.Any] = None) -> tp.Any:
+        return self._d.get(key, default)
+
     def __len__(self):
         return len(self._d)
 
