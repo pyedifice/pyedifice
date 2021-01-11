@@ -49,7 +49,7 @@ else:
 
 
 StyleType = tp.Optional[tp.Union[tp.Mapping[tp.Text, tp.Any], tp.Sequence[tp.Mapping[tp.Text, tp.Any]]]]
-RGBAType = tuple[int, int, int, int]
+RGBAType = tp.Tuple[int, int, int, int]
 
 def _dict_to_style(d, prefix="QWidget"):
     d = d or {}
