@@ -24,6 +24,13 @@ and get the expected result: the values in `self.data` will be displayed, and cl
 add 5 to the array. Most importantly, the display will always match the internal application state --
 clicking the button will update the displayed values.
 
+Declarative GUIs are also easier for developer tools to work with. Edifice provides two key features to make development easier:
+- Dynamic reloading of changed source code. This is especially useful for tweaking the looks of your application, allowing you
+  to test if the margin should be 10px or 15px instantly without closing the app, reopening it, and waiting for everything to load.
+- Component inspector. Similar to the Inspect Elements tool of a browser, the component inspector will show you all Components
+  in your application along with the props and state, allowing you to examine the internal state of your complex component
+  without writing a million print statements.
+
 QML is another declarative GUI framework for Qt. Edifice differs from QML in these aspects:
 - Edifice interfaces are created purely in Python, whereas QML is written using an XML-like language.
 - Because Edifice interfaces are built in Python code, binding the code to the declared UI is much more
@@ -120,6 +127,14 @@ This will run app.py with RootComponent mounted as the root.
 A separate thread will listen to changes in all Python files in the directory containing `app.py` (recursing into subdirectories),
 and will reload and trigger a re-render in the main thread.
 You can customize which directory to listen to using the `--dir` flag.
+
+
+### Component Inspector
+The Edifice component inspector shows the Component tree of your application along with the props and state of each component.
+
+## Backend
+Edifice uses Qt under the hood. Both PyQt5 and PySide2 (and PySide6) are supported. Note that PyQt5 is distributed with the GPL license while PySide2 and PySide6 are distributed
+under the more flexible LGPL license.
 
 ## Detailed Documentation
 [Read the docs](docs/edifice.md)
