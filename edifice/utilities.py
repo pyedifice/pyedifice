@@ -24,22 +24,19 @@ class Timer(object):
             self._timer.stop()
             self._started = False
 
-if QT_VERSION == "PyQt5":
-    from PyQt5.QtCore import pyqtRemoveInputHook, pyqtRestoreInputHook
-    def set_trace():
-        '''Set a tracepoint in the Python debugger that works with Qt'''
-        import pdb
-        import sys
+
+def set_trace():
+    '''Set a tracepoint in the Python debugger that works with Qt'''
+    import pdb
+    if QT_VERSION == "PyQt5":
+        from PyQt5.QtCore import pyqtRemoveInputHook, pyqtRestoreInputHook
         pyqtRemoveInputHook()
-        pdb.set_trace()
-        # # set up the debugger
-        # debugger = pdb.Pdb()
-        # debugger.reset()
-        # # custom next to get outside of function scope
-        # debugger.do_next(None) # run the next command
-        # users_frame = sys._getframe().f_back # frame where the user invoked `pyqt_set_trace()`
-        # debugger.interaction(users_frame, None)
-        # pyqtRestoreInputHook()
-else:
-    def set_trace():
-        raise NotImplementedError
+    pdb.set_trace()
+    # # set up the debugger
+    # debugger = pdb.Pdb()
+    # debugger.reset()
+    # # custom next to get outside of function scope
+    # debugger.do_next(None) # run the next command
+    # users_frame = sys._getframe().f_back # frame where the user invoked `pyqt_set_trace()`
+    # debugger.interaction(users_frame, None)
+    # pyqtRestoreInputHook()
