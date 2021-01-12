@@ -19,8 +19,8 @@ This means that all widgets could potentially respond to clicks and are stylable
 The components here can roughly be divided into layout components and content components.
 
 Layout components take a list of children and function as a container for its children;
-it is most analogous to the <div> html tag.
-The two basic layout components are View and ScrollView,
+it is most analogous to the `<div>` html tag.
+The two basic layout components are **View** and **ScrollView**,
 They take a layout prop, which controls whether children are laid out in a row,
 a column, or without any preset layout.
 A layout component without children will appear as an empty spot in the window;
@@ -29,12 +29,22 @@ and size, making this a handy way of reserving blank spot on the screen
 or drawing an empty rectangle.
 
 Content components display some information or control on the window.
-The basic component for displaying text is Label,
+The basic component for displaying text is **Label**,
 which simply displays the given text (or any Python object).
 The font can be controlled using the style prop.
-The Icon component is another handy component, displaying an icon from the
+The **Icon** component is another handy component, displaying an icon from the
 Font Awesome icon set.
-Finally, the Button and TextInput components allow you to collect input from the user.
+Finally, the **Button** and **TextInput** components allow you to collect input from the user.
+
+Current components:
+- View: a flexible container
+- ScrollView: a container that renders a scroll bar if the contents do not fit in the view
+- Label: text label
+- Icon: display an icon
+- IconButton: a button labeled using an icon
+- Button: a generic button with text
+- TextInput: a one line text input
+- WindowManager: a top level component that displays its children as windows
 
 
 ### class edifice.base_components.QtWidgetComponent(style=None, on_click=None)
