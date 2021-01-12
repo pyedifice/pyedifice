@@ -129,11 +129,18 @@ and will reload and trigger a re-render in the main thread.
 You can customize which directory to listen to using the `--dir` flag.
 
 
-### Component Inspector
+### Other information
 The Edifice component inspector shows the Component tree of your application along with the props and state of each component.
 
-## Backend
-Edifice uses Qt under the hood. Both PyQt5 and PySide2 (and PySide6) are supported. Note that PyQt5 is distributed with the GPL license while PySide2 and PySide6 are distributed
+## Contribution
+
+###
+Contributions are welcome; feel free to send pull requests!
+
+### License
+Edfice is MIT Licensed.
+
+Edifice uses Qt under the hood, and both PyQt5 and PySide2 (and PySide6) are supported. Note that PyQt5 is distributed with the GPL license while PySide2 and PySide6 are distributed
 under the more flexible LGPL license.
 
 ## Detailed Documentation
