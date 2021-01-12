@@ -93,19 +93,69 @@ def _css_to_number(a):
     return float(a)
 
 
+_CURSORS = {
+    "default": QtCore.Qt.ArrowCursor,
+    "arrow": QtCore.Qt.ArrowCursor,
+    "pointer": QtCore.Qt.PointingHandCursor,
+    "grab": QtCore.Qt.OpenHandCursor,
+    "grabbing": QtCore.Qt.ClosedHandCursor,
+    "text": QtCore.Qt.IBeamCursor,
+    "crosshair": QtCore.Qt.CrossCursor,
+    "move": QtCore.Qt.SizeAllCursor,
+    "wait": QtCore.Qt.WaitCursor,
+    "ew-resize": QtCore.Qt.SizeHorCursor,
+    "ns-resize": QtCore.Qt.SizeVerCursor,
+    "nesw-resize": QtCore.Qt.SizeBDiagCursor,
+    "nwse-resize": QtCore.Qt.SizeFDiagCursor,
+    "not-allowed": QtCore.Qt.ForbiddenCursor,
+    "forbidden": QtCore.Qt.ForbiddenCursor,
+}
+
+
+ContextMenuType = tp.Mapping[tp.Text, tp.Union[None, tp.Callable[[], tp.Any], "ContextMenuType"]]
+
+def _create_context_menu(menu: ContextMenuType, parent, title: tp.Optional[tp.Text] = None):
+    widget = QtWidgets.QMenu(parent)
+    if title is not None:
+        widget.setTitle(title)
+
+    for key, value in menu.items():
+        if isinstance(value, dict):
+            sub_menu = _create_context_menu(value, widget, key)
+            widget.addMenu(sub_menu)
+        elif value is None:
+            widget.addSeparator()
+        else:
+            widget.addAction(key, value)
+    return widget
+
+
 class QtWidgetComponent(WidgetComponent):
     """Shared properties of QT widgets."""
 
     @register_props
-    def __init__(self, style: StyleType = None, on_click: tp.Optional[tp.Callable[[QtGui.QMouseEvent], tp.Any]] = None):
+    def __init__(self, style: StyleType = None,
+                 window_title: tp.Text = "Edifice Application",
+                 tool_tip: tp.Optional[tp.Text] = None,
+                 cursor: tp.Optional[tp.Text] = None,
+                 context_menu: tp.Optional[ContextMenuType] = None,
+                 on_click: tp.Optional[tp.Callable[[QtGui.QMouseEvent], tp.Any]] = None):
         """
         Shared props for Qt-based widgets.
 
         Args:
             style: style for the widget. Could either be a dictionary or a list of dictionaries.
                 See docs/style.md for a primer on styling.
+            window_title: if component is a window, the title of the window. Ignored otherwise
+            tool_tip: the tool tip displayed when hovering over the widget.
+            cursor: the shape of the cursor when mousing over this widget. Must be one of:
+                %s
+            context_menu: the context menu to display when the user right clicks on the widget.
+                Expressed as a dict mapping the name of the context menu entry to either a function
+                (which will be called when this entry is clicked) or to another sub context menu.
+                For example, {"Copy": copy_fun, "Share": {"Twitter": twitter_share_fun, "Facebook": facebook_share_fun}}
             on_click: on click callback for the widget. Takes a QMouseEvent object as argument
-        """
+        """ % (list(_CURSORS.keys()))
         super().__init__()
         self._height = 0
         self._width = 0
@@ -114,6 +164,12 @@ class QtWidgetComponent(WidgetComponent):
         self._size_from_font = None
         self._on_click = None
         self._widget_children = []
+
+        self._context_menu = None
+        self._context_menu_connected = False
+        if cursor is not None:
+            if cursor not in _CURSORS:
+                raise ValueError("Unrecognized cursor %s. Cursor must be one of %s" % (cursor, list(_CURSORS.keys())))
 
     def _destroy_widgets(self):
         self.underlying = None
@@ -280,6 +336,19 @@ class QtWidgetComponent(WidgetComponent):
         commands += [(self.underlying.setStyleSheet, _dict_to_style(style,  "QWidget#" + str(id(self))))]
         return commands
 
+    def _set_context_menu(self, underlying):
+        if self._context_menu_connected:
+            underlying.customContextMenuRequested.disconnect()
+        self._context_menu_connected = True
+        underlying.customContextMenuRequested.connect(self._show_context_menu)
+
+    def _show_context_menu(self, pos):
+        if self.props.context_menu is not None:
+            menu = _create_context_menu(self.props.context_menu, self.underlying)
+            pos = self.underlying.mapToGlobal(pos)
+            menu.move(pos)
+            menu.show()
+
     def _qt_update_commands(self, children, newprops, newstate, underlying, underlying_layout=None):
         commands = []
         for prop in newprops:
@@ -297,7 +366,24 @@ class QtWidgetComponent(WidgetComponent):
             elif prop == "on_click":
                 if newprops.on_click is not None:
                     commands.append((self._set_on_click, underlying, newprops.on_click))
-                    commands.append((underlying.setCursor, QtCore.Qt.PointingHandCursor))
+                    if self.props.cursor is not None:
+                        commands.append((underlying.setCursor, QtCore.Qt.PointingHandCursor))
+            elif prop == "window_title":
+                commands.append((underlying.setWindowTitle, newprops.window_title))
+            elif prop == "tool_tip":
+                if newprops.tool_tip is not None:
+                    commands.append((underlying.setToolTip, newprops.tool_tip))
+            elif prop == "cursor":
+                cursor = self.props.cursor or ("default" if self.props.on_click is None else "pointer")
+                commands.append((underlying.setCursor, _CURSORS[cursor]))
+            elif prop == "context_menu":
+                if self._context_menu_connected:
+                    underlying.customContextMenuRequested.disconnect()
+                if self.props.context_menu is not None:
+                    commands.append((underlying.setContextMenuPolicy, QtCore.Qt.CustomContextMenu))
+                    commands.append((self._set_context_menu, underlying))
+                else:
+                    commands.append((underlying.setContextMenuPolicy, QtCore.Qt.DefaultContextMenu))
         return commands
 
 
@@ -487,7 +573,7 @@ class IconButton(Button):
 class Label(QtWidgetComponent):
 
     @register_props
-    def __init__(self, text: tp.Any = "", **kwargs):
+    def __init__(self, text: tp.Any = "", selectable=False, editable=False, **kwargs):
         super().__init__(**kwargs)
         self.underlying = None
 
@@ -505,6 +591,19 @@ class Label(QtWidgetComponent):
         for prop in newprops:
             if prop == "text":
                 commands += [(self.underlying.setText, str(newprops[prop]))]
+            elif prop == "selectable" or prop == "editable":
+                interaction_flags = 0
+                change_cursor = False
+                if self.props.selectable:
+                    change_cursor = True
+                    interaction_flags |= (QtCore.Qt.TextSelectableByMouse | QtCore.Qt.TextSelectableByKeyboard)
+                if self.props.editable:
+                    change_cursor = True
+                    interaction_flags |= QtCore.Qt.TextEditable
+                if change_cursor and self.props.cursor is None:
+                    commands += [(self.underlying.setCursor, _CURSORS["text"])]
+                if interaction_flags:
+                    commands += [(self.underlying.setTextInteractionFlags, interaction_flags)]
         return commands
 
 

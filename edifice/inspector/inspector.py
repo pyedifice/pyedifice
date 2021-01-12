@@ -1,10 +1,14 @@
 import inspect
 import edifice as ed
 
+
+SELECTION_COLOR = "#ACCEF7"
+
+
 class TreeView(ed.Component):
 
     @ed.register_props
-    def __init__(self, title, on_click, initial_collapsed=False):
+    def __init__(self, title, on_click, initial_collapsed=False, selected=False):
         super().__init__()
         self.collapsed = initial_collapsed
 
@@ -15,13 +19,16 @@ class TreeView(ed.Component):
         child_style = {"align": "left"}
         if self.collapsed:
             child_style["height"] = 0
+        root_style = {"margin-left": 5}
+        if self.props.selected:
+            root_style["background-color"] = SELECTION_COLOR
         return ed.View(layout="column", style={"align": "top"})(
             ed.View(layout="row", style={"align": "left"})(
                 ed.Icon("caret-right",
                         rotation=0 if self.collapsed else 90,
                         on_click=self.toggle,
                 ).set_key("caret"),
-                ed.Label(self.props.title, style={"margin-left": 5}, on_click=self.props.on_click).set_key("title"),
+                ed.Label(self.props.title, style=root_style, on_click=self.props.on_click).set_key("title"),
             ).set_key("root"),
             ed.View(layout="row", style=child_style)(
                 ed.View(layout="column", style={"width": 20, }).set_key("indent"),
@@ -41,8 +48,8 @@ class StateView(ed.Component):
         state = dict((k, v) for (k, v) in vars(self.props.component).items() if k[0] != "_")
         return ed.ScrollView(layout="column", style={"align": "top", "margin-left": 15})(
             *[ed.View(layout="row", style={"align": "left"})(
-                  ed.Label(key + ":", style={"font-weight": 600, "width": 140}).set_key("key"),
-                  ed.Label(state[key], style={}).set_key("value"),
+                  ed.Label(key + ":", selectable=True, style={"font-weight": 600, "width": 140}).set_key("key"),
+                  ed.Label(state[key], selectable=True, style={}).set_key("value"),
               ).set_key(key) for key in state]
         )
 
@@ -56,8 +63,9 @@ class PropsView(ed.Component):
         props = self.props.props
         return ed.ScrollView(layout="column", style={"align": "top", "margin-left": 15})(
             *[ed.View(layout="row", style={"align": "left"})(
-                  ed.Label(key + ":", style={"font-weight": 600, "width": 140}).set_key("key"),
-                  ed.Label(props[key], style={}).set_key("value"),
+                  ed.Label(key + ":", selectable=True, style={"font-weight": 600, "width": 140},
+                          ).set_key("key"),
+                  ed.Label(props[key], selectable=True, style={}).set_key("value"),
               ).set_key(key) for key in props._keys]
         )
 
@@ -79,8 +87,12 @@ class ComponentView(ed.Component):
         heading_style = {"font-size": "16px", "margin": 10, "margin-bottom": 0}
 
         return ed.View(layout="column", style={"align": "top", "min-width": 450, "min-height": 450})(
-            ed.Label(component.__class__.__name__, style={"font-size": "20px", "margin": 10}).set_key("class_name"),
-            ed.Label("Class defined in " + module.__file__ + ":" + str(lineno), style={"margin-left": 10}).set_key("file"),
+            ed.Label(component.__class__.__name__,
+                     selectable=True,
+                     style={"font-size": "20px", "margin": 10}).set_key("class_name"),
+            ed.Label("Class defined in " + module.__file__ + ":" + str(lineno),
+                     selectable=True,
+                     style={"margin-left": 10}).set_key("file"),
             ed.Label("Props", style=heading_style).set_key("props_header"),
             PropsView(component.props).set_key("_props_view"),
             ed.Label("State", style=heading_style).set_key("state_header"),
@@ -108,18 +120,20 @@ class Inspector(ed.Component):
 
         if len(children) > 0:
             return TreeView(title=root.__class__.__name__, on_click=lambda e: self.set_state(selected=root),
+                            selected=self.selected == root,
                             initial_collapsed=len(children) > 1)(
                  *[self._build_tree(child) for child in children]
             )
         return ed.Label(root.__class__.__name__,
-                       on_click=lambda e: self.set_state(selected=root))
+                        style={"background-color": SELECTION_COLOR} if (self.selected == root) else {},
+                        on_click=lambda e: self.set_state(selected=root))
 
     def render(self):
-        return ed.View(layout="row")(
+        return ed.View(layout="row", window_title="Inspector")(
             ed.View(layout="column", style={"align": "top", "width": 251, "border-right": "1px solid gray"})(
                 ed.View(layout="row", style={"align": "left", "height": 30})(
                     ed.Label("Edifice Inspector", style={"font-size": 18, "margin-left": 10, "width": 160}).set_key("title"),
-                    ed.Icon("sync-alt", size=20, on_click=lambda e: self._refresh).set_key("refresh")
+                    ed.Icon("sync-alt", size=20, on_click=lambda e: self._refresh, tool_tip="Reload component tree").set_key("refresh")
                 ).set_key("heading"),
                 ed.ScrollView(layout="column", style={"width": 250, "min-height": 450, "margin-top": 10})(
                     self._build_tree(self.root_component)

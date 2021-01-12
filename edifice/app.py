@@ -20,7 +20,7 @@ from .utilities import set_trace
 
 class App(object):
 
-    def __init__(self, component: Component, title: tp.Text = "Edifice App", inspector=False):
+    def __init__(self, component: Component, inspector=False):
         self.app = QtWidgets.QApplication([])
 
         rendered_component = component.render()
@@ -29,8 +29,6 @@ class App(object):
         else:
             self._root = WindowManager()(component)
         self._render_engine = RenderEngine(self._root, self)
-
-        self._title = title
 
         # Support for reloading on file change
         self._file_change_rerender_event_type = QtCore.QEvent.registerEventType()
@@ -73,7 +71,7 @@ class App(object):
                 command[0](*command[1:])
 
     def start(self):
-        self._request_rerender([self._root])
+        self._request_rerender([self._root], {})
         if self._inspector:
             from .inspector import inspector
             print("Running inspector")
@@ -81,5 +79,5 @@ class App(object):
                 inspector.Inspector(self._render_engine._component_tree, self._root,
                                     refresh=(lambda: (self._render_engine._component_tree, self._root))
                                    ))
-            self._request_rerender([self._inspector_component])
+            self._request_rerender([self._inspector_component], {})
         self.app.exec_()

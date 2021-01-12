@@ -112,7 +112,10 @@ class WidgetTreeTestCase(unittest.TestCase):
             commands,
             [(qt_button.setText, button_str), (qt_button.setStyleSheet, "QWidget#%s{min-width: %s;min-height: %s}" % (id(button), font_size*4, font_size)),
              (button._set_on_click, qt_button, on_click),
-             (qt_button.setCursor, QtCore.Qt.PointingHandCursor)])
+             (qt_button.setContextMenuPolicy, QtCore.Qt.DefaultContextMenu),
+             (qt_button.setWindowTitle, "Edifice Application"),
+             (qt_button.setCursor, QtCore.Qt.PointingHandCursor)
+            ])
 
     def test_view_layout(self):
         view_c = base_components.View(layout="column")
@@ -140,6 +143,9 @@ class WidgetTreeTestCase(unittest.TestCase):
             commands,
             [(icon._render_image, ) + render_img_args,
              (icon.underlying.setStyleSheet, "QWidget#%s{min-width: %s;min-height: %s}" % (id(icon), size, size)),
+             (icon.underlying.setContextMenuPolicy, QtCore.Qt.DefaultContextMenu),
+             (icon.underlying.setWindowTitle, "Edifice Application"),
+             (icon.underlying.setCursor, QtCore.Qt.ArrowCursor),
             ])
         icon._render_image(*render_img_args)
 
@@ -161,14 +167,22 @@ class WidgetTreeTestCase(unittest.TestCase):
 
         font_size = label1.underlying.font().pointSize()
 
-        self.assertCountEqual(commands, label1_commands + [(view.underlying.setStyleSheet, "QWidget#%s{min-width: %s;min-height: %s}" % (id(view), font_size, font_size)),
-                                                           (view.underlying_layout.insertWidget, 0, label1.underlying)])
+        self.assertCountEqual(commands, label1_commands + [
+            (view.underlying.setStyleSheet, "QWidget#%s{min-width: %s;min-height: %s}" % (id(view), font_size, font_size)),
+            (view.underlying.setContextMenuPolicy, QtCore.Qt.DefaultContextMenu),
+            (view.underlying.setWindowTitle, "Edifice Application"),
+            (view.underlying.setCursor, QtCore.Qt.ArrowCursor),
+            (view.underlying_layout.insertWidget, 0, label1.underlying)])
 
         view_tree = engine._WidgetTree(view, [label1_tree, label2_tree])
         with engine._storage_manager() as manager:
             commands = view_tree.gen_qt_commands(MockRenderContext(manager))
-        self.assertCountEqual(commands, label1_commands + label2_commands + [(view.underlying.setStyleSheet, "QWidget#%s{min-width: %s;min-height: %s}" % (id(view), font_size, font_size * 2)),
-                                                                             (view.underlying_layout.insertWidget, 1, label2.underlying)])
+        self.assertCountEqual(commands, label1_commands + label2_commands + [
+            (view.underlying.setStyleSheet, "QWidget#%s{min-width: %s;min-height: %s}" % (id(view), font_size, font_size * 2)),
+            (view.underlying.setContextMenuPolicy, QtCore.Qt.DefaultContextMenu),
+            (view.underlying.setWindowTitle, "Edifice Application"),
+            (view.underlying.setCursor, QtCore.Qt.ArrowCursor),
+            (view.underlying_layout.insertWidget, 1, label2.underlying)])
 
         inner_view = base_components.View()
 
@@ -179,7 +193,13 @@ class WidgetTreeTestCase(unittest.TestCase):
             commands, 
             label2_commands + [
                 (view.underlying.setStyleSheet, "QWidget#%s{min-width: %s;min-height: %s}" % (id(view), font_size, font_size)),
+                (view.underlying.setContextMenuPolicy, QtCore.Qt.DefaultContextMenu),
+                (view.underlying.setWindowTitle, "Edifice Application"),
+                (view.underlying.setCursor, QtCore.Qt.ArrowCursor),
                 (inner_view.underlying.setStyleSheet, "QWidget#%s{min-width: 0;min-height: 0}" % id(inner_view)),
+                (inner_view.underlying.setContextMenuPolicy, QtCore.Qt.DefaultContextMenu),
+                (inner_view.underlying.setWindowTitle, "Edifice Application"),
+                (inner_view.underlying.setCursor, QtCore.Qt.ArrowCursor),
                 (view._delete_child, 0),
                 (view.underlying_layout.insertWidget, 1, inner_view.underlying)
             ])

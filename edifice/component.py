@@ -268,7 +268,7 @@ class Component(object):
                 old_vals[s] = old_val
                 super().__setattr__(s, kwargs[s])
             if should_update:
-                self._controller._request_rerender([self])
+                self._controller._request_rerender([self], kwargs)
         except Exception as e:
             for s in old_vals:
                 super().__setattr__(s, old_vals[s])
