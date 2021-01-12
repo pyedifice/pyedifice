@@ -66,14 +66,14 @@ class App(object):
         self._inspector = inspector
         self._inspector_component = None
 
-    def _request_rerender(self, components, newprops, newstate, execute=True):
-        ret = self._render_engine._request_rerender(components, newprops, newstate)
+    def _request_rerender(self, components, newstate, execute=True):
+        ret = self._render_engine._request_rerender(components)
         for _, (_, commands) in ret:
             for command in commands:
                 command[0](*command[1:])
 
     def start(self):
-        self._request_rerender([self._root], {}, {})
+        self._request_rerender([self._root])
         if self._inspector:
             from .inspector import inspector
             print("Running inspector")
@@ -81,5 +81,5 @@ class App(object):
                 inspector.Inspector(self._render_engine._component_tree, self._root,
                                     refresh=(lambda: (self._render_engine._component_tree, self._root))
                                    ))
-            self._request_rerender([self._inspector_component], {}, {})
+            self._request_rerender([self._inspector_component])
         self.app.exec_()

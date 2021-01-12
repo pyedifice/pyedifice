@@ -15,9 +15,6 @@ try:
 except:
     pass
 
-class MockApp(engine.RenderEngine):
-    pass
-
 
 class MockComponent(component.Component):
 
@@ -39,7 +36,7 @@ class ComponentLifeCycleTestCase(unittest.TestCase):
 
     def test_mount_and_dismount(self):
         component = MockComponent(0)
-        app = MockApp(component)
-        app._request_rerender([component], {}, {}, execute=False)
+        app = engine.RenderEngine(component)
+        app._request_rerender([component])
 
         component.did_mount.assert_called_once()

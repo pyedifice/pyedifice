@@ -226,7 +226,7 @@ class RenderEngine(object):
         # 5) call _render for all new component parents
         try:
             logging.info("Rerendering: %s", [parent for _, _, parent, _ in components_to_replace])
-            ret = self._request_rerender([parent_comp for _, _, parent_comp, _ in components_to_replace], PropsDict({}), {})
+            ret = self._request_rerender([parent_comp for _, _, parent_comp, _ in components_to_replace])
         except Exception as e:
             # Restore components
             for parent_comp in backup:
@@ -367,7 +367,7 @@ class RenderEngine(object):
                 qt_trees.append(qt_tree)
         return qt_trees, render_context
 
-    def _request_rerender(self, components, newprops, newstate, execute=True):
+    def _request_rerender(self, components):
         start_time = time.process_time()
         qt_trees, render_context = self._gen_widget_trees(components)
         ret = self._gen_all_commands(qt_trees, render_context)
