@@ -60,11 +60,6 @@ class StorageManagerTestCase(unittest.TestCase):
             pass
         self.assertEqual(obj.value, 0)
 
-class MockRenderContext(engine._RenderContext):
-
-    def need_rerender(self, component):
-        return True
-
 
 class ComponentTestCase(unittest.TestCase):
 
@@ -120,76 +115,6 @@ class ComponentTestCase(unittest.TestCase):
         self.assertTrue(exception_thrown)
         self.assertEqual(a.foo, 1)
         self.assertEqual(a.bar, 2)
-
-class WidgetTreeTestCase(unittest.TestCase):
-
-    def test_button(self):
-        def on_click():
-            pass
-        button_str = "asdf"
-        button = base_components.Button(title=button_str, on_click=on_click)
-        button_tree = engine._WidgetTree(button, [])
-        with engine._storage_manager() as manager:
-            commands = button_tree.gen_qt_commands(MockRenderContext(manager))
-        qt_button = button.underlying
-        font_size = qt_button.font().pointSize()
-        print(commands)
-        self.assertCountEqual(
-            commands,
-            [(qt_button.setText, button_str), (qt_button.setStyleSheet, "QWidget#%s{min-width: %s;min-height: %s}" % (id(button), font_size*4, font_size)),
-             (button._set_on_click, qt_button, on_click),
-             (qt_button.setCursor, QtCore.Qt.PointingHandCursor)])
-
-    def test_view_layout(self):
-        view_c = base_components.View(layout="column")
-        view_c._initialize()
-        self.assertEqual(view_c.underlying_layout.__class__, QtWidgets.QVBoxLayout)
-        view_r = base_components.View(layout="row")
-        view_r._initialize()
-        self.assertEqual(view_r.underlying_layout.__class__, QtWidgets.QHBoxLayout)
-
-
-    def test_view_change(self):
-        label1 = base_components.Label(text="A")
-        label2 = base_components.Label(text="B")
-        view = base_components.View()(label1)
-
-        def label_tree(label):
-            tree = engine._WidgetTree(label, [])
-            with engine._storage_manager() as manager:
-                return tree, tree.gen_qt_commands(MockRenderContext(manager))
-
-        label1_tree, label1_commands = label_tree(label1)
-        label2_tree, label2_commands = label_tree(label2)
-        view_tree = engine._WidgetTree(view, [label1_tree])
-        with engine._storage_manager() as manager:
-            commands = view_tree.gen_qt_commands(MockRenderContext(manager))
-
-        font_size = label1.underlying.font().pointSize()
-
-        self.assertCountEqual(commands, label1_commands + [(view.underlying.setStyleSheet, "QWidget#%s{min-width: %s;min-height: %s}" % (id(view), font_size, font_size)),
-                                                           (view.underlying_layout.insertWidget, 0, label1.underlying)])
-
-        view_tree = engine._WidgetTree(view, [label1_tree, label2_tree])
-        with engine._storage_manager() as manager:
-            commands = view_tree.gen_qt_commands(MockRenderContext(manager))
-        self.assertCountEqual(commands, label1_commands + label2_commands + [(view.underlying.setStyleSheet, "QWidget#%s{min-width: %s;min-height: %s}" % (id(view), font_size, font_size * 2)),
-                                                                             (view.underlying_layout.insertWidget, 1, label2.underlying)])
-
-        inner_view = base_components.View()
-
-        view_tree = engine._WidgetTree(view, [label2_tree, engine._WidgetTree(inner_view, [])])
-        with engine._storage_manager() as manager:
-            commands = view_tree.gen_qt_commands(MockRenderContext(manager))
-        self.assertCountEqual(
-            commands, 
-            label2_commands + [
-                (view.underlying.setStyleSheet, "QWidget#%s{min-width: %s;min-height: %s}" % (id(view), font_size, font_size)),
-                (inner_view.underlying.setStyleSheet, "QWidget#%s{min-width: 0;min-height: 0}" % id(inner_view)),
-                (view._delete_child, 0),
-                (view.underlying_layout.insertWidget, 1, inner_view.underlying)
-            ])
-
 
 
 class _TestComponentInner(component.Component):

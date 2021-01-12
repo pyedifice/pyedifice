@@ -214,7 +214,7 @@ class QtWidgetComponent(WidgetComponent):
                 style.pop("align")
 
             if set_margin:
-                commands += [(underlying_layout.setContentsMargins, new_margin[0], new_margin[0], new_margin[0], new_margin[0])]
+                commands += [(underlying_layout.setContentsMargins, new_margin[0], new_margin[1], new_margin[2], new_margin[3])]
             if set_align:
                 commands += [(underlying_layout.setAlignment, set_align)]
         else:
@@ -406,6 +406,10 @@ class Icon(QtWidgetComponent):
         self.underlying = QtWidgets.QLabel("")
         self.underlying.setObjectName(str(id(self)))
 
+    def _render_image(self, icon_path, size, color, rotation):
+        pixmap = _get_svg_image(icon_path, size, color=color, rotation=rotation)
+        self.underlying.setPixmap(pixmap)
+
     def _qt_update_commands(self, children, newprops, newstate):
         if self.underlying is None:
             self._initialize()
@@ -416,12 +420,8 @@ class Icon(QtWidgetComponent):
                                  "icons",
                                  self.props.collection, self.props.sub_collection, self.props.name + ".svg")
 
-        def render_image(icon_path, size, color, rotation):
-            pixmap = _get_svg_image(icon_path, size, color=color, rotation=rotation)
-            self.underlying.setPixmap(pixmap)
-
         if "name" in newprops or "size" in newprops or "collection" in newprops or "sub_collection" in newprops or "color" in newprops or "rotation" in newprops:
-            commands += [(render_image, icon_path, self.props.size, self.props.color, self.props.rotation)]
+            commands += [(self._render_image, icon_path, self.props.size, self.props.color, self.props.rotation)]
 
         return commands
 
