@@ -149,13 +149,14 @@ class QtWidgetComponent(WidgetComponent):
             window_title: if component is a window, the title of the window. Ignored otherwise
             tool_tip: the tool tip displayed when hovering over the widget.
             cursor: the shape of the cursor when mousing over this widget. Must be one of:
-                %s
+                default, arrow, pointer, grab, grabbing, text, crosshair, move, wait, ew-resize,
+                ns-resize, nesw-resize, nwse-resize, not-allowed, forbidden
             context_menu: the context menu to display when the user right clicks on the widget.
                 Expressed as a dict mapping the name of the context menu entry to either a function
                 (which will be called when this entry is clicked) or to another sub context menu.
                 For example, {"Copy": copy_fun, "Share": {"Twitter": twitter_share_fun, "Facebook": facebook_share_fun}}
             on_click: on click callback for the widget. Takes a QMouseEvent object as argument
-        """ % (list(_CURSORS.keys()))
+        """
         super().__init__()
         self._height = 0
         self._width = 0

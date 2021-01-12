@@ -47,23 +47,14 @@ Current components:
 - WindowManager: a top level component that displays its children as windows
 
 
-### class edifice.base_components.QtWidgetComponent(style=None, on_click=None)
+### class edifice.base_components.QtWidgetComponent(style=None, window_title='Edifice Application', tool_tip=None, cursor=None, context_menu=None, on_click=None)
 Bases: `edifice.component.WidgetComponent`
 
 Shared properties of QT widgets.
 
 
-* **Parameters**
 
-    
-    * **style** (`Union`[`Mapping`[`str`, `Any`], `Sequence`[`Mapping`[`str`, `Any`]], `None`]) – 
-
-
-    * **on_click** (`Optional`[`Callable`[[`QMouseEvent`], `Any`]]) – 
-
-
-
-#### \__init__(style=None, on_click=None)
+#### \__init__(style=None, window_title='Edifice Application', tool_tip=None, cursor=None, context_menu=None, on_click=None)
 Shared props for Qt-based widgets.
 
 
@@ -72,6 +63,23 @@ Shared props for Qt-based widgets.
     
     * **style** (`Union`[`Mapping`[`str`, `Any`], `Sequence`[`Mapping`[`str`, `Any`]], `None`]) – style for the widget. Could either be a dictionary or a list of dictionaries.
     See docs/style.md for a primer on styling.
+
+
+    * **window_title** (`str`) – if component is a window, the title of the window. Ignored otherwise
+
+
+    * **tool_tip** (`Optional`[`str`]) – the tool tip displayed when hovering over the widget.
+
+
+    * **cursor** (`Optional`[`str`]) – the shape of the cursor when mousing over this widget. Must be one of:
+    default, arrow, pointer, grab, grabbing, text, crosshair, move, wait, ew-resize,
+    ns-resize, nesw-resize, nwse-resize, not-allowed, forbidden
+
+
+    * **context_menu** (`Optional`[`Mapping`[`str`, `Union`[`None`, `Callable`[[], `Any`], `Mapping`[`str`, `Union`[`None`, `Callable`[[], `Any`], `ForwardRef`]]]]]) – the context menu to display when the user right clicks on the widget.
+    Expressed as a dict mapping the name of the context menu entry to either a function
+    (which will be called when this entry is clicked) or to another sub context menu.
+    For example, {“Copy”: copy_fun, “Share”: {“Twitter”: twitter_share_fun, “Facebook”: facebook_share_fun}}
 
 
     * **on_click** (`Optional`[`Callable`[[`QMouseEvent`], `Any`]]) – on click callback for the widget. Takes a QMouseEvent object as argument
@@ -136,27 +144,6 @@ will create a classic share icon.
 You can browse and search for icons here: [https://fontawesome.com/icons?d=gallery&s=regular,solid](https://fontawesome.com/icons?d=gallery&s=regular,solid)
 
 
-* **Parameters**
-
-    
-    * **name** (`str`) – 
-
-
-    * **size** (`int`) – 
-
-
-    * **collection** (`str`) – 
-
-
-    * **sub_collection** (`str`) – 
-
-
-    * **color** (`tuple`[`int`, `int`, `int`, `int`]) – 
-
-
-    * **rotation** (`float`) – 
-
-
 
 #### \__init__(name, size=10, collection='font-awesome', sub_collection='solid', color=(0, 0, 0, 255), rotation=0, \*\*kwargs)
 
@@ -188,12 +175,6 @@ Bases: `edifice.base_components.QtWidgetComponent`
 Basic Button.
 
 
-* **Parameters**
-
-    **title** (`Any`) – 
-
-
-
 #### \__init__(title='', \*\*kwargs)
 
 * **Parameters**
@@ -218,12 +199,6 @@ style: the styling of the button
 
 ### class edifice.base_components.Label(text='', \*\*kwargs)
 Bases: `edifice.base_components.QtWidgetComponent`
-
-
-* **Parameters**
-
-    **text** (`Any`) – 
-
 
 
 #### \__init__(text='', \*\*kwargs)
