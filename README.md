@@ -129,12 +129,11 @@ and will reload and trigger a re-render in the main thread.
 You can customize which directory to listen to using the `--dir` flag.
 
 
-### Other information
+## Other information
 The Edifice component inspector shows the Component tree of your application along with the props and state of each component.
 
-## Contribution
+### Contribution
 
-###
 Contributions are welcome; feel free to send pull requests!
 
 ### License
