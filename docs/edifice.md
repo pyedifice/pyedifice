@@ -456,4 +456,4 @@ Set a tracepoint in the Python debugger that works with Qt
 ## Base Components
 
 Base components are the building blocks of an Edifice application.
-[Read the docs for Edifice base components.](/docs/base_components.md)
+[Read the docs for Edifice base components.](/docs/basic_components.md)
