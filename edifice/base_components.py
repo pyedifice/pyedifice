@@ -758,8 +758,8 @@ class Slider(QtWidgetComponent):
         dtype: the data type for the slider, either int or float.
         orientation: the orientation of the slider,
             either horizontal or vertical.
-        on_change: callback for when the check box state changes.
-            The callback receives the new state of the check box as an argument.
+        on_change: callback for when the slider value changes.
+            The callback receives the new value of the slider as an argument.
     """
 
     @register_props
