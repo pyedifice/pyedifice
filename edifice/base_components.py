@@ -44,7 +44,7 @@ if QT_VERSION == "PyQt5":
     from PyQt5 import QtSvg, QtGui
     from PyQt5 import QtCore
 else:
-    from PySide2 import QtCore, QtWidgets, QtSvg, QtGui, QtCore
+    from PySide2 import QtCore, QtWidgets, QtSvg, QtGui
 
 
 StyleType = tp.Optional[tp.Union[tp.Mapping[tp.Text, tp.Any], tp.Sequence[tp.Mapping[tp.Text, tp.Any]]]]
@@ -1006,9 +1006,9 @@ class CustomWidget(QtWidgetComponent):
 
     def _qt_update_commands(self, children, newprops, newstate):
         if self.underlying is None:
-            self.create_widget()
+            self.underlying = self.create_widget()
         commands = super()._qt_update_commands(children, newprops, newstate, self.underlying, None)
-        commands += [(self.paint, self.underlying, newprops)]
+        commands.append((self.paint, self.underlying, newprops))
         return commands
 
 
