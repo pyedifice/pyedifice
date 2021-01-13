@@ -5,7 +5,7 @@ import queue
 import time
 import typing as tp
 
-from .component import Component, PropsDict, register_props, BaseComponent, RootComponent
+from ._component import Component, PropsDict, register_props, BaseComponent, RootComponent
 
 
 class _ChangeManager(object):

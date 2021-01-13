@@ -12,7 +12,7 @@ if QT_VERSION == "PyQt5":
 else:
     from PySide2 import QtCore, QtWidgets
 
-from .component import Component, PropsDict, register_props, BaseComponent, RootComponent
+from ._component import Component, PropsDict, register_props, BaseComponent, RootComponent
 from .base_components import WindowManager
 from .engine import RenderEngine
 from .utilities import set_trace

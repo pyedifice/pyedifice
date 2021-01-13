@@ -11,7 +11,7 @@ from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 from watchdog.observers.fsevents import FSEventsObserver
 
-from .component import Component
+from ._component import Component
 from .app import App
 
 from edifice.qt import QT_VERSION

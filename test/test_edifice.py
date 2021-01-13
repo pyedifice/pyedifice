@@ -1,6 +1,6 @@
 import unittest
 import unittest.mock
-import edifice.component as component
+import edifice._component as component
 import edifice.engine as engine
 import edifice.base_components as base_components
 

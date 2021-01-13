@@ -36,7 +36,7 @@ import logging
 import os
 import typing as tp
 
-from .component import BaseComponent, WidgetComponent, LayoutComponent, RootComponent, Component, register_props 
+from ._component import BaseComponent, WidgetComponent, LayoutComponent, RootComponent, Component, register_props 
 
 from .qt import QT_VERSION
 if QT_VERSION == "PyQt5":
@@ -990,6 +990,27 @@ class ScrollView(_LinearView):
         commands = self._recompute_children(children)
         commands.extend(super()._qt_update_commands(children, newprops, newstate, self.underlying, self.underlying_layout))
         return commands
+
+
+class CustomWidget(QtWidgetComponent):
+
+    def __init__(self):
+        super().__init__()
+        self.underlying = None
+
+    def create_widget(self):
+        raise NotImplementedError
+
+    def paint(self, widget, newprops):
+        raise NotImplementedError
+
+    def _qt_update_commands(self, children, newprops, newstate):
+        if self.underlying is None:
+            self.create_widget()
+        commands = super()._qt_update_commands(children, newprops, newstate, self.underlying, None)
+        commands += [(self.paint, self.underlying, newprops)]
+        return commands
+
 
 class List(BaseComponent):
 
