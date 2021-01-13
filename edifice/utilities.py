@@ -9,6 +9,15 @@ else:
 
 
 class Timer(object):
+    """A Timer for calling a function periodically.
+
+    The function passed in the constructor will be called
+    every time_in_ms milliseconds after the Timer is started,
+    until the Timer is stopped.
+
+    Args:
+        function: the function that will be called periodically
+    """
 
     def __init__(self, function: tp.Callable[[], tp.Any]):
         self._timer = QTimer()
@@ -16,10 +25,16 @@ class Timer(object):
         self._started = False
 
     def start(self, time_in_ms: int):
+        """Starts the timer.
+
+        Args:
+            time_in_ms: time interval for calling the function.
+        """
         self._timer.start(time_in_ms)
         self._started = True
 
     def stop(self):
+        """Stops the timer."""
         if self._started:
             self._timer.stop()
             self._started = False

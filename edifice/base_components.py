@@ -1,6 +1,5 @@
-"""Basic Edifice components.
-
-The components defined in this file are the building blocks for your Edifice application.
+"""
+Base Components are the building blocks for your Edifice application.
 These components may all be imported from the edifice namespace::
 
     import edifice
@@ -8,14 +7,14 @@ These components may all be imported from the edifice namespace::
 
     # you can now access edifice.Button, View, etc.
 
-All components in this module inherit from QtWidgetComponent and its props, such as `style` and `on_click`.
+All components in this module inherit from :doc:`QtWidgetComponent<edifice.base_components.QtWidgetComponent>` and its props, such as `style` and `on_click`.
 This means that all widgets could potentially respond to clicks and are stylable using css-like stylesheets.
 
 The components here can roughly be divided into layout components and content components.
 
 Layout components take a list of children and function as a container for its children;
 it is most analogous to the `<div>` html tag.
-The two basic layout components are `View` and `ScrollView`,
+The two basic layout components are :doc:`View<edifice.base_components.View>` and :doc:`ScrollView<edifice.base_components.ScrollView>`,
 They take a layout prop, which controls whether children are laid out in a row,
 a column, or without any preset layout.
 A layout component without children will appear as an empty spot in the window;
@@ -24,12 +23,12 @@ and size, making this a handy way of reserving blank spot on the screen
 or drawing an empty rectangle.
 
 Content components display some information or control on the window.
-The basic component for displaying text is `Label`,
+The basic component for displaying text is :doc:`Label<edifice.base_components.Label>`,
 which simply displays the given text (or any Python object).
-The font can be controlled using the `style` prop.
-The `Icon` component is another handy component, displaying an icon from the
+The font can be controlled using the style prop.
+The :doc:`Icon<edifice.base_components.Icon>` component is another handy component, displaying an icon from the
 Font Awesome icon set.
-Finally, the `Button` and `TextInput` components allow you to collect input from the user.
+Finally, the :doc:`Button<edifice.base_components.Button>` and :doc:`TextInput<edifice.base_components.TextInput>` components allow you to collect input from the user.
 """
 
 import functools
@@ -131,7 +130,25 @@ def _create_context_menu(menu: ContextMenuType, parent, title: tp.Optional[tp.Te
 
 
 class QtWidgetComponent(WidgetComponent):
-    """Shared properties of QT widgets."""
+    """Base Qt Widget.
+
+    All Qt widgets inherit from this component and its props, which add basic functionality
+    such as styling and event handlers.
+    
+    Args:
+        style: style for the widget. Could either be a dictionary or a list of dictionaries.
+            See docs/style.md for a primer on styling.
+        window_title: if component is a window, the title of the window. Ignored otherwise
+        tool_tip: the tool tip displayed when hovering over the widget.
+        cursor: the shape of the cursor when mousing over this widget. Must be one of:
+            default, arrow, pointer, grab, grabbing, text, crosshair, move, wait, ew-resize,
+            ns-resize, nesw-resize, nwse-resize, not-allowed, forbidden
+        context_menu: the context menu to display when the user right clicks on the widget.
+            Expressed as a dict mapping the name of the context menu entry to either a function
+            (which will be called when this entry is clicked) or to another sub context menu.
+            For example, {"Copy": copy_fun, "Share": {"Twitter": twitter_share_fun, "Facebook": facebook_share_fun}}
+        on_click: on click callback for the widget. Takes a QMouseEvent object as argument
+    """
 
     @register_props
     def __init__(self, style: StyleType = None,
@@ -140,23 +157,6 @@ class QtWidgetComponent(WidgetComponent):
                  cursor: tp.Optional[tp.Text] = None,
                  context_menu: tp.Optional[ContextMenuType] = None,
                  on_click: tp.Optional[tp.Callable[[QtGui.QMouseEvent], tp.Any]] = None):
-        """
-        Shared props for Qt-based widgets.
-
-        Args:
-            style: style for the widget. Could either be a dictionary or a list of dictionaries.
-                See docs/style.md for a primer on styling.
-            window_title: if component is a window, the title of the window. Ignored otherwise
-            tool_tip: the tool tip displayed when hovering over the widget.
-            cursor: the shape of the cursor when mousing over this widget. Must be one of:
-                default, arrow, pointer, grab, grabbing, text, crosshair, move, wait, ew-resize,
-                ns-resize, nesw-resize, nwse-resize, not-allowed, forbidden
-            context_menu: the context menu to display when the user right clicks on the widget.
-                Expressed as a dict mapping the name of the context menu entry to either a function
-                (which will be called when this entry is clicked) or to another sub context menu.
-                For example, {"Copy": copy_fun, "Share": {"Twitter": twitter_share_fun, "Facebook": facebook_share_fun}}
-            on_click: on click callback for the widget. Takes a QMouseEvent object as argument
-        """
         super().__init__()
         self._height = 0
         self._width = 0
@@ -271,9 +271,9 @@ class QtWidgetComponent(WidgetComponent):
                 style.pop("align")
 
             if set_margin:
-                commands += [(underlying_layout.setContentsMargins, new_margin[0], new_margin[1], new_margin[2], new_margin[3])]
+                commands.append((underlying_layout.setContentsMargins, new_margin[0], new_margin[1], new_margin[2], new_margin[3]))
             if set_align:
-                commands += [(underlying_layout.setAlignment, set_align)]
+                commands.append((underlying_layout.setAlignment, set_align))
         else:
             if "align" in style:
                 if style["align"] == "left":
@@ -332,9 +332,10 @@ class QtWidgetComponent(WidgetComponent):
             self._left = move_coords[0]
 
         if set_move:
-            commands += [(self.underlying.move, move_coords[0], move_coords[1])]
+            commands.append((self.underlying.move, move_coords[0], move_coords[1]))
 
-        commands += [(self.underlying.setStyleSheet, _dict_to_style(style,  "QWidget#" + str(id(self))))]
+        css_string = _dict_to_style(style,  "QWidget#" + str(id(self)))
+        commands.append((self.underlying.setStyleSheet, css_string))
         return commands
 
     def _set_context_menu(self, underlying):
@@ -363,7 +364,7 @@ class QtWidgetComponent(WidgetComponent):
                     style = first_style
                 else:
                     style = dict(style)
-                commands += self._gen_styling_commands(children, style, underlying, underlying_layout)
+                commands.extend(self._gen_styling_commands(children, style, underlying, underlying_layout))
             elif prop == "on_click":
                 if newprops.on_click is not None:
                     commands.append((self._set_on_click, underlying, newprops.on_click))
@@ -390,7 +391,7 @@ class QtWidgetComponent(WidgetComponent):
 
 
 class WindowManager(RootComponent):
-    """Window manager: the root component.
+    """Component that displays its children as windows.
 
     The WindowManager should lie at the root of your component Tree.
     The children of WindowManager are each displayed in its own window.
@@ -440,7 +441,7 @@ class WindowManager(RootComponent):
 
         for i, old_child in reversed(list(enumerate(self._widget_children))):
             if old_child not in new_children:
-                commands += [(old_child.underlying.close,)]
+                commands.append((old_child.underlying.close,))
 
         for i, child in enumerate(children):
             old_pos = None
@@ -448,8 +449,8 @@ class WindowManager(RootComponent):
                 old_pos = old_positions[i]
             if child.component not in self._already_rendered:
                 if old_pos is not None:
-                    commands += [(child.component.underlying.move, old_pos)]
-                commands += [(child.component.underlying.show,)]
+                    commands.append((child.component.underlying.move, old_pos))
+                commands.append((child.component.underlying.show,))
             self._already_rendered[child.component] = True
 
         self._widget_children = [child.component for child in children]
@@ -471,21 +472,20 @@ class Icon(QtWidgetComponent):
     will create a classic share icon.
 
     You can browse and search for icons here: https://fontawesome.com/icons?d=gallery&s=regular,solid
+
+    Args:
+        name: name of the icon. Search for the name on https://fontawesome.com/icons?d=gallery&s=regular,solid
+        size: size of the icon.
+        collection: the icon package. Currently only font-awesome is supported.
+        sub_collection: for font awesome, either solid or regular
+        color: the RGBA value for the icon color
+        rotation: an angle (in degrees) for the icon rotation
     """
 
     @register_props
     def __init__(self, name: tp.Text, size: int = 10, collection: tp.Text = "font-awesome",
                  sub_collection: tp.Text = "solid",
                  color: RGBAType = (0,0,0,255), rotation: float = 0, **kwargs):
-        """
-        Args:
-            name: name of the icon. Search for the name on https://fontawesome.com/icons?d=gallery&s=regular,solid
-            size: size of the icon.
-            collection: the icon package. Currently only font-awesome is supported.
-            sub_collection: for font awesome, either solid or regular
-            color: the RGBA value for the icon color
-            rotation: an angle (in degrees) for the icon rotation
-        """
         super().__init__(**kwargs)
         self.underlying = None
 
@@ -508,22 +508,23 @@ class Icon(QtWidgetComponent):
                                  self.props.collection, self.props.sub_collection, self.props.name + ".svg")
 
         if "name" in newprops or "size" in newprops or "collection" in newprops or "sub_collection" in newprops or "color" in newprops or "rotation" in newprops:
-            commands += [(self._render_image, icon_path, self.props.size, self.props.color, self.props.rotation)]
+            commands.append((self._render_image, icon_path, self.props.size, self.props.color, self.props.rotation))
 
         return commands
 
 
 class Button(QtWidgetComponent):
-    """Basic Button.
+    """Basic button widget.
+    
+    Set the on_click prop (inherited from QtWidgetComponent) to define the behavior on click.
+
+    Args:
+        title: the button text
+        style: the styling of the button
     """
 
     @register_props
     def __init__(self, title: tp.Any = "", **kwargs):
-        """
-        Args:
-            title: the button text
-            style: the styling of the button
-        """
         super(Button, self).__init__(**kwargs)
         self._connected = False
         self.underlying = None
@@ -546,6 +547,30 @@ class Button(QtWidgetComponent):
 
 
 class IconButton(Button):
+    """Display an Icon Button.
+
+    Icons are fairly central to modern-looking UI design;
+    this component allows you to put an icon in a button.
+    Edifice comes with the Font Awesome (https://fontawesome.com) regular and solid
+    icon sets, to save you time from looking up your own icon set.
+    You can specify an icon simplify using its name (and optionally the sub_collection).
+    
+    Example::
+
+        IconButton(name="share", on_click: self.share)
+
+    will create a button with a share icon.
+
+    You can browse and search for icons here: https://fontawesome.com/icons?d=gallery&s=regular,solid
+
+    Args:
+        name: name of the icon. Search for the name on https://fontawesome.com/icons?d=gallery&s=regular,solid
+        size: size of the icon.
+        collection: the icon package. Currently only font-awesome is supported.
+        sub_collection: for font awesome, either solid or regular
+        color: the RGBA value for the icon color
+        rotation: an angle (in degrees) for the icon rotation
+    """
 
     @register_props
     def __init__(self, name, size=10, collection="font-awesome", sub_collection="solid",
@@ -566,15 +591,23 @@ class IconButton(Button):
             self.underlying.setIcon(QtGui.QIcon(pixmap))
 
         if "name" in newprops or "size" in newprops or "collection" in newprops or "sub_collection" in newprops or "color" in newprops or "rotation" in newprops:
-            commands += [(render_image, icon_path, self.props.size, self.props.color, self.props.rotation)]
+            commands.append((render_image, icon_path, self.props.size, self.props.color, self.props.rotation))
 
         return commands
 
 
 class Label(QtWidgetComponent):
+    """Basic widget for displaying text.
+
+    Args:
+        text: The text to display. Can be any Python type; the text prop is converted
+            to a string using str before being displayed
+        selectable: Whether the content of the label can be selected. Defaults to False.
+        editable: Whether the content of the label can be edited. Defaults to False.
+    """
 
     @register_props
-    def __init__(self, text: tp.Any = "", selectable=False, editable=False, **kwargs):
+    def __init__(self, text: tp.Any = "", selectable: bool = False, editable: bool = False, **kwargs):
         super().__init__(**kwargs)
         self.underlying = None
 
@@ -591,7 +624,7 @@ class Label(QtWidgetComponent):
         commands = super()._qt_update_commands(children, newprops, newstate, self.underlying, None)
         for prop in newprops:
             if prop == "text":
-                commands += [(self.underlying.setText, str(newprops[prop]))]
+                commands.append((self.underlying.setText, str(newprops[prop])))
             elif prop == "selectable" or prop == "editable":
                 interaction_flags = 0
                 change_cursor = False
@@ -602,25 +635,29 @@ class Label(QtWidgetComponent):
                     change_cursor = True
                     interaction_flags |= QtCore.Qt.TextEditable
                 if change_cursor and self.props.cursor is None:
-                    commands += [(self.underlying.setCursor, _CURSORS["text"])]
+                    commands.append((self.underlying.setCursor, _CURSORS["text"]))
                 if interaction_flags:
-                    commands += [(self.underlying.setTextInteractionFlags, interaction_flags)]
+                    commands.append((self.underlying.setTextInteractionFlags, interaction_flags))
         return commands
 
 
 class TextInput(QtWidgetComponent):
+    """Basic widget for a one line text input
+
+    Args:
+        text: Initial text of the text input
+        on_change: callback for the value of the text input changes. The callback is passed the changed
+            value of the text
+    """
 
     @register_props
     def __init__(self, text: tp.Any = "", on_change: tp.Callable[[tp.Text], None] = (lambda text: None), **kwargs):
-        """
-        Args:
-            text: Initial text of the text input
-            on_change: callback for the value of the text input changes. The callback is passed the changed
-                value of the text
-        """
         super().__init__(**kwargs)
         self.current_text = text
         self._connected = False
+        self.underlying = None
+
+    def _initialize(self):
         self.underlying = QtWidgets.QLineEdit(str(self.props.text))
         size = self.underlying.font().pointSize()
         self._set_size(size * len(self.props.text), size)
@@ -636,11 +673,160 @@ class TextInput(QtWidgetComponent):
         self._connected = True
 
     def _qt_update_commands(self, children, newprops, newstate):
+        if self.underlying is None:
+            self._initialize()
+
         commands = super()._qt_update_commands(children, newprops, newstate, self.underlying)
-        commands += [(self.underlying.setText, str(self.current_text))]
+        commands.append((self.underlying.setText, str(self.current_text)))
         for prop in newprops:
             if prop == "on_change":
-                commands += [(self.set_on_change, newprops[prop])]
+                commands.append((self.set_on_change, newprops[prop]))
+        return commands
+
+
+class CheckBox(QtWidgetComponent):
+    """Checkbox widget.
+
+    A checkbox allows the user to specify some boolean state.
+
+    The checked prop determines the initial check-state of the widget.
+    When the user toggles the check state, the on_change callback is called
+    with the new check state.
+
+    Args:
+        checked: whether or not the checkbox is checked initially
+        text: text for the label of the checkbox
+        on_change: callback for when the check box state changes.
+            The callback receives the new state of the check box as an argument.
+    """
+
+    @register_props
+    def __init__(self, checked: bool = False, text: tp.Any = "",
+                 on_change: tp.Callable[[bool], None] = (lambda checked: None), **kwargs):
+        super().__init__(**kwargs)
+        self.checked = checked
+        self._connected = False
+        self.underlying = None
+
+    def _initialize(self):
+        self.underlying = QtWidgets.QCheckBox(str(self.props.text))
+        size = self.underlying.font().pointSize()
+        self._set_size(size * len(self.props.text), size)
+        self.underlying.setObjectName(str(id(self)))
+
+    def set_on_change(self, on_change):
+        def on_change_fun(checked):
+            self.checked = bool(checked)
+            return on_change(self.checked)
+        if self._connected:
+            self.underlying.stateChanged[int].disconnect()
+        self.underlying.stateChanged[int].connect(on_change_fun)
+        self._connected = True
+
+    def _qt_update_commands(self, children, newprops, newstate):
+        if self.underlying is None:
+            self._initialize()
+
+        commands = super()._qt_update_commands(children, newprops, newstate, self.underlying)
+        check_state = QtCore.Qt.Checked if self.checked else QtCore.Qt.Unchecked
+        commands.append((self.underlying.setCheckState, check_state))
+        for prop in newprops:
+            if prop == "on_change":
+                commands.append((self.set_on_change, newprops[prop]))
+            elif prop == "text":
+                commands.append((self.underlying.setText, str(newprops[prop])))
+        return commands
+
+
+NumericType = tp.Union[float, int]
+
+class Slider(QtWidgetComponent):
+    """Slider bar widget.
+
+    A Slider bar allows the user to input a continuous value.
+    The bar could be displayed either horizontally or vertically.
+
+    The value prop determines the initial value of the widget,
+    and it could either be an integer or a float
+    When the user changes the value of the slider,
+    the on_change callback is called with the new value.
+
+    Args:
+        value: the initial value of the slider
+        min_value: the minimum value for the slider
+        max_value: the max value for the slider
+        dtype: the data type for the slider, either int or float.
+        orientation: the orientation of the slider,
+            either horizontal or vertical.
+        on_change: callback for when the check box state changes.
+            The callback receives the new state of the check box as an argument.
+    """
+
+    @register_props
+    def __init__(self, value: NumericType = 0.0,
+                 min_value: NumericType = 0,
+                 max_value: NumericType = 1,
+                 dtype=float,
+                 orientation="horizontal",
+                 on_change: tp.Callable[[NumericType], None] = (lambda value: None), **kwargs):
+        super().__init__(**kwargs)
+        # A QSlider only accepts integers. We represent floats as
+        # an integer between 0 and 1024.
+        self.value = value
+        self._connected = False
+        self.underlying = None
+        # TODO: let user choose?
+        self._granularity = 512
+        if orientation == "horizontal" or orientation == "row":
+            self.orientation = QtCore.Qt.Horizontal
+        elif orientation == "vertical" or orientation == "column":
+            self.orientation = QtCore.Qt.Vertical
+        else:
+            raise ValueError("Orientation must be horizontal or vertical, got %s" % orientation)
+
+    def _initialize(self):
+        self.underlying = QtWidgets.QSlider(self.orientation)
+        # TODO: figure out what's the right default height and width
+        # if self.orientation == QtCore.Qt.Horizontal:
+        #     self._set_size(size * len(self.props.text), size)
+        # else:
+        #     self._set_size(size * len(self.props.text), size)
+        self.underlying.setObjectName(str(id(self)))
+
+    def set_on_change(self, on_change):
+        def on_change_fun(value):
+            if self.props.dtype == float:
+                min_value, max_value = self.props.min_value, self.props.max_value
+                value = min_value + (max_value - min_value) * (value / self._granularity)
+            return on_change(value)
+        if self._connected:
+            self.underlying.valueChanged[int].disconnect()
+        self.underlying.valueChanged[int].connect(on_change_fun)
+        self._connected = True
+
+    def _qt_update_commands(self, children, newprops, newstate):
+        if self.underlying is None:
+            self._initialize()
+
+        commands = super()._qt_update_commands(children, newprops, newstate, self.underlying)
+        value = self.value
+        if self.props.dtype == float:
+            min_value, max_value = self.props.min_value, self.props.max_value
+            value = int((value - min_value) / (max_value - min_value) * self._granularity)
+
+        commands.append((self.underlying.setValue, value))
+        for prop in newprops:
+            if prop == "on_change":
+                commands.append((self.set_on_change, newprops[prop]))
+            elif prop == "dtype" or prop == "min_value" or prop == "max_value":
+                if self.props.dtype == float:
+                    commands.extend([(self.underlying.setMinimum, 0),
+                                     (self.underlying.setMaximum, self._granularity),
+                                    ])
+                else:
+                    commands.extend([(self.underlying.setMinimum, self.props.min_value),
+                                     (self.underlying.setMaximum, self.props.max_value),
+                                    ])
         return commands
 
 
@@ -676,10 +862,10 @@ class _LinearView(QtWidgetComponent):
         for i, old_child in reversed(list(enumerate(self._widget_children))):
             if old_child not in new_children:
                 if self.underlying_layout is not None:
-                    commands += [(self._delete_child, i)]
+                    commands.append((self._delete_child, i))
                     old_child._destroy_widgets()
                 else:
-                    commands += [(old_child.underlying.setParent, None)]
+                    commands.append((old_child.underlying.setParent, None))
                 del self._widget_children[i]
 
         old_child_index = 0
@@ -710,18 +896,22 @@ class _LinearView(QtWidgetComponent):
 
 
 class View(_LinearView):
+    """Basic layout widget for grouping children together
+    
+    Content that does not fit into the View layout will be clipped.
+    To allow scrolling in case of overflow, use :doc:`ScrollView<edifice.base_components.ScrollView>`.
+
+    Args:
+        layout: one of column, row, or none.
+            A row layout will lay its children in a row and a column layout will lay its children in a column.
+            When row or column layout are set, the position of their children is not adjustable.
+            If layout is none, then all children by default will be positioend at the upper left-hand corner
+            of the View (x=0, y=0). Children can set the `top` and `left` attributes of their style
+            to position themselves relevative to their parent.
+    """
 
     @register_props
     def __init__(self, layout: tp.Text = "column", **kwargs):
-        """
-        Args:
-            layout: one of column, row, or none.
-                A row layout will lay its children in a row and a column layout will lay its children in a column.
-                When row or column layout are set, the position of their children is not adjustable.
-                If layout is none, then all children by default will be positioend at the upper left-hand corner
-                of the View (x=0, y=0). Children can set the `top` and `left` attributes of their style
-                to position themselves relevative to their parent.
-        """
         super().__init__(**kwargs)
         self.underlying = None
 
@@ -749,7 +939,7 @@ class View(_LinearView):
         if self.underlying is None:
             self._initialize()
         commands = self._recompute_children(children)
-        commands += self._qt_stateless_commands(children, newprops, newstate)
+        commands.extend(self._qt_stateless_commands(children, newprops, newstate))
         return commands
 
     def _qt_stateless_commands(self, children, newprops, newstate):
@@ -760,6 +950,17 @@ class View(_LinearView):
 
 
 class ScrollView(_LinearView):
+    """Scrollable layout widget for grouping children together.
+
+    Unlike :doc:`View<edifice.base_components.View>`, overflows in both the x and y direction
+    will cause a scrollbar to show.
+
+    Args:
+
+        layout: one of column or row.
+            A row layout will lay its children in a row and a column layout will lay its children in a column.
+            The position of their children is not adjustable.
+    """
 
     @register_props
     def __init__(self, layout="column", **kwargs):
@@ -787,7 +988,7 @@ class ScrollView(_LinearView):
         if self.underlying is None:
             self._initialize()
         commands = self._recompute_children(children)
-        commands += super()._qt_update_commands(children, newprops, newstate, self.underlying, self.underlying_layout)
+        commands.extend(super()._qt_update_commands(children, newprops, newstate, self.underlying, self.underlying_layout))
         return commands
 
 class List(BaseComponent):
@@ -822,21 +1023,21 @@ class Table(QtWidgetComponent):
 
         for prop in newprops:
             if prop == "rows":
-                commands += [(self.underlying.setRowCount, newprops[prop])]
+                commands.append((self.underlying.setRowCount, newprops[prop]))
             elif prop == "columns":
-                commands += [(self.underlying.setColumnCount, newprops[prop])]
+                commands.append((self.underlying.setColumnCount, newprops[prop]))
             elif prop == "alternating_row_colors":
-                commands += [(self.underlying.setAlternatingRowColors, newprops[prop])]
+                commands.append((self.underlying.setAlternatingRowColors, newprops[prop]))
             elif prop == "row_headers":
                 if newprops[prop] is not None:
-                    commands += [(self.underlying.setVerticalHeaderLabels, list(map(str, newprops[prop])))]
+                    commands.append((self.underlying.setVerticalHeaderLabels, list(map(str, newprops[prop]))))
                 else:
-                    commands += [(self.underlying.setVerticalHeaderLabels, list(map(str, range(newprops.rows))))]
+                    commands.append((self.underlying.setVerticalHeaderLabels, list(map(str, range(newprops.rows)))))
             elif prop == "column_headers":
                 if newprops[prop] is not None:
-                    commands += [(self.underlying.setHorizontalHeaderLabels, list(map(str, newprops[prop])))]
+                    commands.append((self.underlying.setHorizontalHeaderLabels, list(map(str, newprops[prop]))))
                 else:
-                    commands += [(self.underlying.setHorizontalHeaderLabels, list(map(str, range(newprops.columns))))]
+                    commands.append((self.underlying.setHorizontalHeaderLabels, list(map(str, range(newprops.columns)))))
 
         new_children = set()
         for child in children:
@@ -850,12 +1051,12 @@ class Table(QtWidgetComponent):
             if old_child not in new_children:
                 for j, el in enumerate(old_child.children):
                     if el:
-                        commands += [(self.underlying.setCellWidget, i, j, QtWidgets.QWidget())]
+                        commands.append((self.underlying.setCellWidget, i, j, QtWidgets.QWidget()))
 
         self._widget_children = [child.component for child in children]
         for i, child in enumerate(children):
             if child.component not in self._already_rendered:
                 for j, el in enumerate(child.children):
-                    commands += [(self.underlying.setCellWidget, i, j, el.component.underlying)]
+                    commands.append((self.underlying.setCellWidget, i, j, el.component.underlying))
             self._already_rendered[child.component] = True
         return commands

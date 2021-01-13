@@ -46,6 +46,17 @@ class PropsDict(object):
         return self._d.items()
 
     def _get(self, key: tp.Text, default: tp.Optional[tp.Any] = None) -> tp.Any:
+        """Gets item by key.
+
+        Equivalent to dictionary.get(key, default)
+
+        Args:
+            key: key to the PropsDict
+            default: returned value if key is not found in props
+        Returns:
+            The corresponding value if key is in PropsDict, the default
+            value otherwise.
+        """
         return self._d.get(key, default)
 
     def __len__(self):
@@ -74,7 +85,7 @@ class PropsDict(object):
 
 
 class Component(object):
-    """Component.
+    """The base class for Edifice Components.
 
     A Component is a stateful container wrapping a stateless render function.
     Components have both internal and external properties.
@@ -122,7 +133,12 @@ class Component(object):
     the core Components, such as Label, Button, and View.
     Components may be composed in a tree like fashion:
     one special prop is children, which will always be defined (defaults to an
-    empty list). The children prop can be set by calling another Component::
+    empty list).
+    To better enable the visualization of the tree-structure of a Component
+    in the code,
+    the call method of a Component has been overriden to set the arguments
+    of the call as children of the component.
+    This allows you to write tree-like code remniscent of HTML::
 
         View(layout="column")(
             View(layout="row")(
@@ -181,6 +197,9 @@ class Component(object):
 
         Call this function if you do not use the register_props decorator and you have
         props to register.
+
+        Args:
+            props: a dictionary representing the props to register.
         """
         if not hasattr(self, "_props"):
             self._props = {"children": []}
@@ -192,10 +211,12 @@ class Component(object):
 
     @property
     def children(self):
+        """The children of this component."""
         return self._props["children"]
 
     @property
     def props(self) -> PropsDict:
+        """The props of this component."""
         return PropsDict(self._props)
 
     @contextlib.contextmanager
@@ -317,9 +338,19 @@ class Component(object):
         return False
 
     def did_mount(self):
+        """Callback function that is called when the component mounts for the first time.
+
+        Override if you need to do something after the component mounts
+        (e.g. start a timer).
+        """
         pass
 
     def will_unmount(self):
+        """Callback function that is called when the component will unmount.
+
+        Override if you need to clean up some state, e.g. stop a timer,
+        close a file.
+        """
         pass
 
     def __call__(self, *args):
@@ -350,12 +381,17 @@ class Component(object):
         The render logic for this component, not implemented for this abstract class.
         The render function itself should be purely stateless, because the application
         state should not depend on whether or not the render function is called.
+
+        Args:
+            None
+        Returns:
+            A Component object.
         """
         raise NotImplementedError
 
 
 def register_props(f):
-    """Decorator for __init__ function to record props.
+    """Decorator for Component __init__ method to record props.
 
     This decorator will record all arguments (both vector and keyword arguments)
     of the __init__ function as belonging to the props of the component.

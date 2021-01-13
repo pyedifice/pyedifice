@@ -19,6 +19,15 @@ from .utilities import set_trace
 
 
 class App(object):
+    """The main application object.
+
+    Args:
+        component: the root component of the application.
+            If it is not an instance of WindowManager, a WindowManager
+            will be created with the passed in component as a child.
+        inspector: whether or not to run an instance of the Edifice Inspector
+            alongside the main app. Defaults to False
+    """
 
     def __init__(self, component: Component, inspector=False):
         self.app = QtWidgets.QApplication([])
