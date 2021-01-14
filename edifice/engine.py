@@ -50,10 +50,10 @@ class _WidgetTree(object):
         self.children = children
 
     def _dereference(self, address):
-        qt_tree = self
+        widget_tree = self
         for index in address:
-            qt_tree = qt_tree.children[index]
-        return qt_tree
+            widget_tree = widget_tree.children[index]
+        return widget_tree
 
     def gen_qt_commands(self, render_context):
         commands = []
@@ -142,19 +142,26 @@ class _RenderContext(object):
         return self.need_qt_command_reissue.get(component, False)
 
 
+class RenderResult(object):
+
+    def __init__(self, trees, commands, render_context):
+        self.trees = trees
+        self.commands = commands
+        self.render_context = render_context
+
+    def run(self):
+        for command in self.commands:
+            command[0](*command[1:])
+        self.render_context.run_callbacks()
+
+
 class RenderEngine(object):
 
     def __init__(self, root, app=None):
         self._component_tree = {}
         self._widget_tree = {}
         self._root = root
-
         self._app = app
-        self._first_render = True
-        self._nrenders = 0
-        self._render_time = 0
-        self._last_render_time = 0
-        self._worst_render_time = 0
 
     def _delete_component(self, component, recursive):
         # Delete component from render trees
@@ -274,6 +281,7 @@ class RenderEngine(object):
             rendered_children = [self._render(child, render_context) for child in component.children]
             render_context.widget_tree[component] = _WidgetTree(component, rendered_children) 
             render_context.mark_qt_rerender(component, True)
+            render_context.schedule_callback(component.did_mount)
             return render_context.widget_tree[component]
         else:
             # Figure out which children are pre-existing
@@ -350,49 +358,31 @@ class RenderEngine(object):
 
         return render_context.widget_tree[component]
 
-    def _gen_all_commands(self, qt_trees, render_context):
-        ret = []
-        for qt_tree in qt_trees:
-            qt_commands = qt_tree.gen_qt_commands(render_context)
-            root = qt_tree.component
-            ret.append((root, (qt_tree, qt_commands)))
-        return ret
+    def _gen_commands(self, widget_trees, render_context):
+        commands = []
+        for widget_tree in widget_trees:
+            qt_commands = widget_tree.gen_qt_commands(render_context)
+            root = widget_tree.component
+            commands.extend(qt_commands)
+        return commands
 
-    def _gen_widget_trees(self, components):
-        qt_trees = []
-        with _storage_manager() as storage_manager:
-            render_context = _RenderContext(storage_manager)
-            for component in components:
-                qt_tree = self._render(component, render_context)
-                qt_trees.append(qt_tree)
-        return qt_trees, render_context
+    def _gen_widget_trees(self, components, render_context):
+        widget_trees = []
+        for component in components:
+            widget_trees.append(self._render(component, render_context))
+        return widget_trees
 
     def _request_rerender(self, components):
-        start_time = time.process_time()
-        qt_trees, render_context = self._gen_widget_trees(components)
-        ret = self._gen_all_commands(qt_trees, render_context)
+        with _storage_manager() as storage_manager:
+            render_context = _RenderContext(storage_manager)
+            widget_trees = self._gen_widget_trees(components, render_context)
+
+        commands = self._gen_commands(widget_trees, render_context)
 
         self._component_tree.update(render_context.component_tree)
         self._widget_tree.update(render_context.widget_tree)
         for component in render_context.enqueued_deletions:
             self._delete_component(component, True)
 
-        if start_time - self._last_render_time > 1:
-            logging.info("Time without rendering: %.2f ms", (time.process_time() - start_time) * 1000)
-
-        if not self._first_render:
-            end_time = time.process_time()
-            self._render_time += (end_time - start_time)
-            self._worst_render_time = max(end_time - start_time, self._worst_render_time)
-            self._nrenders += 1
-
-            if end_time - self._last_render_time > 1:
-                logging.info("Rendered %d times, with average render time of %.2f ms and worst render time of %.2f ms",
-                             self._nrenders, 1000 * self._render_time / self._nrenders, 1000 * self._worst_render_time)
-                self._last_render_time = end_time
-        self._first_render = False
-
-        render_context.run_callbacks()
-
-        return ret
+        return RenderResult(widget_trees, commands, render_context)
 

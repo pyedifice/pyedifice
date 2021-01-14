@@ -203,7 +203,9 @@ class RenderTestCase(unittest.TestCase):
     def test_basic_render(self):
         component = _TestComponentOuter()
         app = engine.RenderEngine(component)
-        _, (qt_tree, qt_commands) = app._request_rerender([component])[0]
+        render_result = app._request_rerender([component])
+        qt_tree = render_result.trees[0]
+        qt_commands = render_result.commands
 
         def C(*args):
             return _commands_for_address(qt_tree, args)
@@ -218,37 +220,50 @@ class RenderTestCase(unittest.TestCase):
 
         # After everything rendered, a rerender shouldn't involve any commands
         # TODO: make sure this is actually true!
-        _, (_, qt_commands) = app._request_rerender([component])[0]
+        render_result = app._request_rerender([component])
+        qt_tree = render_result.trees[0]
+        qt_commands = render_result.commands
         self.assertEqual(qt_commands, [])
 
     def test_state_changes(self):
         component = _TestComponentOuter()
         app = engine.RenderEngine(component)
-        _, (qt_tree, qt_commands) = app._request_rerender([component])[0]
+        render_result = app._request_rerender([component])
+        qt_tree = render_result.trees[0]
+        qt_commands = render_result.commands
 
         component.state_a = "AChanged"
-        _, (_new_qt_tree, qt_commands) = app._request_rerender([component])[0]
+        render_result = app._request_rerender([component])
+        new_qt_tree = render_result.trees[0]
+        qt_commands = render_result.commands
         # TODO: Make it so that only the label (0, 0) needs to update!
         expected_commands = [(qt_tree._dereference([0, 0]).component.underlying.setText, "AChanged")]
         self.assertEqual(qt_commands, expected_commands)
 
         component.state_b = "BChanged"
-        _, (_, qt_commands) = app._request_rerender([component])[0]
+        render_result = app._request_rerender([component])
+        qt_commands = render_result.commands
         expected_commands = [(qt_tree._dereference([1, 0]).component.underlying.setText, "BChanged")]
         self.assertEqual(qt_commands, expected_commands)
 
         component.state_c = "CChanged"
-        _, (_new_qt_tree, qt_commands) = app._request_rerender([component])[0]
+        render_result = app._request_rerender([component])
+        new_qt_tree = render_result.trees[0]
+        qt_commands = render_result.commands
         expected_commands = [(qt_tree._dereference([2]).component.underlying.setText, "CChanged")]
         self.assertEqual(qt_commands, expected_commands)
 
     def test_keyed_list_add(self):
         component = _TestComponentOuterList(True, True)
         app = engine.RenderEngine(component)
-        _, (qt_tree, qt_commands) = app._request_rerender([component])[0]
+        render_result = app._request_rerender([component])
+        qt_tree = render_result.trees[0]
+        qt_commands = render_result.commands
 
         component.state = ["A", "B", "D", "C"]
-        _, (_new_qt_tree, qt_commands) = app._request_rerender([component])[0]
+        render_result = app._request_rerender([component])
+        _new_qt_tree = render_result.trees[0]
+        qt_commands = render_result.commands
 
         def new_V(*args):
             view = _new_qt_tree._dereference(args)
@@ -266,10 +281,14 @@ class RenderTestCase(unittest.TestCase):
     def test_keyed_list_reshuffle(self):
         component = _TestComponentOuterList(True, True)
         app = engine.RenderEngine(component)
-        _, (qt_tree, qt_commands) = app._request_rerender([component])[0]
+        render_result = app._request_rerender([component])
+        qt_tree = render_result.trees[0]
+        qt_commands = render_result.commands
 
         component.state = ["C", "B", "A"]
-        _, (_new_qt_tree, qt_commands) = app._request_rerender([component])[0]
+        render_result = app._request_rerender([component])
+        _new_qt_tree = render_result.trees[0]
+        qt_commands = render_result.commands
 
         expected_commands = (
                              [(qt_tree.component._soft_delete_child, 0,)]
@@ -282,10 +301,14 @@ class RenderTestCase(unittest.TestCase):
     def test_keyed_list_nochange(self):
         component = _TestComponentOuterList(True, False)
         app = engine.RenderEngine(component)
-        _, (qt_tree, qt_commands) = app._request_rerender([component])[0]
+        render_result = app._request_rerender([component])
+        qt_tree = render_result.trees[0]
+        qt_commands = render_result.commands
 
         component.state = ["C", "B", "A"]
-        _, (_new_qt_tree, qt_commands) = app._request_rerender([component])[0]
+        render_result = app._request_rerender([component])
+        _new_qt_tree = render_result.trees[0]
+        qt_commands = render_result.commands
 
         expected_commands = [(qt_tree._dereference([0, 0]).component.underlying.setText, "C"), (qt_tree._dereference([2, 0]).component.underlying.setText, "A")]
         self.assertEqual(qt_commands, expected_commands)
@@ -293,10 +316,14 @@ class RenderTestCase(unittest.TestCase):
     def test_keyed_list_delete_child(self):
         component = _TestComponentOuterList(True, True)
         app = engine.RenderEngine(component)
-        _, (qt_tree, qt_commands) = app._request_rerender([component])[0]
+        render_result = app._request_rerender([component])
+        qt_tree = render_result.trees[0]
+        qt_commands = render_result.commands
 
         component.state = ["A", "B"]
-        _, (_new_qt_tree, qt_commands) = app._request_rerender([component])[0]
+        render_result = app._request_rerender([component])
+        _new_qt_tree = render_result.trees[0]
+        qt_commands = render_result.commands
 
         expected_commands = [(qt_tree.component._delete_child, 2,)]
 

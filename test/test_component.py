@@ -37,6 +37,6 @@ class ComponentLifeCycleTestCase(unittest.TestCase):
     def test_mount_and_dismount(self):
         component = MockComponent(0)
         app = engine.RenderEngine(component)
-        app._request_rerender([component])
-
+        render_results = app._request_rerender([component])
+        render_results.run()
         component.did_mount.assert_called_once()

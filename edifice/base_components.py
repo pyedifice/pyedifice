@@ -600,14 +600,16 @@ class Label(QtWidgetComponent):
     """Basic widget for displaying text.
 
     Args:
-        text: The text to display. Can be any Python type; the text prop is converted
+        text: the text to display. Can be any Python type; the text prop is converted
             to a string using str before being displayed
-        selectable: Whether the content of the label can be selected. Defaults to False.
-        editable: Whether the content of the label can be edited. Defaults to False.
+        word_wrap: enable/disable word wrapping.
+        selectable: whether the content of the label can be selected. Defaults to False.
+        editable: whether the content of the label can be edited. Defaults to False.
     """
 
     @register_props
-    def __init__(self, text: tp.Any = "", selectable: bool = False, editable: bool = False, **kwargs):
+    def __init__(self, text: tp.Any = "", selectable: bool = False, editable: bool = False,
+                 word_wrap: bool = True, **kwargs):
         super().__init__(**kwargs)
         self.underlying = None
 
@@ -625,6 +627,8 @@ class Label(QtWidgetComponent):
         for prop in newprops:
             if prop == "text":
                 commands.append((self.underlying.setText, str(newprops[prop])))
+            elif prop == "word_wrap":
+                commands.append((self.underlying.setWordWrap, self.props.word_wrap))
             elif prop == "selectable" or prop == "editable":
                 interaction_flags = 0
                 change_cursor = False

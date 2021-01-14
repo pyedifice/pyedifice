@@ -1,5 +1,9 @@
 import edifice as ed
+
+from edifice.components import plotting
+import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
 
 
 class ViewWrapper(ed.Component):
@@ -83,39 +87,21 @@ class Test(ed.Component):
     @ed.register_props
     def __init__(self):
         super().__init__()
-        self.text = ""
-        self.open = True
-        self.hi_text = "Hi 2"
-        self.dimensions = (1, 3)
-        self.data = pd.DataFrame({
-            "a": [2, 5, 6, 3, 21],
-            "b": [3, 3, 1, 8, 11],
-            "c": [4, 7, 1, 0, 10],
-        })
+        self.a = 2
+        self.t = np.linspace(0, 10)
 
-    def on_change(self, text):
-        self.set_state(text=text)
+    def on_change(self, value):
+        self.set_state(a=value)
 
-    def on_click(self, ev):
-        print("HI", ev.pos())
-        # with self.render_changes():
-        #     self.data = self.data + 5
+    def plot(self, ax):
+        ax.plot(self.t, np.sin(self.t * self.a))
 
     def render(self):
-        return ed.View()((ed.View(layout="column", style={}) (
-            ed.Label(self.hi_text, style={"top": 10, "left": 30, "font-size": "20px"}, on_click=self.on_click),
-            ed.Label(self.hi_text + "no click", style={"top": 10, "left": 30, "font-size": "20px"}),
-            ed.IconButton(name="play", title="Changer", on_click=lambda ev: self.set_state(hi_text="Hello"),
-                          style={"top": 50, "left": 20}),
-                # SmartTable(self.data),
-                # ed.Label(self.hi_text),
-                # ed.Icon("play"),
-                # ed.IconButton(name="play", title="Changer", on_click=lambda: self.set_state(hi_text="Hello")),
-                # ed.Button("Add 5", on_click=self.on_click),
-                # ed.ScrollView(style={"min-width": 100, "min-height": 100, "max-height": 100, "height": 100})(
-                #     *[ed.Label(i) for i in range(20)]
-                # )
-            )))
+        return ed.View(layout="column", style={"width": 380, "height": 380, "margin": 10}) (
+            ed.Label(style={"width": 320, "height": 320}, text="""
+                  The time.sleep() function uses the underlying operating system's sleep() function. Ultimately there are limitations of this function. For example on a standard Windows installation, the smallest interval you may sleep is 10 - 13 milliseconds. The Linux kernels tend to have a higher tick rate, where the intervals are generally closer to 1 millisecond. Note that in Linux, you can install the RT_PREEMPT patch set, which allows you to have a semi-realtime kernel. Using a real-time kernel will further increase the accuracy of the time.sleep() function. Generally however, unless you want to sleep for a very small period, you can generally ignore this information.
+                  """)
+        )
 
 
 if __name__ == "__main__":

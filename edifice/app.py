@@ -38,6 +38,12 @@ class App(object):
         else:
             self._root = WindowManager()(component)
         self._render_engine = RenderEngine(self._root, self)
+        self._last_render_time = 0
+        self._nrenders = 0
+        self._render_time = 0
+        self._last_render_time = 0
+        self._worst_render_time = 0
+        self._first_render = True
 
         # Support for reloading on file change
         self._file_change_rerender_event_type = QtCore.QEvent.registerEventType()
@@ -74,10 +80,20 @@ class App(object):
         self._inspector_component = None
 
     def _request_rerender(self, components, newstate, execute=True):
-        ret = self._render_engine._request_rerender(components)
-        for _, (_, commands) in ret:
-            for command in commands:
-                command[0](*command[1:])
+        start_time = time.process_time()
+        render_result = self._render_engine._request_rerender(components)
+        render_result.run()
+
+        end_time = time.process_time()
+        if not self._first_render:
+            self._render_time += (end_time - start_time)
+            self._worst_render_time = max(end_time - start_time, self._worst_render_time)
+            self._nrenders += 1
+            if end_time - self._last_render_time > 1:
+                logging.info("Rendered %d times, with average render time of %.2f ms and worst render time of %.2f ms",
+                             self._nrenders, 1000 * self._render_time / self._nrenders, 1000 * self._worst_render_time)
+                self._last_render_time = end_time
+        self._first_render = False
 
     def start(self):
         self._request_rerender([self._root], {})
@@ -90,3 +106,4 @@ class App(object):
                                    ))
             self._request_rerender([self._inspector_component], {})
         self.app.exec_()
+        self._render_engine._delete_component(self._root, True)
