@@ -55,16 +55,14 @@ class App(object):
                     while not self._class_rerender_queue.empty():
                         file_name, classes = self._class_rerender_queue.get_nowait()
                         try:
-                            ret = self._render_engine._refresh_by_class(classes)
+                            render_result = self._render_engine._refresh_by_class(classes)
                         except Exception as e:
                             logging.warn("Encountered exception while reloading: %s" % e)
                             self._class_rerender_response_queue.put_nowait(False)
                             traceback.print_exc()
                             continue
 
-                        for _, (_, commands) in ret:
-                            for command in commands:
-                                command[0](*command[1:])
+                        render_result.run()
                         self._class_rerender_queue.task_done()
                         self._class_rerender_response_queue.put_nowait(True)
                         logging.info("Rerendering Components in %s due to source change", file_name)
