@@ -8,12 +8,27 @@ SELECTION_COLOR = "#ACCEF7"
 class TreeView(ed.Component):
 
     @ed.register_props
-    def __init__(self, title, on_click, initial_collapsed=False, selected=False):
+    def __init__(self, title, on_click, load_fun, initial_collapsed=False, selected=False):
         super().__init__()
         self.collapsed = initial_collapsed
+        # We load children of the tree lazily, because the component tree can get pretty large!
+        self.cached_children = []
+        self.cached_children_loaded = False
+
+    def did_mount(self):
+        if not self.props.initial_collapsed:
+            with self.render_changes():
+                self.cached_children = self.props.load_fun()
+                self.cached_children_loaded = True
 
     def toggle(self, e):
-        self.set_state(collapsed=not self.collapsed)
+        if not self.cached_children_loaded:
+            with self.render_changes():
+                self.collapsed = not self.collapsed
+                self.cached_children = self.props.load_fun()
+                self.cached_children_loaded = True
+        else:
+            self.set_state(collapsed=not self.collapsed)
 
     def render(self):
         child_style = {"align": "left"}
@@ -33,7 +48,7 @@ class TreeView(ed.Component):
             ed.View(layout="row", style=child_style)(
                 ed.View(layout="column", style={"width": 20, }).set_key("indent"),
                 ed.View(layout="column", style={"align": "top"})(
-                    *[comp.set_key(str(i)) for i, comp in enumerate(self.props.children)]
+                    *[comp.set_key(str(i)) for i, comp in enumerate(self.cached_children)]
                 ).set_key("children")
             ).set_key("children")
         )
@@ -113,7 +128,7 @@ class Inspector(ed.Component):
         with self.render_changes():
             self.component_tree, self.root_component = self.props.refresh()
 
-    def _build_tree(self, root):
+    def _build_tree(self, root, recurse_level=0):
         children = self.component_tree[root]
         if isinstance(children, ed.Component):
             children = [children]
@@ -121,9 +136,9 @@ class Inspector(ed.Component):
         if len(children) > 0:
             return TreeView(title=root.__class__.__name__, on_click=lambda e: self.set_state(selected=root),
                             selected=self.selected == root,
-                            initial_collapsed=len(children) > 1)(
-                 *[self._build_tree(child) for child in children]
-            )
+                            initial_collapsed=len(children) > 1 or recurse_level > 2,
+                            load_fun=lambda: [self._build_tree(child, recurse_level+1) for child in children])
+            
         return ed.Label(root.__class__.__name__,
                         style={"background-color": SELECTION_COLOR} if (self.selected == root) else {},
                         on_click=lambda e: self.set_state(selected=root))
