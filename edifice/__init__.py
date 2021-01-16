@@ -98,6 +98,7 @@ Some useful utilities are also provided:
 
 
 from ._component import PropsDict, Component, register_props
+from .state import StateValue, StateManager
 from .app import App
 from .base_components import *
 from .utilities import Timer, set_trace

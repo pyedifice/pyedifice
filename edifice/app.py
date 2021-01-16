@@ -77,6 +77,9 @@ class App(object):
         self._inspector = inspector
         self._inspector_component = None
 
+    def __hash__(self):
+        return id(self)
+
     def _request_rerender(self, components, newstate, execute=True):
         start_time = time.process_time()
         render_result = self._render_engine._request_rerender(components)

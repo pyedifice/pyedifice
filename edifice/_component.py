@@ -5,11 +5,6 @@ import inspect
 import logging
 import typing as tp
 
-import numpy as np
-import pandas as pd
-
-_NP_CLASSES = (np.ndarray, pd.Series, pd.DataFrame, pd.Index)
-
 
 class PropsDict(object):
     """An immutable dictionary for storing props.
@@ -295,20 +290,6 @@ class Component(object):
                 super().__setattr__(s, old_vals[s])
             raise e
 
-    def _should_update_helper(self, new_obj, old_obj):
-        # It suffices to look at class of old_obj since
-        # if new obj is an instance of the class and old obj isn't
-        # the equality check would fail
-        if isinstance(old_obj, Component):
-            if old_obj.__class__ != new_obj.__class__:
-                return True
-            return old_obj.should_update(new_obj.props, {})
-        elif isinstance(old_obj, _NP_CLASSES):
-            if old_obj.__class__ != new_obj.__class__:
-                return True
-            return not np.array_equal(old_obj, new_obj)
-        return old_obj != new_obj
-
     def should_update(self, newprops: PropsDict, newstate: tp.Mapping[tp.Text, tp.Any]) -> bool:
         """Determines if the component should rerender upon receiving new props and state.
 
@@ -317,9 +298,7 @@ class Component(object):
         all props and state of this Component are the old values, so you can compare
         `component.props` and `newprops` to determine changes.
 
-        By default, all changes to props and state will trigger a re-render. This behavior
-        is probably desirable most of the time, but if you want custom re-rendering logic,
-        you can override this function.
+        By default, this function returns true, even if props and state are unchanged.
 
         Args:
             newprops: the new set of props
@@ -327,15 +306,7 @@ class Component(object):
         Returns:
             Whether or not the Component should be rerendered.
         """
-        for prop, new_obj in newprops._items:
-            old_obj = self.props[prop]
-            if self._should_update_helper(new_obj, old_obj):
-                return True
-        for state, new_obj in newstate.items():
-            old_obj = getattr(self, state)
-            if self._should_update_helper(new_obj, old_obj):
-                return True
-        return False
+        return True
 
     def did_mount(self):
         """Callback function that is called when the component mounts for the first time.
@@ -371,8 +342,6 @@ class Component(object):
 
     def __str__(self):
         tags = self._tags()
-        if self.children:
-            return "%s\n\t%s\n%s" % (tags[0], "\t\n".join(str(child) for child in self.children), tags[1])
         return tags[2]
 
     def render(self):
@@ -439,6 +408,7 @@ def register_props(f):
         f(self, *args, **kwargs)
 
     return func
+
 
 class BaseComponent(Component):
 
