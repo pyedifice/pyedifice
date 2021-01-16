@@ -121,6 +121,7 @@ class _TestComponentInner(component.Component):
 
     @component.register_props
     def __init__(self, prop_a):
+        super().__init__()
         self.state_a = "A"
 
     def render(self):
@@ -145,6 +146,7 @@ class _TestComponentOuter(component.Component):
 
     @component.register_props
     def __init__(self):
+        super().__init__()
         self.state_a = "A"
         self.state_b = "B"
         self.state_c = "C"

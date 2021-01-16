@@ -24,7 +24,7 @@ class PropsDict(object):
     .. autoproperty:: _keys
     .. autoproperty:: _items
     """
-    _d = None
+    __slots__ = ("_d",)
 
     def __init__(self, dictionary: tp.Mapping[tp.Text, tp.Any]):
         super().__setattr__("_d", dictionary)
