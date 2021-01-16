@@ -9,6 +9,7 @@ from ._component import Component, PropsDict, register_props, BaseComponent, Roo
 
 
 class _ChangeManager(object):
+    __slots__ = ("changes",)
 
     def __init__(self):
         self.changes = []
@@ -46,6 +47,8 @@ def _storage_manager():
 
 
 class _WidgetTree(object):
+    __slots__ = ("component", "children")
+
     def __init__(self, component, children):
         self.component = component
         self.children = children
@@ -86,6 +89,8 @@ class _WidgetTree(object):
 
 class _RenderContext(object):
     """Encapsulates various state that's needed for rendering."""
+    __slots__ = ("storage_manager", "need_qt_command_reissue", "component_to_new_props", "component_to_old_props",
+                 "force_refresh", "component_tree", "widget_tree", "enqueued_deletions", "_callback_queue")
     def __init__(self, storage_manager, force_refresh=False):
         self.storage_manager = storage_manager
         self.need_qt_command_reissue = {}
@@ -163,6 +168,7 @@ class RenderResult(object):
 
 
 class RenderEngine(object):
+    __slots__ = ("_component_tree", "_widget_tree", "_root", "_app")
 
     def __init__(self, root, app=None):
         self._component_tree = {}
