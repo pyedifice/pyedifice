@@ -8,7 +8,10 @@ import sys
 
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
-from watchdog.observers.fsevents import FSEventsObserver
+try:
+    from watchdog.observers.fsevents import FSEventsObserver
+except ImportError:
+    FSEventsObserver = None
 
 from ._component import Component
 from .app import App
