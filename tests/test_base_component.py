@@ -2,7 +2,6 @@ import os
 
 import unittest
 import unittest.mock
-import edifice._component as component
 import edifice.engine as engine
 import edifice.base_components as base_components
 
@@ -22,6 +21,7 @@ class MockComponent(base_components.QtWidgetComponent):
     
     class MockUnderlying(object):
         setStyleSheet = "setStyleSheet"
+        move = "move"
 
     underlying = MockUnderlying()
 
@@ -88,7 +88,6 @@ class StyleTestCase(unittest.TestCase):
         _test_for_align("bottom", QtCore.Qt.AlignBottom)
 
     def test_align_widget(self):
-
         def _test_for_align(align, qt_align):
             style = {
                 "align": align,
@@ -104,6 +103,24 @@ class StyleTestCase(unittest.TestCase):
         _test_for_align("justify", "AlignJustify")
         _test_for_align("top", "AlignTop")
         _test_for_align("bottom", "AlignBottom")
+
+    def test_font_size(self):
+        style = {
+            "font-size": 12,
+        }
+        comp = MockComponent(style=style)
+        comp._size_from_font = None
+        commands = comp._gen_styling_commands([], style, None, None)
+        self.assertEqual(style["font-size"], "12px")
+
+    def test_top_left(self):
+        style = {
+            "top": 12,
+            "left": 24,
+        }
+        comp = MockComponent(style=style)
+        commands = comp._gen_styling_commands([], style, None, None)
+        self.assertTrue((comp.underlying.move, 24, 12) in commands)
 
 
 class MockRenderContext(engine._RenderContext):

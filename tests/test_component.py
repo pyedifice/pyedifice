@@ -6,9 +6,9 @@ import edifice.base_components as base_components
 
 from edifice.qt import QT_VERSION
 if QT_VERSION == "PyQt5":
-    from PyQt5 import QtCore, QtWidgets
+    from PyQt5 import QtWidgets
 else:
-    from PySide2 import QtCore, QtWidgets
+    from PySide2 import QtWidgets
 
 try:
     app = QtWidgets.QApplication(["-platform", "offscreen"])
