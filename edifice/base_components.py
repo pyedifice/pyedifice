@@ -7,14 +7,15 @@ These components may all be imported from the edifice namespace::
 
     # you can now access edifice.Button, View, etc.
 
-All components in this module inherit from :doc:`QtWidgetComponent<edifice.base_components.QtWidgetComponent>` and its props, such as `style` and `on_click`.
+All components in this module inherit from :doc:`QtWidgetComponent<edifice.base_components.QtWidgetComponent>`
+and its props, such as `style` and `on_click`.
 This means that all widgets could potentially respond to clicks and are stylable using css-like stylesheets.
 
 The components here can roughly be divided into layout components and content components.
 
 Layout components take a list of children and function as a container for its children;
 it is most analogous to the `<div>` html tag.
-The two basic layout components are :doc:`View<edifice.base_components.View>` and :doc:`ScrollView<edifice.base_components.ScrollView>`,
+The two basic layout components are :doc:`View<edifice.base_components.View>` and :doc:`ScrollView<stubs.edifice.base_components.ScrollView>`,
 They take a layout prop, which controls whether children are laid out in a row,
 a column, or without any preset layout.
 A layout component without children will appear as an empty spot in the window;
@@ -28,15 +29,18 @@ which simply displays the given text (or any Python object).
 The font can be controlled using the style prop.
 The :doc:`Icon<edifice.base_components.Icon>` component is another handy component, displaying an icon from the
 Font Awesome icon set.
-Finally, the :doc:`Button<edifice.base_components.Button>` and :doc:`TextInput<edifice.base_components.TextInput>` components allow you to collect input from the user.
+Finally, the :doc:`Button<edifice.base_components.Button>` and :doc:`TextInput<stubs.edifice.base_components.TextInput>`
+components allow you to collect input from the user.
 """
+
+# pylint:disable=unused-argument
 
 import functools
 import logging
 import os
 import typing as tp
 
-from ._component import BaseComponent, WidgetComponent, LayoutComponent, RootComponent, Component, register_props 
+from ._component import BaseComponent, WidgetComponent, RootComponent, register_props
 
 from .qt import QT_VERSION
 if QT_VERSION == "PyQt5":
@@ -134,7 +138,7 @@ class QtWidgetComponent(WidgetComponent):
 
     All Qt widgets inherit from this component and its props, which add basic functionality
     such as styling and event handlers.
-    
+
     Args:
         style: style for the widget. Could either be a dictionary or a list of dictionaries.
             See docs/style.md for a primer on styling.
@@ -267,7 +271,7 @@ class QtWidgetComponent(WidgetComponent):
                 elif style["align"] == "bottom":
                     set_align = QtCore.Qt.AlignBottom
                 else:
-                    logging.warn("Unknown alignment: %s", style["align"])
+                    logging.warning("Unknown alignment: %s", style["align"])
                 style.pop("align")
 
             if set_margin:
@@ -289,7 +293,7 @@ class QtWidgetComponent(WidgetComponent):
                 elif style["align"] == "bottom":
                     set_align = "AlignBottom"
                 else:
-                    logging.warn("Unknown alignment: %s", style["align"])
+                    logging.warning("Unknown alignment: %s", style["align"])
                 style.pop("align")
                 style["qproperty-alignment"] = set_align
 
@@ -464,7 +468,7 @@ class Icon(QtWidgetComponent):
     Edifice comes with the Font Awesome (https://fontawesome.com) regular and solid
     icon sets, to save you time from looking up your own icon set.
     You can specify an icon simplify using its name (and optionally the sub_collection).
-    
+
     Example::
 
         Icon(name="share")
@@ -515,7 +519,7 @@ class Icon(QtWidgetComponent):
 
 class Button(QtWidgetComponent):
     """Basic button widget.
-    
+
     Set the on_click prop (inherited from QtWidgetComponent) to define the behavior on click.
 
     Args:
@@ -554,7 +558,7 @@ class IconButton(Button):
     Edifice comes with the Font Awesome (https://fontawesome.com) regular and solid
     icon sets, to save you time from looking up your own icon set.
     You can specify an icon simplify using its name (and optionally the sub_collection).
-    
+
     Example::
 
         IconButton(name="share", on_click: self.share)
@@ -584,7 +588,8 @@ class IconButton(Button):
                                  self.props.collection, self.props.sub_collection, self.props.name + ".svg")
 
         size = self.underlying.font().pointSize()
-        self._set_size(self.props.size + 3 + size * len(self.props.title), size,  lambda size: (self.props.size + 3 + size * len(self.props.title), size))
+        self._set_size(self.props.size + 3 + size * len(self.props.title), size,
+                       lambda size: (self.props.size + 3 + size * len(self.props.title), size))
 
         def render_image(icon_path, size, color, rotation):
             pixmap = _get_svg_image(icon_path, size, color=color, rotation=rotation)
@@ -896,7 +901,7 @@ class _LinearView(QtWidgetComponent):
 
 class View(_LinearView):
     """Basic layout widget for grouping children together
-    
+
     Content that does not fit into the View layout will be clipped.
     To allow scrolling in case of overflow, use :doc:`ScrollView<edifice.base_components.ScrollView>`.
 
@@ -980,7 +985,6 @@ class ScrollView(_LinearView):
         self.underlying_layout.setSpacing(0)
         self.inner_widget.setLayout(self.underlying_layout)
         self.underlying.setWidget(self.inner_widget)
-        
         self.underlying.setObjectName(str(id(self)))
 
     def _qt_update_commands(self, children, newprops, newstate):

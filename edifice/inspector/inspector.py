@@ -138,7 +138,7 @@ class Inspector(ed.Component):
                             selected=self.selected == root,
                             initial_collapsed=len(children) > 1 or recurse_level > 2,
                             load_fun=lambda: [self._build_tree(child, recurse_level+1) for child in children])
-            
+
         return ed.Label(root.__class__.__name__,
                         style={"background-color": SELECTION_COLOR} if (self.selected == root) else {},
                         on_click=lambda e: self.set_state(selected=root))

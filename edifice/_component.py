@@ -2,7 +2,6 @@ from collections.abc import Iterator
 import contextlib
 import functools
 import inspect
-import logging
 import typing as tp
 
 
@@ -66,8 +65,7 @@ class PropsDict(object):
     def __getattr__(self, key):
         if key in self._d:
             return self._d[key]
-        else:
-            raise KeyError("%s not in props" % key)
+        raise KeyError("%s not in props" % key)
 
     def __repr__(self):
         return "PropsDict(%s)" % repr(self._d)
@@ -151,7 +149,7 @@ class Component(object):
     render function of this component) or when the state changes (when
     using set_state or render_changes()). By default, all changes in newprops
     and newstate will trigger a re-render.
-    
+
     When the component is rendered,
     the render function is called. This output is then compared against the output
     of the previous render (if that exists). The two renders are diffed,
@@ -181,6 +179,7 @@ class Component(object):
     _render_changes_context = None
     _render_unwind_context = None
     _ignored_variables = set()
+    _controller = None
 
     def __init__(self):
         super().__setattr__("_ignored_variables", set())
@@ -200,8 +199,30 @@ class Component(object):
             self._props = {"children": []}
         self._props.update(props)
 
-    def set_key(self, k: tp.Text):
-        self._key = k
+    def set_key(self, key: tp.Text):
+        """Sets the key of the component.
+
+        The key is used by the re-rendering logic to match a new list of components
+        with an existing list of components.
+        The algorithm will assume that components with the same key are logically the same.
+        If the key is not provided, the list index will be used as the key;
+        however, providing the key may provide more accurate results, leading to efficiency gains.
+
+        Example::
+
+            # inside a render call
+            return edifice.View()(
+                edifice.Label("Hello").set_key("en"),
+                edifice.Label("Bonjour").set_key("fr"),
+                edifice.Label("Hola").set_key("es"),
+            )
+
+        Args:
+            key: the key to label the component with
+        Returns:
+            The component itself.
+        """
+        self._key = key
         return self
 
     @property
@@ -306,6 +327,7 @@ class Component(object):
         Returns:
             Whether or not the Component should be rerendered.
         """
+        del newprops, newstate
         return True
 
     def did_mount(self):
@@ -314,7 +336,6 @@ class Component(object):
         Override if you need to do something after the component mounts
         (e.g. start a timer).
         """
-        pass
 
     def will_unmount(self):
         """Callback function that is called when the component will unmount.
@@ -322,7 +343,6 @@ class Component(object):
         Override if you need to clean up some state, e.g. stop a timer,
         close a file.
         """
-        pass
 
     def __call__(self, *args):
         children = [a for a in args if a]
@@ -335,9 +355,13 @@ class Component(object):
     def _tags(self):
         classname = self.__class__.__name__
         return [
-            "<%s id=0x%x %s>" % (classname, id(self), " ".join("%s=%s" % (p, val) for (p, val) in self.props._items if p != "children")),
+            f"<{classname} id=0x%x %s>" % (
+                id(self),
+                " ".join("%s=%s" % (p, val) for (p, val) in self.props._items if p != "children")),
             "</%s>" % (classname),
-            "<%s id=0x%x %s />" % (classname, id(self), " ".join("%s=%s" % (p, val) for (p, val) in self.props._items if p != "children")),
+            f"<{classname} id=0x%x %s />" % (
+                id(self),
+                " ".join("%s=%s" % (p, val) for (p, val) in self.props._items if p != "children")),
         ]
 
     def __str__(self):
@@ -411,25 +435,16 @@ def register_props(f):
 
 
 class BaseComponent(Component):
-
-    def __init__(self):
-        super().__init__()
+    """Base Component, whose rendering is defined by the backend."""
 
 class WidgetComponent(BaseComponent):
-
-    def __init__(self):
-        super().__init__()
+    pass
 
 class LayoutComponent(BaseComponent):
-
-    def __init__(self):
-        super().__init__()
+    pass
 
 class RootComponent(BaseComponent):
 
-    def __init__(self):
-        super().__init__()
-
     def _qt_update_commands(self, children, newprops, newstate):
-        # Dummy
+        del children, newprops, newstate
         return []

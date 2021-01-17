@@ -37,7 +37,7 @@ of this component. These may be your own higher-level components as well as
 the core Components, such as Label, Button, and View.
 Components may be composed in a tree like fashion:
 one special prop is children, which will always be defined (defaults to an
-empty list). 
+empty list).
 To better enable the visualization of the tree-structure of a Component
 in the code,
 the call method of a Component has been overriden to set the arguments

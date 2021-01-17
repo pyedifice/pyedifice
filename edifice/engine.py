@@ -1,11 +1,8 @@
 import contextlib
 import inspect
 import logging
-import queue
-import time
-import typing as tp
 
-from ._component import Component, PropsDict, register_props, BaseComponent, RootComponent
+from ._component import BaseComponent, Component, PropsDict
 
 
 class _ChangeManager(object):
@@ -23,7 +20,7 @@ class _ChangeManager(object):
 
     def unwind(self):
         logging.warning("Encountered error while rendering. Unwinding changes.")
-        for obj, key, had_key, old_value, new_value in reversed(self.changes):
+        for obj, key, had_key, old_value, _ in reversed(self.changes):
             if had_key:
                 logging.info("Resetting %s.%s to %s", obj, key, old_value)
                 setattr(obj, key, old_value)
@@ -32,8 +29,8 @@ class _ChangeManager(object):
                     delattr(obj, key)
                 except AttributeError:
                     logging.warning(
-                        "Error while unwinding changes: Unable to delete %s from %s. Setting to None instead" % (
-                            key, obj.__class__.__name__))
+                        "Error while unwinding changes: Unable to delete %s from %s. Setting to None instead",
+                        key, obj.__class__.__name__)
                     setattr(obj, key, None)
 
 @contextlib.contextmanager
@@ -196,7 +193,8 @@ class RenderEngine(object):
         # 1) Find all old components that's not a child of another component
 
         # TODO: handle changes in the tree root
-        components_to_replace = [] # List of pairs: (old_component, new_component_class, parent component, new_component)
+        # List of pairs: (old_component, new_component_class, parent component, new_component)
+        components_to_replace = []
         old_components = [cls for cls, _ in classes]
         new_components = [cls for _, cls in classes]
         def traverse(comp, parent):
@@ -219,10 +217,11 @@ class RenderEngine(object):
             old_comp, new_comp_class, _, _ = parts
 
             try:
-                kwargs = {k: old_comp.props[k] for k, v in list(inspect.signature(new_comp_class.__init__).parameters.items())[1:]
+                parameters = list(inspect.signature(new_comp_class.__init__).parameters.items())
+                kwargs = {k: old_comp.props[k] for k, v in parameters[1:]
                           if v.default is inspect.Parameter.empty and k[0] != "_"}
             except KeyError:
-                raise ValueError("Error while reloading %s: New class expects props not present in old class" % old_comp)
+                raise ValueError(f"Error while reloading {old_comp}: New class expects props not present in old class")
             parts[3] = new_comp_class(**kwargs)
             parts[3]._props.update(old_comp._props)
             if hasattr(old_comp, "_key"):
@@ -238,8 +237,10 @@ class RenderEngine(object):
                     if comp is old_comp:
                         parent_comp._props["children"][i] = new_comp
             else:
-                logging.warning(f"Cannot reload {new_comp} (appearing in {parent_comp}) because calling render function is just a wrapper."
-                                 "Consider putting it inside an edifice.View or another Component that has the children prop")
+                logging.warning(
+                    f"Cannot reload {new_comp} (rendered by {parent_comp}) "
+                    "because calling render function is just a wrapper."
+                    "Consider putting it inside an edifice.View or another Component that has the children prop")
 
         # 5) call _render for all new component parents
         try:
@@ -320,7 +321,7 @@ class RenderEngine(object):
             # New component, simply render everything
             render_context.component_tree[component] = list(component.children)
             rendered_children = [self._render(child, render_context) for child in component.children]
-            render_context.widget_tree[component] = _WidgetTree(component, rendered_children) 
+            render_context.widget_tree[component] = _WidgetTree(component, rendered_children)
             render_context.mark_qt_rerender(component, True)
             render_context.schedule_callback(component.did_mount)
             return render_context.widget_tree[component]
@@ -347,7 +348,7 @@ class RenderEngine(object):
             render_context.mark_qt_rerender(component, True)
 
         render_context.component_tree[component] = children
-        render_context.widget_tree[component] = _WidgetTree(component, rendered_children) 
+        render_context.widget_tree[component] = _WidgetTree(component, rendered_children)
         props_dict = dict(component.props._items)
         props_dict["children"] = list(children)
         render_context.mark_props_change(component, PropsDict(props_dict))
@@ -406,4 +407,3 @@ class RenderEngine(object):
             self._delete_component(component, True)
 
         return RenderResult(widget_trees, commands, render_context)
-

@@ -1,10 +1,7 @@
-import contextlib
-import inspect
 import logging
 import queue
 import time
 import traceback
-import typing as tp
 
 from .qt import QT_VERSION
 if QT_VERSION == "PyQt5":
@@ -12,10 +9,45 @@ if QT_VERSION == "PyQt5":
 else:
     from PySide2 import QtCore, QtWidgets
 
-from ._component import Component, PropsDict, register_props, BaseComponent, RootComponent
+from ._component import Component, RootComponent
 from .base_components import WindowManager
 from .engine import RenderEngine
-from .utilities import set_trace
+
+
+class _TimingAvg(object):
+
+    def __init__(self):
+        self.total_time = 0
+        self.total_count = 0
+        self.max_time = 0
+
+    def update(self, new_t):
+        self.max_time = max(self.max_time, new_t)
+        self.total_time += new_t
+        self.total_count += 1
+
+    def count(self):
+        return self.total_count
+
+    def mean(self):
+        return self.total_time / self.total_count
+
+    def max(self):
+        # TODO: consider using EMA max
+        return self.max_time
+
+
+class _RateLimitedLogger(object):
+
+    def __init__(self, gap):
+        self._last_log_time = 0
+        self._gap = gap
+
+    def info(self, *args, **kwargs):
+        cur_time = time.process_time()
+        if cur_time - self._last_log_time > self._gap:
+            logging.info(*args, **kwargs)
+            self._last_log_time = cur_time
 
 
 class App(object):
@@ -38,11 +70,8 @@ class App(object):
         else:
             self._root = WindowManager()(component)
         self._render_engine = RenderEngine(self._root, self)
-        self._last_render_time = 0
-        self._nrenders = 0
-        self._render_time = 0
-        self._last_render_time = 0
-        self._worst_render_time = 0
+        self._logger = _RateLimitedLogger(1)
+        self._render_timing = _TimingAvg()
         self._first_render = True
 
         # Support for reloading on file change
@@ -56,8 +85,8 @@ class App(object):
                         file_name, classes = self._class_rerender_queue.get_nowait()
                         try:
                             render_result = self._render_engine._refresh_by_class(classes)
-                        except Exception as e:
-                            logging.warn("Encountered exception while reloading: %s" % e)
+                        except Exception as exception:
+                            logging.warning("Encountered exception while reloading: %s", exception)
                             self._class_rerender_response_queue.put_nowait(False)
                             traceback.print_exc()
                             continue
@@ -80,20 +109,18 @@ class App(object):
     def __hash__(self):
         return id(self)
 
-    def _request_rerender(self, components, newstate, execute=True):
+    def _request_rerender(self, components, newstate):
+        del newstate
         start_time = time.process_time()
         render_result = self._render_engine._request_rerender(components)
         render_result.run()
-
         end_time = time.process_time()
+
         if not self._first_render:
-            self._render_time += (end_time - start_time)
-            self._worst_render_time = max(end_time - start_time, self._worst_render_time)
-            self._nrenders += 1
-            if end_time - self._last_render_time > 1:
-                logging.info("Rendered %d times, with average render time of %.2f ms and worst render time of %.2f ms",
-                             self._nrenders, 1000 * self._render_time / self._nrenders, 1000 * self._worst_render_time)
-                self._last_render_time = end_time
+            render_timing = self._render_timing
+            render_timing.update(end_time - start_time)
+            self._logger.info("Rendered %d times, with average render time of %.2f ms and worst render time of %.2f ms",
+                         render_timing.count(), 1000 * render_timing.mean(), 1000 * render_timing.max())
         self._first_render = False
 
     def start(self):

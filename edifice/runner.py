@@ -5,7 +5,6 @@ import inspect
 import logging
 import os
 import sys
-import time
 
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
@@ -40,13 +39,56 @@ def _reload(module):
     return importlib.reload(module)
 
 
+def _message_app(app, src_path, components_list):
+    # Alert the main QThread about the change
+    app._class_rerender_queue.put_nowait((src_path, components_list))
+    logging.info("Detected change in %s.", src_path)
+    app.app.postEvent(
+        app._event_receiver,
+        QtCore.QEvent(QtCore.QEvent.Type(app._file_change_rerender_event_type)))
+    return app._class_rerender_response_queue.get()
+
+
+def _reload_components(module):
+    if module in MODULE_CLASS_CACHE:
+        old_components = MODULE_CLASS_CACHE[module]
+    else:
+        old_components = list(_module_to_components(module))
+    MODULE_CLASS_CACHE[module] = old_components
+
+    try:
+        _reload(module)
+    except Exception as e:
+        logging.warning("Encountered exception while reloading module: %s", e)
+        return
+    new_components = list(_module_to_components(module))
+
+    # Create all pairs of (old component, new component) that share the same names
+    components_list = []
+
+    for name, component in old_components:
+        matches = [comp2 for name2, comp2 in new_components if name2 == name]
+        corresponding_component = None
+        if matches:
+            corresponding_component = matches[0]
+        components_list.append((component, corresponding_component))
+
+    for name, component in new_components:
+        matches = [comp2 for name2, comp2 in old_components if name2 == name]
+        if not matches:
+            components_list.append((None, component))
+
+    return components_list, new_components
+
+
 def runner():
     logging.basicConfig(level=logging.INFO)
     parser = argparse.ArgumentParser(description="Edifice app runner.")
     parser.add_argument("main_file", help="Main file containing app")
     parser.add_argument("root_component", help="The root component, should be in main file")
-    parser.add_argument("--dir", dest="directory",
-                        help="Directory to watch for changes. By default, the directory containing main_file", default=None)
+    parser.add_argument(
+        "--dir", dest="directory", default=None,
+        help="Directory to watch for changes. By default, the directory containing main_file")
 
     args = parser.parse_args()
 
@@ -72,21 +114,19 @@ def runner():
             self.seen_files = {}
 
         def on_modified(self, event):
-            if isinstance(observer, FSEventsObserver):
+            if isinstance(observer, FSEventsObserver) and event.is_directory:
                 # For Macs (which use FSEvents), FSEvents only reports directory changes
-                if event.is_directory:
-                    files_in_dir = [os.path.join(event.src_path, f) for f in os.listdir(event.src_path) if f.endswith(".py")]
-                    if not files_in_dir:
-                        return
-                    src_path = max(files_in_dir, key=os.path.getmtime)
-                    mtime = os.path.getmtime(src_path)
-                    if self.seen_files.get(src_path, 0) == mtime:
-                        return
-                    self.seen_files[src_path] = mtime
-                    if datetime.datetime.now().timestamp() - mtime > 1:
-                        return
-                else:
-                    src_path = event.src_path
+                files_in_dir = [os.path.join(event.src_path, f) for f in os.listdir(event.src_path)
+                                if f.endswith(".py")]
+                if not files_in_dir:
+                    return
+                src_path = max(files_in_dir, key=os.path.getmtime)
+                mtime = os.path.getmtime(src_path)
+                if self.seen_files.get(src_path, 0) == mtime:
+                    return
+                self.seen_files[src_path] = mtime
+                if datetime.datetime.now().timestamp() - mtime > 1:
+                    return
             else:
                 src_path = os.path.abspath(event.src_path)
 
@@ -102,41 +142,9 @@ def runner():
 
             # Reload the old module and get old and new Components
             module = sys.modules[old_file_mapping[src_path]]
-
-            if module in MODULE_CLASS_CACHE:
-                old_components = MODULE_CLASS_CACHE[module]
-            else:
-                old_components = list(_module_to_components(module))
-            MODULE_CLASS_CACHE[module] = old_components
-
-            try:
-                _reload(module)
-            except Exception as e:
-                logging.warn("Encountered exception while reloading module: %s", e)
-                return
-            new_components = list(_module_to_components(module))
-
-            # Create all pairs of (old component, new component) that share the same names
-            components_list = []
-
-            for name, component in old_components:
-                matches = [comp2 for name2, comp2 in new_components if name2 == name]
-                corresponding_component = None
-                if matches:
-                    corresponding_component = matches[0]
-                components_list.append((component, corresponding_component))
-
-            for name, component in new_components:
-                matches = [comp2 for name2, comp2 in old_components if name2 == name]
-                if not matches:
-                    components_list.append((None, component))
-
+            components_list, new_components = _reload_components(module)
             # Alert the main QThread about the change
-            app._class_rerender_queue.put_nowait((src_path, components_list))
-            logging.info("Detected change in %s.", src_path)
-            app.app.postEvent(app._event_receiver, QtCore.QEvent(QtCore.QEvent.Type(app._file_change_rerender_event_type)))
-            success = app._class_rerender_response_queue.get()
-            if success:
+            if _message_app(app, src_path, components_list):
                 MODULE_CLASS_CACHE[module] = new_components
 
     event_handler = EventHandler()
