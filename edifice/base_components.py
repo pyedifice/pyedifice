@@ -657,7 +657,6 @@ class TextInput(QtWidgetComponent):
     @register_props
     def __init__(self, text: tp.Any = "", on_change: tp.Callable[[tp.Text], None] = (lambda text: None), **kwargs):
         super().__init__(**kwargs)
-        self.current_text = text
         self._connected = False
         self.underlying = None
 
@@ -669,7 +668,6 @@ class TextInput(QtWidgetComponent):
 
     def set_on_change(self, on_change):
         def on_change_fun(text):
-            self.current_text = text
             return on_change(text)
         if self._connected:
             self.underlying.textChanged[str].disconnect()
@@ -708,7 +706,6 @@ class CheckBox(QtWidgetComponent):
     def __init__(self, checked: bool = False, text: tp.Any = "",
                  on_change: tp.Callable[[bool], None] = (lambda checked: None), **kwargs):
         super().__init__(**kwargs)
-        self.checked = checked
         self._connected = False
         self.underlying = None
 
@@ -720,8 +717,7 @@ class CheckBox(QtWidgetComponent):
 
     def set_on_change(self, on_change):
         def on_change_fun(checked):
-            self.checked = bool(checked)
-            return on_change(self.checked)
+            return on_change(self.props.checked)
         if self._connected:
             self.underlying.stateChanged[int].disconnect()
         self.underlying.stateChanged[int].connect(on_change_fun)
@@ -732,7 +728,7 @@ class CheckBox(QtWidgetComponent):
             self._initialize()
 
         commands = super()._qt_update_commands(children, newprops, newstate, self.underlying)
-        check_state = QtCore.Qt.Checked if self.checked else QtCore.Qt.Unchecked
+        check_state = QtCore.Qt.Checked if self.props.checked else QtCore.Qt.Unchecked
         commands.append((self.underlying.setCheckState, check_state))
         for prop in newprops:
             if prop == "on_change":

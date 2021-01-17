@@ -46,6 +46,22 @@ class StyleTestCase(unittest.TestCase):
              (comp.underlying.setStyleSheet, "QWidget#%s{min-width: 0;min-height: 0}" % id(comp))]
         )
 
+        style = {
+            "margin-left": "10px",
+            "margin-right": 8,
+            "margin-top": 9.0,
+            "margin-bottom": "9.0",
+        }
+        layout = Layout()
+        comp = MockComponent(style=style)
+        commands = comp._gen_styling_commands([], style, None, layout)
+        self.assertTrue("margin" not in style)
+        self.assertCountEqual(
+            commands,
+            [(layout.setContentsMargins, 10, 9.0, 8, 9.0),
+             (comp.underlying.setStyleSheet, "QWidget#%s{min-width: 0;min-height: 0}" % id(comp))]
+        )
+
     def test_align_layout(self):
         class Layout(object):
             setContentsMargins = "setContentsMargins"
@@ -203,4 +219,21 @@ class WidgetTreeTestCase(unittest.TestCase):
                 (view._delete_child, 0),
                 (view.underlying_layout.insertWidget, 1, inner_view.underlying)
             ])
+
+
+class BaseComponentsTest(unittest.TestCase):
+
+    def _test_comp(self, comp, children=None):
+        children = children or []
+        view_tree = engine._WidgetTree(comp, children)
+        with engine._storage_manager() as manager:
+            commands = view_tree.gen_qt_commands(MockRenderContext(manager))
+
+    def test_components(self):
+        self._test_comp(base_components.IconButton("play"))
+        self._test_comp(base_components.TextInput("initial_text", on_change=lambda text: None))
+        self._test_comp(base_components.CheckBox(checked=True, text="Test", on_change=lambda checked: None))
+        self._test_comp(base_components.Slider(value=1, min_value=0, max_value=3, on_change=lambda value: None))
+        self._test_comp(base_components.ScrollView(layout="row"))
+        self._test_comp(base_components.List())
 

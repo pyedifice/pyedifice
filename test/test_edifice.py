@@ -331,6 +331,198 @@ class RenderTestCase(unittest.TestCase):
 
         self.assertEqual(qt_commands, expected_commands)
 
+    def test_one_child_rerender(self):
+        class TestCompInner(component.Component):
+
+            @component.register_props
+            def __init__(self, val):
+                super().__init__()
+                self.count = 0
+
+            def render(self):
+                self.count += 1
+                return base_components.Label(self.props.val)
+
+        class TestCompOuter(component.Component):
+            def render(self):
+                return base_components.View()(TestCompInner(self.value))
+
+        test_comp = TestCompOuter()
+        test_comp.value = 2
+        app = engine.RenderEngine(test_comp)
+        render_result = app._request_rerender([test_comp])
+        inner_comp = app._component_tree[app._component_tree[test_comp]][0]
+        self.assertEqual(inner_comp.count, 1)
+        self.assertEqual(inner_comp.props.val, 2)
+
+        test_comp.value = 4
+        render_result = app._request_rerender([test_comp])
+        inner_comp = app._component_tree[app._component_tree[test_comp]][0]
+        self.assertEqual(inner_comp.count, 2)
+        self.assertEqual(inner_comp.props.val, 4)
+
+    def test_render_exception(self):
+        class TestCompInner1(component.Component):
+
+            @component.register_props
+            def __init__(self, val):
+                super().__init__()
+                self.count = 0
+                self.success_count = 0
+
+            def render(self):
+                self.count += 1
+                self.success_count += 1
+                return base_components.Label(self.props.val)
+
+        class TestCompInner2(component.Component):
+
+            @component.register_props
+            def __init__(self, val):
+                super().__init__()
+                self.count = 0
+                self.success_count = 0
+
+            def render(self):
+                self.count += 1
+                assert self.props.val == 8
+                self.success_count += 1
+                return base_components.Label(self.props.val)
+
+        class TestCompOuter(component.Component):
+            def render(self):
+                return base_components.View()(
+                    TestCompInner1(self.value * 2),
+                    TestCompInner2(self.value * 4),
+                )
+
+        test_comp = TestCompOuter()
+        test_comp.value = 2
+        app = engine.RenderEngine(test_comp)
+        render_result = app._request_rerender([test_comp])
+        inner_comp1, inner_comp2 = app._component_tree[app._component_tree[test_comp]]
+        self.assertEqual(inner_comp1.count, 1)
+        self.assertEqual(inner_comp1.props.val, 4)
+        self.assertEqual(inner_comp2.count, 1)
+        self.assertEqual(inner_comp2.props.val, 8)
+
+        test_comp.value = 3
+        try:
+            render_result = app._request_rerender([test_comp])
+        except AssertionError:
+            pass
+        inner_comp1, inner_comp2 = app._component_tree[app._component_tree[test_comp]]
+        self.assertEqual(inner_comp1.props.val, 4)
+        self.assertEqual(inner_comp2.count, 2)
+        self.assertEqual(inner_comp2.success_count, 1)
+        self.assertEqual(inner_comp2.props.val, 8)
+
+
+class RefreshClassTestCase(unittest.TestCase):
+
+    def test_refresh_child(self):
+        class OldInnerClass(component.Component):
+
+            @component.register_props
+            def __init__(self, val):
+                super().__init__()
+                self.count = 0
+                self.will_unmount = unittest.mock.MagicMock()
+
+            def render(self):
+                self.count += 1
+                return base_components.Label(self.props.val)
+
+        class NewInnerClass(component.Component):
+
+            @component.register_props
+            def __init__(self, val):
+                super().__init__()
+                self.count = 0
+
+            def render(self):
+                self.count += 1
+                return base_components.Label(self.props.val * 2)
+
+        class OuterClass(component.Component):
+
+            @component.register_props
+            def __init__(self):
+                super().__init__()
+                self.count = 0
+
+            def render(self):
+                self.count += 1
+                return base_components.View()(
+                    OldInnerClass(5)
+                )
+
+        outer_comp = OuterClass()
+        app = engine.RenderEngine(outer_comp)
+        app._request_rerender([outer_comp])
+        old_inner_comp = app._component_tree[app._component_tree[outer_comp]][0]
+        assert isinstance(old_inner_comp, OldInnerClass)
+
+        app._refresh_by_class([(OldInnerClass, NewInnerClass)])
+        inner_comp = app._component_tree[app._component_tree[outer_comp]][0]
+        old_inner_comp.will_unmount.assert_called_once()
+        assert isinstance(inner_comp, NewInnerClass)
+        self.assertEqual(inner_comp.props.val, 5)
+
+    def test_refresh_child_error(self):
+        class OldInnerClass(component.Component):
+
+            @component.register_props
+            def __init__(self, val):
+                super().__init__()
+                self.count = 0
+                self.will_unmount = unittest.mock.MagicMock()
+
+            def render(self):
+                self.count += 1
+                return base_components.Label(self.props.val)
+
+        class NewInnerClass(component.Component):
+
+            @component.register_props
+            def __init__(self, val):
+                super().__init__()
+                self.count = 0
+
+            def render(self):
+                self.count += 1
+                assert False
+                return base_components.Label(self.props.val * 2)
+
+        class OuterClass(component.Component):
+
+            @component.register_props
+            def __init__(self):
+                super().__init__()
+                self.count = 0
+
+            def render(self):
+                self.count += 1
+                return base_components.View()(
+                    OldInnerClass(5)
+                )
+
+        outer_comp = OuterClass()
+        app = engine.RenderEngine(outer_comp)
+        app._request_rerender([outer_comp])
+        old_inner_comp = app._component_tree[app._component_tree[outer_comp]][0]
+        assert isinstance(old_inner_comp, OldInnerClass)
+
+        try:
+            app._refresh_by_class([(OldInnerClass, NewInnerClass)])
+        except AssertionError:
+            pass
+        inner_comp = app._component_tree[app._component_tree[outer_comp]][0]
+        old_inner_comp.will_unmount.assert_not_called()
+        assert isinstance(inner_comp, OldInnerClass)
+        self.assertEqual(inner_comp.props.val, 5)
+
+
 
 if __name__ == "__main__":
     unittest.main()

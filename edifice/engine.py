@@ -230,11 +230,6 @@ class RenderEngine(object):
 
         # 3) Replace old component in the place in the tree where they first appear, with a reference to new component
 
-        def serialize_comp(comp):
-            widget = self._widget_tree[comp]
-            serialization = [id(widget.component)]
-            return serialization + [serialize_comp(sc.component) for sc in widget.children]
-
         backup = {}
         for old_comp, _, parent_comp, new_comp in components_to_replace:
             if isinstance(self._component_tree[parent_comp], list):
@@ -242,6 +237,9 @@ class RenderEngine(object):
                 for i, comp in enumerate(parent_comp.children):
                     if comp is old_comp:
                         parent_comp._props["children"][i] = new_comp
+            else:
+                logging.warning(f"Cannot reload {new_comp} (appearing in {parent_comp}) because calling render function is just a wrapper."
+                                 "Consider putting it inside an edifice.View or another Component that has the children prop")
 
         # 5) call _render for all new component parents
         try:
@@ -249,9 +247,8 @@ class RenderEngine(object):
             ret = self._request_rerender([parent_comp for _, _, parent_comp, _ in components_to_replace])
         except Exception as e:
             # Restore components
-            for parent_comp in backup:
-                parent_comp._props["children"] = backup[parent_comp]
-
+            for parent_comp, backup_val in backup.items():
+                parent_comp._props["children"] = backup_val
             raise e
         # # 4) Delete all old_components from the tree, and do this recursively
         # for old_comp, _, _, _ in components_to_replace:

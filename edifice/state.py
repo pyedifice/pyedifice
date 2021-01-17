@@ -140,9 +140,9 @@ class StateManager(object):
 
     """
 
-    def __init__(self):
-        self._values = {}
-        self._subscriptions_for_key = defaultdict(set())
+    def __init__(self, initial_values: tp.Optional[tp.Mapping[tp.Text, tp.Any]] = None):
+        self._values = initial_values or {}
+        self._subscriptions_for_key = defaultdict(set)
 
     def subscribe(self, component: Component, key: tp.Text) -> tp.Any:
         """Subscribes a component to the given key.
