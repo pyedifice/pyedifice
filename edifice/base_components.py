@@ -681,7 +681,7 @@ class TextInput(QtWidgetComponent):
             self._initialize()
 
         commands = super()._qt_update_commands(children, newprops, newstate, self.underlying)
-        commands.append((self.underlying.setText, str(self.current_text)))
+        commands.append((self.underlying.setText, str(self.props.text)))
         for prop in newprops:
             if prop == "on_change":
                 commands.append((self.set_on_change, newprops[prop]))
@@ -776,7 +776,6 @@ class Slider(QtWidgetComponent):
         super().__init__(**kwargs)
         # A QSlider only accepts integers. We represent floats as
         # an integer between 0 and 1024.
-        self.value = value
         self._connected = False
         self.underlying = None
         # TODO: let user choose?
@@ -813,7 +812,7 @@ class Slider(QtWidgetComponent):
             self._initialize()
 
         commands = super()._qt_update_commands(children, newprops, newstate, self.underlying)
-        value = self.value
+        value = self.props.value
         if self.props.dtype == float:
             min_value, max_value = self.props.min_value, self.props.max_value
             value = int((value - min_value) / (max_value - min_value) * self._granularity)

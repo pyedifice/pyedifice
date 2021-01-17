@@ -280,7 +280,7 @@ class RenderEngine(object):
     def _attach_keys(self, component, render_context: _RenderContext):
         for i, child in enumerate(component.children):
             if not hasattr(child, "_key"):
-                logging.warning("Setting child key of %s to: %s", component, "KEY" + str(i))
+                # logging.warning("Setting child key of %s to: %s", component, "KEY" + str(i))
                 render_context.set(child, "_key", "KEY" + str(i))
 
     def _recycle_children(self, component, render_context):

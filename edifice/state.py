@@ -12,14 +12,13 @@ that only pass the state to their children and does not use it directly.
 
 StateValue and StateManager provide an alternative model of state storage,
 with the principal advantages that
-
     - There is no need to pass both a "getter" and a "setter" for every state
-    down the Component Tree. Indeed, if you choose to create a global StateValue
-    or a global StateManager object, there is no need to pass any state down
-    the Component Tree.
+      down the Component Tree. Indeed, if you choose to create a global StateValue
+      or a global StateManager object, there is no need to pass any state down
+      the Component Tree.
     - Changes to the value will trigger automatic re-render, just like calling
-    set_state. However, only the nodes that actually use the state will be
-    re-rendered.
+      set_state. However, only the nodes that actually use the state will be
+      re-rendered.
 
 A StateValue is a value (any Python object) that Edifice will keep track of.
 The principal methods of a StateValue are set and subscribe.
