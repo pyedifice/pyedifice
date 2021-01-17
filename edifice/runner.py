@@ -20,8 +20,7 @@ else:
     from PySide2 import QtCore
 
 
-def _reload():
-    importlib.reload()
+MODULE_CLASS_CACHE = {}
 
 def _file_to_module_name():
     d = {}
@@ -30,14 +29,11 @@ def _file_to_module_name():
             d[os.path.abspath(module.__file__)] = name
     return d
 
-MODULE_CLASS_CACHE = {}
-
 def _module_to_components(module):
     return inspect.getmembers(module, lambda x: inspect.isclass(x) and issubclass(x, Component))
 
 def _reload(module):
     return importlib.reload(module)
-
 
 def _message_app(app, src_path, components_list):
     # Alert the main QThread about the change
@@ -47,7 +43,6 @@ def _message_app(app, src_path, components_list):
         app._event_receiver,
         QtCore.QEvent(QtCore.QEvent.Type(app._file_change_rerender_event_type)))
     return app._class_rerender_response_queue.get()
-
 
 def _reload_components(module):
     if module in MODULE_CLASS_CACHE:
