@@ -1,4 +1,5 @@
 import logging
+import os
 import queue
 import time
 import traceback
@@ -136,6 +137,9 @@ class App(object):
             self._inspector_component = inspector.Inspector(
                 self._render_engine._component_tree, self._root,
                 refresh=(lambda: (self._render_engine._component_tree, self._root)))
-            self._request_rerender([Window(title="Component Inspector", on_close=cleanup)(self._inspector_component)], {})
+            icon_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), "inspector/icon.png")
+            self._request_rerender([
+                Window(title="Component Inspector", on_close=cleanup, icon=icon_path)(self._inspector_component)
+            ], {})
         self.app.exec_()
         self._render_engine._delete_component(self._root, True)

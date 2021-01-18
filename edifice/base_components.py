@@ -60,6 +60,28 @@ def _dict_to_style(d, prefix="QWidget"):
     return stylesheet
 
 
+def _array_to_pixmap(arr):
+    try:
+        import numpy as np
+    except ImportError:
+        raise ValueError("Image src must be filename or numpy array")
+
+    height, width, channel = arr.shape
+    if arr.dtype == np.float32 or arr.dtype == np.float64:
+        arr = (255 * arr).round()
+    arr = arr.astype(np.uint8)
+    return QtGui.QImage(arr.data, width, height, channel * width, QtGui.QImage.Format_RGB888)
+
+@functools.lru_cache(30)
+def _get_image(path):
+    return QtGui.QPixmap(path)
+
+def _image_descriptor_to_pixmap(inp):
+    if isinstance(inp, str):
+        return _get_image(inp)
+    else:
+        return _array_to_pixmap(arr)
+
 @functools.lru_cache(100)
 def _get_svg_image_raw(icon_path, size):
     svg_renderer = QtSvg.QSvgRenderer(icon_path)
@@ -117,14 +139,14 @@ _CURSORS = {
 
 ContextMenuType = tp.Mapping[tp.Text, tp.Union[None, tp.Callable[[], tp.Any], "ContextMenuType"]]
 
-def _create_context_menu(menu: ContextMenuType, parent, title: tp.Optional[tp.Text] = None):
+def _create_qmenu(menu: ContextMenuType, parent, title: tp.Optional[tp.Text] = None):
     widget = QtWidgets.QMenu(parent)
     if title is not None:
         widget.setTitle(title)
 
     for key, value in menu.items():
         if isinstance(value, dict):
-            sub_menu = _create_context_menu(value, widget, key)
+            sub_menu = _create_qmenu(value, widget, key)
             widget.addMenu(sub_menu)
         elif value is None:
             widget.addSeparator()
@@ -348,7 +370,7 @@ class QtWidgetComponent(WidgetComponent):
 
     def _show_context_menu(self, pos):
         if self.props.context_menu is not None:
-            menu = _create_context_menu(self.props.context_menu, self.underlying)
+            menu = _create_qmenu(self.props.context_menu, self.underlying)
             pos = self.underlying.mapToGlobal(pos)
             menu.move(pos)
             menu.show()
@@ -408,19 +430,28 @@ class Window(RootComponent):
     """
 
     @register_props
-    def __init__(self, title="Edifice Application", on_close=None):
+    def __init__(self, title: tp.Text = "Edifice Application",
+                 on_close: tp.Optional[tp.Callable[[QtGui.QCloseEvent], tp.Any]] = None,
+                 icon:tp.Optional[tp.Union[tp.Text, tp.Sequence]] = None,
+                 menu=None):
         super().__init__()
 
         self._previous_rendering = None
         self._on_click = None
+        self._menu_bar = None
+        self.underlying = None
 
     def _set_on_close(self, underlying, on_close):
-        print("Setting on close")
         self._on_close = on_close
         if on_close:
             underlying.closeEvent = self._on_close
         else:
             underlying.closeEvent = lambda e: None
+
+    def _attach_menubar(self, menu_bar, menus):
+        menu_bar.setParent(self._previous_rendering.underlying)
+        for menu_title, menu in menus.items():
+            menu_bar.addMenu(_create_qmenu(menu, menu_title))
 
     def _qt_update_commands(self, children, newprops, newstate):
         if len(children) != 1:
@@ -436,8 +467,12 @@ class Window(RootComponent):
                 if old_position:
                     commands.append((child.underlying.move, old_position))
                 commands.append((child.underlying.show,))
+                newprops = self.props
+                self._menu_bar = None
         else:
             commands.append((child.underlying.show,))
+            newprops = self.props
+            self._menu_bar = None
         self._previous_rendering = child
 
         for prop in newprops:
@@ -445,6 +480,14 @@ class Window(RootComponent):
                 commands.append((self._previous_rendering.underlying.setWindowTitle, newprops.title))
             elif prop == "on_close":
                 commands.append((self._set_on_close, self._previous_rendering.underlying, newprops.on_close))
+            elif prop == "icon" and newprops.icon:
+                pixmap = _image_descriptor_to_pixmap(newprops.icon)
+                commands.append((self._previous_rendering.underlying.setWindowIcon, QtGui.QIcon(pixmap)))
+            elif prop == "menu" and newprops.menu:
+                if self._menu_bar is not None:
+                    self._menu_bar.setParent(None)
+                self._menu_bar = QtWidgets.QMenuBar()
+                commands.append((self._attach_menubar, self._menu_bar, newprops.menu))
         return commands
 
 
@@ -842,6 +885,7 @@ class _LinearView(QtWidgetComponent):
 
     def _recompute_children(self, children):
         commands = []
+        children = [child for child in children if child.component.underlying is not None]
         new_children = set()
         for child in children:
             new_children.add(child.component)
