@@ -66,7 +66,7 @@ class _WidgetTree(object):
             return commands
 
         old_props = render_context.get_old_props(self.component)
-        new_props = PropsDict({k: v for k, v in self.component.props._items if k not in old_props or old_props[k] != v})
+        new_props = PropsDict({k: v for k, v in self.component.props._items if k not in old_props or old_props[k] is not v})
         commands.extend(self.component._qt_update_commands(self.children, new_props, {}))
         return commands
 

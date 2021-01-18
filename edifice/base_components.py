@@ -142,7 +142,6 @@ class QtWidgetComponent(WidgetComponent):
     Args:
         style: style for the widget. Could either be a dictionary or a list of dictionaries.
             See docs/style.md for a primer on styling.
-        window_title: if component is a window, the title of the window. Ignored otherwise
         tool_tip: the tool tip displayed when hovering over the widget.
         cursor: the shape of the cursor when mousing over this widget. Must be one of:
             default, arrow, pointer, grab, grabbing, text, crosshair, move, wait, ew-resize,
@@ -156,7 +155,6 @@ class QtWidgetComponent(WidgetComponent):
 
     @register_props
     def __init__(self, style: StyleType = None,
-                 window_title: tp.Text = "Edifice Application",
                  tool_tip: tp.Optional[tp.Text] = None,
                  cursor: tp.Optional[tp.Text] = None,
                  context_menu: tp.Optional[ContextMenuType] = None,
@@ -374,8 +372,6 @@ class QtWidgetComponent(WidgetComponent):
                     commands.append((self._set_on_click, underlying, newprops.on_click))
                     if self.props.cursor is not None:
                         commands.append((underlying.setCursor, QtCore.Qt.PointingHandCursor))
-            elif prop == "window_title":
-                commands.append((underlying.setWindowTitle, newprops.window_title))
             elif prop == "tool_tip":
                 if newprops.tool_tip is not None:
                     commands.append((underlying.setToolTip, newprops.tool_tip))
@@ -393,71 +389,62 @@ class QtWidgetComponent(WidgetComponent):
         return commands
 
 
+class Window(RootComponent):
+    """Component that displays its child as a window.
 
-class WindowManager(RootComponent):
-    """Component that displays its children as windows.
-
-    The WindowManager should lie at the root of your component Tree.
-    The children of WindowManager are each displayed in its own window.
-    To create a new window, simply append to the list of children::
+    Window will mount its child as a window.
+    It can be created as a child of any standard container.
+    This is useful if a window is logically associated with ::
 
         class MyApp(Component):
 
-            @register_props
-            def __init__(self):
-                self.window_texts = []
-
-            def create_window(self):
-                nwindows = len(self.window_texts)
-                self.set_state(window_texts=self.window_texts + ["Window %s" % (nwindows + 1)])
-
             def render(self):
-                return WindowManager()(
-                    View()(
-                        Button(title="Create new window", on_click=self.create_window)
-                    ),
-                    *[Label(s) for s in self.window_texts]
+                return View()(
+                    Window(Label("Hello"), title="Hello"),
                 )
 
         if __name__ == "__main__":
             App(MyApp()).start()
     """
 
-    def __init__(self):
+    @register_props
+    def __init__(self, title="Edifice Application", on_close=None):
         super().__init__()
 
-        self._already_rendered = {}
-        self._widget_children = []
+        self._previous_rendering = None
+        self._on_click = None
+
+    def _set_on_close(self, underlying, on_close):
+        print("Setting on close")
+        self._on_close = on_close
+        if on_close:
+            underlying.closeEvent = self._on_close
+        else:
+            underlying.closeEvent = lambda e: None
 
     def _qt_update_commands(self, children, newprops, newstate):
+        if len(children) != 1:
+            raise ValueError("Window can only have 1 child")
+
+        child = children[0].component
         commands = []
-        new_children = set()
-        for child in children:
-            new_children.add(child.component)
 
-        for child in list(self._already_rendered.keys()):
-            if child not in new_children:
-                del self._already_rendered[child]
+        if self._previous_rendering:
+            old_position = self._previous_rendering.underlying.pos()
+            if child != self._previous_rendering:
+                commands.append((self._previous_rendering.underlying.close,))
+                if old_position:
+                    commands.append((child.underlying.move, old_position))
+                commands.append((child.underlying.show,))
+        else:
+            commands.append((child.underlying.show,))
+        self._previous_rendering = child
 
-        old_positions = []
-        for old_child in self._widget_children:
-            old_positions.append(old_child.underlying.pos())
-
-        for i, old_child in reversed(list(enumerate(self._widget_children))):
-            if old_child not in new_children:
-                commands.append((old_child.underlying.close,))
-
-        for i, child in enumerate(children):
-            old_pos = None
-            if i < len(old_positions):
-                old_pos = old_positions[i]
-            if child.component not in self._already_rendered:
-                if old_pos is not None:
-                    commands.append((child.component.underlying.move, old_pos))
-                commands.append((child.component.underlying.show,))
-            self._already_rendered[child.component] = True
-
-        self._widget_children = [child.component for child in children]
+        for prop in newprops:
+            if prop == "title":
+                commands.append((self._previous_rendering.underlying.setWindowTitle, newprops.title))
+            elif prop == "on_close":
+                commands.append((self._set_on_close, self._previous_rendering.underlying, newprops.on_close))
         return commands
 
 

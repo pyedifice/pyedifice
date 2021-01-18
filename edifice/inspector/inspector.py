@@ -5,7 +5,11 @@ import edifice as ed
 SELECTION_COLOR = "#ACCEF7"
 
 
-class TreeView(ed.Component):
+class InspectorComponent(ed.Component):
+    pass
+
+
+class TreeView(InspectorComponent):
 
     @ed.register_props
     def __init__(self, title, on_click, load_fun, initial_collapsed=False, selected=False):
@@ -53,7 +57,7 @@ class TreeView(ed.Component):
             ).set_key("children")
         )
 
-class StateView(ed.Component):
+class StateView(InspectorComponent):
 
     @ed.register_props
     def __init__(self, component):
@@ -68,7 +72,7 @@ class StateView(ed.Component):
               ).set_key(key) for key in state]
         )
 
-class PropsView(ed.Component):
+class PropsView(InspectorComponent):
 
     @ed.register_props
     def __init__(self, props):
@@ -85,7 +89,7 @@ class PropsView(ed.Component):
         )
 
 
-class ComponentView(ed.Component):
+class ComponentView(InspectorComponent):
 
     @ed.register_props
     def __init__(self, component):
@@ -115,7 +119,7 @@ class ComponentView(ed.Component):
         )
 
 
-class Inspector(ed.Component):
+class Inspector(InspectorComponent):
 
     @ed.register_props
     def __init__(self, component_tree, root_component, refresh):
@@ -144,7 +148,7 @@ class Inspector(ed.Component):
                         on_click=lambda e: self.set_state(selected=root))
 
     def render(self):
-        return ed.View(layout="row", window_title="Inspector")(
+        return ed.View(layout="row")(
             ed.View(layout="column", style={"align": "top", "width": 251, "border-right": "1px solid gray"})(
                 ed.View(layout="row", style={"align": "left", "height": 30})(
                     ed.Label("Edifice Inspector", style={"font-size": 18, "margin-left": 10, "width": 160}).set_key("title"),

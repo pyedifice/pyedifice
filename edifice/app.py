@@ -10,8 +10,9 @@ else:
     from PySide2 import QtCore, QtWidgets
 
 from ._component import Component, RootComponent
-from .base_components import WindowManager
+from .base_components import Window
 from .engine import RenderEngine
+from .inspector import inspector
 
 
 class _TimingAvg(object):
@@ -55,7 +56,7 @@ class App(object):
 
     Args:
         component: the root component of the application.
-            If it is not an instance of WindowManager, a WindowManager
+            If it is not an instance of Window or RootComponent, a Window
             will be created with the passed in component as a child.
         inspector: whether or not to run an instance of the Edifice Inspector
             alongside the main app. Defaults to False
@@ -68,7 +69,7 @@ class App(object):
         if isinstance(rendered_component, RootComponent):
             self._root = RootComponent()(component)
         else:
-            self._root = WindowManager()(component)
+            self._root = Window()(component)
         self._render_engine = RenderEngine(self._root, self)
         self._logger = _RateLimitedLogger(1)
         self._render_timing = _TimingAvg()
@@ -122,16 +123,19 @@ class App(object):
             self._logger.info("Rendered %d times, with average render time of %.2f ms and worst render time of %.2f ms",
                          render_timing.count(), 1000 * render_timing.mean(), 1000 * render_timing.max())
         self._first_render = False
+        if self._inspector_component is not None and not all(isinstance(comp, inspector.InspectorComponent) for comp in components):
+            self._inspector_component._refresh()
 
     def start(self):
         self._request_rerender([self._root], {})
         if self._inspector:
-            from .inspector import inspector
             print("Running inspector")
-            self._inspector_component = WindowManager()(
-                inspector.Inspector(self._render_engine._component_tree, self._root,
-                                    refresh=(lambda: (self._render_engine._component_tree, self._root))
-                                   ))
-            self._request_rerender([self._inspector_component], {})
+            def cleanup(e):
+                self._inspector_component = None
+
+            self._inspector_component = inspector.Inspector(
+                self._render_engine._component_tree, self._root,
+                refresh=(lambda: (self._render_engine._component_tree, self._root)))
+            self._request_rerender([Window(title="Component Inspector", on_close=cleanup)(self._inspector_component)], {})
         self.app.exec_()
         self._render_engine._delete_component(self._root, True)

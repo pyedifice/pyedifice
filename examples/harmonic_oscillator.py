@@ -21,7 +21,6 @@ class Test(ed.Component):
         ax.plot(self.t, np.sin(self.t * self.a))
 
     def render(self):
-        print("render", self.a)
         return ed.View(layout="column", style={}) (
             plotting.Figure(lambda figure: self.plot(figure)).set_key("plot"),
             ed.Slider(value=self.a, min_value=1, max_value=10, on_change=self.on_change).set_key("slider")
