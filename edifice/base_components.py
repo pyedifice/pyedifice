@@ -680,6 +680,24 @@ class Label(QtWidgetComponent):
         return commands
 
 
+class Completer(object):
+
+    def __init__(self, options, mode="popup"):
+        self.options = options
+        if mode == "popup":
+            self.mode = QtWidgets.QCompleter.PopupCompletion
+        elif mode == "inline":
+            self.mode = QtWidgets.QCompleter.InlineCompletion
+        else:
+            raise ValueError
+
+    def __eq__(self, other):
+        return (self.options == other.options) and (self.mode == other.mode)
+
+    def __ne__(self, other):
+        return (self.options != other.options) or (self.mode != other.mode)
+
+
 class TextInput(QtWidgetComponent):
     """Basic widget for a one line text input
 
@@ -690,7 +708,8 @@ class TextInput(QtWidgetComponent):
     """
 
     @register_props
-    def __init__(self, text: tp.Any = "", on_change: tp.Callable[[tp.Text], None] = (lambda text: None), **kwargs):
+    def __init__(self, text: tp.Any = "", on_change: tp.Callable[[tp.Text], None] = (lambda text: None),
+                 completer: tp.Optional[Completer] = None, **kwargs):
         super().__init__(**kwargs)
         self._connected = False
         self.underlying = None
@@ -709,6 +728,11 @@ class TextInput(QtWidgetComponent):
         self.underlying.textChanged[str].connect(on_change_fun)
         self._connected = True
 
+    def set_completer(self, completer):
+        qt_completer = QtWidgets.QCompleter(completer.options)
+        qt_completer.setCompletionMode(completer.mode)
+        self.underlying.setCompleter(qt_completer)
+
     def _qt_update_commands(self, children, newprops, newstate):
         if self.underlying is None:
             self._initialize()
@@ -718,6 +742,79 @@ class TextInput(QtWidgetComponent):
         for prop in newprops:
             if prop == "on_change":
                 commands.append((self.set_on_change, newprops[prop]))
+            elif prop == "completer":
+                commands.append((self.set_completer, newprops[prop]))
+        return commands
+
+
+class Dropdown(QtWidgetComponent):
+    """Basic widget for a dropdown menu.
+
+    Args:
+        text: Initial text of the text input
+        on_change: callback for the value of the text input changes. The callback is passed the changed
+            value of the text
+    """
+
+    @register_props
+    def __init__(self, text: tp.Text = "", selection: tp.Text = "",
+                 editable: bool = False,
+                 show_on_type: bool = True,
+                 options: tp.Optional[tp.Sequence[tp.Text]] = None,
+                 on_change: tp.Callable[[tp.Text], None] = (lambda text: None),
+                 on_select: tp.Callable[[tp.Text], None] = (lambda text: None),
+                 **kwargs):
+        super().__init__(**kwargs)
+        self._on_change_connected = False
+        self._on_select_connected = False
+        self.underlying = None
+
+    def _initialize(self):
+        self.underlying = QtWidgets.QComboBox()
+        self.underlying.setObjectName(str(id(self)))
+
+    def set_completer(self, completer):
+        completer = QtWidgets.QCompleter(completer.options, self.underlying)
+        completer.setCompletionMode(completer.mode)
+        self.underlying.setCompleter(completer)
+
+    def set_on_change(self, on_change):
+        def on_change_fun(text):
+            return on_change(text)
+        if self._on_change_connected:
+            self.underlying.editTextChanged[str].disconnect()
+        self.underlying.editTextChanged[str].connect(on_change_fun)
+        self._on_change_connected = True
+
+    def set_on_select(self, on_select):
+        def on_select_fun(text):
+            return on_select(text)
+        if self._on_select_connected:
+            self.underlying.textActivated[str].disconnect()
+        self.underlying.textActivated[str].connect(on_select_fun)
+        self._on_select_connected = True
+
+    def _qt_update_commands(self, children, newprops, newstate):
+        if self.underlying is None:
+            self._initialize()
+
+        commands = super()._qt_update_commands(children, newprops, newstate, self.underlying)
+        commands.append((self.underlying.setEditable, self.props.editable))
+        if "options" in newprops:
+            commands.extend([(self.underlying.clear,),
+                             (self.underlying.addItems, newprops.options),
+                            ])
+        for prop in newprops:
+            if prop == "on_change":
+                commands.append((self.set_on_change, newprops[prop]))
+            elif prop == "on_select":
+                commands.append((self.set_on_select, newprops[prop]))
+            elif prop == "text":
+                commands.append((self.underlying.setEditText, newprops[prop]))
+            elif prop == "selection":
+                commands.append((self.underlying.setCurrentText, newprops[prop]))
+            elif prop == "completer":
+                commands.append((self.set_completer, newprops[prop]))
         return commands
 
 

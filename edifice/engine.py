@@ -42,6 +42,11 @@ def _storage_manager():
         changes.unwind()
         raise e
 
+def _try_neq(a, b):
+    try:
+        return a != b
+    except:
+        return a is not b
 
 class _WidgetTree(object):
     __slots__ = ("component", "children")
@@ -66,7 +71,7 @@ class _WidgetTree(object):
             return commands
 
         old_props = render_context.get_old_props(self.component)
-        new_props = PropsDict({k: v for k, v in self.component.props._items if k not in old_props or old_props[k] is not v})
+        new_props = PropsDict({k: v for k, v in self.component.props._items if k not in old_props or _try_neq(old_props[k], v)})
         commands.extend(self.component._qt_update_commands(self.children, new_props, {}))
         return commands
 
