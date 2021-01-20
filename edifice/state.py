@@ -51,9 +51,10 @@ allowing you to properly handle the exception with guarantees of consistency.
 
 A StateManager is very similar in concept to a StateValue;
 you can think of it as a key-value store for multiple values.
-StateManagers allow you to store related state together
-and update them in batch.
-Components subscribe to individual keys in the StateManager.
+StateManagers allow you to store related state together and update them in batch.
+Components subscribe to individual keys in the StateManager, and a StateValue
+tied to that key is returned. This can be used by the Component directly,
+or passed to children, who would not need to know about the underlying StateManager.
 """
 
 from collections import defaultdict, OrderedDict
@@ -107,6 +108,10 @@ class StateValue(object):
         self._value = initial_value
         self._subscriptions = OrderedDict()
 
+    def _set_subscriptions(self, new_subscriptions):
+        # This helper method is overridden by StateManager
+        self._subscriptions = new_subscriptions
+
     def subscribe(self, component: Component) -> tp.Any:
         """Subscribes a component to this value's updates and returns the current value.
 
@@ -117,7 +122,7 @@ class StateValue(object):
         Returns:
             Current value.
         """
-        self._subscriptions = _add_subscription(self._subscriptions, component)
+        self._set_subscriptions(_add_subscription(self._subscriptions, component))
         return self._value
 
     @property
@@ -173,17 +178,30 @@ class StateManager(object):
         self._values = initial_values or {}
         self._subscriptions_for_key = defaultdict(OrderedDict)
 
+    def _set_subscriptions(self, key, new_subscriptions):
+        self._subscriptions_for_key[key] = new_subscriptions
+
     def subscribe(self, component: Component, key: tp.Text) -> tp.Any:
         """Subscribes a component to the given key.
+
+        This returns a StateValue, which can be dereferenced (via state_value.value)
+        and set (via state_value.set. This triggers a re-render for all subscribed components).
+        All state values produced by this method share the same subscription list.
+        The state value can also be passed to child components, which can subscribe to it
+        without knowing about the underlying StateManager.
 
         Args:
             component: component to subscribe
             key: key to subscribe to.
         Returns:
-            Corresponding value
+            A StateValue
         """
-        self._subscriptions_for_key[key] = _add_subscription(self._subscriptions_for_key[key], component)
-        return self._values[key]
+        self._set_subscriptions(key, _add_subscription(self._subscriptions_for_key[key], component))
+        state_value = StateValue(self._values[key])
+        state_value._subscriptions = self._subscriptions_for_key[key]
+        state_value._set_subscriptions = lambda new_subscriptions: self._set_subscriptions(key, new_subscriptions)
+        state_value.set = lambda value: self.set(key, value)
+        return state_value
 
     def __getitem__(self, key: tp.Text) -> tp.Any:
         return self._values[key]

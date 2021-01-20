@@ -146,10 +146,14 @@ class StateManagerTestCase(unittest.TestCase):
         })
 
         class TestComp1(component.Component):
+            def trigger_update(self):
+                self.state_value = state_manager.subscribe(self, "key2")
+                self.state_value.set(5)
+
             def render(self):
                 if not hasattr(self, "render_called_count"):
                     self.render_called_count = 0
-                self.value = state_manager.subscribe(self, "key1")
+                self.value = state_manager.subscribe(self, "key1").value
                 self.render_called_count += 1
                 return base_components.Label(self.value)
 
@@ -157,7 +161,7 @@ class StateManagerTestCase(unittest.TestCase):
             def render(self):
                 if not hasattr(self, "render_called_count"):
                     self.render_called_count = 0
-                self.value = state_manager.subscribe(self, "key2")
+                self.value = state_manager.subscribe(self, "key2").value
                 self.render_called_count += 1
                 return base_components.Label(self.value)
 
@@ -213,6 +217,14 @@ class StateManagerTestCase(unittest.TestCase):
         self.assertEqual(test_comp2.render_called_count, 2)
         self.assertEqual(app.render_count, 3)
 
+        test_comp1.trigger_update()
+        test_comp1, test_comp2 = extract_inner_components(test_comp)
+        self.assertEqual(state_manager["key2"], 5)
+        self.assertEqual(test_comp2.value, 5)
+        self.assertEqual(test_comp2.render_called_count, 3)
+        self.assertEqual(app.render_count, 4)
+
+
     def test_subscribe_error(self):
         state_manager = state.StateManager({
             "key1": 1,
@@ -223,7 +235,7 @@ class StateManagerTestCase(unittest.TestCase):
             def render(self):
                 if not hasattr(self, "render_called_count"):
                     self.render_called_count = 0
-                self.value = state_manager.subscribe(self, "key1")
+                self.value = state_manager.subscribe(self, "key1").value
                 self.render_called_count += 1
                 return base_components.Label(self.value)
 
@@ -231,7 +243,7 @@ class StateManagerTestCase(unittest.TestCase):
             def render(self):
                 if not hasattr(self, "render_called_count"):
                     self.render_called_count = 0
-                self.value = state_manager.subscribe(self, "key2")
+                self.value = state_manager.subscribe(self, "key2").value
                 self.render_called_count += 1
                 assert self.value == 2
                 return base_components.Label(self.value)

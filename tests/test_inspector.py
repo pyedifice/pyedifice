@@ -43,4 +43,5 @@ class InspectorTestCase(unittest.TestCase):
             on_click = lambda e: None).render()
         inspector.Collapsible(
             collapsed=True, on_click=lambda e: None,
-            title="HI", toggle=lambda e: None).render()
+            root=object(),
+            toggle=lambda e: None).render()

@@ -26,7 +26,7 @@ class ComponentLabel(InspectorComponent):
         root = self.props.root
         on_click = self.props.on_click
         try:
-            selected = current_selection.subscribe(self, id(root))
+            selected = current_selection.subscribe(self, id(root)).value
         except KeyError:
             selected = False
         return ed.Label(root.__class__.__name__,
@@ -36,15 +36,15 @@ class ComponentLabel(InspectorComponent):
 class Collapsible(InspectorComponent):
 
     @ed.register_props
-    def __init__(self, collapsed, on_click, title, toggle):
+    def __init__(self, collapsed, on_click, root, toggle):
         super().__init__()
 
     def should_update(self, newprops, newstate):
-        return newprops._get("title", self.props.title) != self.props.title or newprops._get("collapsed", self.props.collapsed) != self.props.collapsed
+        return newprops._get("root", self.props.root) != self.props.root or newprops._get("collapsed", self.props.collapsed) != self.props.collapsed
 
     def render(self):
         try:
-            selected = current_selection.subscribe(self, id(self.props.root))
+            selected = current_selection.subscribe(self, id(self.props.root)).value
         except KeyError:
             selected = False
         root_style = {"margin-left": 5}
@@ -55,13 +55,13 @@ class Collapsible(InspectorComponent):
                         rotation=0 if self.props.collapsed else 90,
                         on_click=self.props.toggle,
                 ).set_key("caret"),
-                ed.Label(self.props.title, style=root_style, on_click=self.props.on_click).set_key("title"),
+                ed.Label(self.props.root.__class__.__name__, style=root_style, on_click=self.props.on_click).set_key("title"),
             )
 
 class TreeView(InspectorComponent):
 
     @ed.register_props
-    def __init__(self, root, title, on_click, load_fun, must_refresh, initial_collapsed=False):
+    def __init__(self, root, on_click, load_fun, must_refresh, initial_collapsed=False):
         super().__init__()
         self.collapsed = initial_collapsed
         # We load children of the tree lazily, because the component tree can get pretty large!
@@ -107,7 +107,7 @@ class TreeView(InspectorComponent):
         if self.collapsed:
             child_style["height"] = 0
         return ed.View(layout="column", style={"align": "top"})(
-            Collapsible(title=self.props.title, on_click=self.props.on_click, toggle=self.toggle,
+            Collapsible(root=self.props.root, on_click=self.props.on_click, toggle=self.toggle,
                         collapsed=self.collapsed).set_key("root"),
             ed.View(layout="column", style={"align": "top", "margin-left": 20})(
                 *[comp.set_key(str(i)) for i, comp in enumerate(self.cached_children)]
@@ -209,7 +209,7 @@ class Inspector(InspectorComponent):
             children = [children]
 
         if len(children) > 0:
-            return TreeView(title=root.__class__.__name__, on_click=lambda e: self.select_component(root),
+            return TreeView(on_click=lambda e: self.select_component(root),
                             root=root,
                             must_refresh=lambda: self.must_refresh,
                             initial_collapsed=len(children) > 1 or recurse_level > 2,
@@ -218,7 +218,6 @@ class Inspector(InspectorComponent):
         return ComponentLabel(root, on_click=lambda e: self.select_component(root))
 
     def render(self):
-        print("Must refresh", self.must_refresh)
         if self.must_refresh or self._cached_tree is None:
             self._cached_tree = self._build_tree(self.root_component)
         return ed.View(layout="row")(
