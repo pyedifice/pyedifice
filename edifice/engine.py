@@ -193,6 +193,8 @@ class RenderEngine(object):
                     self._delete_component(sub_comp, recursive)
             # Node deletion
 
+        for ref in component._edifice_internal_references:
+            ref._value = None
         component.will_unmount()
         del self._component_tree[component]
         del self._widget_tree[component]
@@ -267,7 +269,11 @@ class RenderEngine(object):
         return ret
 
 
-    def _update_old_component(self, component, newprops, render_context: _RenderContext):
+    def _update_old_component(self, component, new_component, render_context: _RenderContext):
+        # This function is called whenever we want to update component to have props of new_component
+        newprops = new_component.props
+        render_context.set(component, "_edifice_internal_references",
+                           component._edifice_internal_references | new_component._edifice_internal_references)
         if component.should_update(newprops, {}):
             render_context.mark_props_change(component, newprops)
             rerendered_obj = self._render(component, render_context)
@@ -281,7 +287,7 @@ class RenderEngine(object):
     def _get_child_using_key(self, d, key, newchild, render_context: _RenderContext):
         if key not in d or d[key].__class__ != newchild.__class__:
             return newchild
-        self._update_old_component(d[key], newchild.props, render_context)
+        self._update_old_component(d[key], newchild, render_context)
         return d[key]
 
     def _attach_keys(self, component, render_context: _RenderContext):
@@ -300,7 +306,7 @@ class RenderEngine(object):
         if len(component.children) == 1 and len(old_children) == 1:
             # If both former and current child lists are length 1, just compare class
             if component.children[0].__class__ == old_children[0].__class__:
-                self._update_old_component(old_children[0], component.children[0].props, render_context)
+                self._update_old_component(old_children[0], component.children[0], render_context)
                 children = [old_children[0]]
             else:
                 children = [component.children[0]]
@@ -366,6 +372,8 @@ class RenderEngine(object):
     def _render(self, component: Component, render_context: _RenderContext):
         if component in render_context.widget_tree:
             return render_context.widget_tree[component]
+        for ref in component._edifice_internal_references:
+            render_context.set(ref, "_value", component)
         component._controller = self._app
         component._edifice_internal_parent = render_context.component_parent
         render_context.component_parent = component
@@ -381,10 +389,11 @@ class RenderEngine(object):
         if sub_component.__class__ == old_rendering.__class__:
             # TODO: Call will _eceive_props hook
             render_context.widget_tree[component] = self._update_old_component(
-                old_rendering, sub_component.props, render_context)
+                old_rendering, sub_component, render_context)
+            render_context.schedule_callback(component.did_update)
         else:
             if old_rendering is not None:
-                render_context.enqueued_deletions.append(sub_component)
+                render_context.enqueued_deletions.append(old_rendering)
 
             render_context.schedule_callback(component.did_mount)
             render_context.component_tree[component] = sub_component

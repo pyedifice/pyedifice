@@ -16,6 +16,62 @@ except:
     pass
 
 
+class TestReference(unittest.TestCase):
+
+    def test_reference(self):
+        class TestComp(component.Component):
+            def __init__(self):
+                super().__init__()
+                self.render_count = 0
+                self.ref1 = component.Reference()
+                self.ref2 = component.Reference()
+
+            def render(self):
+                self.render_count += 1
+                if self.render_count == 1:
+                    return base_components.Label("Test").register_ref(self.ref1)
+                else:
+                    return base_components.Label("Test").register_ref(self.ref2)
+
+        class TestCompWrapper(component.Component):
+
+            def __init__(self):
+                super().__init__()
+                self.render_count = 0
+
+            def render(self):
+                self.render_count += 1
+                if self.render_count == 3:
+                    # We do this to force the dismount of TestComp
+                    return base_components.Label("Test")
+                else:
+                    return TestComp()
+
+        root = TestCompWrapper()
+        render_engine = engine.RenderEngine(root)
+        render_engine._request_rerender([root])
+        sub_comp = render_engine._component_tree[root]
+        label_comp = render_engine._component_tree[sub_comp]
+        self.assertEqual(sub_comp.ref1(), label_comp)
+        self.assertEqual(sub_comp.ref2(), None)
+
+        # Rerender so that ref2 should also point to label
+        render_engine._request_rerender([root])
+        new_sub_comp = render_engine._component_tree[root]
+        new_label = render_engine._component_tree[new_sub_comp]
+        self.assertEqual(new_sub_comp, sub_comp)
+        self.assertEqual(new_label, label_comp)
+        self.assertEqual(sub_comp.ref1(), label_comp)
+        self.assertEqual(sub_comp.ref2(), label_comp)
+
+        # Rerender to test dismount behavior
+        render_engine._request_rerender([root])
+        new_sub_comp = render_engine._component_tree[root]
+        assert sub_comp not in render_engine._component_tree
+        self.assertEqual(sub_comp.ref1(), None)
+        self.assertEqual(sub_comp.ref2(), None)
+
+
 class _TestComponentInner(component.Component):
 
     @component.register_props

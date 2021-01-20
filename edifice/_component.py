@@ -77,6 +77,70 @@ class PropsDict(object):
         raise ValueError("Props are immutable")
 
 
+class Reference(object):
+    """Reference to an Edifice Component.
+
+    While Edifice is a declarative library and tries to abstract away the need to issue
+    imperative commands to widgets,
+    this is not always possible, either due to limitations with the underlying backened,
+    or because some feature implemented by the backend is not yet supported by the declarative layer.
+    In these cases, you might need to issue imperative commands to the underlying widgets and components,
+    and References gives you a handle to the currently rendered Component.
+
+    Consider the following code::
+
+        class MyComp(Component):
+            def __init__(self):
+                self.ref = None
+
+            def issue_command(self, e):
+                self.ref.issue_command()
+
+            def render(self):
+                self.ref = AnotherComponent(on_click=self.issue_command)
+                return self.ref
+
+    This code is **incorrect** since the component returned by render is not necessarily the Component rendered on Screen,
+    since the old component (with all its state) will be reused when possible.
+    The right way of solving the problem is via references::
+
+        class MyComp(Component):
+            def __init__(self):
+                self.ref = Reference()
+
+            def issue_command(self, e):
+                self.ref().issue_command()
+
+            def render(self):
+                return AnotherComponent(on_click=self.issue_command).register_ref(self.ref)
+
+    Under the hood, register_ref registers the Reference object to the component returned by the render function.
+    While rendering, Edifice will examine all requested references and attaches them to the correct Component.
+
+    Initially, a Reference object will point to None. After the first render, they will point to the rendered Component.
+    When the rendered component dismounts, the reference will once again point to None.
+    You may assume that References are valid whenever they are not None.
+    References evaluate false if the underlying value is None.
+
+    References can be dereferenced by calling them. An idiomatic way of using references is::
+
+        if ref:
+            ref().do_something()
+    """
+
+    def __init__(self):
+        self._value = None
+
+    def __bool__(self):
+        return self._value is not None
+
+    def __hash__(self):
+        return id(self)
+
+    def __call__(self):
+        return self._value
+
+
 class Component(object):
     """The base class for Edifice Components.
 
@@ -181,9 +245,11 @@ class Component(object):
     _ignored_variables = set()
     _edifice_internal_parent = None
     _controller = None
+    _edifice_internal_references = None
 
     def __init__(self):
         super().__setattr__("_ignored_variables", set())
+        super().__setattr__("_edifice_internal_references", set())
         if not hasattr(self, "_props"):
             self._props = {"children": []}
 
@@ -224,6 +290,21 @@ class Component(object):
             The component itself.
         """
         self._key = key
+        return self
+
+    def register_ref(self, reference: Reference):
+        """Registers provided reference to this component.
+
+        During render, the provided reference will be set to point to the currently rendered instance of this component
+        (i.e. if another instance of the Component is rendered and the RenderEngine decides to reconcile the existing
+        and current instances, the reference will eventually point to that previously existing Component.
+
+        Args:
+            reference: the Reference to register
+        Returns:
+            The component itself.
+        """
+        self._edifice_internal_references.add(reference)
         return self
 
     @property
@@ -336,6 +417,13 @@ class Component(object):
 
         Override if you need to do something after the component mounts
         (e.g. start a timer).
+        """
+
+    def did_update(self):
+        """Callback function that is called whenever the component updates.
+
+        *This is not called after the first render.*
+        Override if you need to do something after every render except the first.
         """
 
     def did_render(self):
