@@ -1,3 +1,4 @@
+from collections import OrderedDict
 import os
 
 import unittest
@@ -32,6 +33,44 @@ class MockApp(object):
     def _request_rerender(self, components, newstate=None):
         self.render_count += 1
         render_result = self._render_engine._request_rerender(components)
+
+
+class TopologicalUpdateTestCase(unittest.TestCase):
+    
+    def test_add(self):
+        class Node(object):
+            def __init__(self, ancestor=None):
+                self._edifice_internal_parent = ancestor
+
+            def __hash__(self):
+                return id(self)
+
+        node_a = Node()
+        node_b = Node(node_a)
+        node_d = Node(node_b)
+        node_c = Node(node_a)
+        node_e = Node(node_b)
+        node_f = Node(node_a)
+        node_g = Node(node_f)
+        node_h = Node(node_c)
+        previous = OrderedDict([
+            (node_a, set()),
+            (node_b, set([node_a])),
+            (node_d, set([node_a, node_b])),
+            (node_c, set([node_a])),
+            (node_e, set([node_a, node_b])),
+            (node_g, set([node_a, node_f])),
+        ])
+
+        new = state._add_subscription(previous, node_f)
+        self.assertEqual(
+            list(new.keys()), [node_a, node_b, node_d, node_c, node_e,
+                               node_f, node_g])
+        previous = new
+        new = state._add_subscription(previous, node_h)
+        self.assertEqual(
+            list(new.keys()), [node_a, node_b, node_d, node_c, node_e,
+                               node_f, node_g, node_h])
 
 
 class StateValueTestCase(unittest.TestCase):

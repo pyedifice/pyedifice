@@ -9,6 +9,10 @@ class RecurseTree(ed.Component):
     def __init__(self, level, t):
         super().__init__()
 
+    def did_mount(self):
+        if self.props.level == 0:
+            self.props.t.subscribe(self)
+
     def render(self):
         if self.props.level > 0:
             layout = "row" if self.props.level % 2 == 0 else "column"
@@ -17,7 +21,7 @@ class RecurseTree(ed.Component):
                RecurseTree(level=self.props.level-1, t=self.props.t).set_key("1"),
             )
         else:
-            t = self.props.t.subscribe(self)
+            t = self.props.t.value
             return ed.View(layout="row")(
                 ed.View(style={"background-color": "rgba(255, 255, 0, 1)", "width": "25px", "height": "25px", "min-height": "25px", "min-width": "25px", "max-width": "25px"}).set_key("0"),
                 ed.Label("%.02f" % t).set_key("1"),

@@ -179,6 +179,7 @@ class Component(object):
     _render_changes_context = None
     _render_unwind_context = None
     _ignored_variables = set()
+    _edifice_internal_parent = None
     _controller = None
 
     def __init__(self):
@@ -337,6 +338,13 @@ class Component(object):
         (e.g. start a timer).
         """
 
+    def did_render(self):
+        """Callback function that is called whenever the component renders.
+
+        It will be called on both renders and updates.
+        Override if you need to do something after every render.
+        """
+
     def will_unmount(self):
         """Callback function that is called when the component will unmount.
 
@@ -345,7 +353,12 @@ class Component(object):
         """
 
     def __call__(self, *args):
-        children = [a for a in args if a]
+        children = []
+        for a in args:
+            if isinstance(a, list):
+                children.extend(a)
+            elif a:
+                children.append(a)
         self._props["children"] = children
         return self
 
@@ -381,6 +394,70 @@ class Component(object):
             A Component object.
         """
         raise NotImplementedError
+
+
+def make_component(f):
+    """Decorator turning a function into a Component.
+
+    Some components do not have internal state, and these components are often little more than
+    a render function. Creating a Component class results in a lot of boiler plate code::
+
+        class MySimpleComp(Component):
+            @register_props
+            def __init__(self, prop1, prop2, prop3):
+                super().__init__()
+
+            def render(self):
+                # Only here is there actual logic.
+
+    To cut down on the amount of boilerplate, you can use the make_component decorator::
+
+        @make_component
+        def MySimpleComp(self, prop1, prop2, prop3, children):
+            # Here you put what you'd normally put in the render logic
+            # Note that you can access prop1 via the variable, or via self.props
+            return View()(Label(prop1), Label(self.prop2), Label(prop3))
+
+    Of course, you could have written::
+
+        # No decorator
+        def MySimpleComp(prop1, prop2, prop3):
+            return View()(Label(prop1), Label(self.prop2), Label(prop3))
+
+    instead. The difference is, with the decorator, an actual Component object is created,
+    which can be viewed, for example, in the inspector.
+    If this component uses :doc:`State Values or State Managers<state>`,
+    only this component and (possibly) its children will be re-rendered.
+    If you don't use the decorator, the returned components are directly attached to the
+    Component that called the function, and so any re-renders will have to start from that level.
+
+    Args:
+        f: the function to wrap. Its first argument must be self, and children must be one of its parameters.
+    Returns:
+        Component class.
+    """
+    varnames = f.__code__.co_varnames[1:]
+    signature = inspect.signature(f).parameters
+    defaults = {
+        k: v.default for k, v in signature.items() if v.default is not inspect.Parameter.empty and k[0] != "_"
+    }
+    if "children" not in signature:
+        raise ValueError("All function components must take children as last argument.")
+
+    class MyComponent(Component):
+
+        def __init__(self, *args, **kwargs):
+            name_to_val = defaults.copy()
+            name_to_val.update(filter((lambda tup: (tup[0][0] != "_")), zip(varnames, args)))
+            name_to_val.update(((k, v) for (k, v) in kwargs.items() if k[0] != "_"))
+            name_to_val["children"] = name_to_val.get("children") or []
+            self.register_props(name_to_val)
+            super().__init__()
+
+        def render(self):
+            return f(self, **self.props._d)
+    MyComponent.__name__ = f.__name__
+    return MyComponent
 
 
 def register_props(f):

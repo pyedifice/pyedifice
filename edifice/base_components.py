@@ -41,6 +41,7 @@ import os
 import typing as tp
 
 from ._component import BaseComponent, WidgetComponent, RootComponent, register_props
+from .utilities import set_trace
 
 from .qt import QT_VERSION
 if QT_VERSION == "PyQt5":
@@ -451,6 +452,9 @@ class Window(RootComponent):
     def _attach_menubar(self, menu_bar, menus):
         menu_bar.setParent(self._previous_rendering.underlying)
         for menu_title, menu in menus.items():
+            if not isinstance(menu, dict):
+                raise ValueError(
+                    "Menu must be a dict of dicts (each of which describes a submenu)")
             menu_bar.addMenu(_create_qmenu(menu, menu_title))
 
     def _qt_update_commands(self, children, newprops, newstate):
@@ -490,6 +494,27 @@ class Window(RootComponent):
                 commands.append((self._attach_menubar, self._menu_bar, newprops.menu))
         return commands
 
+
+class GroupBox(QtWidgetComponent):
+
+    @register_props
+    def __init__(self, title):
+        super().__init__()
+        self.underlying = None
+
+    def _initialize(self):
+        self.underlying = QtWidgets.QGroupBox(self.props.title)
+        self.underlying.setObjectName(str(id(self)))
+
+    def _qt_update_commands(self, children, newprops, newstate):
+        if self.underlying is None:
+            self._initialize()
+        if len(children) != 1:
+            raise ValueError("GroupBox expects exactly 1 child, got %s" % len(children))
+        commands = super()._qt_update_commands(children, newprops, newstate, self.underlying)
+        commands.append((children[0].component.underlying.setParent, self.underlying))
+        commands.append((self.underlying.setTitle, self.props.title))
+        return commands
 
 class Icon(QtWidgetComponent):
     """Display an Icon
@@ -729,9 +754,12 @@ class TextInput(QtWidgetComponent):
         self._connected = True
 
     def set_completer(self, completer):
-        qt_completer = QtWidgets.QCompleter(completer.options)
-        qt_completer.setCompletionMode(completer.mode)
-        self.underlying.setCompleter(qt_completer)
+        if completer:
+            qt_completer = QtWidgets.QCompleter(completer.options)
+            qt_completer.setCompletionMode(completer.mode)
+            self.underlying.setCompleter(qt_completer)
+        else:
+            self.underlying.setCompleter(None)
 
     def _qt_update_commands(self, children, newprops, newstate):
         if self.underlying is None:
@@ -760,6 +788,7 @@ class Dropdown(QtWidgetComponent):
     def __init__(self, text: tp.Text = "", selection: tp.Text = "",
                  editable: bool = False,
                  show_on_type: bool = True,
+                 completer: tp.Optional[Completer] = None,
                  options: tp.Optional[tp.Sequence[tp.Text]] = None,
                  on_change: tp.Callable[[tp.Text], None] = (lambda text: None),
                  on_select: tp.Callable[[tp.Text], None] = (lambda text: None),
@@ -774,9 +803,12 @@ class Dropdown(QtWidgetComponent):
         self.underlying.setObjectName(str(id(self)))
 
     def set_completer(self, completer):
-        completer = QtWidgets.QCompleter(completer.options, self.underlying)
-        completer.setCompletionMode(completer.mode)
-        self.underlying.setCompleter(completer)
+        if completer:
+            qt_completer = QtWidgets.QCompleter(completer.options)
+            qt_completer.setCompletionMode(completer.mode)
+            self.underlying.setCompleter(qt_completer)
+        else:
+            self.underlying.setCompleter(None)
 
     def set_on_change(self, on_change):
         def on_change_fun(text):

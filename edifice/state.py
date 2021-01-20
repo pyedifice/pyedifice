@@ -56,10 +56,39 @@ and update them in batch.
 Components subscribe to individual keys in the StateManager.
 """
 
-from collections import defaultdict
+from collections import defaultdict, OrderedDict
+import functools
+import itertools
 import typing as tp
 
+
 from ._component import Component
+
+
+def _add_subscription(previous, new):
+    # Adds a subscription in topological sort order,
+    # so that ancestors will appear before descendants.
+    if new in previous:
+        return previous
+    new_ancestors = set()
+    node = new
+    while node is not None:
+        new_ancestors.add(node)
+        node = node._edifice_internal_parent
+
+    keys = []
+    inserted = False
+    for p in previous:
+        if not inserted and new in previous[p]:
+            # new is ancestor of p
+            keys.append(new)
+            inserted = True
+        keys.append(p)
+    if not inserted:
+        keys.append(new)
+    previous[new] = new_ancestors
+
+    return OrderedDict((k, previous[k]) for k in keys)
 
 
 class StateValue(object):
@@ -76,7 +105,7 @@ class StateValue(object):
 
     def __init__(self, initial_value: tp.Any):
         self._value = initial_value
-        self._subscriptions = set()
+        self._subscriptions = OrderedDict()
 
     def subscribe(self, component: Component) -> tp.Any:
         """Subscribes a component to this value's updates and returns the current value.
@@ -88,7 +117,7 @@ class StateValue(object):
         Returns:
             Current value.
         """
-        self._subscriptions.add(component)
+        self._subscriptions = _add_subscription(self._subscriptions, component)
         return self._value
 
     @property
@@ -142,7 +171,7 @@ class StateManager(object):
 
     def __init__(self, initial_values: tp.Optional[tp.Mapping[tp.Text, tp.Any]] = None):
         self._values = initial_values or {}
-        self._subscriptions_for_key = defaultdict(set)
+        self._subscriptions_for_key = defaultdict(OrderedDict)
 
     def subscribe(self, component: Component, key: tp.Text) -> tp.Any:
         """Subscribes a component to the given key.
@@ -153,11 +182,14 @@ class StateManager(object):
         Returns:
             Corresponding value
         """
-        self._subscriptions_for_key[key].add(component)
+        self._subscriptions_for_key[key] = _add_subscription(self._subscriptions_for_key[key], component)
         return self._values[key]
 
     def __getitem__(self, key: tp.Text) -> tp.Any:
         return self._values[key]
+
+    def set(self, key, value):
+        self.update({key: value})
 
     def update(self, d: tp.Mapping[tp.Text, tp.Any]):
         """Updates the key value store.
@@ -170,10 +202,14 @@ class StateManager(object):
             d: a dictionary mapping key to the value to update to.
         """
         old_values = {}
+        del_values = []
         by_app = defaultdict(list)
         try:
             for key, val in d.items():
-                old_values[key] = self._values[key]
+                if key in self._values:
+                    old_values[key] = self._values[key]
+                else:
+                    del_values.append(key)
                 self._values[key] = val
                 for comp in self._subscriptions_for_key[key]:
                     by_app[comp._controller].append(comp)
@@ -183,4 +219,6 @@ class StateManager(object):
         except Exception as e:
             for key, val in old_values.items():
                 self._values[key] = val
+            for key in del_values:
+                del self._values[key]
             raise e

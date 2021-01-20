@@ -1,18 +1,17 @@
 # Edifice: a declarative GUI framework for Python
 ![tests](https://github.com/fding/pyreact/workflows/test/badge.svg)
 ## Why Edifice?
-The premise of Edifice is that GUIs should be specified in a declarative way, not via drawing commands.
-Fundamentally, a GUI designer cares about *what* is rendered on the screen,
+The premise of Edifice is that
+GUI designers should only need to worry about *what* is rendered on the screen,
 not *how* the content is rendered.
-A declarative framework allows you to specify a mapping from internal application state to the desired
-display. The state of the display (whatever is rendered) will always match the state of the application
-(internal data), without needing to specify how the display is to be updated.
+Most existing GUI libraries in Python, such as Tkinter and Qt, operate imperatively.
+To create a dynamic application using these libraries,
+you must not only think about what to display to the user given state changes,
+but also how to issue the commands to achieve the desired effect.
 
-Most existing GUI frameworks, such as Tkinter and Qt, operate in a very imperative manner.
-Creating a dynamic application using these frameworks require thinking about how to issue the commands
-to update the GUI given the current state of the application.
-With Edifice, the mapping from state to view is straightforward, and you do not need to think about
-how the view ultimately gets rendered.
+Edifice allows you to describe the GUI as a function mapping state to displayed widgets,
+leaving the how to the library.
+User interactions update the state, and state changes update the GUI.
 Edifice makes it possible to write code like:
 ```
 View(layout="row")(
@@ -20,16 +19,31 @@ View(layout="row")(
     *[Label(i) for i in self.data]
 )
 ```
-and get the expected result: the values in `self.data` will be displayed, and clicking the button will
-add 5 to the array. Most importantly, the display will always match the internal application state --
-clicking the button will update the displayed values.
 
-Declarative GUIs are also easier for developer tools to work with. Edifice provides two key features to make development easier:
-- Dynamic reloading of changed source code. This is especially useful for tweaking the looks of your application, allowing you
-  to test if the margin should be 10px or 15px instantly without closing the app, reopening it, and waiting for everything to load.
-- Component inspector. Similar to the Inspect Elements tool of a browser, the component inspector will show you all Components
-  in your application along with the props and state, allowing you to examine the internal state of your complex component
-  without writing a million print statements.
+and get the expected result: the values in self.data will be displayed, and clicking the button will
+add 5 to the array, and this state change will automatically be reflected in the GUI.
+You only need to specify what is to be displayed given the current state,
+and Edifice will work to ensure that
+the displayed widgets always correspond to the internal state.
+
+Edifice is designed to make GUI applications easier for humans to reason about.
+Thus, the displayed GUI always reflect the internal state,
+even if an exception occurs part way through rendering ---
+in that case, the state changes are unwound,
+the display is unchanged,
+and the exception is re-raised for the application to handle.
+You can specify a batch of state changes in a transaction,
+so that either all changes happen or none of them happens.
+There is no in-between state for you to worry about.
+
+Declarative UIs are also easier for developer tools to work with.
+Edifice provides two key features to make development easier:
+
+- Dynamic reloading of changed source code. This is especially useful for tweaking the looks of your application, allowing you to test if the margin should be 10px or 15px instantly without closing the app, reopening it, and waiting for everything to load.
+- Component inspector. Similar to the Inspect Elements tool of a browser, the component inspector will show you all Components in your application along with the props and state, allowing you to examine the internal state of your complex component without writing a million print statements.
+  Since the UI is specified as a (pure) function of state, the state you see completely describes your application,
+  and you can even do things like rewinding to a previous state.
+
 
 QML is another declarative GUI framework for Qt. Edifice differs from QML in these aspects:
 - Edifice interfaces are created purely in Python, whereas QML is written using an XML-like language.
@@ -41,7 +55,7 @@ because the interface is written in Python code. QML assumes a much more static 
 An analogy is, QML is like HTML + JavaScript, whereas Edifice is like React.js.
 While QML and HTML are both declarative UI frameworks,
 they require imperative logic to add dynamism.
-Edifice and React allows fully dynamic applications to be specified declaratively.
+Edifice and React allow fully dynamic applications to be specified declaratively.
 
 ## Getting Started
 

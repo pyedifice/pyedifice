@@ -1,8 +1,10 @@
 import contextlib
 import inspect
+import itertools
 import logging
 
 from ._component import BaseComponent, Component, PropsDict
+from .utilities import set_trace
 
 
 class _ChangeManager(object):
@@ -92,7 +94,7 @@ class _WidgetTree(object):
 class _RenderContext(object):
     """Encapsulates various state that's needed for rendering."""
     __slots__ = ("storage_manager", "need_qt_command_reissue", "component_to_new_props", "component_to_old_props",
-                 "force_refresh", "component_tree", "widget_tree", "enqueued_deletions", "_callback_queue")
+                 "force_refresh", "component_tree", "widget_tree", "enqueued_deletions", "_callback_queue", "component_parent")
     def __init__(self, storage_manager, force_refresh=False):
         self.storage_manager = storage_manager
         self.need_qt_command_reissue = {}
@@ -105,6 +107,7 @@ class _RenderContext(object):
         self.enqueued_deletions = []
 
         self._callback_queue = []
+        self.component_parent = None
 
     def schedule_callback(self, callback, args=None, kwargs=None):
         args = args or []
@@ -176,6 +179,7 @@ class RenderEngine(object):
         self._component_tree = {}
         self._widget_tree = {}
         self._root = root
+        self._root._edifice_internal_parent = None
         self._app = app
 
     def _delete_component(self, component, recursive):
@@ -360,9 +364,15 @@ class RenderEngine(object):
         return render_context.widget_tree[component]
 
     def _render(self, component: Component, render_context: _RenderContext):
+        if component in render_context.widget_tree:
+            return render_context.widget_tree[component]
         component._controller = self._app
+        component._edifice_internal_parent = render_context.component_parent
+        render_context.component_parent = component
         if isinstance(component, BaseComponent):
-            return self._render_base_component(component, render_context)
+            ret = self._render_base_component(component, render_context)
+            render_context.component_parent = component._edifice_internal_parent
+            return ret
 
         # Call user provided render function and retrieve old results
         sub_component = component.render()
@@ -379,7 +389,9 @@ class RenderEngine(object):
             render_context.schedule_callback(component.did_mount)
             render_context.component_tree[component] = sub_component
             render_context.widget_tree[component] = self._render(sub_component, render_context)
+        render_context.schedule_callback(component.did_render)
 
+        render_context.component_parent = component._edifice_internal_parent
         return render_context.widget_tree[component]
 
     def _gen_commands(self, widget_trees, render_context):
@@ -391,7 +403,9 @@ class RenderEngine(object):
     def _gen_widget_trees(self, components, render_context):
         widget_trees = []
         for component in components:
-            widget_trees.append(self._render(component, render_context))
+            if component not in render_context.widget_tree:
+                render_context.component_parent = component._edifice_internal_parent
+                widget_trees.append(self._render(component, render_context))
         return widget_trees
 
     def _request_rerender(self, components):

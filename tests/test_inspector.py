@@ -36,3 +36,11 @@ class InspectorTestCase(unittest.TestCase):
         inspector_component.render()
         inspector.ComponentView(comp_b).render()
         inspector.StateView(comp_b).render()
+        inspector.TreeView(root, root.__class__.__name__,
+                           lambda e: None, lambda: [], lambda: True,).render()
+        inspector.ComponentLabel(
+            root,
+            on_click = lambda e: None).render()
+        inspector.Collapsible(
+            collapsed=True, on_click=lambda e: None,
+            title="HI", toggle=lambda e: None).render()

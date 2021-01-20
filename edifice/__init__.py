@@ -97,13 +97,8 @@ Some useful utilities are also provided:
 """
 
 
-from ._component import PropsDict, Component, register_props
+from ._component import PropsDict, Component, make_component, register_props
 from .state import StateValue, StateManager
 from .app import App
 from .base_components import *
 from .utilities import Timer, set_trace
-
-
-if __name__ == "__main__":
-    from .runner import runner
-    runner()

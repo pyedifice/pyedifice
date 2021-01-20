@@ -138,8 +138,8 @@ class App(object):
                 self._render_engine._component_tree, self._root,
                 refresh=(lambda: (self._render_engine._component_tree, self._root)))
             icon_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), "inspector/icon.png")
-            self._request_rerender([
-                Window(title="Component Inspector", on_close=cleanup, icon=icon_path)(self._inspector_component)
-            ], {})
+            component = Window(title="Component Inspector", on_close=cleanup, icon=icon_path)(self._inspector_component)
+            component._edifice_internal_parent = None
+            self._request_rerender([component], {})
         self.app.exec_()
         self._render_engine._delete_component(self._root, True)

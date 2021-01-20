@@ -236,15 +236,42 @@ class BaseComponentsTest(unittest.TestCase):
 
     def _test_comp(self, comp, children=None):
         children = children or []
-        view_tree = engine._WidgetTree(comp, children)
-        with engine._storage_manager() as manager:
-            commands = view_tree.gen_qt_commands(MockRenderContext(manager))
+        render_engine = engine.RenderEngine(comp)
+        res = render_engine._request_rerender([comp])
+        res.run()
 
     def test_components(self):
-        self._test_comp(base_components.IconButton("play"))
+        context_menu = {
+            "play": lambda: None,
+            "sep": None,
+            "options": {
+                "faster": lambda: None,
+                "sloer": lambda: None,
+            }
+        }
+
+        completer1 = base_components.Completer(["option1", "option2"])
+        completer2 = base_components.Completer(["option1", "option2"], "inline")
+        self._test_comp(base_components.Window(
+            title="title",
+            menu={"Playback": context_menu},
+        )(base_components.View()))
+        self._test_comp(base_components.IconButton("play", on_click=lambda e: None))
+        self._test_comp(base_components.View(context_menu=context_menu))
+        self._test_comp(base_components.Label(text="Hello", selectable=True))
+        self._test_comp(base_components.Button("play", on_click=lambda e: None))
         self._test_comp(base_components.TextInput("initial_text", on_change=lambda text: None))
+        self._test_comp(base_components.Button("play", on_click=lambda e: None))
+        self._test_comp(base_components.Dropdown(selection="Option1", options=["Option1, Option2"], on_select=lambda text: None))
+        self._test_comp(base_components.Dropdown(editable=True, selection="Option1", options=["Option1, Option2"], on_change=lambda text: None))
+        self._test_comp(base_components.Dropdown(
+            editable=True, selection="Option1", options=["Option1, Option2"],
+            completer=completer2, on_change=lambda text: None))
+        self._test_comp(base_components.TextInput("initial_text", on_change=lambda text: None))
+        self._test_comp(base_components.TextInput("initial_text", completer=completer1, on_change=lambda text: None))
         self._test_comp(base_components.CheckBox(checked=True, text="Test", on_change=lambda checked: None))
         self._test_comp(base_components.Slider(value=1, min_value=0, max_value=3, on_change=lambda value: None))
         self._test_comp(base_components.ScrollView(layout="row"))
         self._test_comp(base_components.List())
+        self._test_comp(base_components.GroupBox(title="Group")(base_components.View()))
 

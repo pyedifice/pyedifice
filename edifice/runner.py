@@ -58,7 +58,7 @@ def _reload_components(module):
         _reload(module)
     except Exception as e:
         logging.warning("Encountered exception while reloading module: %s", e)
-        return
+        return None, None
     new_components = list(_module_to_components(module))
 
     # Create all pairs of (old component, new component) that share the same names
@@ -141,6 +141,8 @@ def runner():
             # Reload the old module and get old and new Components
             module = sys.modules[old_file_mapping[src_path]]
             components_list, new_components = _reload_components(module)
+            if components_list is None:
+                return
             # Alert the main QThread about the change
             if _message_app(app, src_path, components_list):
                 MODULE_CLASS_CACHE[module] = new_components
