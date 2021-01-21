@@ -126,6 +126,20 @@ class Reference(object):
 
         if ref:
             ref().do_something()
+
+    If you want to access the Qt widget underlying a base component,
+    you can use the :code:`underlying` attribute of the component::
+
+        class MyComp(Component):
+            def __init__(self):
+                self.ref = Reference()
+
+            def did_render(self):
+                if self.ref:
+                    self.ref().underlying.setText("Hi")
+
+            def render(self):
+                return Label("Hi").register_ref(self.ref)
     """
 
     def __init__(self):
@@ -514,7 +528,7 @@ def make_component(f):
 
     instead. The difference is, with the decorator, an actual Component object is created,
     which can be viewed, for example, in the inspector.
-    If this component uses :doc:`State Values or State Managers<state>`,
+    If this component uses :doc:`State Values or State Managers</state>`,
     only this component and (possibly) its children will be re-rendered.
     If you don't use the decorator, the returned components are directly attached to the
     Component that called the function, and so any re-renders will have to start from that level.

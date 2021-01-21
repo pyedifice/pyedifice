@@ -12,6 +12,7 @@ that only pass the state to their children and does not use it directly.
 
 StateValue and StateManager provide an alternative model of state storage,
 with the principal advantages that
+
     - There is no need to pass both a "getter" and a "setter" for every state
       down the Component Tree. Indeed, if you choose to create a global StateValue
       or a global StateManager object, there is no need to pass any state down

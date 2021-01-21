@@ -156,6 +156,26 @@ class App(object):
             self._inspector_component._refresh()
 
     def export_widgets(self):
+        """Exports the Qt widgets underlying the Edifice Component.
+
+        Depending on how the root component is defined, either one or multiple
+        widgets are returned
+        (for example, if your root component returns a list of Views,
+        export_widgets will return a list of widgets).
+        These widgets are still managed by Edifice:
+        they will still benefit from full reactivity and state consistency.
+        You can mount these widgets to your pre-existing Qt Application this way::
+
+            # Suppose parent_widget is defined in Qt code.
+            app = edifice.App(MyAwesomeComponent())
+            widget = app.export_widgets()
+            widget.setParent(parent_widget)
+
+        Args:
+            None
+        Returns:
+            One or multiple QtWidgets.QWidget objects.
+        """
         self._request_rerender([self._root], {})
         def _make_widget_helper(comp):
             widget = self._render_engine._widget_tree[comp].component
