@@ -76,7 +76,6 @@ class _TestComponentInner(component.Component):
 
     @component.register_props
     def __init__(self, prop_a):
-        super().__init__()
         self.state_a = "A"
 
     def render(self):
@@ -101,7 +100,6 @@ class _TestComponentOuter(component.Component):
 
     @component.register_props
     def __init__(self):
-        super().__init__()
         self.state_a = "A"
         self.state_b = "B"
         self.state_c = "C"
@@ -291,7 +289,6 @@ class RenderTestCase(unittest.TestCase):
 
             @component.register_props
             def __init__(self, val):
-                super().__init__()
                 self.count = 0
 
             def render(self):
@@ -321,7 +318,6 @@ class RenderTestCase(unittest.TestCase):
 
             @component.register_props
             def __init__(self, val):
-                super().__init__()
                 self.count = 0
                 self.success_count = 0
 
@@ -334,7 +330,6 @@ class RenderTestCase(unittest.TestCase):
 
             @component.register_props
             def __init__(self, val):
-                super().__init__()
                 self.count = 0
                 self.success_count = 0
 
@@ -380,7 +375,6 @@ class RefreshClassTestCase(unittest.TestCase):
 
             @component.register_props
             def __init__(self, val):
-                super().__init__()
                 self.count = 0
                 self.will_unmount = unittest.mock.MagicMock()
 
@@ -392,7 +386,6 @@ class RefreshClassTestCase(unittest.TestCase):
 
             @component.register_props
             def __init__(self, val):
-                super().__init__()
                 self.count = 0
 
             def render(self):
@@ -403,7 +396,6 @@ class RefreshClassTestCase(unittest.TestCase):
 
             @component.register_props
             def __init__(self):
-                super().__init__()
                 self.count = 0
 
             def render(self):
@@ -429,7 +421,6 @@ class RefreshClassTestCase(unittest.TestCase):
 
             @component.register_props
             def __init__(self, val):
-                super().__init__()
                 self.count = 0
                 self.will_unmount = unittest.mock.MagicMock()
 
@@ -441,7 +432,6 @@ class RefreshClassTestCase(unittest.TestCase):
 
             @component.register_props
             def __init__(self, val):
-                super().__init__()
                 self.count = 0
 
             def render(self):
@@ -453,7 +443,6 @@ class RefreshClassTestCase(unittest.TestCase):
 
             @component.register_props
             def __init__(self):
-                super().__init__()
                 self.count = 0
 
             def render(self):

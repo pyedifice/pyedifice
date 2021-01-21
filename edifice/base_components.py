@@ -1156,6 +1156,36 @@ class ScrollView(_LinearView):
 
 
 class CustomWidget(QtWidgetComponent):
+    """Custom widgets that you can define.
+
+    Not all widgets are currently supported by Edifice.
+    You can create your own base component by overriding this class::
+
+        class MyWidgetComponent(CustomWidget):
+            def create_widget(self):
+                # This function should return the new widget
+                # (with parent set to None; Edifice will handle parenting)
+                return QtWidgets.FooWidget()
+
+            def paint(self, widget, newprops):
+                # This function should update the widget
+                for prop in newprops:
+                    if prop == "text":
+                        widget.setText(newprops[prop])
+                    elif prop == "value":
+                        widget.setValue(newprops[prop])
+
+    The two methods to override are :code`create_widget`,
+    which should return the Qt widget,
+    and :code`paint`,
+    which takes the current widget and new props,
+    and should update the widget according to the new props.
+    The created widget inherits all the properties of Qt widgets,
+    allowing the user to, for example, set the style.
+
+    See the :doc:`plotting.Figure <edifice.components.plotting.Figure>` widget
+    for an example of how to use this class.
+    """
 
     def __init__(self):
         super().__init__()

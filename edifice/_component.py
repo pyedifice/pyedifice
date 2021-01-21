@@ -78,7 +78,7 @@ class PropsDict(object):
 
 
 class Reference(object):
-    """Reference to an Edifice Component.
+    """Reference to a Component to allow imperative modifications.
 
     While Edifice is a declarative library and tries to abstract away the need to issue
     imperative commands to widgets,
@@ -485,7 +485,7 @@ class Component(object):
 
 
 def make_component(f):
-    """Decorator turning a function into a Component.
+    """Decorator turning a render function into a Component.
 
     Some components do not have internal state, and these components are often little more than
     a render function. Creating a Component class results in a lot of boiler plate code::
@@ -594,6 +594,7 @@ def register_props(f):
         name_to_val.update(filter((lambda tup: (tup[0][0] != "_")), zip(varnames, args)))
         name_to_val.update(((k, v) for (k, v) in kwargs.items() if k[0] != "_"))
         self.register_props(name_to_val)
+        Component.__init__(self)
         f(self, *args, **kwargs)
 
     return func

@@ -71,7 +71,6 @@ class TreeView(InspectorComponent):
     def did_mount(self):
         if not self.props.initial_collapsed:
             with self.render_changes():
-                print("Did mount, load_fun")
                 self.cached_children = self.props.load_fun()
                 self.cached_children_loaded = True
 

@@ -93,12 +93,11 @@ class _WidgetTree(object):
 
 class _RenderContext(object):
     """Encapsulates various state that's needed for rendering."""
-    __slots__ = ("storage_manager", "need_qt_command_reissue", "component_to_new_props", "component_to_old_props",
+    __slots__ = ("storage_manager", "need_qt_command_reissue", "component_to_old_props",
                  "force_refresh", "component_tree", "widget_tree", "enqueued_deletions", "_callback_queue", "component_parent")
     def __init__(self, storage_manager, force_refresh=False):
         self.storage_manager = storage_manager
         self.need_qt_command_reissue = {}
-        self.component_to_new_props = {}
         self.component_to_old_props = {}
         self.force_refresh = force_refresh
 
@@ -122,7 +121,6 @@ class _RenderContext(object):
         d = dict(newprops._items)
         if "children" not in d:
             d["children"] = []
-        self.component_to_new_props[component] = newprops
         if component not in self.component_to_old_props:
             if new_component:
                 self.component_to_old_props[component] = PropsDict({})
@@ -130,19 +128,10 @@ class _RenderContext(object):
                 self.component_to_old_props[component] = component.props
         self.set(component, "_props", d)
 
-    def get_new_props(self, component):
-        if component in self.component_to_new_props:
-            return self.component_to_new_props[component]
-        return component.props
-
     def get_old_props(self, component):
         if component in self.component_to_old_props:
             return self.component_to_old_props[component]
         return PropsDict({})
-
-    def commit(self):
-        for component, newprops in self.component_to_new_props.items():
-            component.register_props(newprops)
 
     def set(self, obj, k, v):
         self.storage_manager.set(obj, k, v)

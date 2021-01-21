@@ -2,6 +2,7 @@ import unittest
 
 import edifice.app as app
 import edifice.base_components as base_components
+import edifice._component as component
 
 from edifice.qt import QT_VERSION
 if QT_VERSION == "PyQt5":
@@ -37,7 +38,28 @@ class TimingAvgTestCase(unittest.TestCase):
         self.assertEqual(avg.max(), 6)
 
 
+class TestComp(component.Component):
+
+    @component.register_props
+    def __init__(self):
+        super().__init__()
+        self.text = ""
+
+    def render(self):
+        return base_components.List()(
+            base_components.Label(f"Hello World: {self.text}"),
+            base_components.TextInput(self.text, on_change=lambda text: self.set_state(text=text))
+        )
+
+
 class IntegrationTestCase(unittest.TestCase):
+
+    def test_widget_creation(self):
+        my_app = app.App(TestComp(), create_application=False, mount_into_window=False)
+        widgets = my_app.export_widgets()
+        self.assertEqual(len(widgets), 2)
+        self.assertEqual(widgets[0].__class__, QtWidgets.QLabel)
+        self.assertEqual(widgets[1].__class__, QtWidgets.QLineEdit)
 
     def test_integration(self):
         my_app = app.App(base_components.Label("Hello World!"), create_application=False)

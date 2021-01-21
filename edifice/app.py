@@ -60,9 +60,9 @@ class App(object):
         App(MyRootComponent()).start()
 
     If you just want to create a widget (that you'll integrate with an existing codebase),
-    call the make_widget method::
+    call the export_widgets method::
 
-        widget = App(MyRootComponent()).make_widget()
+        widget = App(MyRootComponent()).export_widgets()
 
     This widget can then be plugged into the rest of your application, and there's no need
     to manage the rendering of the widget -- state changes will trigger automatic re-render
@@ -79,20 +79,26 @@ class App(object):
             However, if the QApplication is already created (e.g. in a test suite or if you just want Edifice
             to make a widget to plug into an existing Qt application),
             you can set this to False.
+        mount_into_window: (default True) whether or not to mount a window-less component into a window by default.
+            If the passed in component is not part of any window, leaving this flag on will put the component in a window.
+            Set this to False if you just want the App to output a widget.
     """
 
-    def __init__(self, component: Component, inspector=False, create_application=True):
+    def __init__(self, component: Component, inspector=False, create_application=True, mount_into_window=True):
         if create_application:
             self.app = QtWidgets.QApplication([])
 
-        if isinstance(component, BaseComponent):
-            rendered_component = component
+        if mount_into_window:
+            if isinstance(component, BaseComponent):
+                rendered_component = component
+            else:
+                rendered_component = component.render()
+            if isinstance(rendered_component, RootComponent):
+                self._root = RootComponent()(component)
+            else:
+                self._root = Window()(component)
         else:
-            rendered_component = component.render()
-        if isinstance(rendered_component, RootComponent):
-            self._root = RootComponent()(component)
-        else:
-            self._root = Window()(component)
+            self._root = component
         self._render_engine = RenderEngine(self._root, self)
         self._logger = _RateLimitedLogger(1)
         self._render_timing = _TimingAvg()
@@ -148,6 +154,25 @@ class App(object):
         self._first_render = False
         if self._inspector_component is not None and not all(isinstance(comp, inspector.InspectorComponent) for comp in components):
             self._inspector_component._refresh()
+
+    def export_widgets(self):
+        self._request_rerender([self._root], {})
+        def _make_widget_helper(comp):
+            widget = self._render_engine._widget_tree[comp].component
+            try:
+                underlying = comp.underlying
+            except AttributeError:
+                underlying = None
+            if underlying is None:
+                comps = self._render_engine._widget_tree[comp].children
+                if len(comps) > 1:
+                    return [_make_widget_helper(c.component) for c in comps]
+                return _make_widget_helper(comps[0].component)
+
+            return underlying
+
+        return _make_widget_helper(self._root)
+
 
     def start(self):
         self._request_rerender([self._root], {})
