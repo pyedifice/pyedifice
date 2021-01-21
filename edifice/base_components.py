@@ -81,7 +81,7 @@ def _image_descriptor_to_pixmap(inp):
     if isinstance(inp, str):
         return _get_image(inp)
     else:
-        return _array_to_pixmap(arr)
+        return _array_to_pixmap(inp)
 
 @functools.lru_cache(100)
 def _get_svg_image_raw(icon_path, size):
