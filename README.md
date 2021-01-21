@@ -157,4 +157,4 @@ Edifice uses Qt under the hood, and both PyQt5 and PySide2 (and PySide6) are sup
 under the more flexible LGPL license.
 
 ## Detailed Documentation
-[Read the docs](docs/edifice.md)
+[Read the docs](https://pyedifice.org)
