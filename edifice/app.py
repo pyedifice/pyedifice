@@ -10,7 +10,7 @@ if QT_VERSION == "PyQt5":
 else:
     from PySide2 import QtCore, QtWidgets
 
-from ._component import Component, RootComponent
+from ._component import BaseComponent, Component, RootComponent
 from .base_components import Window
 from .engine import RenderEngine
 from .inspector import inspector
@@ -55,18 +55,40 @@ class _RateLimitedLogger(object):
 class App(object):
     """The main application object.
 
+    To start the application, call the start method::
+
+        App(MyRootComponent()).start()
+
+    If you just want to create a widget (that you'll integrate with an existing codebase),
+    call the make_widget method::
+
+        widget = App(MyRootComponent()).make_widget()
+
+    This widget can then be plugged into the rest of your application, and there's no need
+    to manage the rendering of the widget -- state changes will trigger automatic re-render
+    without any intervention.
+
     Args:
         component: the root component of the application.
             If it is not an instance of Window or RootComponent, a Window
             will be created with the passed in component as a child.
         inspector: whether or not to run an instance of the Edifice Inspector
             alongside the main app. Defaults to False
+        create_application: (default True) whether or not to create an instance of QApplication.
+            Usually you want to use the default setting.
+            However, if the QApplication is already created (e.g. in a test suite or if you just want Edifice
+            to make a widget to plug into an existing Qt application),
+            you can set this to False.
     """
 
-    def __init__(self, component: Component, inspector=False):
-        self.app = QtWidgets.QApplication([])
+    def __init__(self, component: Component, inspector=False, create_application=True):
+        if create_application:
+            self.app = QtWidgets.QApplication([])
 
-        rendered_component = component.render()
+        if isinstance(component, BaseComponent):
+            rendered_component = component
+        else:
+            rendered_component = component.render()
         if isinstance(rendered_component, RootComponent):
             self._root = RootComponent()(component)
         else:
