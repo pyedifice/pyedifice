@@ -383,7 +383,7 @@ class QtWidgetComponent(WidgetComponent):
                 style = newprops[prop] or {}
                 if isinstance(style, list):
                     # style is nonempty since otherwise the or statement would make it a dict
-                    first_style = style[0]
+                    first_style = style[0].copy()
                     for next_style in style[1:]:
                         first_style.update(next_style)
                     style = first_style
