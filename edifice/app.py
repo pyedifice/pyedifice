@@ -1,5 +1,10 @@
+from . import logger
+logger_mod = logger
 import logging
+logger = logging.getLogger("Edifice")
+
 import os
+import sys
 import queue
 import time
 import traceback
@@ -48,7 +53,7 @@ class _RateLimitedLogger(object):
     def info(self, *args, **kwargs):
         cur_time = time.process_time()
         if cur_time - self._last_log_time > self._gap:
-            logging.info(*args, **kwargs)
+            logger.info(*args, **kwargs)
             self._last_log_time = cur_time
 
 
@@ -116,15 +121,37 @@ class App(object):
                         try:
                             render_result = self._render_engine._refresh_by_class(classes)
                         except Exception as exception:
-                            logging.warning("Encountered exception while reloading: %s", exception)
+                            logger.error("Encountered exception while reloading: %s", exception)
                             self._class_rerender_response_queue.put_nowait(False)
-                            traceback.print_exc()
+                            etype, evalue, tb = sys.exc_info()
+                            stack_trace = traceback.extract_tb(tb)
+                            module_path = os.path.dirname(__file__)
+                            user_stack_trace = [frame for frame in stack_trace if not frame.filename.startswith(module_path)]
+
+                            formatted_trace = traceback.format_list(stack_trace)
+                            formatted_user_trace = traceback.format_list(user_stack_trace)
+                            def should_bold(line, frame):
+                                if frame.filename.startswith(module_path):
+                                    return line
+                                return logger_mod.BOLD_SEQ + line + logger_mod.RESET_SEQ
+                            formatted_trace = [should_bold(line, frame) for line, frame in zip(formatted_trace, stack_trace)]
+
+                            print("Traceback (most recent call last):")
+                            for line in formatted_trace:
+                                print(line, end="")
+
+                            print((logger_mod.COLOR_SEQ % (30 + logger_mod.RED)) + "Stemming from these renders:" + logger_mod.RESET_SEQ)
+                            for line in formatted_user_trace:
+                                print(line, end="")
+                            for line in traceback.format_exception_only(etype, evalue):
+                                print((logger_mod.COLOR_SEQ % (30 + logger_mod.RED)) + line + logger_mod.RESET_SEQ, end="")
+
                             continue
 
                         render_result.run()
                         self._class_rerender_queue.task_done()
                         self._class_rerender_response_queue.put_nowait(True)
-                        logging.info("Rerendering Components in %s due to source change", file_name)
+                        logger.info("Rerendering Components in %s due to source change", file_name)
                     return True
                 else:
                     return super().event(e)
@@ -197,7 +224,7 @@ class App(object):
     def start(self):
         self._request_rerender([self._root], {})
         if self._inspector:
-            print("Running inspector")
+            logger.info("Running inspector")
             def cleanup(e):
                 self._inspector_component = None
 

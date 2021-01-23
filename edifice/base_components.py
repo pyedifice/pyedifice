@@ -35,8 +35,10 @@ components allow you to collect input from the user.
 
 # pylint:disable=unused-argument
 
+from . import logger
 import functools
 import logging
+logger = logging.getLogger("Edifice")
 import os
 import typing as tp
 
@@ -292,7 +294,7 @@ class QtWidgetComponent(WidgetComponent):
                 elif style["align"] == "bottom":
                     set_align = QtCore.Qt.AlignBottom
                 else:
-                    logging.warning("Unknown alignment: %s", style["align"])
+                    logger.warning("Unknown alignment: %s", style["align"])
                 style.pop("align")
 
             if set_margin:
@@ -314,7 +316,7 @@ class QtWidgetComponent(WidgetComponent):
                 elif style["align"] == "bottom":
                     set_align = "AlignBottom"
                 else:
-                    logging.warning("Unknown alignment: %s", style["align"])
+                    logger.warning("Unknown alignment: %s", style["align"])
                 style.pop("align")
                 style["qproperty-alignment"] = set_align
 

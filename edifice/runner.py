@@ -1,8 +1,12 @@
+from . import logger
 import argparse
 import datetime
 import importlib
 import inspect
 import logging
+
+logger = logging.getLogger("Edifice")
+
 import os
 import sys
 
@@ -41,7 +45,7 @@ def _reload(module):
 def _message_app(app, src_path, components_list):
     # Alert the main QThread about the change
     app._class_rerender_queue.put_nowait((src_path, components_list))
-    logging.info("Detected change in %s.", src_path)
+    logger.info("Detected change in %s.", src_path)
     app.app.postEvent(
         app._event_receiver,
         QtCore.QEvent(QtCore.QEvent.Type(app._file_change_rerender_event_type)))
@@ -57,7 +61,7 @@ def _reload_components(module):
     try:
         _reload(module)
     except Exception as e:
-        logging.warning("Encountered exception while reloading module: %s", e)
+        logger.error("Encountered exception while reloading module: %s", e)
         return None, None
     new_components = list(_module_to_components(module))
 
@@ -80,7 +84,6 @@ def _reload_components(module):
 
 
 def runner():
-    logging.basicConfig(level=logging.INFO)
     parser = argparse.ArgumentParser(description="Edifice app runner.")
     parser.add_argument("main_file", help="Main file containing app")
     parser.add_argument("root_component", help="The root component, should be in main file")
@@ -149,7 +152,7 @@ def runner():
 
     event_handler = EventHandler()
 
-    logging.info("Monitoring changes to python files in %s", directory)
+    logger.info("Monitoring changes to python files in %s", directory)
     if directory[-1] != "/":
         directory += "/"
 

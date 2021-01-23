@@ -1,7 +1,13 @@
+from . import logger
+
 import contextlib
 import inspect
 import itertools
 import logging
+
+import logging
+logger = logging.getLogger("Edifice")
+
 
 from ._component import BaseComponent, Component, PropsDict
 from .utilities import set_trace
@@ -21,16 +27,16 @@ class _ChangeManager(object):
         setattr(obj, key, value)
 
     def unwind(self):
-        logging.warning("Encountered error while rendering. Unwinding changes.")
+        logger.warning("Encountered error while rendering. Unwinding changes.")
         for obj, key, had_key, old_value, _ in reversed(self.changes):
             if had_key:
-                logging.info("Resetting %s.%s to %s", obj, key, old_value)
+                logger.info("Resetting %s.%s to %s", obj, key, old_value)
                 setattr(obj, key, old_value)
             else:
                 try:
                     delattr(obj, key)
                 except AttributeError:
-                    logging.warning(
+                    logger.warning(
                         "Error while unwinding changes: Unable to delete %s from %s. Setting to None instead",
                         key, obj.__class__.__name__)
                     setattr(obj, key, None)
@@ -237,14 +243,14 @@ class RenderEngine(object):
                     if comp is old_comp:
                         parent_comp._props["children"][i] = new_comp
             else:
-                logging.warning(
+                logger.warning(
                     f"Cannot reload {new_comp} (rendered by {parent_comp}) "
                     "because calling render function is just a wrapper."
                     "Consider putting it inside an edifice.View or another Component that has the children prop")
 
         # 5) call _render for all new component parents
         try:
-            logging.info("Rerendering: %s", [parent for _, _, parent, _ in components_to_replace])
+            logger.info("Rerendering: %s", [parent for _, _, parent, _ in components_to_replace])
             ret = self._request_rerender([parent_comp for _, _, parent_comp, _ in components_to_replace])
         except Exception as e:
             # Restore components
@@ -282,7 +288,7 @@ class RenderEngine(object):
     def _attach_keys(self, component, render_context: _RenderContext):
         for i, child in enumerate(component.children):
             if not hasattr(child, "_key"):
-                # logging.warning("Setting child key of %s to: %s", component, "KEY" + str(i))
+                # logger.warning("Setting child key of %s to: %s", component, "KEY" + str(i))
                 render_context.set(child, "_key", "KEY" + str(i))
 
     def _recycle_children(self, component, render_context):
