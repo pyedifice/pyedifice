@@ -87,6 +87,8 @@ def runner():
     parser = argparse.ArgumentParser(description="Edifice app runner.")
     parser.add_argument("main_file", help="Main file containing app")
     parser.add_argument("root_component", help="The root component, should be in main file")
+    parser.add_argument("--inspect", action="store_true",
+                        dest="inspect", help="Whether to turn on inspector", default=False)
     parser.add_argument(
         "--dir", dest="directory", default=None,
         help="Directory to watch for changes. By default, the directory containing main_file")
@@ -106,7 +108,7 @@ def runner():
     main_module = importlib.import_module(module_name)
     root_component = getattr(main_module, args.root_component)
 
-    app = App(root_component(), inspector=True)
+    app = App(root_component(), inspector=bool(args.inspect))
 
     class EventHandler(FileSystemEventHandler):
 

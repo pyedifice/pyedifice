@@ -334,18 +334,18 @@ class QtWidgetComponent(WidgetComponent):
                 style["min-width"] = style["width"]
             if "max-width" not in style:
                 style["max-width"] = style["width"]
-        else:
-            if "min-width" not in style:
-                style["min-width"] = self._get_width(children)
+        # else:
+        #     if "min-width" not in style:
+        #         style["min-width"] = self._get_width(children)
 
         if "height" in style:
             if "min-height" not in style:
                 style["min-height"] = style["height"]
             if "max-height" not in style:
                 style["max-height"] = style["height"]
-        else:
-            if "min-height" not in style:
-                style["min-height"] = self._get_height(children)
+        # else:
+        #     if "min-height" not in style:
+        #         style["min-height"] = self._get_height(children)
 
         set_move = False
         move_coords = [0, 0]
@@ -443,6 +443,10 @@ class Window(RootComponent):
         self._on_click = None
         self._menu_bar = None
         self.underlying = None
+
+    def will_unmount(self):
+        if self._previous_rendering:
+            self._previous_rendering.underlying.close()
 
     def _set_on_close(self, underlying, on_close):
         self._on_close = on_close
@@ -736,9 +740,11 @@ class TextInput(QtWidgetComponent):
 
     @register_props
     def __init__(self, text: tp.Any = "", on_change: tp.Callable[[tp.Text], None] = (lambda text: None),
+                 on_edit_finish: tp.Callable[[], None] = (lambda: None),
                  completer: tp.Optional[Completer] = None, **kwargs):
         super().__init__(**kwargs)
-        self._connected = False
+        self._on_change_connected = False
+        self._editing_finished_connected = False
         self.underlying = None
 
     def _initialize(self):
@@ -750,10 +756,18 @@ class TextInput(QtWidgetComponent):
     def set_on_change(self, on_change):
         def on_change_fun(text):
             return on_change(text)
-        if self._connected:
+        if self._on_change_connected:
             self.underlying.textChanged[str].disconnect()
         self.underlying.textChanged[str].connect(on_change_fun)
-        self._connected = True
+        self._on_change_connected = True
+
+    def set_on_edit_finish(self, on_edit_finish):
+        def on_edit_finish_fun():
+            return on_edit_finish()
+        if self._editing_finished_connected:
+            self.underlying.editingFinished.disconnect()
+        self.underlying.editingFinished.connect(on_edit_finish_fun)
+        self._editing_finished_connected = True
 
     def set_completer(self, completer):
         if completer:
@@ -772,6 +786,8 @@ class TextInput(QtWidgetComponent):
         for prop in newprops:
             if prop == "on_change":
                 commands.append((self.set_on_change, newprops[prop]))
+            elif prop == "on_edit_finish":
+                commands.append((self.set_on_edit_finish, newprops[prop]))
             elif prop == "completer":
                 commands.append((self.set_completer, newprops[prop]))
         return commands
@@ -788,10 +804,9 @@ class Dropdown(QtWidgetComponent):
 
     @register_props
     def __init__(self, text: tp.Text = "", selection: tp.Text = "",
-                 editable: bool = False,
-                 show_on_type: bool = True,
-                 completer: tp.Optional[Completer] = None,
                  options: tp.Optional[tp.Sequence[tp.Text]] = None,
+                 editable: bool = False,
+                 completer: tp.Optional[Completer] = None,
                  on_change: tp.Callable[[tp.Text], None] = (lambda text: None),
                  on_select: tp.Callable[[tp.Text], None] = (lambda text: None),
                  **kwargs):
@@ -1207,7 +1222,7 @@ class CustomWidget(QtWidgetComponent):
         return commands
 
 
-class List(BaseComponent):
+class List(RootComponent):
 
     @register_props
     def __init__(self):

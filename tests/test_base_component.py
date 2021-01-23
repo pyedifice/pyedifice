@@ -43,7 +43,7 @@ class StyleTestCase(unittest.TestCase):
         self.assertCountEqual(
             commands,
             [(layout.setContentsMargins, 10.0, 5.0, 5.0, 5.0),
-             (comp.underlying.setStyleSheet, "QWidget#%s{min-width: 0;min-height: 0}" % id(comp))]
+             (comp.underlying.setStyleSheet, "QWidget#%s{}" % id(comp))]
         )
 
         style = {
@@ -59,7 +59,7 @@ class StyleTestCase(unittest.TestCase):
         self.assertCountEqual(
             commands,
             [(layout.setContentsMargins, 10, 9.0, 8, 9.0),
-             (comp.underlying.setStyleSheet, "QWidget#%s{min-width: 0;min-height: 0}" % id(comp))]
+             (comp.underlying.setStyleSheet, "QWidget#%s{}" % id(comp))]
         )
 
     def test_align_layout(self):
@@ -78,7 +78,7 @@ class StyleTestCase(unittest.TestCase):
             self.assertCountEqual(
                 commands,
                 [(layout.setAlignment, qt_align),
-                 (comp.underlying.setStyleSheet, "QWidget#%s{min-width: 0;min-height: 0}" % id(comp))]
+                 (comp.underlying.setStyleSheet, "QWidget#%s{}" % id(comp))]
             )
         _test_for_align("left", QtCore.Qt.AlignLeft)
         _test_for_align("right", QtCore.Qt.AlignRight)
@@ -143,7 +143,7 @@ class WidgetTreeTestCase(unittest.TestCase):
         font_size = qt_button.font().pointSize()
         self.assertCountEqual(
             commands,
-            [(qt_button.setText, button_str), (qt_button.setStyleSheet, "QWidget#%s{min-width: %s;min-height: %s}" % (id(button), font_size*4, font_size)),
+            [(qt_button.setText, button_str), (qt_button.setStyleSheet, "QWidget#%s{}" % id(button)),
              (button._set_on_click, qt_button, on_click),
              (qt_button.setContextMenuPolicy, QtCore.Qt.DefaultContextMenu),
              (qt_button.setCursor, QtCore.Qt.PointingHandCursor)
@@ -174,7 +174,7 @@ class WidgetTreeTestCase(unittest.TestCase):
         self.assertCountEqual(
             commands,
             [(icon._render_image, ) + render_img_args,
-             (icon.underlying.setStyleSheet, "QWidget#%s{min-width: %s;min-height: %s}" % (id(icon), size, size)),
+             (icon.underlying.setStyleSheet, "QWidget#%s{}" % id(icon)),
              (icon.underlying.setContextMenuPolicy, QtCore.Qt.DefaultContextMenu),
              (icon.underlying.setCursor, QtCore.Qt.ArrowCursor),
             ])
@@ -199,7 +199,7 @@ class WidgetTreeTestCase(unittest.TestCase):
         font_size = label1.underlying.font().pointSize()
 
         self.assertCountEqual(commands, label1_commands + [
-            (view.underlying.setStyleSheet, "QWidget#%s{min-width: %s;min-height: %s}" % (id(view), font_size, font_size)),
+            (view.underlying.setStyleSheet, "QWidget#%s{}" % id(view)),
             (view.underlying.setContextMenuPolicy, QtCore.Qt.DefaultContextMenu),
             (view.underlying.setCursor, QtCore.Qt.ArrowCursor),
             (view.underlying_layout.insertWidget, 0, label1.underlying)])
@@ -208,7 +208,7 @@ class WidgetTreeTestCase(unittest.TestCase):
         with engine._storage_manager() as manager:
             commands = view_tree.gen_qt_commands(MockRenderContext(manager))
         self.assertCountEqual(commands, label1_commands + label2_commands + [
-            (view.underlying.setStyleSheet, "QWidget#%s{min-width: %s;min-height: %s}" % (id(view), font_size, font_size * 2)),
+            (view.underlying.setStyleSheet, "QWidget#%s{}" % id(view)),
             (view.underlying.setContextMenuPolicy, QtCore.Qt.DefaultContextMenu),
             (view.underlying.setCursor, QtCore.Qt.ArrowCursor),
             (view.underlying_layout.insertWidget, 1, label2.underlying)])
@@ -221,10 +221,10 @@ class WidgetTreeTestCase(unittest.TestCase):
         self.assertCountEqual(
             commands, 
             label2_commands + [
-                (view.underlying.setStyleSheet, "QWidget#%s{min-width: %s;min-height: %s}" % (id(view), font_size, font_size)),
+                (view.underlying.setStyleSheet, "QWidget#%s{}" % id(view)),
                 (view.underlying.setContextMenuPolicy, QtCore.Qt.DefaultContextMenu),
                 (view.underlying.setCursor, QtCore.Qt.ArrowCursor),
-                (inner_view.underlying.setStyleSheet, "QWidget#%s{min-width: 0;min-height: 0}" % id(inner_view)),
+                (inner_view.underlying.setStyleSheet, "QWidget#%s{}" % id(inner_view)),
                 (inner_view.underlying.setContextMenuPolicy, QtCore.Qt.DefaultContextMenu),
                 (inner_view.underlying.setCursor, QtCore.Qt.ArrowCursor),
                 (view._delete_child, 0),

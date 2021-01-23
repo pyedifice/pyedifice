@@ -1,7 +1,18 @@
+import calendar
+import datetime
+import enum
+import pathlib
 import typing as tp
 
-from .._component import Component, register_props
+from ..qt import QT_VERSION
+if QT_VERSION == "PyQt5":
+    from PyQt5 import QtCore, QtWidgets
+else:
+    from PySide2 import QtCore, QtWidgets
+
+from .._component import Component, register_props, RootComponent
 from ..state import StateManager
+from .. import base_components as ed
 
 class FormElement(object):
     pass
@@ -83,6 +94,7 @@ class Form(Component):
                  ["City", "State", "Zipcode"]]
     """
 
+    @register_props
     def __init__(self, data: StateManager,
                  config: tp.Optional[tp.Mapping[tp.Text, FormElement]] = None,
                  label_map: tp.Optional[tp.Mapping[tp.Text, tp.Text]] = None,
@@ -90,4 +102,180 @@ class Form(Component):
                  on_submit: tp.Optional[tp.Callable[[tp.Mapping[tp.Text, tp.Any]], None]] = None,
                  submit_text: tp.Text = "Submit",
                  layout: tp.Any = None):
-        pass
+        self.internal_data = data.copy()
+        self.error_msgs = {}
+
+    def _field_changed(self, key, value, dtype, text):
+        self.internal_data.update({key: text})
+        try:
+            if dtype:
+                val = dtype(text)
+            else:
+                val = text
+            if isinstance(value.value, tuple):
+                val = (val, value.value[1])
+            value.set(val)
+            with self.render_changes():
+                if key in self.error_msgs:
+                    self.error_msgs = self.error_msgs.copy()
+                    del self.error_msgs[key]
+        except ValueError:
+            with self.render_changes():
+                self.error_msgs = self.error_msgs.copy()
+                self.error_msgs[key] = f"{key} must be {dtype.__name__}"
+
+    def _create_entry(self, key, value):
+        has_error = (key in self.error_msgs)
+        if isinstance(value.value, str):
+            # Render text input for string fields
+            element = ed.TextInput(self.internal_data.subscribe(self, key).value,
+                                   on_change=lambda text: self._field_changed(key, value, str, text))
+        elif isinstance(value.value, int) or isinstance(value.value, float):
+            # Render text input for numeric fields, but include validation
+            dtype = type(value.value)
+            element = ed.View(layout="column")(
+                ed.TextInput(str(self.internal_data.subscribe(self, key).value),
+                             on_change=lambda text: self._field_changed(key, value, dtype, text)),
+                has_error and ed.Label(self.error_msgs[key], style={"color": "red", "font-size": 10})
+            )
+        elif isinstance(value.value, tuple):
+            # Tuples are dropdowns, and the tuple must be (selection, options)
+            if len(value.value) != 2:
+                raise ValueError("When specifying tuple as field in Form, the tuple should be length 2 (current_selection, options)")
+            str_to_old_type = dict(zip(map(str, value.value[1]), value.value[1]))
+            element = ed.Dropdown(
+                selection=str(value.value[0]),
+                options=list(map(str, value.value[1])),
+                on_select=lambda selection: self._field_changed(key, value, None,
+                                                                str_to_old_type[selection])
+            )
+        elif isinstance(value.value, enum.Enum):
+            # Enums are dropdowns
+            enum_cls = type(value.value)
+            element = ed.Dropdown(
+                selection=value.value.name,
+                options=list(map(lambda v: v.name, enum_cls)),
+                on_select=lambda selection: self._field_changed(key, value, None,
+                                                                enum_cls[selection])
+            )
+        elif isinstance(value.value, datetime.date):
+            # Dates are separate dropdowns for year, month, and day
+            date = value.value
+            days_in_month = calendar.monthrange(date.year, date.month)
+            element = ed.View(layout="row")(
+                ed.Dropdown(
+                    selection=str(date.year),
+                    options=list(map(str, range(1900, 2100))),
+                    on_select=lambda selection: self._field_changed(
+                        key, value, None, datetime.date(int(selection), date.month, date.day))
+                ),
+                ed.Dropdown(
+                    selection=str(date.month),
+                    options=list(map(str, range(1, 13))),
+                    on_select=lambda selection: self._field_changed(
+                        key, value, None, datetime.date(date.year, int(selection), date.day))
+                ),
+                ed.Dropdown(
+                    selection=str(date.day),
+                    options=list(map(str, range(1, days_in_month[1]+1))),
+                    on_select=lambda selection: self._field_changed(
+                        key, value, None, datetime.date(date.year, date.month, int(selection)))
+                ),
+            )
+        elif isinstance(value.value, pathlib.Path):
+            # Paths are rendered as a file selection dialogue
+            def choose_file(e):
+                dialog = QtWidgets.QFileDialog()
+                dialog.setFileMode(QtWidgets.QFileDialog.AnyFile)
+                fname = dialog.getOpenFileName(None, "Select File")
+                fname = fname[0]
+                self._field_changed(key, value, pathlib.Path, fname)
+
+            element = ed.View(layout="row") (
+                ed.Label(value.value.name, style={"margin-right": 2}),
+                ed.Button("Choose File", on_click=choose_file)
+            )
+        elif callable(value.value):
+            # A label holding evaluation of function on current form data
+            element = ed.Label(value.value(self.props.data.as_dict()))
+
+        return ed.View(layout="row",
+                       style={"align": "left", "margin-left": 10, "margin-right": 10, "margin-top": 5, "margin-bottom": 5})(
+            ed.Label(key, style={"margin-right": 5}),
+            element
+        )
+
+    def _reset(self, e):
+        self.internal_data.update(self.props.defaults)
+        self.props.data.update(self.props.defaults)
+
+    def render(self):
+        column_style = {"margin": 10}
+
+        props = self.props
+        layout = props.layout or list(props.data.keys())
+        label_map = props.label_map or {}
+
+        column_view_children = []
+        for row in layout:
+            if isinstance(row, list) or isinstance(row, tuple):
+                row_view_children = []
+                for element in row:
+                    if not isinstance(element, str):
+                        raise ValueError("Forms only support 2D lists for layout argument")
+                    row_view_children.append(
+                        self._create_entry(label_map.get(element, element),
+                                           props.data.subscribe(self, element)))
+                column_view_children.append(ed.View(layout="row")(
+                    *row_view_children
+                ))
+            elif isinstance(row, str):
+                column_view_children.append(
+                    self._create_entry(label_map.get(row, row),
+                                       props.data.subscribe(self, row)))
+            else:
+                raise ValueError("Encountered unexpected type in layout: %s" % row)
+        buttons = None
+        if props.defaults or props.on_submit:
+            buttons = ed.View(layout="row")(
+                props.defaults and ed.Button("Reset", on_click=self._reset),
+                props.on_submit and ed.Button("Submit", on_click=lambda e: props.on_submit(self.props.data.as_dict())),
+            )
+        return ed.View(layout="column", style=column_style)(
+            *column_view_children,
+            buttons
+        )
+
+class FormDialog(Component):
+    """A convenience component that renders a Form in a dialog window.
+
+    After submit is clicked, the window is closed.
+    See documentation of Form for detailed documentation.
+
+    Args:
+        title: The title of the window
+    """
+
+    @register_props
+    def __init__(self, data: StateManager,
+                 title: str = "Form",
+                 config: tp.Optional[tp.Mapping[tp.Text, FormElement]] = None,
+                 label_map: tp.Optional[tp.Mapping[tp.Text, tp.Text]] = None,
+                 defaults: tp.Optional[tp.Mapping[tp.Text, tp.Any]] = None,
+                 on_submit: tp.Optional[tp.Callable[[tp.Mapping[tp.Text, tp.Any]], None]] = None,
+                 submit_text: tp.Text = "Submit",
+                 layout: tp.Any = None):
+        self.is_open = True
+
+    def on_submit(self, data):
+        if self.props.on_submit is not None:
+            self.props.on_submit(data)
+        self.set_state(is_open=False)
+
+    def render(self):
+        return ed.List()(self.is_open and ed.Window(title=self.props.title)(
+            Form(data=self.props.data, config=self.props.config, label_map=self.props.label_map,
+                 defaults=self.props.defaults, on_submit=self.on_submit,
+                 submit_text=self.props.submit_text, layout=self.props.layout)
+        ))
+        

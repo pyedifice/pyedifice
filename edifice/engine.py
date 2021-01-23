@@ -227,7 +227,11 @@ class RenderEngine(object):
                 kwargs = {k: old_comp.props[k] for k, v in parameters[1:]
                           if v.default is inspect.Parameter.empty and k[0] != "_"}
             except KeyError:
-                raise ValueError(f"Error while reloading {old_comp}: New class expects props not present in old class")
+                k = None
+                for k, v in parameters[1:]:
+                    if k not in old_comp.props:
+                        break
+                raise ValueError(f"Error while reloading {old_comp}: New class expects prop ({k}) not present in old class")
             parts[3] = new_comp_class(**kwargs)
             parts[3]._props.update(old_comp._props)
             if hasattr(old_comp, "_key"):

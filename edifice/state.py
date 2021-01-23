@@ -204,11 +204,26 @@ class StateManager(object):
         state_value.set = lambda value: self.set(key, value)
         return state_value
 
+    def copy(self):
+        """Returns a (shallow) copy of this StateManager.
+
+        The new StateManager is a copy and not a reference of the original,
+        and do not share any subscriptions.
+        """
+        return StateManager(self._values.copy())
+
+    def as_dict(self):
+        """Returns a (shallow) copy of this StateManager as a dictionary. """
+        return self._values.copy()
+
     def __getitem__(self, key: tp.Text) -> tp.Any:
         return self._values[key]
 
     def set(self, key, value):
         self.update({key: value})
+
+    def keys(self):
+        return self._values.keys()
 
     def update(self, d: tp.Mapping[tp.Text, tp.Any]):
         """Updates the key value store.
