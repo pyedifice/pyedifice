@@ -20,8 +20,6 @@ class FormElement(object):
 class Form(Component):
     """A simple Form element to allow editting values stored in a StateManager.
     
-    **THIS IS NOT IMPLEMENTED YET. THE BELOW IS ONLY A PREVIEW OF THE PROPOSED DESIGN.**
-
     For every key, value pair in the StateManager, a field is created in the Form,
     A field consists of a label (by default, the key, although this is configurable using label_map)
     and a form element, such as a TextInput or a Dropdown.
@@ -33,12 +31,15 @@ class Form(Component):
           enters a non number and unfocuses from the TextInput, an error message is printed.
         - tuple (selection, options): A dropdown with the current selection and the list of options
         - Enum: dropdown
+        - pathlib.Path: a file choice dialog
+        - function: a label that displays the value of the function evaluated on the current form. The function
+                    is passed a dictionary containing all current values.
         - datetime.date: Three drop downs for year, month, and day.
-        - datetime.time: Three dropdowns for hour, minute, second
-        - datetime.datetime: Six dropdowns combining date and time
-        - list: a list view. This is purely for display, and the user can't modify this state.
-        - np.array or pd.DataFrame: A table. This is purely for display, and the user can't modify this state.
-        - StateManager: a group box containing a sub-form. This sub-form cannot be submitted,
+        - datetime.time: **NOT SUPPORTED YET** Three dropdowns for hour, minute, second
+        - datetime.datetime: **NOT SUPPORTED YET** Six dropdowns combining date and time
+        - list: **NOT SUPPORTED YET** a list view. This is purely for display, and the user can't modify this state.
+        - np.array or pd.DataFrame: **NOT SUPPORTED YET** A table. This is purely for display, and the user can't modify this state.
+        - StateManager: **NOT SUPPORTED YET**a group box containing a sub-form. This sub-form cannot be submitted,
           except as part of the larger form's submission process.
 
     If the defaults dict is provided, a Reset button will appear, allowing the user to reset the form to default values.
@@ -69,7 +70,7 @@ class Form(Component):
 
     Args:
         data: the data that the Form displays and modifies
-        config: (optional) the form element to use in displaying each entry in data.
+        config: (optional) **NOT SUPPORTED YET** the form element to use in displaying each entry in data.
             You don't have to provide configs for every key in data;
             sensible defaults will be used if the config is unspecified.
         label_map: (optional) the label to use for each key. By default, the key itself is used.
@@ -239,7 +240,7 @@ class Form(Component):
         if props.defaults or props.on_submit:
             buttons = ed.View(layout="row")(
                 props.defaults and ed.Button("Reset", on_click=self._reset),
-                props.on_submit and ed.Button("Submit", on_click=lambda e: props.on_submit(self.props.data.as_dict())),
+                props.on_submit and ed.Button(props.submit_text or "Submit", on_click=lambda e: props.on_submit(self.props.data.as_dict())),
             )
         return ed.View(layout="column", style=column_style)(
             *column_view_children,
