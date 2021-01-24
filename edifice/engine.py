@@ -371,8 +371,13 @@ class RenderEngine(object):
     def _render(self, component: Component, render_context: _RenderContext):
         if component in render_context.widget_tree:
             return render_context.widget_tree[component]
-        for ref in component._edifice_internal_references:
-            render_context.set(ref, "_value", component)
+        try:
+            for ref in component._edifice_internal_references:
+                render_context.set(ref, "_value", component)
+        except TypeError:
+            raise ValueError(f"{component.__class__} is not correctly initialized. "
+                             "Did you remember to call super().__init__() in the constructor? "
+                             "(alternatively, the register_props decorator will also correctly initialize the component)")
         component._controller = self._app
         component._edifice_internal_parent = render_context.component_parent
         render_context.component_parent = component

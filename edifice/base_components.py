@@ -525,7 +525,12 @@ class GroupBox(QtWidgetComponent):
 class Icon(QtWidgetComponent):
     """Display an Icon
 
-    Icons are fairly central to modern-looking UI design.
+    .. figure:: ../widget_images/icons.png
+       :width: 300
+
+       Two icons. Note that you can set the color and rotation.
+
+    Icons are central to modern-looking UI design.
     Edifice comes with the Font Awesome (https://fontawesome.com) regular and solid
     icon sets, to save you time from looking up your own icon set.
     You can specify an icon simplify using its name (and optionally the sub_collection).
@@ -581,6 +586,11 @@ class Icon(QtWidgetComponent):
 class Button(QtWidgetComponent):
     """Basic button widget.
 
+    .. figure:: ../widget_images/textinput_button.png
+       :width: 300
+
+       Button on the right
+
     Set the on_click prop (inherited from QtWidgetComponent) to define the behavior on click.
 
     Args:
@@ -613,6 +623,11 @@ class Button(QtWidgetComponent):
 
 class IconButton(Button):
     """Display an Icon Button.
+
+    .. figure:: ../widget_images/icons.png
+       :width: 300
+
+       Icon button on the very right.
 
     Icons are fairly central to modern-looking UI design;
     this component allows you to put an icon in a button.
@@ -664,6 +679,11 @@ class IconButton(Button):
 
 class Label(QtWidgetComponent):
     """Basic widget for displaying text.
+
+    .. figure:: ../widget_images/label.png
+       :width: 500
+
+       Three different label objects. You can embed HTML in labels to get rich text formatting.
 
     Args:
         text: the text to display. Can be any Python type; the text prop is converted
@@ -732,6 +752,11 @@ class Completer(object):
 class TextInput(QtWidgetComponent):
     """Basic widget for a one line text input
 
+    .. figure:: ../widget_images/textinput_button.png
+       :width: 300
+
+       TextInput on the left. Note that you can set an optional Completer, giving the dropdown for completion.
+
     Args:
         text: Initial text of the text input
         on_change: callback for the value of the text input changes. The callback is passed the changed
@@ -795,6 +820,11 @@ class TextInput(QtWidgetComponent):
 
 class Dropdown(QtWidgetComponent):
     """Basic widget for a dropdown menu.
+
+    .. figure:: ../widget_images/checkbox_dropdown.png
+       :width: 300
+
+       Dropdown on the right.
 
     Args:
         text: Initial text of the text input
@@ -870,6 +900,11 @@ class Dropdown(QtWidgetComponent):
 class CheckBox(QtWidgetComponent):
     """Checkbox widget.
 
+    .. figure:: ../widget_images/checkbox_dropdown.png
+       :width: 300
+
+       Checkbox on the left.
+
     A checkbox allows the user to specify some boolean state.
 
     The checked prop determines the initial check-state of the widget.
@@ -923,6 +958,11 @@ NumericType = tp.Union[float, int]
 
 class Slider(QtWidgetComponent):
     """Slider bar widget.
+
+    .. figure:: ../widget_images/slider.png
+       :width: 300
+
+       Horizontal and vertical sliders
 
     A Slider bar allows the user to input a continuous value.
     The bar could be displayed either horizontally or vertically.
@@ -1132,6 +1172,11 @@ class View(_LinearView):
 
 class ScrollView(_LinearView):
     """Scrollable layout widget for grouping children together.
+
+    .. figure:: ../widget_images/scroll_view.png
+       :width: 500
+
+       A ScrollView containing a Label.
 
     Unlike :doc:`View<edifice.base_components.View>`, overflows in both the x and y direction
     will cause a scrollbar to show.
