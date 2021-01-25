@@ -6,16 +6,12 @@ import edifice._component as component
 
 from edifice.qt import QT_VERSION
 if QT_VERSION == "PyQt5":
-    from PyQt5 import QtCore, QtWidgets
+    from PyQt5 import QtCore, QtWidgets, QtGui
 else:
-    from PySide2 import QtCore, QtWidgets
+    from PySide2 import QtCore, QtWidgets, QtGui
 
-
-try:
+if QtWidgets.QApplication.instance() is None:
     app_obj = QtWidgets.QApplication(["-platform", "offscreen"])
-except:
-    app_obj = QtWidgets.QApplication.instance()
-
 
 class TimingAvgTestCase(unittest.TestCase):
 

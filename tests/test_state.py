@@ -14,10 +14,8 @@ if QT_VERSION == "PyQt5":
 else:
     from PySide2 import QtWidgets
 
-try:
+if QtWidgets.QApplication.instance() is None:
     app = QtWidgets.QApplication(["-platform", "offscreen"])
-except:
-    pass
 
 
 class MockApp(object):
@@ -62,14 +60,14 @@ class TopologicalUpdateTestCase(unittest.TestCase):
             (node_g, set([node_a, node_f])),
         ])
 
-        new = state._add_subscription(previous, node_f)
+        new_comp = state._add_subscription(previous, node_f)
         self.assertEqual(
-            list(new.keys()), [node_a, node_b, node_d, node_c, node_e,
+            list(new_comp.keys()), [node_a, node_b, node_d, node_c, node_e,
                                node_f, node_g])
-        previous = new
-        new = state._add_subscription(previous, node_h)
+        previous = new_comp
+        new_comp = state._add_subscription(previous, node_h)
         self.assertEqual(
-            list(new.keys()), [node_a, node_b, node_d, node_c, node_e,
+            list(new_comp.keys()), [node_a, node_b, node_d, node_c, node_e,
                                node_f, node_g, node_h])
 
 

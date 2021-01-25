@@ -720,10 +720,14 @@ class Label(QtWidgetComponent):
                 change_cursor = False
                 if self.props.selectable:
                     change_cursor = True
-                    interaction_flags |= (QtCore.Qt.TextSelectableByMouse | QtCore.Qt.TextSelectableByKeyboard)
+                    interaction_flags = (QtCore.Qt.TextSelectableByMouse | QtCore.Qt.TextSelectableByKeyboard)
                 if self.props.editable:
                     change_cursor = True
-                    interaction_flags |= QtCore.Qt.TextEditable
+                    # PyQt5 doesn't support bitwise or with ints
+                    if interaction_flags:
+                        interaction_flags |= QtCore.Qt.TextEditable
+                    else:
+                        interaction_flags = QtCore.Qt.TextEditable
                 if change_cursor and self.props.cursor is None:
                     commands.append((self.underlying.setCursor, _CURSORS["text"]))
                 if interaction_flags:

@@ -10,10 +10,8 @@ if QT_VERSION == "PyQt5":
 else:
     from PySide2 import QtWidgets
 
-try:
+if QtWidgets.QApplication.instance() is None:
     app = QtWidgets.QApplication(["-platform", "offscreen"])
-except:
-    pass
 
 
 class TestReference(unittest.TestCase):

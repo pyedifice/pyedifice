@@ -13,10 +13,8 @@ if QT_VERSION == "PyQt5":
 else:
     from PySide2 import QtCore, QtWidgets
 
-try:
+if QtWidgets.QApplication.instance() is None:
     app = QtWidgets.QApplication(["-platform", "offscreen"])
-except:
-    pass
 
 
 class MockComponent(base_components.QtWidgetComponent):

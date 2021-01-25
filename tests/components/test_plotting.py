@@ -11,10 +11,8 @@ else:
     from PySide2 import QtCore, QtWidgets
 
 
-try:
+if QtWidgets.QApplication.instance() is None:
     app_obj = QtWidgets.QApplication(["-platform", "offscreen"])
-except:
-    app_obj = QtWidgets.QApplication.instance()
 
 
 class FigureTestCase(unittest.TestCase):

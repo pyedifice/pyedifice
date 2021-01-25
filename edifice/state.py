@@ -67,13 +67,13 @@ import typing as tp
 from ._component import Component
 
 
-def _add_subscription(previous, new):
+def _add_subscription(previous, new_comp):
     # Adds a subscription in topological sort order,
     # so that ancestors will appear before descendants.
-    if new in previous:
+    if new_comp in previous:
         return previous
     new_ancestors = set()
-    node = new
+    node = new_comp
     while node is not None:
         new_ancestors.add(node)
         node = node._edifice_internal_parent
@@ -81,14 +81,14 @@ def _add_subscription(previous, new):
     keys = []
     inserted = False
     for p in previous:
-        if not inserted and new in previous[p]:
-            # new is ancestor of p
-            keys.append(new)
+        if not inserted and new_comp in previous[p]:
+            # new_comp is ancestor of p
+            keys.append(new_comp)
             inserted = True
         keys.append(p)
     if not inserted:
-        keys.append(new)
-    previous[new] = new_ancestors
+        keys.append(new_comp)
+    previous[new_comp] = new_ancestors
 
     return OrderedDict((k, previous[k]) for k in keys)
 
