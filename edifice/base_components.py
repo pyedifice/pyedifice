@@ -1215,7 +1215,7 @@ class View(_LinearView):
             old_child.underlying.setParent(None)
         old_child._destroy_widgets()
 
-    def _soft_delete_child(self, i):
+    def _soft_delete_child(self, i, old_child):
         if self.underlying_layout is not None:
             self.underlying_layout.takeAt(i)
         else:
@@ -1290,7 +1290,7 @@ class ScrollView(_LinearView):
             child_node.widget().deleteLater() # setParent(self._garbage_collector)
         old_child._destroy_widgets()
 
-    def _soft_delete_child(self, i):
+    def _soft_delete_child(self, i, old_child):
         self.underlying_layout.takeAt(i)
 
     def _add_child(self, i, child_component):
@@ -1339,7 +1339,7 @@ class TabView(_LinearView):
     def _delete_child(self, i, old_child):
         self.underlying.removeTab(i)
 
-    def _soft_delete_child(self, i):
+    def _soft_delete_child(self, i, old_child):
         self.underlying.removeTab(i)
 
     def _add_child(self, i, child_component):
