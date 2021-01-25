@@ -73,7 +73,7 @@ def _array_to_pixmap(arr):
     if arr.dtype == np.float32 or arr.dtype == np.float64:
         arr = (255 * arr).round()
     arr = arr.astype(np.uint8)
-    return QtGui.QImage(arr.data, width, height, channel * width, QtGui.QImage.Format_RGB888)
+    return QtGui.QPixmap.fromImage(QtGui.QImage(arr.data, width, height, channel * width, QtGui.QImage.Format_RGB888))
 
 @functools.lru_cache(30)
 def _get_image(path):
@@ -731,6 +731,35 @@ class Label(QtWidgetComponent):
         return commands
 
 
+class Image(QtWidgetComponent):
+    """An image container.
+
+    Args:
+        src: either the path to the image, or an np array. The np array must be 3 dimensional (height, width, channels)
+        scale_to_fit: if True, the image will be scaled to fit inside the container.
+    """
+
+    @register_props
+    def __init__(self, src: tp.Any = "", scale_to_fit: bool = True, **kwargs):
+        super().__init__(**kwargs)
+        self.underlying = None
+
+    def _initialize(self):
+        self.underlying = QtWidgets.QLabel()
+        self.underlying.setObjectName(str(id(self)))
+
+    def _qt_update_commands(self, children, newprops, newstate):
+        if self.underlying is None:
+            self._initialize()
+
+        commands = super()._qt_update_commands(children, newprops, newstate, self.underlying, None)
+        commands.append((self.underlying.setScaledContents, self.props.scale_to_fit))
+        for prop in newprops:
+            if prop == "src":
+                commands.append((self.underlying.setPixmap, _image_descriptor_to_pixmap(self.props.src)))
+        return commands
+
+
 class Completer(object):
 
     def __init__(self, options, mode="popup"):
@@ -894,6 +923,60 @@ class Dropdown(QtWidgetComponent):
                 commands.append((self.underlying.setCurrentText, newprops[prop]))
             elif prop == "completer":
                 commands.append((self.set_completer, newprops[prop]))
+        return commands
+
+
+class RadioButton(QtWidgetComponent):
+    """Radio buttons.
+
+    .. figure:: ../widget_images/radio_button.png
+       :width: 300
+
+       Three mutually exclusive radio buttons.
+
+    Radio buttons are used to specify a single choice out of many.
+    Radio buttons belonging to the same parent component are exclusive:
+    only one may be selected at a time.
+
+    Args:
+        checked: whether or not the checkbox is checked initially
+        text: text for the label of the checkbox
+        on_change: callback for when the check box state changes.
+            The callback receives the new state of the check box as an argument.
+    """
+
+    @register_props
+    def __init__(self, checked: bool = False, text: tp.Any = "",
+                 on_change: tp.Callable[[bool], None] = (lambda checked: None), **kwargs):
+        super().__init__(**kwargs)
+        self._connected = False
+        self.underlying = None
+
+    def _initialize(self):
+        self.underlying = QtWidgets.QRadioButton(str(self.props.text))
+        size = self.underlying.font().pointSize()
+        self._set_size(size * len(self.props.text), size)
+        self.underlying.setObjectName(str(id(self)))
+
+    def set_on_change(self, on_change):
+        def on_change_fun(checked):
+            return on_change(checked)
+        if self._connected:
+            self.underlying.toggled.disconnect()
+        self.underlying.toggled.connect(on_change_fun)
+        self._connected = True
+
+    def _qt_update_commands(self, children, newprops, newstate):
+        if self.underlying is None:
+            self._initialize()
+
+        commands = super()._qt_update_commands(children, newprops, newstate, self.underlying)
+        commands.append((self.underlying.setChecked, self.props.checked))
+        for prop in newprops:
+            if prop == "on_change":
+                commands.append((self.set_on_change, newprops[prop]))
+            elif prop == "text":
+                commands.append((self.underlying.setText, str(newprops[prop])))
         return commands
 
 
@@ -1061,27 +1144,6 @@ class _LinearView(QtWidgetComponent):
     def __del__(self):
         pass
 
-    def _delete_child(self, i, old_child):
-        if self.underlying_layout is not None:
-            child_node = self.underlying_layout.takeAt(i)
-            if child_node.widget():
-                child_node.widget().deleteLater() # setParent(self._garbage_collector)
-        else:
-            old_child.underlying.setParent(None)
-        old_child._destroy_widgets()
-
-    def _soft_delete_child(self, i):
-        if self.underlying_layout is not None:
-            self.underlying_layout.takeAt(i)
-        else:
-            old_child.underlying.setParent(None)
-
-    def _add_child(self, i, child_component):
-        if self.underlying_layout is not None:
-            self.underlying_layout.insertWidget(i, child_component)
-        else:
-            child_component.setParent(self.underlying)
-
     def _recompute_children(self, children):
         commands = []
         children = [child for child in children if child.component.underlying is not None]
@@ -1140,6 +1202,27 @@ class View(_LinearView):
         super().__init__(**kwargs)
         self.underlying = None
 
+    def _delete_child(self, i, old_child):
+        if self.underlying_layout is not None:
+            child_node = self.underlying_layout.takeAt(i)
+            if child_node.widget():
+                child_node.widget().deleteLater() # setParent(self._garbage_collector)
+        else:
+            old_child.underlying.setParent(None)
+        old_child._destroy_widgets()
+
+    def _soft_delete_child(self, i):
+        if self.underlying_layout is not None:
+            self.underlying_layout.takeAt(i)
+        else:
+            old_child.underlying.setParent(None)
+
+    def _add_child(self, i, child_component):
+        if self.underlying_layout is not None:
+            self.underlying_layout.insertWidget(i, child_component)
+        else:
+            child_component.setParent(self.underlying)
+
     def _initialize(self):
         self.underlying = QtWidgets.QWidget()
         layout = self.props.layout
@@ -1173,7 +1256,6 @@ class View(_LinearView):
         return commands
 
 
-
 class ScrollView(_LinearView):
     """Scrollable layout widget for grouping children together.
 
@@ -1198,6 +1280,18 @@ class ScrollView(_LinearView):
 
         self.underlying = None
 
+    def _delete_child(self, i, old_child):
+        child_node = self.underlying_layout.takeAt(i)
+        if child_node.widget():
+            child_node.widget().deleteLater() # setParent(self._garbage_collector)
+        old_child._destroy_widgets()
+
+    def _soft_delete_child(self, i):
+        self.underlying_layout.takeAt(i)
+
+    def _add_child(self, i, child_component):
+        self.underlying_layout.insertWidget(i, child_component)
+
     def _initialize(self):
         self.underlying = QtWidgets.QScrollArea()
         self.underlying.setWidgetResizable(True)
@@ -1218,6 +1312,46 @@ class ScrollView(_LinearView):
             self._initialize()
         commands = self._recompute_children(children)
         commands.extend(super()._qt_update_commands(children, newprops, newstate, self.underlying, self.underlying_layout))
+        return commands
+
+
+class TabView(_LinearView):
+    """Widget with multiple tabs.
+
+    .. figure:: ../widget_images/tab_view.png
+       :width: 300
+
+       A TabView with 2 children.
+
+    Args:
+        labels: The labels for the tabs. The number of labels must match the number of children.
+    """
+
+    @register_props
+    def __init__(self, labels=None, **kwargs):
+        super().__init__(**kwargs)
+        self.underlying = None
+
+    def _delete_child(self, i, old_child):
+        self.underlying.removeTab(i)
+
+    def _soft_delete_child(self, i):
+        self.underlying.removeTab(i)
+
+    def _add_child(self, i, child_component):
+        self.underlying.insertTab(i, child_component, self.props.labels[i])
+
+    def _initialize(self):
+        self.underlying = QtWidgets.QTabWidget()
+        self.underlying.setObjectName(str(id(self)))
+
+    def _qt_update_commands(self, children, newprops, newstate):
+        if len(children) != len(self.props.labels):
+            raise ValueError(f"The number of labels should be equal to the number of children for TabView {self}")
+        if self.underlying is None:
+            self._initialize()
+        commands = self._recompute_children(children)
+        commands.extend(super()._qt_update_commands(children, newprops, newstate, self.underlying, None))
         return commands
 
 

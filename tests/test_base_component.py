@@ -1,5 +1,7 @@
 import os
 
+import numpy as np
+
 import unittest
 import unittest.mock
 import edifice.engine as engine
@@ -260,6 +262,8 @@ class BaseComponentsTest(unittest.TestCase):
         self._test_comp(base_components.IconButton("play", on_click=lambda e: None))
         self._test_comp(base_components.View(context_menu=context_menu))
         self._test_comp(base_components.Label(text="Hello", selectable=True))
+        self._test_comp(base_components.Image(src="tests/example.png", scale_to_fit=True))
+        self._test_comp(base_components.Image(src=np.zeros((100, 100, 3)), scale_to_fit=False))
         self._test_comp(base_components.Button("play", on_click=lambda e: None))
         self._test_comp(base_components.TextInput("initial_text", on_change=lambda text: None))
         self._test_comp(base_components.Button("play", on_click=lambda e: None))
@@ -271,8 +275,9 @@ class BaseComponentsTest(unittest.TestCase):
         self._test_comp(base_components.TextInput("initial_text", on_change=lambda text: None))
         self._test_comp(base_components.TextInput("initial_text", completer=completer1, on_change=lambda text: None))
         self._test_comp(base_components.CheckBox(checked=True, text="Test", on_change=lambda checked: None))
+        self._test_comp(base_components.RadioButton(checked=True, text="Test", on_change=lambda checked: None))
         self._test_comp(base_components.Slider(value=1, min_value=0, max_value=3, on_change=lambda value: None))
         self._test_comp(base_components.ScrollView(layout="row"))
         self._test_comp(base_components.List())
         self._test_comp(base_components.GroupBox(title="Group")(base_components.View()))
-
+        self._test_comp(base_components.TabView(labels=["Tab 1", "Tab 2"])(base_components.Label(), base_components.Label()))
