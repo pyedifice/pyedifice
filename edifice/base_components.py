@@ -1061,13 +1061,26 @@ class _LinearView(QtWidgetComponent):
     def __del__(self):
         pass
 
-    def _delete_child(self, i):
-        child_node = self.underlying_layout.takeAt(i)
-        if child_node.widget():
-            child_node.widget().deleteLater() # setParent(self._garbage_collector)
+    def _delete_child(self, i, old_child):
+        if self.underlying_layout is not None:
+            child_node = self.underlying_layout.takeAt(i)
+            if child_node.widget():
+                child_node.widget().deleteLater() # setParent(self._garbage_collector)
+        else:
+            old_child.underlying.setParent(None)
+        old_child._destroy_widgets()
 
     def _soft_delete_child(self, i):
-        self.underlying_layout.takeAt(i)
+        if self.underlying_layout is not None:
+            self.underlying_layout.takeAt(i)
+        else:
+            old_child.underlying.setParent(None)
+
+    def _add_child(self, i, child_component):
+        if self.underlying_layout is not None:
+            self.underlying_layout.insertWidget(i, child_component)
+        else:
+            child_component.setParent(self.underlying)
 
     def _recompute_children(self, children):
         commands = []
@@ -1082,11 +1095,7 @@ class _LinearView(QtWidgetComponent):
 
         for i, old_child in reversed(list(enumerate(self._widget_children))):
             if old_child not in new_children:
-                if self.underlying_layout is not None:
-                    commands.append((self._delete_child, i))
-                    old_child._destroy_widgets()
-                else:
-                    commands.append((old_child.underlying.setParent, None))
+                commands.append((self._delete_child, i, old_child))
                 del self._widget_children[i]
 
         old_child_index = 0
@@ -1098,16 +1107,11 @@ class _LinearView(QtWidgetComponent):
 
             if old_child is None or child.component is not old_child:
                 if child.component not in self._already_rendered:
-                    if self.underlying_layout is not None:
-                        commands.append((self.underlying_layout.insertWidget, i, child.component.underlying))
-                    else:
-                        commands.append((child.component.underlying.setParent, self.underlying))
+                    commands.append((self._add_child, i, child.component.underlying))
                     old_child_index -= 1
                 else:
-                    if self.underlying_layout is not None:
-                        commands.extend([(self._soft_delete_child, i,), (self.underlying_layout.insertWidget, i, child.component.underlying)])
-                    else:
-                        commands.extend([(old_child.underlying.setParent, None), (child.component.underlying.setParent, self.underlying)])
+                    commands.extend([(self._soft_delete_child, i, old_child),
+                                     (self._add_child, i, child.component.underlying)])
 
             old_child_index += 1
             self._already_rendered[child.component] = True

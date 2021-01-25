@@ -167,7 +167,7 @@ class RenderTestCase(unittest.TestCase):
 
         def V(*args):
             view = qt_tree._dereference(args)
-            return [(view.component.underlying_layout.insertWidget, i, child.component.underlying)
+            return [(view.component._add_child, i, child.component.underlying)
                     for (i, child) in enumerate(view.children)]
 
         expected_commands = C(0, 0) + C(0, 1) + V(0) + C(0) + C(1, 0) + C(1, 1) + V(1) + C(1) + C(2) + V() + C()
@@ -222,14 +222,14 @@ class RenderTestCase(unittest.TestCase):
 
         def new_V(*args):
             view = _new_qt_tree._dereference(args)
-            return [(view.component.underlying_layout.insertWidget, i, child.component.underlying)
+            return [(view.component._add_child, i, child.component.underlying)
                     for (i, child) in enumerate(view.children)]
 
         self.assertEqual(_new_qt_tree._dereference([2, 0]).component.props.text, "D")
         def new_C(*args):
             return _commands_for_address(_new_qt_tree, args)
         expected_commands = (new_C(2, 0) + new_C(2, 1) + new_V(2) + new_C(2) +
-                             [(qt_tree.component.underlying_layout.insertWidget, 2, _new_qt_tree.children[2].component.underlying)])
+                             [(qt_tree.component._add_child, 2, _new_qt_tree.children[2].component.underlying)])
 
         self.assertEqual(qt_commands, expected_commands)
 
@@ -239,6 +239,8 @@ class RenderTestCase(unittest.TestCase):
         render_result = app._request_rerender([component])
         qt_tree = render_result.trees[0]
         qt_commands = render_result.commands
+        old_child0 = qt_tree.children[0].component
+        old_child2 = qt_tree.children[2].component
 
         component.state = ["C", "B", "A"]
         render_result = app._request_rerender([component])
@@ -246,10 +248,10 @@ class RenderTestCase(unittest.TestCase):
         qt_commands = render_result.commands
 
         expected_commands = (
-                             [(qt_tree.component._soft_delete_child, 0,)]
-                             + [(qt_tree.component.underlying_layout.insertWidget, 0, qt_tree.children[2].component.underlying)]
-                             + [(qt_tree.component._soft_delete_child, 2,)]
-                             + [(qt_tree.component.underlying_layout.insertWidget, 2, qt_tree.children[0].component.underlying)])
+                             [(qt_tree.component._soft_delete_child, 0, old_child0)]
+                             + [(qt_tree.component._add_child, 0, qt_tree.children[2].component.underlying)]
+                             + [(qt_tree.component._soft_delete_child, 2, old_child2)]
+                             + [(qt_tree.component._add_child, 2, qt_tree.children[0].component.underlying)])
 
         self.assertEqual(qt_commands, expected_commands)
 
@@ -273,6 +275,7 @@ class RenderTestCase(unittest.TestCase):
         app = engine.RenderEngine(component)
         render_result = app._request_rerender([component])
         qt_tree = render_result.trees[0]
+        old_child = qt_tree.children[2].component
         qt_commands = render_result.commands
 
         component.state = ["A", "B"]
@@ -280,7 +283,7 @@ class RenderTestCase(unittest.TestCase):
         _new_qt_tree = render_result.trees[0]
         qt_commands = render_result.commands
 
-        expected_commands = [(qt_tree.component._delete_child, 2,)]
+        expected_commands = [(qt_tree.component._delete_child, 2, old_child)]
 
         self.assertEqual(qt_commands, expected_commands)
 

@@ -202,7 +202,7 @@ class WidgetTreeTestCase(unittest.TestCase):
             (view.underlying.setStyleSheet, "QWidget#%s{}" % id(view)),
             (view.underlying.setContextMenuPolicy, QtCore.Qt.DefaultContextMenu),
             (view.underlying.setCursor, QtCore.Qt.ArrowCursor),
-            (view.underlying_layout.insertWidget, 0, label1.underlying)])
+            (view._add_child, 0, label1.underlying)])
 
         view_tree = engine._WidgetTree(view, [label1_tree, label2_tree])
         with engine._storage_manager() as manager:
@@ -211,9 +211,10 @@ class WidgetTreeTestCase(unittest.TestCase):
             (view.underlying.setStyleSheet, "QWidget#%s{}" % id(view)),
             (view.underlying.setContextMenuPolicy, QtCore.Qt.DefaultContextMenu),
             (view.underlying.setCursor, QtCore.Qt.ArrowCursor),
-            (view.underlying_layout.insertWidget, 1, label2.underlying)])
+            (view._add_child, 1, label2.underlying)])
 
         inner_view = base_components.View()
+        old_child = view_tree.children[0].component
 
         view_tree = engine._WidgetTree(view, [label2_tree, engine._WidgetTree(inner_view, [])])
         with engine._storage_manager() as manager:
@@ -227,8 +228,8 @@ class WidgetTreeTestCase(unittest.TestCase):
                 (inner_view.underlying.setStyleSheet, "QWidget#%s{}" % id(inner_view)),
                 (inner_view.underlying.setContextMenuPolicy, QtCore.Qt.DefaultContextMenu),
                 (inner_view.underlying.setCursor, QtCore.Qt.ArrowCursor),
-                (view._delete_child, 0),
-                (view.underlying_layout.insertWidget, 1, inner_view.underlying)
+                (view._delete_child, 0, old_child),
+                (view._add_child, 1, inner_view.underlying)
             ])
 
 
