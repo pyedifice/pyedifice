@@ -29,6 +29,7 @@ class Form(Component):
         - str: TextInput
         - int or float: TextInput. The input will the validated to be a number, and if the user
           enters a non number and unfocuses from the TextInput, an error message is printed.
+        - bool: Checkbox
         - tuple (selection, options): A dropdown with the current selection and the list of options
         - Enum: dropdown
         - pathlib.Path: a file choice dialog
@@ -139,6 +140,10 @@ class Form(Component):
                              on_change=lambda text: self._field_changed(key, value, dtype, text)),
                 has_error and ed.Label(self.error_msgs[key], style={"color": "red", "font-size": 10})
             )
+        elif isinstance(value.value, bool):
+            # Render bools as checkboxes
+            element = ed.CheckBox(checked=value.value,
+                                  on_change=lambda checked: self._field_changed(key, value, bool, checked))
         elif isinstance(value.value, tuple):
             # Tuples are dropdowns, and the tuple must be (selection, options)
             if len(value.value) != 2:

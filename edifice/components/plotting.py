@@ -39,12 +39,14 @@ class Figure(CustomWidget):
         self.plot_thread.join()
 
     def plot(self):
+        time.sleep(0.5)
         while self.plot_thread_should_run:
             plot_fun = self.current_plot_fun
             if plot_fun is not None and self.current_plotted_fun != plot_fun:
                 self.subplots.clear()
                 plot_fun(self.subplots)
                 self.figure_canvas.draw()
+                self.figure_canvas.figure.tight_layout()
                 self.current_plotted_fun = plot_fun
             time.sleep(.016)
 

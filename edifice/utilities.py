@@ -29,7 +29,8 @@ class Timer(object):
         Args:
             time_in_ms: time interval for calling the function.
         """
-        self._timer.start(time_in_ms)
+        if not self._started:
+            self._timer.start(time_in_ms)
         self._started = True
 
     def stop(self):

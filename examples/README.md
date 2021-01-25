@@ -20,7 +20,7 @@ but I didn't want to have to write that in raw Qt!
 
 ##  Financial Chart Viewer
 
-![financial_charts](example_financial_charting1.png)
+![financial-charts](example_financial_charting1.png)
 
 File: `financial_charts.py`
 
@@ -50,3 +50,15 @@ You can also pass a function, which would generate a label whose content is the 
 
 The Form component was created using the same high-level Edifice api provided to users,
 so [its source code](https://github.com/fding/pyedifice/blob/master/edifice/components/forms.py) is technically another example!
+
+
+## Harmonic Oscillator
+
+![harmonic-oscillator](example_harmonic_oscillator.gif)
+
+File: `harmonic_oscillator.py`
+
+An example showing animation. The animation was rendered at 30 FPS (the GIF is only at 12 FPS so you won't be able to tell).
+You can interactively set the frequency and damping factors and instantly see the result,
+both in a graph and in the animation.
+Python of course has great numeric libraries, so we can work with complex numbers.

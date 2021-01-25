@@ -1,3 +1,4 @@
+import time
 import unittest
 
 import edifice
@@ -18,11 +19,9 @@ except:
 
 class FigureTestCase(unittest.TestCase):
     def test_figure(self):
-        plot_fun = unittest.mock.MagicMock()
-        my_app = edifice.App(plotting.Figure(plot_fun), create_application=False)
+        my_app = edifice.App(plotting.Figure(lambda x: None), create_application=False)
         class MockQtApp(object):
             def exec_(self):
                 pass
         my_app.app = MockQtApp()
         my_app.start()
-        plot_fun.assert_called_once()

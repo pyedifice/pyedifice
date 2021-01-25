@@ -1034,7 +1034,6 @@ class Slider(QtWidgetComponent):
             min_value, max_value = self.props.min_value, self.props.max_value
             value = int((value - min_value) / (max_value - min_value) * self._granularity)
 
-        commands.append((self.underlying.setValue, value))
         for prop in newprops:
             if prop == "on_change":
                 commands.append((self.set_on_change, newprops[prop]))
@@ -1047,6 +1046,7 @@ class Slider(QtWidgetComponent):
                     commands.extend([(self.underlying.setMinimum, self.props.min_value),
                                      (self.underlying.setMaximum, self.props.max_value),
                                     ])
+        commands.append((self.underlying.setValue, value))
         return commands
 
 

@@ -21,8 +21,9 @@ class FormTest(unittest.TestCase):
             "f": datetime.date(1970, 1, 1),
             "g": lambda data: data["a"] + data["c"],
             "h": pathlib.Path("."),
+            "i": True,
         })
-        form = forms.Form(data, layout=["a", ["b", "c", "d"], ["e"], "f", "g", "h"], defaults={"a": 1})
+        form = forms.Form(data, layout=["a", ["b", "c", "d"], ["e"], "f", "g", "h", "i"], defaults={"a": 1})
         my_app = edifice.App(form, create_application=False)
         class MockQtApp(object):
             def exec_(self):
