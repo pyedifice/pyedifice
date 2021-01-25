@@ -47,7 +47,7 @@ Edifice provides two key features to make development easier:
 
 
 QML is another declarative GUI framework for Qt. Edifice differs from QML in these aspects:
-- Edifice interfaces are created purely in Python, whereas QML is written using an XML-like language.
+- Edifice interfaces are created purely in Python, whereas QML is written using a separate language.
 - Because Edifice interfaces are built in Python code, binding the code to the declared UI is much more
 straightforward.
 - Edifice makes it easy to create dynamic applications. It's easy to create, shuffle, and destroy widgets
