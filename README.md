@@ -1,6 +1,34 @@
-# Edifice: a declarative GUI framework for Python
+# Edifice: a declarative GUI library for Python
 ![tests](https://github.com/fding/pyedifice/workflows/test/badge.svg)
 [![codecov](https://codecov.io/gh/fding/pyedifice/branch/master/graph/badge.svg)](https://codecov.io/gh/fding/pyedifice)
+
+Installation for version 0.0.5:
+```
+    pip install pyedifice
+```
+
+Detailed Documentation: [Read the docs](https://pyedifice.org)
+
+Edifice is a Python library for building reactive UI, inspired by modern Javascript libraries such as React.
+Edifice makes it simple to build a fully reactive UI without ever leaving Python, getting the best of both worlds:
+
+- Modern paradigms from web development that simplify UI creation
+- Fast iteration via hot reloading
+- Seamless integration with the Python ecosystem (standard library, numpy, matplotlib, pandas, etc)
+- A native desktop app without the overhead of bundling a browser.
+
+Edifice uses Qt as a backend (although it could be generalized to other backends).
+
+## Getting Started
+
+Edifice is inspired by React, so if you have React experience, you'll find Edifice to be very similar.
+For example, for the React `setState` function, Edifice has `set_state`, and for React's `this.props`,
+Edifice has `self.props`.
+All function names use underscores instead of camel case to conform to Python standards,
+and "Component" is removed from functions like `shouldComponentUpdate` (renamed to `should_update`).
+
+See the [tutorial](https://www.pyedifice.org/tutorial.html) to get started.
+
 ## Why Edifice?
 The premise of Edifice is that
 GUI designers should only need to worry about *what* is rendered on the screen,
@@ -58,51 +86,6 @@ While QML and HTML are both declarative UI frameworks,
 they require imperative logic to add dynamism.
 Edifice and React allow fully dynamic applications to be specified declaratively.
 
-## Getting Started
-
-Edifice is inspired by React, so if you have React experience, you'll find Edifice to be very similar.
-For example, for the React `setState` function, Edifice has `set_state`, and for React's `this.props`,
-Edifice has `self.props`.
-All function names use underscores instead of camel case to conform to Python standards,
-and "Component" is removed from functions like `shouldComponentUpdate` (renamed to `should_update`).
-
-Here's a simple Edifice program to render a window showing you a textbox, and a button that, when clicked, will generate a popup.
-```
-import edifice as ed
-
-class MyApp(ed.Component):
-
-    @ed.register_props
-    def __init__(self):
-        self.text = ""
-        self.popups = []
-        
-    def create_greeting(self):
-        with self.render_changes():
-            self.popups=self.popups + ["Hello " + self.text]
-        
-    def render(self):
-        return ed.WindowManager()(
-            ed.View(layout="column")(
-                ed.TextInput(text=self.text, on_change=lambda text: self.set_state(text=text)),
-                ed.Button("Greet", on_click=self.create_greeting)
-            ),
-            *[ed.Label(greeting) for greeting in self.popups]
-        )
-
-if __name__ == "__main__":
-    ed.App(MyApp()).start()
-```
-
-Notes:
-- A custom component should inherit from `edifice.Component`. An Edifice component must implement the render method, which Edifice will call when the state changes.
-- The `edifice.register_props` decorator will record the arguments of the `__init__` function into `self.props`. Props are data passed into a Component from a parent
-component. The data associated with props is owned by the parent, and so should not be modified by the Component. The `MyApp` Component does not have any props.
-- `edifice.WindowManager` is a special component whose children are displayed as separate windows.
-- "Calling a component" is syntactic sugar for setting the arguments of the call as children. It clearly separates the regular props of the Component from the Component's children. The children are store in self.props.children or self.children; however, they often are semantically different from the other props.
-- `edifice.View`, `edifice.Label`, and `edifice.Button` are basic components from which your own, higher-level components are built. They too expose their interface via props, including event handlers such as `on_click` and `on_change`.
-- Finally, to start the application, pass the root component to `edifice.App` and call the `start` method.
-
 ## How it works:
 An Edifice component encapsulates application state and defines the mapping from the state to UI in the render function.
 The state of a Component is divided into **props** and **state**.
@@ -123,13 +106,15 @@ Currently, Edifice uses Qt under the hood, though it could be adapated to delega
 Edifices also offers a few tools to aid in development.
 
 ### set_trace
-PDB does not work well with Q applications. edifice.set_trace is equivalent to pdb.set_trace(), but it can properly pause the Q event loop
-to enable use of the debugger.
+PDB does not work well with PyQt5 applications. `edifice.set_trace` is equivalent to `pdb.set_trace()`,
+but it can properly pause the PyQt5 event loop
+to enable use of the debugger
+(users of PySide2 need not worry about this).
 
 ### Dynamic reload
 One other advantage of declarative code is that it is easier for humans and machines to reason about.
-Edifice takes advantage of this by offering dynamic reloading of Components.
-When a file in your application is changed, the dynamic loader will reload all components in that file
+Edifice takes advantage of this by offering hot reloading of Components.
+When a file in your application is changed, the loader will reload all components in that file
 with preserved props (since that state comes from the caller) and reset state.
 Because rendering is abstracted away, it is simple to diff the UI trees and have the Edifice renderer figure out
 what to do using its normal logic.
@@ -144,9 +129,11 @@ and will reload and trigger a re-render in the main thread.
 You can customize which directory to listen to using the `--dir` flag.
 
 
-## Other information
+### Component Inspector 
+
 The Edifice component inspector shows the Component tree of your application along with the props and state of each component.
 
+## Other information
 ### Contribution
 
 Contributions are welcome; feel free to send pull requests!
@@ -156,6 +143,3 @@ Edfice is MIT Licensed.
 
 Edifice uses Qt under the hood, and both PyQt5 and PySide2 (and PySide6) are supported. Note that PyQt5 is distributed with the GPL license while PySide2 and PySide6 are distributed
 under the more flexible LGPL license.
-
-## Detailed Documentation
-[Read the docs](https://pyedifice.org)
