@@ -5,7 +5,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setuptools.setup(
     name="pyedifice",
-    version="0.0.5",
+    version="0.0.6",
     author="David Ding",
     author_email="davidding2000@gmail.com",
     description="A declarative UI framework",
@@ -17,6 +17,7 @@ setuptools.setup(
     install_requires=[
         "PySide2",
         "watchdog",
+        "qasync",
     ],
     classifiers=[
         "Programming Language :: Python :: 3",

@@ -15,3 +15,4 @@ watchdog==1.0.2
 PySide2==5.15.2
 shiboken2==5.15.2
 matplotlib==3.3.3
+qasync==0.13.0
