@@ -3,6 +3,7 @@ logger_mod = logger
 import logging
 logger = logging.getLogger("Edifice")
 
+import asyncio
 import os
 import sys
 import queue
@@ -10,10 +11,15 @@ import time
 import traceback
 
 from .qt import QT_VERSION
+
 if QT_VERSION == "PyQt5":
     from PyQt5 import QtCore, QtWidgets
+    os.environ["QT_API"] = "pyqt5"
 else:
     from PySide2 import QtCore, QtWidgets
+    os.environ["QT_API"] = "pyside2"
+
+from qasync import QEventLoop
 
 from ._component import BaseComponent, Component, RootComponent
 from .base_components import Window
@@ -235,5 +241,10 @@ class App(object):
             component = Window(title="Component Inspector", on_close=cleanup, icon=icon_path)(self._inspector_component)
             component._edifice_internal_parent = None
             self._request_rerender([component], {})
-        self.app.exec_()
+
+        loop = QEventLoop(self.app)
+        asyncio.set_event_loop(loop)
+        with loop:
+            ret = loop.run_forever()
         self._render_engine._delete_component(self._root, True)
+        return ret

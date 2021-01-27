@@ -34,16 +34,17 @@ components allow you to collect input from the user.
 """
 
 # pylint:disable=unused-argument
-
 from . import logger
+
+import asyncio
 import functools
+import inspect
 import logging
 logger = logging.getLogger("Edifice")
 import os
 import typing as tp
 
 from ._component import BaseComponent, WidgetComponent, RootComponent, register_props
-from .utilities import set_trace
 
 from .qt import QT_VERSION
 if QT_VERSION == "PyQt5":
@@ -52,6 +53,16 @@ if QT_VERSION == "PyQt5":
     from PyQt5 import QtCore
 else:
     from PySide2 import QtCore, QtWidgets, QtSvg, QtGui
+
+
+def _ensure_future(fn):
+    # Ensures future if fn is a coroutine, otherwise don't modify fn
+    if inspect.iscoroutinefunction(fn):
+        @functools.wraps(fn)
+        def wrapper(*args, **kwargs):
+            return asyncio.ensure_future(fn(*args, **kwargs))
+        return wrapper
+    return fn
 
 
 StyleType = tp.Optional[tp.Union[tp.Mapping[tp.Text, tp.Any], tp.Sequence[tp.Mapping[tp.Text, tp.Any]]]]
@@ -248,7 +259,10 @@ class QtWidgetComponent(WidgetComponent):
             self._on_click(ev)
 
     def _set_on_click(self, underlying, on_click):
-        self._on_click = on_click
+        if on_click is not None:
+            self._on_click = _ensure_future(on_click)
+        else:
+            self._on_click = None
         self.underlying.mousePressEvent = self._mouse_press
         self.underlying.mouseReleaseEvent = self._mouse_release
 
@@ -451,7 +465,7 @@ class Window(RootComponent):
     def _set_on_close(self, underlying, on_close):
         self._on_close = on_close
         if on_close:
-            underlying.closeEvent = self._on_close
+            underlying.closeEvent = _ensure_future(self._on_close)
         else:
             underlying.closeEvent = lambda e: None
 
@@ -813,7 +827,7 @@ class TextInput(QtWidgetComponent):
 
     def set_on_change(self, on_change):
         def on_change_fun(text):
-            return on_change(text)
+            return _ensure_future(on_change)(text)
         if self._on_change_connected:
             self.underlying.textChanged[str].disconnect()
         self.underlying.textChanged[str].connect(on_change_fun)
@@ -821,7 +835,7 @@ class TextInput(QtWidgetComponent):
 
     def set_on_edit_finish(self, on_edit_finish):
         def on_edit_finish_fun():
-            return on_edit_finish()
+            return _ensure_future(on_edit_finish)()
         if self._editing_finished_connected:
             self.underlying.editingFinished.disconnect()
         self.underlying.editingFinished.connect(on_edit_finish_fun)
@@ -892,7 +906,7 @@ class Dropdown(QtWidgetComponent):
 
     def set_on_change(self, on_change):
         def on_change_fun(text):
-            return on_change(text)
+            return _ensure_future(on_change)(text)
         if self._on_change_connected:
             self.underlying.editTextChanged[str].disconnect()
         self.underlying.editTextChanged[str].connect(on_change_fun)
@@ -900,7 +914,7 @@ class Dropdown(QtWidgetComponent):
 
     def set_on_select(self, on_select):
         def on_select_fun(text):
-            return on_select(text)
+            return _ensure_future(on_select)(text)
         if self._on_select_connected:
             self.underlying.textActivated[str].disconnect()
         self.underlying.textActivated[str].connect(on_select_fun)
@@ -964,7 +978,7 @@ class RadioButton(QtWidgetComponent):
 
     def set_on_change(self, on_change):
         def on_change_fun(checked):
-            return on_change(checked)
+            return _ensure_future(on_change)(checked)
         if self._connected:
             self.underlying.toggled.disconnect()
         self.underlying.toggled.connect(on_change_fun)
@@ -1020,7 +1034,7 @@ class CheckBox(QtWidgetComponent):
 
     def set_on_change(self, on_change):
         def on_change_fun(checked):
-            return on_change(self.props.checked)
+            return _ensure_future(on_change)(self.props.checked)
         if self._connected:
             self.underlying.stateChanged[int].disconnect()
         self.underlying.stateChanged[int].connect(on_change_fun)
@@ -1105,7 +1119,7 @@ class Slider(QtWidgetComponent):
             if self.props.dtype == float:
                 min_value, max_value = self.props.min_value, self.props.max_value
                 value = min_value + (max_value - min_value) * (value / self._granularity)
-            return on_change(value)
+            return _ensure_future(on_change)(value)
         if self._connected:
             self.underlying.valueChanged[int].disconnect()
         self.underlying.valueChanged[int].connect(on_change_fun)
@@ -1121,19 +1135,18 @@ class Slider(QtWidgetComponent):
             min_value, max_value = self.props.min_value, self.props.max_value
             value = int((value - min_value) / (max_value - min_value) * self._granularity)
 
+        if self.props.dtype == float:
+            commands.extend([(self.underlying.setMinimum, 0),
+                             (self.underlying.setMaximum, self._granularity),
+                            ])
+        else:
+            commands.extend([(self.underlying.setMinimum, self.props.min_value),
+                             (self.underlying.setMaximum, self.props.max_value),
+                            ])
+        commands.append((self.underlying.setValue, value))
         for prop in newprops:
             if prop == "on_change":
                 commands.append((self.set_on_change, newprops[prop]))
-            elif prop == "dtype" or prop == "min_value" or prop == "max_value":
-                if self.props.dtype == float:
-                    commands.extend([(self.underlying.setMinimum, 0),
-                                     (self.underlying.setMaximum, self._granularity),
-                                    ])
-                else:
-                    commands.extend([(self.underlying.setMinimum, self.props.min_value),
-                                     (self.underlying.setMaximum, self.props.max_value),
-                                    ])
-        commands.append((self.underlying.setValue, value))
         return commands
 
 
