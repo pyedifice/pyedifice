@@ -132,6 +132,10 @@ class Form(Component):
             # Render text input for string fields
             element = ed.TextInput(self.internal_data.subscribe(self, key).value,
                                    on_change=lambda text: self._field_changed(key, value, str, text))
+        elif isinstance(value.value, bool):
+            # Render bools as checkboxes
+            element = ed.CheckBox(checked=value.value,
+                                  on_change=lambda checked: self._field_changed(key, value, bool, checked))
         elif isinstance(value.value, int) or isinstance(value.value, float):
             # Render text input for numeric fields, but include validation
             dtype = type(value.value)
@@ -140,10 +144,6 @@ class Form(Component):
                              on_change=lambda text: self._field_changed(key, value, dtype, text)),
                 has_error and ed.Label(self.error_msgs[key], style={"color": "red", "font-size": 10})
             )
-        elif isinstance(value.value, bool):
-            # Render bools as checkboxes
-            element = ed.CheckBox(checked=value.value,
-                                  on_change=lambda checked: self._field_changed(key, value, bool, checked))
         elif isinstance(value.value, tuple):
             # Tuples are dropdowns, and the tuple must be (selection, options)
             if len(value.value) != 2:

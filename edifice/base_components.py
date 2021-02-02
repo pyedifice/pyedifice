@@ -884,13 +884,15 @@ class Dropdown(QtWidgetComponent):
                  options: tp.Optional[tp.Sequence[tp.Text]] = None,
                  editable: bool = False,
                  completer: tp.Optional[Completer] = None,
-                 on_change: tp.Callable[[tp.Text], None] = (lambda text: None),
-                 on_select: tp.Callable[[tp.Text], None] = (lambda text: None),
+                 on_change: tp.Optional[tp.Callable[[tp.Text], None]] = None,
+                 on_select: tp.Optional[tp.Callable[[tp.Text], None]] = None,
                  **kwargs):
         super().__init__(**kwargs)
         self._on_change_connected = False
         self._on_select_connected = False
         self.underlying = None
+        if not editable and on_change is not None and on_select is None:
+            raise ValueError("Uneditable dropdowns do not emit change events. Use the on_select event handler.")
 
     def _initialize(self):
         self.underlying = QtWidgets.QComboBox()
@@ -909,16 +911,18 @@ class Dropdown(QtWidgetComponent):
             return _ensure_future(on_change)(text)
         if self._on_change_connected:
             self.underlying.editTextChanged[str].disconnect()
-        self.underlying.editTextChanged[str].connect(on_change_fun)
-        self._on_change_connected = True
+        if on_change is not None:
+            self.underlying.editTextChanged[str].connect(on_change_fun)
+            self._on_change_connected = True
 
     def set_on_select(self, on_select):
         def on_select_fun(text):
             return _ensure_future(on_select)(text)
         if self._on_select_connected:
             self.underlying.textActivated[str].disconnect()
-        self.underlying.textActivated[str].connect(on_select_fun)
-        self._on_select_connected = True
+        if on_select is not None:
+            self.underlying.textActivated[str].connect(on_select_fun)
+            self._on_select_connected = True
 
     def _qt_update_commands(self, children, newprops, newstate):
         if self.underlying is None:
@@ -1034,7 +1038,7 @@ class CheckBox(QtWidgetComponent):
 
     def set_on_change(self, on_change):
         def on_change_fun(checked):
-            return _ensure_future(on_change)(self.props.checked)
+            return _ensure_future(on_change)(checked)
         if self._connected:
             self.underlying.stateChanged[int].disconnect()
         self.underlying.stateChanged[int].connect(on_change_fun)
