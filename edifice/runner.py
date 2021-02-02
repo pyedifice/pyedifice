@@ -4,6 +4,7 @@ import datetime
 import importlib
 import inspect
 import logging
+from pathlib import Path
 
 logger = logging.getLogger("Edifice")
 
@@ -100,12 +101,9 @@ def runner():
 
     observer = Observer()
 
-    parts = list(os.path.split(args.main_file))
-    if parts[-1].endswith(".py"):
-        parts[-1] = parts[-1][:-3]
-
-    module_name = ".".join(parts)
-    main_module = importlib.import_module(module_name)
+    main_file = Path((args.main_file))
+    
+    main_module = importlib.import_module(main_file.stem)
     root_component = getattr(main_module, args.root_component)
 
     app = App(root_component(), inspector=bool(args.inspect))
