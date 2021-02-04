@@ -40,6 +40,7 @@ import asyncio
 import functools
 import inspect
 import logging
+import math
 logger = logging.getLogger("Edifice")
 import os
 import typing as tp
@@ -827,7 +828,8 @@ class TextInput(QtWidgetComponent):
 
     def set_on_change(self, on_change):
         def on_change_fun(text):
-            return _ensure_future(on_change)(text)
+            if text != self.props.text:
+                return _ensure_future(on_change)(text)
         if self._on_change_connected:
             self.underlying.textChanged[str].disconnect()
         self.underlying.textChanged[str].connect(on_change_fun)
@@ -880,7 +882,7 @@ class Dropdown(QtWidgetComponent):
     """
 
     @register_props
-    def __init__(self, text: tp.Text = "", selection: tp.Text = "",
+    def __init__(self, selection: tp.Text = "", text: tp.Text = "",
                  options: tp.Optional[tp.Sequence[tp.Text]] = None,
                  editable: bool = False,
                  completer: tp.Optional[Completer] = None,
@@ -1102,6 +1104,17 @@ class Slider(QtWidgetComponent):
         self.underlying = None
         # TODO: let user choose?
         self._granularity = 512
+        if math.isnan(value):
+            raise ValueError("Received nan for value")
+        elif math.isnan(min_value):
+            raise ValueError("Received nan for min_value")
+        elif math.isnan(max_value):
+            raise ValueError("Received nan for max_value")
+        elif min_value == max_value:
+            raise ValueError("min_value must be different from max_value")
+        elif value < min_value or value > max_value:
+            raise ValueError("value must be between min_value and max_value")
+
         if orientation == "horizontal" or orientation == "row":
             self.orientation = QtCore.Qt.Horizontal
         elif orientation == "vertical" or orientation == "column":
