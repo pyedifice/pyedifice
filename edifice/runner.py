@@ -102,7 +102,7 @@ def runner():
     observer = Observer()
 
     main_file = Path((args.main_file))
-    
+    sys.path.append(str(main_file.parent))
     main_module = importlib.import_module(main_file.stem)
     root_component = getattr(main_module, args.root_component)
 
