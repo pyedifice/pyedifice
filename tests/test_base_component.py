@@ -145,6 +145,11 @@ class WidgetTreeTestCase(unittest.TestCase):
             commands,
             [(qt_button.setText, button_str), (qt_button.setStyleSheet, "QWidget#%s{}" % id(button)),
              (button._set_on_click, qt_button, on_click),
+             (button._set_on_mouse_enter, qt_button, None),
+             (button._set_on_mouse_leave, qt_button, None),
+             (button._set_on_mouse_down, qt_button, None),
+             (button._set_on_mouse_up, qt_button, None),
+             (button._set_on_mouse_move, qt_button, None),
              (qt_button.setContextMenuPolicy, QtCore.Qt.DefaultContextMenu),
              (qt_button.setCursor, QtCore.Qt.PointingHandCursor)
             ])
@@ -177,6 +182,12 @@ class WidgetTreeTestCase(unittest.TestCase):
              (icon.underlying.setStyleSheet, "QWidget#%s{}" % id(icon)),
              (icon.underlying.setContextMenuPolicy, QtCore.Qt.DefaultContextMenu),
              (icon.underlying.setCursor, QtCore.Qt.ArrowCursor),
+             (icon._set_on_mouse_enter, icon.underlying, None),
+             (icon._set_on_mouse_leave, icon.underlying, None),
+             (icon._set_on_mouse_down, icon.underlying, None),
+             (icon._set_on_mouse_up, icon.underlying, None),
+             (icon._set_on_mouse_move, icon.underlying, None),
+             (icon._set_on_click, icon.underlying, None),
             ])
         icon._render_image(*render_img_args)
 
@@ -202,6 +213,12 @@ class WidgetTreeTestCase(unittest.TestCase):
             (view.underlying.setStyleSheet, "QWidget#%s{}" % id(view)),
             (view.underlying.setContextMenuPolicy, QtCore.Qt.DefaultContextMenu),
             (view.underlying.setCursor, QtCore.Qt.ArrowCursor),
+            (view._set_on_mouse_enter, view.underlying, None),
+            (view._set_on_mouse_leave, view.underlying, None),
+            (view._set_on_mouse_down, view.underlying, None),
+            (view._set_on_mouse_up, view.underlying, None),
+            (view._set_on_mouse_move, view.underlying, None),
+            (view._set_on_click, view.underlying, None),
             (view._add_child, 0, label1.underlying)])
 
         view_tree = engine._WidgetTree(view, [label1_tree, label2_tree])
@@ -211,6 +228,12 @@ class WidgetTreeTestCase(unittest.TestCase):
             (view.underlying.setStyleSheet, "QWidget#%s{}" % id(view)),
             (view.underlying.setContextMenuPolicy, QtCore.Qt.DefaultContextMenu),
             (view.underlying.setCursor, QtCore.Qt.ArrowCursor),
+            (view._set_on_mouse_enter, view.underlying, None),
+            (view._set_on_mouse_leave, view.underlying, None),
+            (view._set_on_mouse_down, view.underlying, None),
+            (view._set_on_mouse_up, view.underlying, None),
+            (view._set_on_mouse_move, view.underlying, None),
+            (view._set_on_click, view.underlying, None),
             (view._add_child, 1, label2.underlying)])
 
         inner_view = base_components.View()
@@ -225,9 +248,21 @@ class WidgetTreeTestCase(unittest.TestCase):
                 (view.underlying.setStyleSheet, "QWidget#%s{}" % id(view)),
                 (view.underlying.setContextMenuPolicy, QtCore.Qt.DefaultContextMenu),
                 (view.underlying.setCursor, QtCore.Qt.ArrowCursor),
+                (view._set_on_mouse_enter, view.underlying, None),
+                (view._set_on_mouse_leave, view.underlying, None),
+                (view._set_on_mouse_down, view.underlying, None),
+                (view._set_on_mouse_up, view.underlying, None),
+                (view._set_on_mouse_move, view.underlying, None),
+                (view._set_on_click, view.underlying, None),
                 (inner_view.underlying.setStyleSheet, "QWidget#%s{}" % id(inner_view)),
                 (inner_view.underlying.setContextMenuPolicy, QtCore.Qt.DefaultContextMenu),
                 (inner_view.underlying.setCursor, QtCore.Qt.ArrowCursor),
+                (inner_view._set_on_mouse_enter, inner_view.underlying, None),
+                (inner_view._set_on_mouse_leave, inner_view.underlying, None),
+                (inner_view._set_on_mouse_down, inner_view.underlying, None),
+                (inner_view._set_on_mouse_up, inner_view.underlying, None),
+                (inner_view._set_on_mouse_move, inner_view.underlying, None),
+                (inner_view._set_on_click, inner_view.underlying, None),
                 (view._delete_child, 0, old_child),
                 (view._add_child, 1, inner_view.underlying)
             ])

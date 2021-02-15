@@ -187,7 +187,15 @@ class QtWidgetComponent(WidgetComponent):
             Expressed as a dict mapping the name of the context menu entry to either a function
             (which will be called when this entry is clicked) or to another sub context menu.
             For example, {"Copy": copy_fun, "Share": {"Twitter": twitter_share_fun, "Facebook": facebook_share_fun}}
-        on_click: on click callback for the widget. Takes a QMouseEvent object as argument
+        on_click: callback for click events (mouse pressed and released). Takes a QMouseEvent object as argument
+        on_mouse_down: callback for mouse down events (mouse pressed). Takes a QMouseEvent object as argument
+        on_mouse_up: callback for mouse up events (mouse released). Takes a QMouseEvent object as argument
+        on_mouse_enter: callback for mouse enter events (triggered once every time mouse enters widget).
+            Takes a QMouseEvent object as argument
+        on_mouse_leave: callback for mouse leave events (triggered once every time mouse leaves widget).
+            Takes a QMouseEvent object as argument
+        on_mouse_move: callback for mouse move events (triggered every time mouse moves within widget).
+            Takes a QMouseEvent object as argument
     """
 
     @register_props
@@ -195,7 +203,13 @@ class QtWidgetComponent(WidgetComponent):
                  tool_tip: tp.Optional[tp.Text] = None,
                  cursor: tp.Optional[tp.Text] = None,
                  context_menu: tp.Optional[ContextMenuType] = None,
-                 on_click: tp.Optional[tp.Callable[[QtGui.QMouseEvent], tp.Any]] = None):
+                 on_click: tp.Optional[tp.Callable[[QtGui.QMouseEvent], tp.Any]] = None,
+                 on_mouse_down: tp.Optional[tp.Callable[[QtGui.QMouseEvent], tp.Any]] = None,
+                 on_mouse_up: tp.Optional[tp.Callable[[QtGui.QMouseEvent], tp.Any]] = None,
+                 on_mouse_enter: tp.Optional[tp.Callable[[QtGui.QMouseEvent], tp.Any]] = None,
+                 on_mouse_leave: tp.Optional[tp.Callable[[QtGui.QMouseEvent], tp.Any]] = None,
+                 on_mouse_move: tp.Optional[tp.Callable[[QtGui.QMouseEvent], tp.Any]] = None,
+                ):
         super().__init__()
         self._height = 0
         self._width = 0
@@ -203,6 +217,11 @@ class QtWidgetComponent(WidgetComponent):
         self._left = 0
         self._size_from_font = None
         self._on_click = None
+        self._on_mouse_enter = None
+        self._on_mouse_leave = None
+        self._on_mouse_down = None
+        self._on_mouse_up = None
+        self._on_mouse_move = None
         self._widget_children = []
 
         self._context_menu = None
@@ -245,10 +264,13 @@ class QtWidgetComponent(WidgetComponent):
             return 0
 
     def _mouse_press(self, ev):
-        pass
+        if self._on_mouse_down is not None:
+            self._on_mouse_down(ev)
 
     def _mouse_release(self, ev):
         event_pos = ev.pos()
+        if self._on_mouse_up is not None:
+            self._on_mouse_up(ev)
         geometry = self.underlying.geometry()
 
         if 0 <= event_pos.x() <= geometry.width() and 0 <= event_pos.y() <= geometry.height():
@@ -266,6 +288,46 @@ class QtWidgetComponent(WidgetComponent):
             self._on_click = None
         self.underlying.mousePressEvent = self._mouse_press
         self.underlying.mouseReleaseEvent = self._mouse_release
+
+    def _set_on_mouse_down(self, underlying, on_mouse_down):
+        if on_mouse_down is not None:
+            self._on_mouse_down = _ensure_future(on_mouse_down)
+        else:
+            self._on_mouse_down = None
+        self.underlying.mousePressEvent = self._mouse_press
+
+    def _set_on_mouse_up(self, underlying, on_mouse_up):
+        if on_mouse_up is not None:
+            self._on_mouse_up = _ensure_future(on_mouse_up)
+        else:
+            self._on_mouse_up = None
+        self.underlying.mouseReleaseEvent = self._mouse_release
+
+    def _set_on_mouse_enter(self, underlying, on_mouse_enter):
+        if on_mouse_enter is not None:
+            self._on_mouse_enter = _ensure_future(on_mouse_enter)
+            self.underlying.enterEvent = self._on_mouse_enter
+        else:
+            self._on_mouse_enter = None
+            self.underlying.enterEvent = lambda e: None
+
+    def _set_on_mouse_leave(self, underlying, on_mouse_leave):
+        if on_mouse_leave is not None:
+            self._on_mouse_leave = _ensure_future(on_mouse_leave)
+            self.underlying.leaveEvent = self._on_mouse_leave
+        else:
+            self.underlying.leaveEvent = lambda e: None
+            self._on_mouse_leave = None
+
+    def _set_on_mouse_move(self, underlying, on_mouse_move):
+        if on_mouse_move is not None:
+            self._on_mouse_move = _ensure_future(on_mouse_move)
+            self.underlying.mouseMoveEvent = self._on_mouse_move
+            self.underlying.setMouseTracking(True)
+        else:
+            self._on_mouse_move = None
+            self.underlying.mouseMoveEvent = lambda e: None
+            self.underlying.setMouseTracking(False)
 
     def _gen_styling_commands(self, children, style, underlying, underlying_layout=None):
         commands = []
@@ -408,10 +470,19 @@ class QtWidgetComponent(WidgetComponent):
                     style = dict(style)
                 commands.extend(self._gen_styling_commands(children, style, underlying, underlying_layout))
             elif prop == "on_click":
-                if newprops.on_click is not None:
-                    commands.append((self._set_on_click, underlying, newprops.on_click))
-                    if self.props.cursor is not None:
-                        commands.append((underlying.setCursor, QtCore.Qt.PointingHandCursor))
+                commands.append((self._set_on_click, underlying, newprops.on_click))
+                if newprops.on_click is not None and self.props.cursor is not None:
+                    commands.append((underlying.setCursor, QtCore.Qt.PointingHandCursor))
+            elif prop == "on_mouse_down":
+                commands.append((self._set_on_mouse_down, underlying, newprops.on_mouse_down))
+            elif prop == "on_mouse_up":
+                commands.append((self._set_on_mouse_up, underlying, newprops.on_mouse_up))
+            elif prop == "on_mouse_enter":
+                commands.append((self._set_on_mouse_enter, underlying, newprops.on_mouse_enter))
+            elif prop == "on_mouse_leave":
+                commands.append((self._set_on_mouse_leave, underlying, newprops.on_mouse_leave))
+            elif prop == "on_mouse_move":
+                commands.append((self._set_on_mouse_move, underlying, newprops.on_mouse_move))
             elif prop == "tool_tip":
                 if newprops.tool_tip is not None:
                     commands.append((underlying.setToolTip, newprops.tool_tip))
