@@ -43,7 +43,10 @@ import logging
 import math
 logger = logging.getLogger("Edifice")
 import os
+import re
 import typing as tp
+
+import numpy as np
 
 from ._component import BaseComponent, WidgetComponent, RootComponent, register_props
 
@@ -1417,6 +1420,133 @@ class ScrollView(_LinearView):
             self._initialize()
         commands = self._recompute_children(children)
         commands.extend(super()._qt_update_commands(children, newprops, newstate, self.underlying, self.underlying_layout))
+        return commands
+
+
+def _layout_str_to_grid_spec(layout):
+    """Parses layout to return a grid spec.
+
+    Args:
+        layout: layout string as expected by GridView
+    Returns: (num_rows, num_cols, cell_list), where cell_list is a list of
+        tuples (char_code, row_idx, col_idx, row_span, col_span)
+    """
+    ls = []
+    layout = re.split(";|\n", layout)
+    layout = list(filter(lambda x: x, map(lambda x: x.strip(), layout)))
+    num_rows = len(layout)
+    if num_rows == 0:
+        return (0, 0, [])
+    num_cols = len(layout[0])
+    if num_cols == 0:
+        return (num_rows, 0, [])
+
+    corner = (0, 0)
+    unprocessed = np.ones([num_rows, num_cols])
+    while np.any(unprocessed):
+        char = layout[corner[0]][corner[1]]
+        i = corner[1] + 1
+        for i in range(corner[1] + 1, num_cols + 1):
+            if i >= num_cols or layout[corner[0]][i] != char:
+                break
+        col_span = i - corner[1]
+        j = corner[0] + 1
+        for j in range(corner[0] + 1, num_rows + 1):
+            if j >= num_rows or layout[j][corner[1]] != char:
+                break
+        row_span = j - corner[0]
+
+        ls.append((char, corner[0], corner[1], row_span, col_span))
+        unprocessed[corner[0]: corner[0] + row_span, corner[1]: corner[1] + col_span] = 0
+        corner = np.unravel_index(np.argmax(unprocessed), unprocessed.shape)
+    return (num_rows, num_cols, ls)
+
+
+class GridView(QtWidgetComponent):
+    """Grid layout widget for rendering children on a 2D rectangular grid.
+
+    Grid views allow you to precisely control 2D positioning of widgets.
+    While you can also layout widgets using nested :doc:`Views<edifice.base_components.View>`,
+    specifying the exact location of children relative to each other (with proper alignment)
+    requires extensive fine tuning of style attributes.
+    The GridView allows you to lay out widgets at specified grid indices and size.
+
+    Children will be laid out according to the layout argument.
+    Each child is assigned a character code (by default, the first character of the key;
+    this can be changed via the key_to_code prop).
+    The layout argument describes pictorially where the child should be laid out.
+    For example::
+
+        aabc
+        aabd
+        effg
+
+    describes a layout of 7 children (labeled *a* to *g*) in a 3x4 grid.
+    Child a occupies the top left 2x2 portion of the grid,
+    child b occupies a 2x1 portion of the grid starting from the third column of the first row,
+    etc.
+
+    You can also leave certain spots empty using '_'::
+
+        aa__
+        aabc
+
+    Here is a complete example of using GridView::
+
+        def render(self):
+            return ed.GridView(layout='''
+                789+
+                456-
+                123*
+                00./
+            ''')(
+                ed.Button("7").set_key("7"), ed.Button("8").set_key("8"), ed.Button("9").set_key("9"), ed.Button("+").set_key("+"),
+                ed.Button("4").set_key("4"), ed.Button("5").set_key("5"), ed.Button("6").set_key("6"), ed.Button("-").set_key("-"),
+                ed.Button("1").set_key("1"), ed.Button("2").set_key("2"), ed.Button("3").set_key("3"), ed.Button("*").set_key("*"),
+                ed.Button("0").set_key("0"),                              ed.Button(".").set_key("."), ed.Button("*").set_key("/"),
+            )
+
+    Args:
+
+        layout: description of layout as described above
+        key_to_code: mapping from key to a single character representing that child in the layout string
+    """
+
+    @register_props
+    def __init__(self, layout="", key_to_code=None, **kwargs):
+        super().__init__(**kwargs)
+        self.underlying = None
+        self._previously_rendered = None
+
+    def _initialize(self):
+        self.underlying = QtWidgets.QWidget()
+        self.underlying_layout = QtWidgets.QGridLayout()
+        self.underlying.setObjectName(str(id(self)))
+        self.underlying.setLayout(self.underlying_layout)
+        self.underlying_layout.setContentsMargins(0, 0, 0, 0)
+        self.underlying_layout.setSpacing(0)
+
+    def _clear(self):
+        while self.underlying_layout.takeAt(0) is not None:
+            pass
+
+    def _qt_update_commands(self, children, newprops, newstate):
+        if self.underlying is None:
+            self._initialize()
+        rows, columns, grid_spec = _layout_str_to_grid_spec(self.props.layout)
+        if self.props.key_to_code is None:
+            code_to_child = {c.component._key[0]: c.component for c in children}
+        else:
+            code_to_child = {self.props.key_to_code[c.component._key]: c.component for c in children}
+        grid_spec = [(code_to_child[cell[0]],) + cell[1:] for cell in grid_spec if cell[0] not in " _"]
+        commands = []
+        if grid_spec != self._previously_rendered:
+            commands.append((self._clear,))
+            for child, y, x, dy, dx in grid_spec:
+                print(f"Laying out at ({y}, {x}, {dy}, {dx})")
+                commands.append((self.underlying_layout.addWidget, child.underlying, y, x, dy, dx,))
+            self._previously_rendered = grid_spec
+        commands.extend(super()._qt_update_commands(children, newprops, newstate, self.underlying, None))
         return commands
 
 

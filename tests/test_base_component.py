@@ -26,6 +26,26 @@ class MockComponent(base_components.QtWidgetComponent):
     underlying = MockUnderlying()
 
 
+class GridLayoutTestCase(unittest.TestCase):
+
+    def test_layout_parsing(self):
+        layout = base_components._layout_str_to_grid_spec(
+            """
+            aabc
+            aabd
+            eeff
+            """
+        )
+        self.assertEqual(layout[0], 3)
+        self.assertEqual(layout[1], 4)
+        self.assertCountEqual(
+            layout[2], [
+                ("a", 0, 0, 2, 2), ("b", 0, 2, 2, 1),
+                ("c", 0, 3, 1, 1), ("d", 1, 3, 1, 1),
+                ("e", 2, 0, 1, 2), ("f", 2, 2, 1, 2)
+            ])
+
+
 class StyleTestCase(unittest.TestCase):
 
     def test_margin_layout(self):
@@ -311,6 +331,7 @@ class BaseComponentsTest(unittest.TestCase):
         self._test_comp(base_components.RadioButton(checked=True, text="Test", on_change=lambda checked: None))
         self._test_comp(base_components.Slider(value=1, min_value=0, max_value=3, on_change=lambda value: None))
         self._test_comp(base_components.ScrollView(layout="row"))
+        self._test_comp(base_components.GridView(layout=""))
         self._test_comp(base_components.List())
         self._test_comp(base_components.GroupBox(title="Group")(base_components.View()))
         self._test_comp(base_components.TabView(labels=["Tab 1", "Tab 2"])(base_components.Label(), base_components.Label()))
