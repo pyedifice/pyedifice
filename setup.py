@@ -18,6 +18,7 @@ setuptools.setup(
         "PySide2",
         "watchdog",
         "qasync",
+        "numpy",
     ],
     classifiers=[
         "Programming Language :: Python :: 3",

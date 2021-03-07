@@ -28,7 +28,7 @@ class Calculator(ed.Component):
 
     def render(self):
         window_style = {"background-color": "#404040", "height": 300, "width": 242}
-        button_style = {"font-size": 20, "color": "white", "height": 45, "width": 60, "border": "1px solid #333333"}
+        button_style = {"font-size": 20, "color": "white", "height": 60, "width": 60, "border": "1px solid #333333"}
         digits_style = button_style | {"background-color": "#777777"}
         binary_style = button_style | {"background-color": "#ff9e00", "font-size": 30}
         unary_style = button_style | {"background-color": "#595959"}
@@ -82,21 +82,16 @@ class Calculator(ed.Component):
         return ed.Window(title="Calculator")(
             ed.View(layout="column", style=window_style)(
                 ed.Label(self.display, style=display_style),
-                ed.View(layout="row")(
-                    unary_button("AC"), unary_button("+/-"), unary_button("%"), binary_button("÷"),
-                ),
-                ed.View(layout="row")(
-                    digit_button(7), digit_button(8), digit_button(9), binary_button("×"),
-                ),
-                ed.View(layout="row")(
-                    digit_button(4), digit_button(5), digit_button(6), binary_button("-"),
-                ),
-                ed.View(layout="row")(
-                    digit_button(1), digit_button(2), digit_button(3), binary_button("+"),
-                ),
-                ed.View(layout="row", style={"width": 245})(
-                    digit_button(0, double_width=True), digit_button("."), binary_button("="),
-                ),
+                ed.GridView(layout="""cs%/
+                                      789*
+                                      123+
+                                      00.=""")(
+                    unary_button("AC").set_key("c"), unary_button("+/-").set_key("s"), unary_button("%").set_key("%"), binary_button("÷").set_key("/"),
+                    digit_button(7).set_key("7"), digit_button(8).set_key("8"), digit_button(9).set_key("9"), binary_button("×").set_key("*"),
+                    digit_button(4).set_key("4"), digit_button(5).set_key("5"), digit_button(6).set_key("6"), binary_button("-").set_key("-"),
+                    digit_button(1).set_key("1"), digit_button(2).set_key("2"), digit_button(3).set_key("3"), binary_button("+").set_key("+"),
+                    digit_button(0, double_width=True).set_key("0"), digit_button(".").set_key("."), binary_button("=").set_key("="),
+                )
             )
         )
 
