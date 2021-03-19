@@ -188,6 +188,17 @@ class App(object):
         if self._inspector_component is not None and not all(isinstance(comp, inspector.InspectorComponent) for comp in components):
             self._inspector_component._refresh()
 
+    def set_stylesheet(self, stylesheet):
+        """Adds a global stylesheet for the app.
+
+        Args:
+            stylesheet: String containing the contents of the stylesheet
+        Returns:
+            None
+        """
+        self.app.setStyleSheet(stylesheet)
+        return self
+
     def export_widgets(self):
         """Exports the Qt widgets underlying the Edifice Component.
 
