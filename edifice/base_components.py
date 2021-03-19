@@ -226,6 +226,11 @@ class QtWidgetComponent(WidgetComponent):
         self._on_mouse_up = None
         self._on_mouse_move = None
         self._widget_children = []
+        self._default_mouse_press_event = None
+        self._default_mouse_release_event = None
+        self._default_mouse_move_event = None
+        self._default_mouse_enter_event = None
+        self._default_mouse_leave_event = None
 
         self._context_menu = None
         self._context_menu_connected = False
@@ -269,11 +274,15 @@ class QtWidgetComponent(WidgetComponent):
     def _mouse_press(self, ev):
         if self._on_mouse_down is not None:
             self._on_mouse_down(ev)
+        if self._default_mouse_press_event is not None:
+            self._default_mouse_press_event(ev)
 
     def _mouse_release(self, ev):
         event_pos = ev.pos()
         if self._on_mouse_up is not None:
             self._on_mouse_up(ev)
+        if self._default_mouse_release_event is not None:
+            self._default_mouse_release_event(ev)
         geometry = self.underlying.geometry()
 
         if 0 <= event_pos.x() <= geometry.width() and 0 <= event_pos.y() <= geometry.height():
@@ -289,7 +298,11 @@ class QtWidgetComponent(WidgetComponent):
             self._on_click = _ensure_future(on_click)
         else:
             self._on_click = None
+        if self._default_mouse_press_event is None:
+            self._default_mouse_press_event = self.underlying.mousePressEvent
         self.underlying.mousePressEvent = self._mouse_press
+        if self._default_mouse_release_event is None:
+            self._default_mouse_release_event = self.underlying.mouseReleaseEvent
         self.underlying.mouseReleaseEvent = self._mouse_release
 
     def _set_on_mouse_down(self, underlying, on_mouse_down):
@@ -297,6 +310,8 @@ class QtWidgetComponent(WidgetComponent):
             self._on_mouse_down = _ensure_future(on_mouse_down)
         else:
             self._on_mouse_down = None
+        if self._default_mouse_press_event is None:
+            self._default_mouse_press_event = self.underlying.mousePressEvent
         self.underlying.mousePressEvent = self._mouse_press
 
     def _set_on_mouse_up(self, underlying, on_mouse_up):
@@ -304,33 +319,40 @@ class QtWidgetComponent(WidgetComponent):
             self._on_mouse_up = _ensure_future(on_mouse_up)
         else:
             self._on_mouse_up = None
+        if self._default_mouse_release_event is None:
+            self._default_mouse_release_event = self.underlying.mouseReleaseEvent
         self.underlying.mouseReleaseEvent = self._mouse_release
 
     def _set_on_mouse_enter(self, underlying, on_mouse_enter):
+        if self._default_mouse_enter_event is None:
+            self._default_mouse_enter_event = self.underlying.enterEvent
         if on_mouse_enter is not None:
             self._on_mouse_enter = _ensure_future(on_mouse_enter)
             self.underlying.enterEvent = self._on_mouse_enter
         else:
             self._on_mouse_enter = None
-            self.underlying.enterEvent = lambda e: None
+            self.underlying.enterEvent = self._default_mouse_enter_event
 
     def _set_on_mouse_leave(self, underlying, on_mouse_leave):
+        if self._default_mouse_leave_event is None:
+            self._default_mouse_leave_event = self.underlying.leaveEvent
         if on_mouse_leave is not None:
             self._on_mouse_leave = _ensure_future(on_mouse_leave)
             self.underlying.leaveEvent = self._on_mouse_leave
         else:
-            self.underlying.leaveEvent = lambda e: None
+            self.underlying.leaveEvent = self._default_mouse_leave_event
             self._on_mouse_leave = None
 
     def _set_on_mouse_move(self, underlying, on_mouse_move):
+        if self._default_mouse_move_event is None:
+            self._default_mouse_move_event = self.underlying.mouseMoveEvent
         if on_mouse_move is not None:
             self._on_mouse_move = _ensure_future(on_mouse_move)
             self.underlying.mouseMoveEvent = self._on_mouse_move
             self.underlying.setMouseTracking(True)
         else:
             self._on_mouse_move = None
-            self.underlying.mouseMoveEvent = lambda e: None
-            self.underlying.setMouseTracking(False)
+            self.underlying.mouseMoveEvent = self._default_mouse_move_event
 
     def _gen_styling_commands(self, children, style, underlying, underlying_layout=None):
         commands = []
