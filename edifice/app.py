@@ -226,7 +226,6 @@ class App(object):
 
         return _make_widget_helper(self._root)
 
-
     def start(self):
         self._request_rerender([self._root], {})
         if self._inspector:
