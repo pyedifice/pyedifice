@@ -23,7 +23,18 @@ class FormTest(unittest.TestCase):
             "h": pathlib.Path("."),
             "i": True,
         })
-        form = forms.Form(data, layout=["a", ["b", "c", "d"], ["e"], "f", "g", "h", "i"], defaults={"a": 1})
+        label_map = {
+            "a": "A",
+            "b": "B",
+            "c": "C",
+            "d": "D",
+            "e": "E",
+            "f": "F",
+            "g": "G",
+            "h": "H",
+            "i": "I",
+        }
+        form = forms.Form(data, layout=["a", ["b", "c", "d"], ["e"], "f", "g", "h", "i"], defaults={"a": 1}, label_map=label_map)
         my_app = edifice.App(form, create_application=False)
         class MockQtApp(object):
             def exec_(self):
