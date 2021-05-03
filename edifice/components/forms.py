@@ -19,7 +19,7 @@ class FormElement(object):
 
 class Form(Component):
     """A simple Form element to allow editting values stored in a StateManager.
-    
+
     For every key, value pair in the StateManager, a field is created in the Form,
     A field consists of a label (by default, the key, although this is configurable using label_map)
     and a form element, such as a TextInput or a Dropdown.
@@ -205,9 +205,10 @@ class Form(Component):
             # A label holding evaluation of function on current form data
             element = ed.Label(value.value(self.props.data.as_dict()))
 
+        label_map = self.props.label_map or {}
         return ed.View(layout="row",
                        style={"align": "left", "margin-left": 10, "margin-right": 10, "margin-top": 5, "margin-bottom": 5})(
-            ed.Label(key, style={"margin-right": 5}),
+            ed.Label(label_map.get(key, key), style={"margin-right": 5}),
             element
         )
 
@@ -220,7 +221,6 @@ class Form(Component):
 
         props = self.props
         layout = props.layout or list(props.data.keys())
-        label_map = props.label_map or {}
 
         column_view_children = []
         for row in layout:
@@ -230,15 +230,13 @@ class Form(Component):
                     if not isinstance(element, str):
                         raise ValueError("Forms only support 2D lists for layout argument")
                     row_view_children.append(
-                        self._create_entry(label_map.get(element, element),
-                                           props.data.subscribe(self, element)))
+                        self._create_entry(element, props.data.subscribe(self, element)))
                 column_view_children.append(ed.View(layout="row")(
                     *row_view_children
                 ))
             elif isinstance(row, str):
                 column_view_children.append(
-                    self._create_entry(label_map.get(row, row),
-                                       props.data.subscribe(self, row)))
+                    self._create_entry(row, props.data.subscribe(self, row)))
             else:
                 raise ValueError("Encountered unexpected type in layout: %s" % row)
         buttons = None
@@ -284,4 +282,4 @@ class FormDialog(Component):
                  defaults=self.props.defaults, on_submit=self.on_submit,
                  submit_text=self.props.submit_text, layout=self.props.layout)
         ))
-        
+
