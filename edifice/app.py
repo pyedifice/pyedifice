@@ -90,14 +90,19 @@ class App(object):
             However, if the QApplication is already created (e.g. in a test suite or if you just want Edifice
             to make a widget to plug into an existing Qt application),
             you can set this to False.
+        application_name: the Qt application name to set when creating a new QApplication.
+            This option is only relevant if create_application is True.
         mount_into_window: (default True) whether or not to mount a window-less component into a window by default.
             If the passed in component is not part of any window, leaving this flag on will put the component in a window.
             Set this to False if you just want the App to output a widget.
     """
 
-    def __init__(self, component: Component, inspector=False, create_application=True, mount_into_window=True):
+    def __init__(self, component: Component, inspector=False, create_application=True, application_name=None, mount_into_window=True):
         if create_application:
-            self.app = QtWidgets.QApplication([])
+            if application_name is not None:
+                self.app = QtWidgets.QApplication([application_name])
+            else:
+                self.app = QtWidgets.QApplication([])
 
         if mount_into_window:
             if isinstance(component, BaseComponent):
