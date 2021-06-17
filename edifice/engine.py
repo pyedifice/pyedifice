@@ -4,10 +4,7 @@ import contextlib
 import inspect
 import itertools
 import logging
-
-import logging
 logger = logging.getLogger("Edifice")
-
 
 from ._component import BaseComponent, Component, PropsDict
 from .utilities import set_trace
@@ -52,7 +49,7 @@ def _storage_manager():
 
 def _try_neq(a, b):
     try:
-        return a != b
+        return bool(a != b)
     except:
         return a is not b
 
