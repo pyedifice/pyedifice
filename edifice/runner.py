@@ -115,7 +115,7 @@ def runner():
             self.seen_files = {}
 
         def on_modified(self, event):
-            if isinstance(observer, FSEventsObserver) and event.is_directory:
+            if FSEventsObserver is not None and isinstance(observer, FSEventsObserver) and event.is_directory:
                 # For Macs (which use FSEvents), FSEvents only reports directory changes
                 files_in_dir = [os.path.join(event.src_path, f) for f in os.listdir(event.src_path)
                                 if f.endswith(".py")]
