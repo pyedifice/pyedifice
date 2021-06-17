@@ -34,8 +34,7 @@ class Calculator(ed.Component):
         unary_style = button_style | {"background-color": "#595959"}
         display_style = {"font-size": 50, "height": 70, "color": "white", "width": 240, "align": "right", "padding-right": 10}
 
-        def digit_button(digit, double_width=False):
-            # Create digits buttons, include the decimal point
+        def make_add_digit(digit):
             def add_digit(e):
                 with self.render_changes():
                     if self.clear_display:
@@ -53,23 +52,28 @@ class Calculator(ed.Component):
                             self.display = str(digit)
                         else:
                             self.display += str(digit)
+            return add_digit
+
+        def digit_button(digit, double_width=False):
+            # Create digits buttons, include the decimal point
             button_style = digits_style.copy()
             if double_width:
                 button_style["width"] = 2 * button_style["width"]
-            return ed.Button(str(digit), style=button_style, on_click=add_digit)
+            return ed.Button(str(digit), style=button_style, on_click=make_add_digit(digit))
+
+        def apply_binary_operand(operator):
+            with self.render_changes():
+                self.clear_display = True
+                if self.previous_operator is None or self.previous_operator == "=":
+                    self.stored_value = float(self.display)
+                else:
+                    self.stored_value = OPERATORS[self.previous_operator](self.stored_value, float(self.display))
+                    self.display = "%.4f" % self.stored_value
+                self.previous_operator = operator
 
         def binary_button(symbol):
             # Qt layout is sometimes unintuitive, but you can definitely hack around it!
             button_style = binary_style.copy()
-            def apply_binary_operand(operator):
-                with self.render_changes():
-                    self.clear_display = True
-                    if self.previous_operator is None or self.previous_operator == "=":
-                        self.stored_value = float(self.display)
-                    else:
-                        self.stored_value = OPERATORS[self.previous_operator](self.stored_value, float(self.display))
-                        self.display = "%.4f" % self.stored_value
-                    self.previous_operator = operator
             return ed.Button(symbol, style=button_style, on_click=lambda e: apply_binary_operand(symbol))
 
         def unary_button(symbol):
@@ -79,11 +83,20 @@ class Calculator(ed.Component):
                     self.display = "%.4f" % OPERATORS[operator](float(self.display))
             return ed.Button(symbol, style=unary_style, on_click=lambda e: apply_unary_operand(symbol))
 
+        def key_press(e):
+            if ord('0') <= e.key() <= ord('9'):
+                make_add_digit(e.key() - ord('0'))(None)
+            elif e.text() in ['+', '-', '*', '/']:
+                apply_binary_operand(e.text())
+            elif e.key() == ed.Key.Key_Return:
+                apply_binary_operand("=")
+
         return ed.Window(title="Calculator")(
-            ed.View(layout="column", style=window_style)(
+            ed.View(layout="column", style=window_style, on_key_down=key_press)(
                 ed.Label(self.display, style=display_style),
                 ed.GridView(layout="""cs%/
                                       789*
+                                      456-
                                       123+
                                       00.=""")(
                     unary_button("AC").set_key("c"), unary_button("+/-").set_key("s"), unary_button("%").set_key("%"), binary_button("÷").set_key("/"),
