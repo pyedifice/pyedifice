@@ -58,6 +58,7 @@ if QT_VERSION == "PyQt5":
 else:
     from PySide2 import QtCore, QtWidgets, QtSvg, QtGui
 
+Key = QtCore.Qt.Key
 
 def _ensure_future(fn):
     # Ensures future if fn is a coroutine, otherwise don't modify fn
@@ -191,6 +192,12 @@ class QtWidgetComponent(WidgetComponent):
             (which will be called when this entry is clicked) or to another sub context menu.
             For example, {"Copy": copy_fun, "Share": {"Twitter": twitter_share_fun, "Facebook": facebook_share_fun}}
         on_click: callback for click events (mouse pressed and released). Takes a QMouseEvent object as argument
+        on_key_down: callback for key down events (key pressed). Takes a QKeyEvent object as argument.
+            The key() method of QKeyEvent returns the raw key pressed (an element of the QtCore.Qt.Key enum,
+            which is conveniently exposed as edifice.Key).
+            The text() method returns the unicode of the key press, taking modifier keys (e.g. Shift)
+            into account.
+        on_key_up: callback for key up events (key released). Takes a QKeyEvent object as argument.
         on_mouse_down: callback for mouse down events (mouse pressed). Takes a QMouseEvent object as argument
         on_mouse_up: callback for mouse up events (mouse released). Takes a QMouseEvent object as argument
         on_mouse_enter: callback for mouse enter events (triggered once every time mouse enters widget).
@@ -207,6 +214,8 @@ class QtWidgetComponent(WidgetComponent):
                  cursor: tp.Optional[tp.Text] = None,
                  context_menu: tp.Optional[ContextMenuType] = None,
                  on_click: tp.Optional[tp.Callable[[QtGui.QMouseEvent], tp.Any]] = None,
+                 on_key_down: tp.Optional[tp.Callable[[QtGui.QKeyEvent], tp.Any]] = None,
+                 on_key_up: tp.Optional[tp.Callable[[QtGui.QKeyEvent], tp.Any]] = None,
                  on_mouse_down: tp.Optional[tp.Callable[[QtGui.QMouseEvent], tp.Any]] = None,
                  on_mouse_up: tp.Optional[tp.Callable[[QtGui.QMouseEvent], tp.Any]] = None,
                  on_mouse_enter: tp.Optional[tp.Callable[[QtGui.QMouseEvent], tp.Any]] = None,
@@ -220,6 +229,8 @@ class QtWidgetComponent(WidgetComponent):
         self._left = 0
         self._size_from_font = None
         self._on_click = None
+        self._on_key_down = None
+        self._on_key_up = None
         self._on_mouse_enter = None
         self._on_mouse_leave = None
         self._on_mouse_down = None
@@ -291,6 +302,20 @@ class QtWidgetComponent(WidgetComponent):
             self._on_click = None
         self.underlying.mousePressEvent = self._mouse_press
         self.underlying.mouseReleaseEvent = self._mouse_release
+
+    def _set_on_key_down(self, underlying, on_key_down):
+        if on_key_down is not None:
+            self._on_key_down = _ensure_future(on_key_down)
+        else:
+            self._on_key_down = lambda e: None
+        self.underlying.keyPressEvent = self._on_key_down
+
+    def _set_on_key_up(self, underlying, on_key_up):
+        if on_key_up is not None:
+            self._on_key_up = _ensure_future(on_key_up)
+        else:
+            self._on_key_up = lambda e: None
+        self.underlying.keyReleaseEvent = self._on_key_up
 
     def _set_on_mouse_down(self, underlying, on_mouse_down):
         if on_mouse_down is not None:
@@ -476,6 +501,10 @@ class QtWidgetComponent(WidgetComponent):
                 commands.append((self._set_on_click, underlying, newprops.on_click))
                 if newprops.on_click is not None and self.props.cursor is not None:
                     commands.append((underlying.setCursor, QtCore.Qt.PointingHandCursor))
+            elif prop == "on_key_down":
+                commands.append((self._set_on_key_down, underlying, newprops.on_key_down))
+            elif prop == "on_key_up":
+                commands.append((self._set_on_key_up, underlying, newprops.on_key_up))
             elif prop == "on_mouse_down":
                 commands.append((self._set_on_mouse_down, underlying, newprops.on_mouse_down))
             elif prop == "on_mouse_up":
@@ -1543,7 +1572,6 @@ class GridView(QtWidgetComponent):
         if grid_spec != self._previously_rendered:
             commands.append((self._clear,))
             for child, y, x, dy, dx in grid_spec:
-                print(f"Laying out at ({y}, {x}, {dy}, {dx})")
                 commands.append((self.underlying_layout.addWidget, child.underlying, y, x, dy, dx,))
             self._previously_rendered = grid_spec
         commands.extend(super()._qt_update_commands(children, newprops, newstate, self.underlying, None))
