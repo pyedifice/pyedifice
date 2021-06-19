@@ -230,7 +230,9 @@ class QtWidgetComponent(WidgetComponent):
         self._size_from_font = None
         self._on_click = None
         self._on_key_down = None
+        self._default_on_key_down = None
         self._on_key_up = None
+        self._default_on_key_up = None
         self._on_mouse_enter = None
         self._on_mouse_leave = None
         self._on_mouse_down = None
@@ -317,17 +319,21 @@ class QtWidgetComponent(WidgetComponent):
         self.underlying.mouseReleaseEvent = self._mouse_release
 
     def _set_on_key_down(self, underlying, on_key_down):
+        if self._default_on_key_down is None:
+            self._default_on_key_down = self.underlying.keyPressEvent
         if on_key_down is not None:
             self._on_key_down = _ensure_future(on_key_down)
         else:
-            self._on_key_down = lambda e: None
+            self._on_key_down = self._default_on_key_down
         self.underlying.keyPressEvent = self._on_key_down
 
     def _set_on_key_up(self, underlying, on_key_up):
+        if self._default_on_key_up is None:
+            self._default_on_key_up = self.underlying.keyReleaseEvent
         if on_key_up is not None:
             self._on_key_up = _ensure_future(on_key_up)
         else:
-            self._on_key_up = lambda e: None
+            self._on_key_up = self._default_on_key_up
         self.underlying.keyReleaseEvent = self._on_key_up
 
     def _set_on_mouse_down(self, underlying, on_mouse_down):
