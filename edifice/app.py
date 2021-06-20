@@ -199,7 +199,7 @@ class App(object):
         Args:
             stylesheet: String containing the contents of the stylesheet
         Returns:
-            None
+            self
         """
         self.app.setStyleSheet(stylesheet)
         return self

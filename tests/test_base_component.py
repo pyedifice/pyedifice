@@ -164,6 +164,9 @@ class WidgetTreeTestCase(unittest.TestCase):
         self.assertCountEqual(
             commands,
             [(qt_button.setText, button_str), (qt_button.setStyleSheet, "QWidget#%s{}" % id(button)),
+             (qt_button.setProperty, "css_class", []),
+             (qt_button.style().unpolish, qt_button),
+             (qt_button.style().polish, qt_button),
              (button._set_on_click, qt_button, on_click),
              (button._set_on_key_down, qt_button, None),
              (button._set_on_key_up, qt_button, None),
@@ -202,6 +205,9 @@ class WidgetTreeTestCase(unittest.TestCase):
             commands,
             [(icon._render_image, ) + render_img_args,
              (icon.underlying.setStyleSheet, "QWidget#%s{}" % id(icon)),
+             (icon.underlying.setProperty, "css_class", []),
+             (icon.underlying.style().unpolish, icon.underlying),
+             (icon.underlying.style().polish, icon.underlying),
              (icon.underlying.setContextMenuPolicy, QtCore.Qt.DefaultContextMenu),
              (icon.underlying.setCursor, QtCore.Qt.ArrowCursor),
              (icon._set_on_key_down, icon.underlying, None),
@@ -235,6 +241,9 @@ class WidgetTreeTestCase(unittest.TestCase):
 
         self.assertCountEqual(commands, label1_commands + [
             (view.underlying.setStyleSheet, "QWidget#%s{}" % id(view)),
+            (view.underlying.setProperty, "css_class", []),
+            (view.underlying.style().unpolish, view.underlying),
+            (view.underlying.style().polish, view.underlying),
             (view.underlying.setContextMenuPolicy, QtCore.Qt.DefaultContextMenu),
             (view.underlying.setCursor, QtCore.Qt.ArrowCursor),
             (view._set_on_key_down, view.underlying, None),
@@ -252,6 +261,9 @@ class WidgetTreeTestCase(unittest.TestCase):
             commands = view_tree.gen_qt_commands(MockRenderContext(manager))
         self.assertCountEqual(commands, label1_commands + label2_commands + [
             (view.underlying.setStyleSheet, "QWidget#%s{}" % id(view)),
+            (view.underlying.setProperty, "css_class", []),
+            (view.underlying.style().unpolish, view.underlying),
+            (view.underlying.style().polish, view.underlying),
             (view.underlying.setContextMenuPolicy, QtCore.Qt.DefaultContextMenu),
             (view.underlying.setCursor, QtCore.Qt.ArrowCursor),
             (view._set_on_key_down, view.underlying, None),
@@ -274,6 +286,9 @@ class WidgetTreeTestCase(unittest.TestCase):
             commands, 
             label2_commands + [
                 (view.underlying.setStyleSheet, "QWidget#%s{}" % id(view)),
+                (view.underlying.setProperty, "css_class", []),
+                (view.underlying.style().unpolish, view.underlying),
+                (view.underlying.style().polish, view.underlying),
                 (view.underlying.setContextMenuPolicy, QtCore.Qt.DefaultContextMenu),
                 (view.underlying.setCursor, QtCore.Qt.ArrowCursor),
                 (view._set_on_key_down, view.underlying, None),
@@ -285,6 +300,9 @@ class WidgetTreeTestCase(unittest.TestCase):
                 (view._set_on_mouse_move, view.underlying, None),
                 (view._set_on_click, view.underlying, None),
                 (inner_view.underlying.setStyleSheet, "QWidget#%s{}" % id(inner_view)),
+                (inner_view.underlying.setProperty, "css_class", []),
+                (inner_view.underlying.style().unpolish, inner_view.underlying),
+                (inner_view.underlying.style().polish, inner_view.underlying),
                 (inner_view.underlying.setContextMenuPolicy, QtCore.Qt.DefaultContextMenu),
                 (inner_view.underlying.setCursor, QtCore.Qt.ArrowCursor),
                 (inner_view._set_on_key_down, inner_view.underlying, None),

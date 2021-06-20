@@ -102,13 +102,13 @@ class TreeView(InspectorComponent):
 
 
     def render(self):
-        child_style = {"align": "left"}
+        child_style = {"align": "top", "margin-left": 20}
         if self.collapsed:
             child_style["height"] = 0
         return ed.View(layout="column", style={"align": "top"})(
             Collapsible(root=self.props.root, on_click=self.props.on_click, toggle=self.toggle,
                         collapsed=self.collapsed).set_key("root"),
-            ed.View(layout="column", style={"align": "top", "margin-left": 20})(
+            ed.View(layout="column", style=child_style)(
                 *[comp.set_key(str(i)) for i, comp in enumerate(self.cached_children)]
             ).set_key("children")
         )

@@ -3,8 +3,10 @@ import typing as tp
 from .qt import QT_VERSION
 if QT_VERSION == "PyQt5":
     from PyQt5.QtCore import QTimer
+    from PyQt5 import QtWidgets
 else:
     from PySide2.QtCore import QTimer
+    from PySide2 import QtWidgets
 
 
 class Timer(object):
@@ -38,6 +40,13 @@ class Timer(object):
         if self._started:
             self._timer.stop()
             self._started = False
+
+
+def alert(message):
+    """Displays a message in an alert box."""
+    msgbox = QtWidgets.QMessageBox()
+    msgbox.setText(message)
+    msgbox.exec()
 
 
 def set_trace():

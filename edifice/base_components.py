@@ -191,6 +191,9 @@ class QtWidgetComponent(WidgetComponent):
             Expressed as a dict mapping the name of the context menu entry to either a function
             (which will be called when this entry is clicked) or to another sub context menu.
             For example, {"Copy": copy_fun, "Share": {"Twitter": twitter_share_fun, "Facebook": facebook_share_fun}}
+        css_class: a string or a list of strings, which will be stored in the "css_class" property of the Qt Widget.
+            This can be used in an application stylesheet, like:
+                QLabel[css_class="heading"] { font-size: 18px; }
         on_click: callback for click events (mouse pressed and released). Takes a QMouseEvent object as argument
         on_key_down: callback for key down events (key pressed). Takes a QKeyEvent object as argument.
             The key() method of QKeyEvent returns the raw key pressed (an element of the QtCore.Qt.Key enum,
@@ -213,6 +216,7 @@ class QtWidgetComponent(WidgetComponent):
                  tool_tip: tp.Optional[tp.Text] = None,
                  cursor: tp.Optional[tp.Text] = None,
                  context_menu: tp.Optional[ContextMenuType] = None,
+                 css_class: tp.Optional[tp.Any] = None,
                  on_click: tp.Optional[tp.Callable[[QtGui.QMouseEvent], tp.Any]] = None,
                  on_key_down: tp.Optional[tp.Callable[[QtGui.QKeyEvent], tp.Any]] = None,
                  on_key_up: tp.Optional[tp.Callable[[QtGui.QKeyEvent], tp.Any]] = None,
@@ -546,6 +550,13 @@ class QtWidgetComponent(WidgetComponent):
             elif prop == "tool_tip":
                 if newprops.tool_tip is not None:
                     commands.append((underlying.setToolTip, newprops.tool_tip))
+            elif prop == "css_class":
+                css_class = newprops.css_class
+                if css_class is None:
+                    css_class = []
+                commands.append((underlying.setProperty, "css_class", css_class))
+                commands.extend([(underlying.style().unpolish, underlying),
+                                 (underlying.style().polish, underlying)])
             elif prop == "cursor":
                 cursor = self.props.cursor or ("default" if self.props.on_click is None else "pointer")
                 commands.append((underlying.setCursor, _CURSORS[cursor]))
@@ -576,13 +587,20 @@ class Window(RootComponent):
 
         if __name__ == "__main__":
             App(MyApp()).start()
+
+    Args:
+        title: the window title
+        icon: the window icon
+        menu: the window's menu bar. In some GUI settings, for example Mac OS,
+            this menu will appear seperately from the window.
+        on_close: event handler for when this window is closed.
     """
 
     @register_props
     def __init__(self, title: tp.Text = "Edifice Application",
-                 on_close: tp.Optional[tp.Callable[[QtGui.QCloseEvent], tp.Any]] = None,
                  icon:tp.Optional[tp.Union[tp.Text, tp.Sequence]] = None,
-                 menu=None):
+                 menu=None,
+                 on_close: tp.Optional[tp.Callable[[QtGui.QCloseEvent], tp.Any]] = None):
         super().__init__()
 
         self._previous_rendering = None
@@ -988,6 +1006,8 @@ class TextInput(QtWidgetComponent):
 
         commands = super()._qt_update_commands(children, newprops, newstate, self.underlying)
         commands.append((self.underlying.setText, str(self.props.text)))
+        commands.append((self.underlying.setCursorPosition,
+                         self.underlying.cursorPosition()))
         for prop in newprops:
             if prop == "on_change":
                 commands.append((self.set_on_change, newprops[prop]))
