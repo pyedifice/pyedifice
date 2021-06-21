@@ -15,7 +15,7 @@ The components here can roughly be divided into layout components and content co
 
 Layout components take a list of children and function as a container for its children;
 it is most analogous to the `<div>` html tag.
-The two basic layout components are :doc:`View<edifice.base_components.View>` and :doc:`ScrollView<stubs.edifice.base_components.ScrollView>`,
+The two basic layout components are :doc:`View<edifice.base_components.View>` and :doc:`ScrollView<edifice.base_components.ScrollView>`,
 They take a layout prop, which controls whether children are laid out in a row,
 a column, or without any preset layout.
 A layout component without children will appear as an empty spot in the window;
@@ -1323,7 +1323,6 @@ class _LinearView(QtWidgetComponent):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
-        self._already_rendered = {}
         self._widget_children = []
 
     def __del__(self):
@@ -1335,10 +1334,6 @@ class _LinearView(QtWidgetComponent):
         new_children = set()
         for child in children:
             new_children.add(child.component)
-
-        for child in list(self._already_rendered.keys()):
-            if child not in new_children:
-                del self._already_rendered[child]
 
         for i, old_child in reversed(list(enumerate(self._widget_children))):
             if old_child not in new_children:
@@ -1353,15 +1348,10 @@ class _LinearView(QtWidgetComponent):
                 old_child = self._widget_children[old_child_index]
 
             if old_child is None or child.component is not old_child:
-                if child.component not in self._already_rendered:
-                    commands.append((self._add_child, i, child.component.underlying))
-                    old_child_index -= 1
-                else:
-                    commands.extend([(self._soft_delete_child, i, old_child),
-                                     (self._add_child, i, child.component.underlying)])
+                commands.append((self._add_child, i, child.component.underlying))
+                old_child_index -= 1
 
             old_child_index += 1
-            self._already_rendered[child.component] = True
 
         self._widget_children = [child.component for child in children]
         return commands

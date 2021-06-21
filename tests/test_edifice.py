@@ -246,10 +246,8 @@ class RenderTestCase(unittest.TestCase):
         qt_commands = render_result.commands
 
         expected_commands = (
-                             [(qt_tree.component._soft_delete_child, 0, old_child0)]
-                             + [(qt_tree.component._add_child, 0, qt_tree.children[2].component.underlying)]
-                             + [(qt_tree.component._soft_delete_child, 2, old_child2)]
-                             + [(qt_tree.component._add_child, 2, qt_tree.children[0].component.underlying)])
+                             [(qt_tree.component._add_child, 0, qt_tree.children[2].component.underlying)]
+                             + [(qt_tree.component._add_child, 1, qt_tree.children[1].component.underlying)])
 
         self.assertEqual(qt_commands, expected_commands)
 
