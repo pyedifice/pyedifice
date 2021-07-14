@@ -4,7 +4,7 @@
 
 <img src="examples/example_calculator.png" width=200/><img src="examples/example_harmonic_oscillator.gif" width=200/>
 
-Installation for version 0.0.9:
+Installation for version 0.0.10:
 ```
     pip install pyedifice
 ```
