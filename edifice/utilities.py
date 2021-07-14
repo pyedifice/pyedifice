@@ -42,11 +42,57 @@ class Timer(object):
             self._started = False
 
 
-def alert(message):
-    """Displays a message in an alert box."""
+def alert(message: tp.Text, choices: tp.Optional[tp.Sequence[tp.Text]] = None) -> tp.Optional[int]:
+    """Displays a message in an alert box.
+
+    If choices is specified, the alert box contain a list of buttons showing each of the choices,
+    and this function will return the user's choice.
+
+    Args:
+        message: message to display
+        choices: optional list of choice texts, which will be displayed as buttons.
+    Returns:
+        Index of chosen option.
+    """
     msgbox = QtWidgets.QMessageBox()
     msgbox.setText(message)
+    buttons = []
+    if choices is not None:
+        for choice in choices:
+            buttons.append(msgbox.addButton(
+                choice, QtWidgets.QMessageBox.ButtonRole.ActionRole))
     msgbox.exec()
+    clicked_button = msgbox.clickedButton()
+    for i, button in enumerate(buttons):
+        if clicked_button == button:
+            return i
+    return None
+
+
+def file_dialog(caption: tp.Text = "",
+                directory: tp.Text = "",
+                file_filter: tp.Optional[tp.Sequence[tp.Text]] = None) -> tp.Optional[tp.Text]:
+    """Displays a file choice dialog.
+
+    Args:
+        caption: the file dialog's caption
+        directory: starting directory for the file dialog
+        file_filter: Sequence of allowed file extensions
+            For example:
+                "*.cpp *.cc *.C *.c++"
+                "C++ files (*.cpp *.cc *.C *.c++)"
+            are both valid ways of specifying a file filter.
+    Returns:
+        Path of chosen file
+    """
+    dialog = QtWidgets.QFileDialog(None, caption, directory)
+    dialog.setFileMode(QtWidgets.QFileDialog.AnyFile)
+    dialog.setFileMode(QtWidgets.QFileDialog.AnyFile)
+    if file_filter is not None:
+        dialog.setNameFilters(file_filter)
+    if dialog.exec() == QtWidgets.QDialog.Accepted:
+        return dialog.selectedFiles()[0]
+    return None
 
 
 def set_trace():
