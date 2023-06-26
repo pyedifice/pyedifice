@@ -3,8 +3,8 @@ chardet==4.0.0
 idna==2.10
 numpy==1.19.4
 pandas==1.2.0
-PyQt5==5.15.2
-PyQt5-sip==12.8.1
+PyQt6==6.5.0
+PyQt6-sip==13.5.1
 python-dateutil==2.8.1
 pytz==2020.5
 requests==2.25.1
@@ -12,7 +12,7 @@ six==1.15.0
 snowballstemmer==2.0.0
 urllib3==1.26.2
 watchdog==1.0.2
-PySide2==5.15.2
-shiboken2==5.15.2
+PySide6==6.5.0
+shiboken2==6.5.0
 matplotlib==3.3.3
-qasync==0.13.0
+qasync==0.24.0

@@ -51,12 +51,12 @@ import numpy as np
 from ._component import BaseComponent, WidgetComponent, RootComponent, register_props
 
 from .qt import QT_VERSION
-if QT_VERSION == "PyQt5":
-    from PyQt5 import QtWidgets
-    from PyQt5 import QtSvg, QtGui
-    from PyQt5 import QtCore
+if QT_VERSION == "PyQt6":
+    from PyQt6 import QtWidgets
+    from PyQt6 import QtSvg, QtGui
+    from PyQt6 import QtCore
 else:
-    from PySide2 import QtCore, QtWidgets, QtSvg, QtGui
+    from PySide6 import QtCore, QtWidgets, QtSvg, QtGui
 
 Key = QtCore.Qt.Key
 
@@ -89,7 +89,7 @@ def _array_to_pixmap(arr):
     if arr.dtype == np.float32 or arr.dtype == np.float64:
         arr = (255 * arr).round()
     arr = arr.astype(np.uint8)
-    return QtGui.QPixmap.fromImage(QtGui.QImage(arr.data, width, height, channel * width, QtGui.QImage.Format_RGB888))
+    return QtGui.QPixmap.fromImage(QtGui.QImage(arr.data, width, height, channel * width, QtGui.QImage.Format.Format_RGB888))
 
 @functools.lru_cache(30)
 def _get_image(path):
@@ -104,7 +104,7 @@ def _image_descriptor_to_pixmap(inp):
 @functools.lru_cache(100)
 def _get_svg_image_raw(icon_path, size):
     svg_renderer = QtSvg.QSvgRenderer(icon_path)
-    image = QtGui.QImage(size, size, QtGui.QImage.Format_ARGB32)
+    image = QtGui.QImage(size, size, QtGui.QImage.Format.Format_ARGB32)
     image.fill(0x00000000)
     svg_renderer.render(QtGui.QPainter(image))
     pixmap = QtGui.QPixmap.fromImage(image)
@@ -138,21 +138,21 @@ def _css_to_number(a):
 
 
 _CURSORS = {
-    "default": QtCore.Qt.ArrowCursor,
-    "arrow": QtCore.Qt.ArrowCursor,
-    "pointer": QtCore.Qt.PointingHandCursor,
-    "grab": QtCore.Qt.OpenHandCursor,
-    "grabbing": QtCore.Qt.ClosedHandCursor,
-    "text": QtCore.Qt.IBeamCursor,
-    "crosshair": QtCore.Qt.CrossCursor,
-    "move": QtCore.Qt.SizeAllCursor,
-    "wait": QtCore.Qt.WaitCursor,
-    "ew-resize": QtCore.Qt.SizeHorCursor,
-    "ns-resize": QtCore.Qt.SizeVerCursor,
-    "nesw-resize": QtCore.Qt.SizeBDiagCursor,
-    "nwse-resize": QtCore.Qt.SizeFDiagCursor,
-    "not-allowed": QtCore.Qt.ForbiddenCursor,
-    "forbidden": QtCore.Qt.ForbiddenCursor,
+    "default": QtCore.Qt.CursorShape.ArrowCursor,
+    "arrow": QtCore.Qt.CursorShape.ArrowCursor,
+    "pointer": QtCore.Qt.CursorShape.PointingHandCursor,
+    "grab": QtCore.Qt.CursorShape.OpenHandCursor,
+    "grabbing": QtCore.Qt.CursorShape.ClosedHandCursor,
+    "text": QtCore.Qt.CursorShape.IBeamCursor,
+    "crosshair": QtCore.Qt.CursorShape.CrossCursor,
+    "move": QtCore.Qt.CursorShape.SizeAllCursor,
+    "wait": QtCore.Qt.CursorShape.WaitCursor,
+    "ew-resize": QtCore.Qt.CursorShape.SizeHorCursor,
+    "ns-resize": QtCore.Qt.CursorShape.SizeVerCursor,
+    "nesw-resize": QtCore.Qt.CursorShape.SizeBDiagCursor,
+    "nwse-resize": QtCore.Qt.CursorShape.SizeFDiagCursor,
+    "not-allowed": QtCore.Qt.CursorShape.ForbiddenCursor,
+    "forbidden": QtCore.Qt.CursorShape.ForbiddenCursor,
 }
 
 
@@ -419,17 +419,17 @@ class QtWidgetComponent(WidgetComponent):
             set_align = None
             if "align" in style:
                 if style["align"] == "left":
-                    set_align = QtCore.Qt.AlignLeft
+                    set_align = QtCore.Qt.AlignmentFlag.AlignLeft
                 elif style["align"] == "center":
-                    set_align = QtCore.Qt.AlignCenter
+                    set_align = QtCore.Qt.AlignmentFlag.AlignCenter
                 elif style["align"] == "right":
-                    set_align = QtCore.Qt.AlignRight
+                    set_align = QtCore.Qt.AlignmentFlag.AlignRight
                 elif style["align"] == "justify":
-                    set_align = QtCore.Qt.AlignJustify
+                    set_align = QtCore.Qt.AlignmentFlag.AlignJustify
                 elif style["align"] == "top":
-                    set_align = QtCore.Qt.AlignTop
+                    set_align = QtCore.Qt.AlignmentFlag.AlignTop
                 elif style["align"] == "bottom":
-                    set_align = QtCore.Qt.AlignBottom
+                    set_align = QtCore.Qt.AlignmentFlag.AlignBottom
                 else:
                     logger.warning("Unknown alignment: %s", style["align"])
                 style.pop("align")
@@ -564,10 +564,10 @@ class QtWidgetComponent(WidgetComponent):
                 if self._context_menu_connected:
                     underlying.customContextMenuRequested.disconnect()
                 if self.props.context_menu is not None:
-                    commands.append((underlying.setContextMenuPolicy, QtCore.Qt.CustomContextMenu))
+                    commands.append((underlying.setContextMenuPolicy, QtCore.Qt.ContextMenuPolicy.CustomContextMenu))
                     commands.append((self._set_context_menu, underlying))
                 else:
-                    commands.append((underlying.setContextMenuPolicy, QtCore.Qt.DefaultContextMenu))
+                    commands.append((underlying.setContextMenuPolicy, QtCore.Qt.ContextMenuPolicy.DefaultContextMenu))
         return commands
 
 
@@ -884,10 +884,11 @@ class Label(QtWidgetComponent):
                 change_cursor = False
                 if self.props.selectable:
                     change_cursor = True
-                    interaction_flags = (QtCore.Qt.TextSelectableByMouse | QtCore.Qt.TextSelectableByKeyboard)
+                    interaction_flags = (QtCore.Qt.TextInteractionFlag.TextSelectableByMouse | QtCore.Qt.TextInteractionFlag.TextSelectableByKeyboard)
                 if self.props.editable:
                     change_cursor = True
                     # PyQt5 doesn't support bitwise or with ints
+                    # TODO What about PyQt6?
                     if interaction_flags:
                         interaction_flags |= QtCore.Qt.TextEditable
                     else:
@@ -933,9 +934,9 @@ class Completer(object):
     def __init__(self, options, mode="popup"):
         self.options = options
         if mode == "popup":
-            self.mode = QtWidgets.QCompleter.PopupCompletion
+            self.mode = QtWidgets.QCompleter.CompletionMode.PopupCompletion
         elif mode == "inline":
-            self.mode = QtWidgets.QCompleter.InlineCompletion
+            self.mode = QtWidgets.QCompleter.CompletionMode.InlineCompletion
         else:
             raise ValueError
 
@@ -1202,7 +1203,7 @@ class CheckBox(QtWidgetComponent):
             self._initialize()
 
         commands = super()._qt_update_commands(children, newprops, newstate, self.underlying)
-        check_state = QtCore.Qt.Checked if self.props.checked else QtCore.Qt.Unchecked
+        check_state = QtCore.Qt.CheckState.Checked if self.props.checked else QtCore.Qt.CheckState.Unchecked
         commands.append((self.underlying.setCheckState, check_state))
         for prop in newprops:
             if prop == "on_change":
@@ -1267,9 +1268,9 @@ class Slider(QtWidgetComponent):
             raise ValueError("value must be between min_value and max_value")
 
         if orientation == "horizontal" or orientation == "row":
-            self.orientation = QtCore.Qt.Horizontal
+            self.orientation = QtCore.Qt.Orientation.Horizontal
         elif orientation == "vertical" or orientation == "column":
-            self.orientation = QtCore.Qt.Vertical
+            self.orientation = QtCore.Qt.Orientation.Vertical
         else:
             raise ValueError("Orientation must be horizontal or vertical, got %s" % orientation)
 
