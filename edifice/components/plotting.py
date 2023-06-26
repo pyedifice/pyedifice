@@ -4,11 +4,11 @@ from ..base_components import CustomWidget
 from .._component import Component, register_props
 
 from ..qt import QT_VERSION
-if QT_VERSION == "PyQt5":
-    from PyQt5 import QtWidgets
-    from PyQt5 import QtCore
+if QT_VERSION == "PyQt6":
+    from PyQt6 import QtWidgets
+    from PyQt6 import QtCore
 else:
-    from PySide2 import QtCore, QtWidgets
+    from PySide6 import QtCore, QtWidgets
 
 try:
     MATPLOTLIB_LOADED = True

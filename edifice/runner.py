@@ -22,10 +22,10 @@ from ._component import Component
 from .app import App
 
 from edifice.qt import QT_VERSION
-if QT_VERSION == "PyQt5":
-    from PyQt5 import QtCore
+if QT_VERSION == "PyQt6":
+    from PyQt6 import QtCore
 else:
-    from PySide2 import QtCore
+    from PySide6 import QtCore
 
 
 MODULE_CLASS_CACHE = {}

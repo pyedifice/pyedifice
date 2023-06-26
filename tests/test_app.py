@@ -5,10 +5,10 @@ import edifice.base_components as base_components
 import edifice._component as component
 
 from edifice.qt import QT_VERSION
-if QT_VERSION == "PyQt5":
-    from PyQt5 import QtCore, QtWidgets, QtGui
+if QT_VERSION == "PyQt6":
+    from PyQt6 import QtCore, QtWidgets, QtGui
 else:
-    from PySide2 import QtCore, QtWidgets, QtGui
+    from PySide6 import QtCore, QtWidgets, QtGui
 
 if QtWidgets.QApplication.instance() is None:
     app_obj = QtWidgets.QApplication(["-platform", "offscreen"])

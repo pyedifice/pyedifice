@@ -8,17 +8,17 @@ import edifice.engine as engine
 import edifice.base_components as base_components
 
 from edifice.qt import QT_VERSION
-if QT_VERSION == "PyQt5":
-    from PyQt5 import QtCore, QtWidgets
+if QT_VERSION == "PyQt6":
+    from PyQt6 import QtCore, QtWidgets
 else:
-    from PySide2 import QtCore, QtWidgets
+    from PySide6 import QtCore, QtWidgets
 
 if QtWidgets.QApplication.instance() is None:
     app = QtWidgets.QApplication(["-platform", "offscreen"])
 
 
 class MockComponent(base_components.QtWidgetComponent):
-    
+
     class MockUnderlying(object):
         setStyleSheet = "setStyleSheet"
         move = "move"
@@ -100,12 +100,12 @@ class StyleTestCase(unittest.TestCase):
                 [(layout.setAlignment, qt_align),
                  (comp.underlying.setStyleSheet, "QWidget#%s{}" % id(comp))]
             )
-        _test_for_align("left", QtCore.Qt.AlignLeft)
-        _test_for_align("right", QtCore.Qt.AlignRight)
-        _test_for_align("center", QtCore.Qt.AlignCenter)
-        _test_for_align("justify", QtCore.Qt.AlignJustify)
-        _test_for_align("top", QtCore.Qt.AlignTop)
-        _test_for_align("bottom", QtCore.Qt.AlignBottom)
+        _test_for_align("left", QtCore.Qt.AlignmentFlag.AlignLeft)
+        _test_for_align("right", QtCore.Qt.AlignmentFlag.AlignRight)
+        _test_for_align("center", QtCore.Qt.AlignmentFlag.AlignCenter)
+        _test_for_align("justify", QtCore.Qt.AlignmentFlag.AlignJustify)
+        _test_for_align("top", QtCore.Qt.AlignmentFlag.AlignTop)
+        _test_for_align("bottom", QtCore.Qt.AlignmentFlag.AlignBottom)
 
     def test_align_widget(self):
         def _test_for_align(align, qt_align):
@@ -175,8 +175,8 @@ class WidgetTreeTestCase(unittest.TestCase):
              (button._set_on_mouse_down, qt_button, None),
              (button._set_on_mouse_up, qt_button, None),
              (button._set_on_mouse_move, qt_button, None),
-             (qt_button.setContextMenuPolicy, QtCore.Qt.DefaultContextMenu),
-             (qt_button.setCursor, QtCore.Qt.PointingHandCursor)
+             (qt_button.setContextMenuPolicy, QtCore.Qt.ContextMenuPolicy.DefaultContextMenu),
+             (qt_button.setCursor, QtCore.Qt.CursorShape.PointingHandCursor)
             ])
 
     def test_view_layout(self):
@@ -208,8 +208,8 @@ class WidgetTreeTestCase(unittest.TestCase):
              (icon.underlying.setProperty, "css_class", []),
              (icon.underlying.style().unpolish, icon.underlying),
              (icon.underlying.style().polish, icon.underlying),
-             (icon.underlying.setContextMenuPolicy, QtCore.Qt.DefaultContextMenu),
-             (icon.underlying.setCursor, QtCore.Qt.ArrowCursor),
+             (icon.underlying.setContextMenuPolicy, QtCore.Qt.ContextMenuPolicy.DefaultContextMenu),
+             (icon.underlying.setCursor, QtCore.Qt.CursorShape.ArrowCursor),
              (icon._set_on_key_down, icon.underlying, None),
              (icon._set_on_key_up, icon.underlying, None),
              (icon._set_on_mouse_enter, icon.underlying, None),
@@ -244,8 +244,8 @@ class WidgetTreeTestCase(unittest.TestCase):
             (view.underlying.setProperty, "css_class", []),
             (view.underlying.style().unpolish, view.underlying),
             (view.underlying.style().polish, view.underlying),
-            (view.underlying.setContextMenuPolicy, QtCore.Qt.DefaultContextMenu),
-            (view.underlying.setCursor, QtCore.Qt.ArrowCursor),
+            (view.underlying.setContextMenuPolicy, QtCore.Qt.ContextMenuPolicy.DefaultContextMenu),
+            (view.underlying.setCursor, QtCore.Qt.CursorShape.ArrowCursor),
             (view._set_on_key_down, view.underlying, None),
             (view._set_on_key_up, view.underlying, None),
             (view._set_on_mouse_enter, view.underlying, None),
@@ -264,8 +264,8 @@ class WidgetTreeTestCase(unittest.TestCase):
             (view.underlying.setProperty, "css_class", []),
             (view.underlying.style().unpolish, view.underlying),
             (view.underlying.style().polish, view.underlying),
-            (view.underlying.setContextMenuPolicy, QtCore.Qt.DefaultContextMenu),
-            (view.underlying.setCursor, QtCore.Qt.ArrowCursor),
+            (view.underlying.setContextMenuPolicy, QtCore.Qt.ContextMenuPolicy.DefaultContextMenu),
+            (view.underlying.setCursor, QtCore.Qt.CursorShape.ArrowCursor),
             (view._set_on_key_down, view.underlying, None),
             (view._set_on_key_up, view.underlying, None),
             (view._set_on_mouse_enter, view.underlying, None),
@@ -283,14 +283,14 @@ class WidgetTreeTestCase(unittest.TestCase):
         with engine._storage_manager() as manager:
             commands = view_tree.gen_qt_commands(MockRenderContext(manager))
         self.assertCountEqual(
-            commands, 
+            commands,
             label2_commands + [
                 (view.underlying.setStyleSheet, "QWidget#%s{}" % id(view)),
                 (view.underlying.setProperty, "css_class", []),
                 (view.underlying.style().unpolish, view.underlying),
                 (view.underlying.style().polish, view.underlying),
-                (view.underlying.setContextMenuPolicy, QtCore.Qt.DefaultContextMenu),
-                (view.underlying.setCursor, QtCore.Qt.ArrowCursor),
+                (view.underlying.setContextMenuPolicy, QtCore.Qt.ContextMenuPolicy.DefaultContextMenu),
+                (view.underlying.setCursor, QtCore.Qt.CursorShape.ArrowCursor),
                 (view._set_on_key_down, view.underlying, None),
                 (view._set_on_key_up, view.underlying, None),
                 (view._set_on_mouse_enter, view.underlying, None),
@@ -303,8 +303,8 @@ class WidgetTreeTestCase(unittest.TestCase):
                 (inner_view.underlying.setProperty, "css_class", []),
                 (inner_view.underlying.style().unpolish, inner_view.underlying),
                 (inner_view.underlying.style().polish, inner_view.underlying),
-                (inner_view.underlying.setContextMenuPolicy, QtCore.Qt.DefaultContextMenu),
-                (inner_view.underlying.setCursor, QtCore.Qt.ArrowCursor),
+                (inner_view.underlying.setContextMenuPolicy, QtCore.Qt.ContextMenuPolicy.DefaultContextMenu),
+                (inner_view.underlying.setCursor, QtCore.Qt.CursorShape.ArrowCursor),
                 (inner_view._set_on_key_down, inner_view.underlying, None),
                 (inner_view._set_on_key_up, inner_view.underlying, None),
                 (inner_view._set_on_mouse_enter, inner_view.underlying, None),

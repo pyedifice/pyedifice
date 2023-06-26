@@ -15,7 +15,7 @@ setuptools.setup(
     include_package_data=True,
     packages=setuptools.find_packages(),
     install_requires=[
-        "PySide2",
+        "PySide6",
         "watchdog",
         "qasync",
         "numpy",

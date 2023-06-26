@@ -1,12 +1,12 @@
 import typing as tp
 
 from .qt import QT_VERSION
-if QT_VERSION == "PyQt5":
-    from PyQt5.QtCore import QTimer
-    from PyQt5 import QtWidgets
+if QT_VERSION == "PyQt6":
+    from PyQt6.QtCore import QTimer
+    from PyQt6 import QtWidgets
 else:
-    from PySide2.QtCore import QTimer
-    from PySide2 import QtWidgets
+    from PySide6.QtCore import QTimer
+    from PySide6 import QtWidgets
 
 
 class Timer(object):
@@ -98,8 +98,8 @@ def file_dialog(caption: tp.Text = "",
 def set_trace():
     '''Set a tracepoint in the Python debugger that works with Qt'''
     import pdb
-    if QT_VERSION == "PyQt5":
-        from PyQt5.QtCore import pyqtRemoveInputHook, pyqtRestoreInputHook
+    if QT_VERSION == "PyQt6":
+        from PyQt6.QtCore import pyqtRemoveInputHook, pyqtRestoreInputHook
         pyqtRemoveInputHook()
     pdb.set_trace()
     # # set up the debugger

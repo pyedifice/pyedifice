@@ -3,10 +3,10 @@
 , fetchPypi
 , pytest
 , qasync
-, pyside2
+, pyside6
 , watchdog
 , numpy
-, pyqt5
+, pyqt6
 }:
 
 buildPythonPackage rec {
@@ -20,10 +20,10 @@ buildPythonPackage rec {
 
     src = ../..;
 
-    propagatedBuildInputs = [ 
+    propagatedBuildInputs = [
       qasync
-      pyside2
-      pyqt5
+      pyside6
+      pyqt6
       watchdog
       numpy
     ];

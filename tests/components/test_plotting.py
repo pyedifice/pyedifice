@@ -5,10 +5,10 @@ import edifice
 from edifice.components import plotting
 
 from edifice.qt import QT_VERSION
-if QT_VERSION == "PyQt5":
-    from PyQt5 import QtCore, QtWidgets
+if QT_VERSION == "PyQt6":
+    from PyQt6 import QtCore, QtWidgets
 else:
-    from PySide2 import QtCore, QtWidgets
+    from PySide6 import QtCore, QtWidgets
 
 
 if QtWidgets.QApplication.instance() is None:
