@@ -9,10 +9,10 @@ import edifice.engine as engine
 import edifice.base_components as base_components
 
 from edifice.qt import QT_VERSION
-if QT_VERSION == "PyQt5":
-    from PyQt5 import QtWidgets
+if QT_VERSION == "PyQt6":
+    from PyQt6 import QtWidgets
 else:
-    from PySide2 import QtWidgets
+    from PySide6 import QtWidgets
 
 if QtWidgets.QApplication.instance() is None:
     app = QtWidgets.QApplication(["-platform", "offscreen"])
@@ -34,7 +34,7 @@ class MockApp(object):
 
 
 class TopologicalUpdateTestCase(unittest.TestCase):
-    
+
     def test_add(self):
         class Node(object):
             def __init__(self, ancestor=None):
@@ -180,7 +180,7 @@ class StateManagerTestCase(unittest.TestCase):
         test_comp = TestComp()
         app = MockApp(test_comp)
         render_result = app._request_rerender([test_comp])
-    
+
         test_comp1, test_comp2 = extract_inner_components(test_comp)
 
         self.assertEqual(test_comp.render_called_count, 1)
@@ -263,7 +263,7 @@ class StateManagerTestCase(unittest.TestCase):
         test_comp = TestComp()
         app = MockApp(test_comp)
         render_result = app._request_rerender([test_comp])
-    
+
         test_comp1, test_comp2 = extract_inner_components(test_comp)
 
         self.assertEqual(test_comp.render_called_count, 1)

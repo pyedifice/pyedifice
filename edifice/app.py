@@ -12,12 +12,12 @@ import traceback
 
 from .qt import QT_VERSION
 
-if QT_VERSION == "PyQt5":
-    from PyQt5 import QtCore, QtWidgets
-    os.environ["QT_API"] = "pyqt5"
+if QT_VERSION == "PyQt6":
+    from PyQt6 import QtCore, QtWidgets
+    os.environ["QT_API"] = "pyqt6"
 else:
-    from PySide2 import QtCore, QtWidgets
-    os.environ["QT_API"] = "pyside2"
+    from PySide6 import QtCore, QtWidgets
+    os.environ["QT_API"] = "pyside6"
 
 from qasync import QEventLoop
 
