@@ -56,7 +56,7 @@ if QT_VERSION == "PyQt6":
     from PyQt6 import QtSvg, QtGui
     from PyQt6 import QtCore
 else:
-    from PySide6 import QtCore, QtWidgets, QtSvg, QtGui
+    from PySide6 import QtCore, QtWidgets, QtSvg, QtGui, QtSvgWidgets
 
 Key = QtCore.Qt.Key
 
@@ -928,6 +928,30 @@ class Image(QtWidgetComponent):
                 commands.append((self.underlying.setPixmap, _image_descriptor_to_pixmap(self.props.src)))
         return commands
 
+class ImageSvg(QtWidgetComponent):
+    """An SVG Image container.
+
+    Args:
+        src: the path to the SVG image.
+    """
+    @register_props
+    def __init__(self, src: str, **kwargs):
+        super().__init__(**kwargs)
+        self.underlying = None
+
+    def _initialize(self):
+        self.underlying = QtSvgWidgets.QSvgWidget()
+        self.underlying.setObjectName(str(id(self)))
+
+    def _qt_update_commands(self, children, newprops, newstate):
+        if self.underlying is None:
+            self._initialize()
+
+        commands = super()._qt_update_commands(children, newprops, newstate, self.underlying, None)
+        for prop in newprops:
+            if prop == "src":
+                commands.append((self.underlying.load, self.props.src))
+        return commands
 
 class Completer(object):
 
