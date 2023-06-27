@@ -15,10 +15,10 @@ setuptools.setup(
     include_package_data=True,
     packages=setuptools.find_packages(),
     install_requires=[
-        "PySide6",
-        "watchdog",
-        "qasync",
-        "numpy",
+        # "PySide6",
+        # "watchdog",
+        # "qasync",
+        # "numpy",
     ],
     classifiers=[
         "Programming Language :: Python :: 3",
