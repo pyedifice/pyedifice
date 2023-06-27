@@ -9,38 +9,59 @@
         inherit system;
       };
 
+      qasync_ = import ./nix/qasync/default.nix;
+      pyedifice_ = import ./nix/pyedifice/default.nix;
+
       # https://github.com/NixOS/nixpkgs/blob/master/doc/languages-frameworks/python.section.md#overriding-python-packages-overriding-python-packages
-      python-extras =
+      pythonOverride =
         let
           # https://github.com/NixOS/nixpkgs/blob/master/doc/languages-frameworks/python.section.md#including-a-derivation-using-callpackage-including-a-derivation-using-callpackage
           packageOverrides = pyself: pysuper: {
-            qasync =
-              (pyself.pythonPackages.callPackage (import ./nix/qasync/default.nix) {});
-            pyedifice =
-              (pyself.pythonPackages.callPackage (import ./nix/pyedifice/default.nix) {});
+            qasync = pyself.pythonPackages.callPackage qasync_ {};
+            pyedifice = pyself.pythonPackages.callPackage pyedifice_ {};
           };
-        # https://stackoverflow.com/questions/51333232/nixos-how-do-i-get-get-a-python-with-debug-info-included-with-packages
-        # in pkgs.python310.override { inherit packageOverrides; self = pkgs.enableDebugging python-extras; };
-        in pkgs.python310.override { inherit packageOverrides; self = python-extras; };
+        in pkgs.python310.override { inherit packageOverrides; self = pythonOverride; };
 
 
-      pythonWithPackages = python-extras.withPackages (p: with p; [
+      pythonWithPackages = pythonOverride.withPackages (p: with p; [
         pip # for reading dependency information with pip list
         pytest
         qasync
-        # pyedifice
         pyside6
         pyqt6
         matplotlib
         watchdog
       ]);
+
+      # https://github.com/NixOS/nixpkgs/issues/80147#issuecomment-784857897
+      qtOverride = attrs: attrs // {
+        QT_PLUGIN_PATH = with pkgs.qt6; "${qtbase}/${qtbase.qtPluginPrefix}";
+      };
+
+      pythonEnv = qtOverride pythonWithPackages.env;
+
+      # pythonEnv = pythonWithPackages.env.overrideAttrs(finalAttrs: prevAttrs: {
+      #   # https://github.com/NixOS/nixpkgs/issues/80147#issuecomment-784857897
+      #   QT_PLUGIN_PATH = with pkgs.qt6; "${qtbase}/${qtbase.qtPluginPrefix}";
+      # });
     in
-    {
+    rec {
       devShells = {
-        default = pythonWithPackages.env.overrideAttrs(finalAttrs: prevAttrs: {
-          # https://github.com/NixOS/nixpkgs/issues/80147#issuecomment-784857897
-          QT_PLUGIN_PATH = with pkgs.qt6; "${qtbase}/${qtbase.qtPluginPrefix}";
-        });
+        default = pythonEnv;
+      };
+      lib = {
+        qasync = qasync_;
+        pyedifice = pyedifice_;
+      };
+      apps = {
+        test = {
+          type = "app";
+          program = (pythonOverride.withPackages (p: [p.pyedifice]).env) // {
+            shellHook = ''
+              ./run_tests.sh
+              '';
+            };
+        };
       };
     });
 }
