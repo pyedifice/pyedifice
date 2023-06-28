@@ -131,7 +131,7 @@ and will reload and trigger a re-render in the main thread.
 You can customize which directory to listen to using the `--dir` flag.
 
 
-### Component Inspector 
+### Component Inspector
 
 The Edifice component inspector shows the Component tree of your application along with the props and state of each component.
 
@@ -145,3 +145,34 @@ Edfice is MIT Licensed.
 
 Edifice uses Qt under the hood, and both PyQt5 and PySide2 (and PySide6) are supported. Note that PyQt5 is distributed with the GPL license while PySide2 and PySide6 are distributed
 under the more flexible LGPL license.
+
+# Cross Compass Fork
+
+At [Cross Compass](https://github.com/xc-jp) we have forked Edifice, because
+David Deng seems to have abandoned this very nice project.
+
+We would like to update and republish the
+[Edifice documentation](https://www.pyedifice.org/)
+but we don’t know where the source code for that documentation is.
+
+Here are the changes we have made.
+
+## `flake.nix`
+
+We are packaging this fork with [Nix](https://nixos.org/) Flakes.
+
+Enter the development environment:
+
+```
+nix develop
+```
+
+(TODO discuss flake `outputs.lib` overlays for `qasync` and `pyedifice`.)
+
+## PySide6 / PyQt6
+
+We have upgraded the dependencies to support __Qt6__.
+
+## New Components
+
+- `ImageSvg` static SVG image display.
