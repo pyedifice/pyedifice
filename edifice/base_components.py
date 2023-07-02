@@ -194,6 +194,7 @@ class QtWidgetComponent(WidgetComponent):
         css_class: a string or a list of strings, which will be stored in the "css_class" property of the Qt Widget.
             This can be used in an application stylesheet, like:
                 QLabel[css_class="heading"] { font-size: 18px; }
+        size_policy: https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QSizePolicy.html
         on_click: callback for click events (mouse pressed and released). Takes a QMouseEvent object as argument
         on_key_down: callback for key down events (key pressed). Takes a QKeyEvent object as argument.
             The key() method of QKeyEvent returns the raw key pressed (an element of the QtCore.Qt.Key enum,
@@ -217,6 +218,7 @@ class QtWidgetComponent(WidgetComponent):
                  cursor: tp.Optional[tp.Text] = None,
                  context_menu: tp.Optional[ContextMenuType] = None,
                  css_class: tp.Optional[tp.Any] = None,
+                 size_policy: tp.Optional[QtWidgets.QSizePolicy] = None,
                  on_click: tp.Optional[tp.Callable[[QtGui.QMouseEvent], tp.Any]] = None,
                  on_key_down: tp.Optional[tp.Callable[[QtGui.QKeyEvent], tp.Any]] = None,
                  on_key_up: tp.Optional[tp.Callable[[QtGui.QKeyEvent], tp.Any]] = None,
@@ -529,6 +531,9 @@ class QtWidgetComponent(WidgetComponent):
                 else:
                     style = dict(style)
                 commands.extend(self._gen_styling_commands(children, style, underlying, underlying_layout))
+            elif prop == "size_policy":
+                if newprops.size_policy is not None:
+                    commands.append((underlying.setSizePolicy, newprops.size_policy))
             elif prop == "on_click":
                 commands.append((self._set_on_click, underlying, newprops.on_click))
                 if newprops.on_click is not None and self.props.cursor is not None:
