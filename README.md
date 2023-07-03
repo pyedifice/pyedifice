@@ -173,12 +173,25 @@ nix develop
 
 We have upgraded the dependencies to support __Qt6__.
 
-## New Components
+## New Component `ImageSvg`
 
-- `ImageSvg` static SVG image display.
+`ImageSvg` static SVG image display.
 
-## `size_policy` prop
+Props:
 
-Added a
-[`size_policy`](https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.PySide6.QtWidgets.QWidget.setSizePolicy)
-prop to the base `QtWidgetComponent`.
+- `src : str` = Path to an SVG file.
+
+## Component `Label`
+
+New Props:
+
+- `link_open : bool` = [`setOpenExternalLinks`](https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QLabel.html#PySide6.QtWidgets.PySide6.QtWidgets.QLabel.setOpenExternalLinks)
+automatically open links using `openUrl()`.
+
+## Base Component new `size_policy` prop
+
+Added a `size_policy` prop to the base `QtWidgetComponent`.
+
+New Props:
+
+- `size_policy : QSizePolicy` = [`setSizePolicy`](https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.PySide6.QtWidgets.QWidget.setSizePolicy)
