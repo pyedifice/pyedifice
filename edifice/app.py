@@ -243,6 +243,9 @@ class App(object):
         return _make_widget_helper(self._root)
 
     def start(self):
+        loop = QEventLoop(self.app)
+        asyncio.set_event_loop(loop)
+
         self._request_rerender([self._root], {})
         if self._inspector:
             logger.info("Running inspector")
@@ -257,8 +260,6 @@ class App(object):
             component._edifice_internal_parent = None
             self._request_rerender([component], {})
 
-        loop = QEventLoop(self.app)
-        asyncio.set_event_loop(loop)
         with loop:
             ret = loop.run_forever()
         self._render_engine._delete_component(self._root, True)
