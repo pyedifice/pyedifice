@@ -195,3 +195,7 @@ Added a `size_policy` prop to the base `QtWidgetComponent`.
 New Props:
 
 - `size_policy : QSizePolicy` = [`setSizePolicy`](https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.PySide6.QtWidgets.QWidget.setSizePolicy)
+
+## App QEventLoop
+
+Create the main `QEventLoop` before the first `App` render.
