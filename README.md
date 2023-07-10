@@ -199,3 +199,8 @@ New Props:
 ## App QEventLoop
 
 Create the main `QEventLoop` before the first `App` render.
+
+
+## Component `Image`
+
+Image src can be a `QtGui.QImage`.

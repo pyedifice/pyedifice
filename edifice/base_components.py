@@ -83,7 +83,7 @@ def _array_to_pixmap(arr):
     try:
         import numpy as np
     except ImportError:
-        raise ValueError("Image src must be filename or numpy array")
+        raise ValueError("Image src must be filename or QImage or numpy array")
 
     height, width, channel = arr.shape
     if arr.dtype == np.float32 or arr.dtype == np.float64:
@@ -98,6 +98,8 @@ def _get_image(path):
 def _image_descriptor_to_pixmap(inp):
     if isinstance(inp, str):
         return _get_image(inp)
+    elif isinstance(inp, QtGui.QImage):
+        return QtGui.QPixmap.fromImage(inp)
     else:
         return _array_to_pixmap(inp)
 
@@ -912,7 +914,7 @@ class Image(QtWidgetComponent):
     """An image container.
 
     Args:
-        src: either the path to the image, or an np array. The np array must be 3 dimensional (height, width, channels)
+        src: either the path to the image, or an RGB np array, or a QtGui.QImage. The np array must be 3 dimensional (height, width, channels)
         scale_to_fit: if True, the image will be scaled to fit inside the container.
     """
 
