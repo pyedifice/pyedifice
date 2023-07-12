@@ -48,6 +48,9 @@
     rec {
       devShells = {
         default = pythonEnv;
+        poetry = pkgs.mkShell {
+          packages= [pkgs.poetry];
+        };
       };
       lib = {
         qasync = qasync_;
