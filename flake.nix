@@ -85,7 +85,7 @@
       # 2. .#poetry Poetry environment.
       #    In this environment the tests should pass.
       #
-      #        poetry install --all-extras --no-root
+      #        poetry install --sync --all-extras --no-root
       #        ./run_tests.sh
       #
       # 3. .#poetry2nix Not working.
