@@ -2,11 +2,17 @@
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-23.05";
     flake-utils.url = "github:numtide/flake-utils";
+    poetry2nix = {
+      url = "github:nix-community/poetry2nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+      inputs.flake-utils.follows = "flake-utils";
+    };
   };
   outputs = inputs: inputs.flake-utils.lib.eachDefaultSystem (system:
     let
       pkgs = import inputs.nixpkgs {
         inherit system;
+        overlays = [ inputs.poetry2nix.overlay ];
       };
 
       qasync_ = import ./nix/qasync/default.nix;
@@ -33,10 +39,33 @@
         watchdog
       ]);
 
-      # https://github.com/NixOS/nixpkgs/issues/80147#issuecomment-784857897
+      # qtOverride = attrs:
+      #   let
+      #     libraries = [
+      #       pkgs.libGL
+      #       pkgs.stdenv.cc.cc.lib
+      #       pkgs.glib
+      #       pkgs.zlib
+      #       "/run/opgengl-driver"
+      #       pkgs.libxkbcommon
+      #       pkgs.fontconfig
+      #       pkgs.xorg.libX11
+      #       pkgs.freetype
+      #       pkgs.dbus
+      #     ];
+      #   in
+      #   attrs // {
+      #     # https://github.com/NixOS/nixpkgs/issues/80147#issuecomment-784857897
+      #     QT_PLUGIN_PATH = with pkgs.qt6; "${qtbase}/${qtbase.qtPluginPrefix}";
+      #     # fixes libstdc++ issues and libgl.so issues
+      #     LD_LIBRARY_PATH = "${pkgs.lib.makeLibraryPath libraries}";
+      #   };
+
       qtOverride = attrs: attrs // {
-        QT_PLUGIN_PATH = with pkgs.qt6; "${qtbase}/${qtbase.qtPluginPrefix}";
-      };
+          # https://github.com/NixOS/nixpkgs/issues/80147#issuecomment-784857897
+          QT_PLUGIN_PATH = with pkgs.qt6; "${qtbase}/${qtbase.qtPluginPrefix}";
+        };
+
 
       pythonEnv = qtOverride pythonWithPackages.env;
 
@@ -46,8 +75,24 @@
       # });
     in
     rec {
+      # There are 3 devShell flavors here.
+      #
+      # 1. .#default Nixpkgs pythonWithPackages environment.
+      #    In this environment the tests should pass.
+      #
+      #        ./run_tests.sh
+      #
+      # 2. .#poetry Poetry environment.
+      #    In this environment the tests should pass.
+      #
+      #        poetry install --all-extras --no-root
+      #        ./run_tests.sh
+      #
+      # 3. .#poetry2nix Not working.
       devShells = {
+
         default = pythonEnv;
+
         poetry = pkgs.mkShell {
           packages= [ pkgs.python310 pkgs.poetry pkgs.qt6.qtbase ];
           shellHook =
@@ -76,7 +121,21 @@
               echo ""
             '';
         };
+
+        poetry2nix = (pkgs.poetry2nix.mkPoetryEnv {
+          projectDir = ./.;
+          editablePackageSources = {
+            edifice = ./edifice;
+          };
+          preferWheels = true;
+          extras = [ "*" ];
+        }).env.overrideAttrs(oldAttrs: {
+          propagatedBuildInputs = [
+            pkgs.libxkbcommon
+          ];
+        });
       };
+
       lib = {
         qasync = qasync_;
         pyedifice = pyedifice_;
