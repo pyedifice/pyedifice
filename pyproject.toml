@@ -5,6 +5,10 @@ description = "Declarative UI framework for Qt"
 authors = ["David Ding"]
 license = "MIT"
 readme = "README.md"
+packages = [{include = "edifice", from = "."}]
+
+[tool.nix]
+format = "poetry-core"
 
 [tool.poetry.dependencies]
 python = ">= 3.8,<3.12" # "^3.10"

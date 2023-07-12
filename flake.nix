@@ -77,18 +77,25 @@
     rec {
       # There are 3 devShell flavors here.
       #
-      # 1. .#default Nixpkgs pythonWithPackages environment.
+      # 1. nix develop .#default
+      #
+      #    Nixpkgs pythonWithPackages environment.
       #    In this environment the tests should pass.
       #
       #        ./run_tests.sh
       #
-      # 2. .#poetry Poetry environment.
+      # 2. nix develop .#poetry
+      #
+      #    Poetry environment.
       #    In this environment the tests should pass.
       #
       #        poetry install --sync --all-extras --no-root
       #        ./run_tests.sh
       #
-      # 3. .#poetry2nix Not working.
+      # 3. nix develop .#poetry2nix
+      #
+      #    Not working.
+      #
       devShells = {
 
         default = pythonEnv;
