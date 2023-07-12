@@ -49,23 +49,48 @@
       devShells = {
         default = pythonEnv;
         poetry = pkgs.mkShell {
-          packages= [pkgs.poetry];
+          packages= [ pkgs.python310 pkgs.poetry pkgs.qt6.qtbase ];
+          shellHook =
+            let
+              libraries = [
+                pkgs.libGL
+                pkgs.stdenv.cc.cc.lib
+                pkgs.glib
+                pkgs.zlib
+                "/run/opgengl-driver"
+                pkgs.libxkbcommon
+                pkgs.fontconfig
+                pkgs.xorg.libX11
+                pkgs.freetype
+                pkgs.dbus
+              ];
+            in
+            ''
+              # fixes libstdc++ issues and libgl.so issues
+              export LD_LIBRARY_PATH="${pkgs.lib.makeLibraryPath libraries}"
+              # https://github.com/NixOS/nixpkgs/issues/80147#issuecomment-784857897
+              export QT_PLUGIN_PATH="${pkgs.qt6.qtbase}/${pkgs.qt6.qtbase.qtPluginPrefix}"
+              echo "Enter the poetry shell with"
+              echo ""
+              echo "    poetry shell"
+              echo ""
+            '';
         };
       };
       lib = {
         qasync = qasync_;
         pyedifice = pyedifice_;
       };
-      apps = {
-        test = {
-          type = "app";
-          program = (pythonOverride.withPackages (p: [p.pyedifice]).env) // {
-            shellHook = ''
-              ./run_tests.sh
-              '';
-            };
-        };
-      };
+      # apps = {
+      #   test = {
+      #     type = "app";
+      #     program = (pythonOverride.withPackages (p: [p.pyedifice]).env) // {
+      #       shellHook = ''
+      #         ./run_tests.sh
+      #         '';
+      #       };
+      #   };
+      # };
     });
 }
 
