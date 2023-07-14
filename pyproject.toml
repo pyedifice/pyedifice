@@ -5,6 +5,8 @@ description = "Declarative UI framework for Qt"
 authors = ["David Ding"]
 license = "MIT"
 readme = "README.md"
+homepage = "https://github.com/xc-jp/pyedifice"
+repository = "https://github.com/xc-jp/pyedifice"
 packages = [{include = "edifice", from = "."}]
 
 [tool.nix]
