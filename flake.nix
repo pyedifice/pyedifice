@@ -90,6 +90,7 @@
       #    In this environment the tests should pass.
       #
       #        poetry install --sync --all-extras --no-root
+      #        poetry shell
       #        ./run_tests.sh
       #
       # 3. nix develop .#poetry2nix

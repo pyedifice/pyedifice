@@ -151,6 +151,17 @@ under the more flexible LGPL license.
 At [Cross Compass](https://github.com/xc-jp) we have forked Edifice, because
 David Deng seems to have abandoned this very nice project.
 
+You can use our fork with a Poetry `pyproject.toml`, for example, with
+
+```
+[tool.poetry.dependencies]
+python = ">=3.10,<3.11"
+pyedifice = {git = "https://github.com/xc-jp/pyedifice.git"}
+pyside6 = "6.5.1.1"
+```
+
+See [Poetry git dependencies](https://python-poetry.org/docs/dependency-specification/#git-dependencies).
+
 We would like to update and republish the
 [Edifice documentation](https://www.pyedifice.org/)
 but we don’t know where the source code for that documentation is.
