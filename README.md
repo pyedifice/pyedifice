@@ -203,6 +203,8 @@ three development environments:
 
 ( 🚧 TODO discuss flake `outputs.lib` overlays for `qasync` and `pyedifice6`.)
 
+# Improvements from Edifice, not yet published in new docs
+
 ## PySide6 / PyQt6
 
 We have upgraded the dependencies to support __Qt6__.
@@ -219,7 +221,7 @@ Props:
 
 New Props:
 
-- `link_open : bool` = [`setOpenExternalLinks`](https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QLabel.html#PySide6.QtWidgets.PySide6.QtWidgets.QLabel.setOpenExternalLinks)
+- `link_open : bool` — [`setOpenExternalLinks`](https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QLabel.html#PySide6.QtWidgets.PySide6.QtWidgets.QLabel.setOpenExternalLinks)
 automatically open links using `openUrl()`.
 
 ## Base Component new `size_policy` prop
