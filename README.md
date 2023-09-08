@@ -1,8 +1,5 @@
 # Edifice6: a declarative GUI library for Python
 
-<img src="examples/example_calculator.png" width=200/><img src="examples/example_harmonic_oscillator.gif" width=200/>
-
-
 Edifice6 is a Python library for building reactive
 [model-view-update](https://thomasbandt.com/model-view-update) UI.
 With Edifice6 we can build a fully reactive UI without ever leaving Python, giving us:
@@ -19,11 +16,14 @@ Python instead of JavaScript, and Qt instead of the HTML DOM.
 Edifice6 is a successor to [Edifice](https://github.com/pyedifice/pyedifice),
 but Edifice6 supports only PySide6 and PyQt6. Edifice supports PySide2 and PyQt5.
 
+<img src="examples/example_calculator.png" width=200/><img src="examples/example_harmonic_oscillator.gif" width=200/>
+
 ## Getting Started
 
 🚧 Installation, not available yet:
+
 ```
-    pip install pyedifice6
+pip install pyedifice6
 ```
 
 Detailed Documentation: 🚧 Not online yet.
