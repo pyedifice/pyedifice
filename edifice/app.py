@@ -252,6 +252,8 @@ class App(object):
         return _make_widget_helper(self._root)
 
     def start(self):
+        """Start the QEventLoop.
+        """
         loop = QEventLoop(self.app)
         asyncio.set_event_loop(loop)
 

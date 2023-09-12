@@ -7,15 +7,13 @@ Edifice: A Declarative UI Library
 =================================
 
    "Make simple UI easy and complex ones straightforward."
-.. image:: example_calculator.png
+
+.. image:: /image/example_calculator.png
    :width: 200
 
-.. image:: example_harmonic_oscillator.gif
+.. image:: /image/example_harmonic_oscillator.gif
    :width: 250
 
-
-
-|test| |nbsp| |coverage|
 
 Installation for version 0.0.8:
 
@@ -233,7 +231,7 @@ Documentation
 -------------
 
 .. toctree::
-   :maxdepth: 4
+   :maxdepth: 2
    :caption: Contents:
 
    tutorial
@@ -267,6 +265,3 @@ Indices and tables
 * :ref:`modindex`
 * :ref:`search`
 
-.. |test| image:: https://github.com/fding/pyedifice/workflows/test/badge.svg
-.. |nbsp| unicode:: 0xA0
-.. |coverage| image:: https://codecov.io/gh/fding/pyedifice/branch/master/graph/badge.svg
