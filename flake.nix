@@ -38,6 +38,8 @@
         pyqt6
         matplotlib
         watchdog
+        sphinx-book-theme
+        sphinx-autodoc-typehints
       ]);
 
       qtOverride = attrs: attrs // {
@@ -129,7 +131,11 @@
             edifice = ./edifice;
           };
           extras = [ "*" ];
-          extraPackages = ps: [ ps.pip ];
+          extraPackages = ps: with ps; [
+            pip
+            sphinx-book-theme
+            sphinx-autodoc-typehints
+          ];
         })).env;
 
       };

@@ -7,22 +7,41 @@
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
 project = 'Edifice'
-copyright = '2023, David Deng'
-author = 'David Deng'
+# Copyright is broken, renders as '1980, David Ding' for some reason
+# project_copyright = '2021, David Ding'
+author = 'David Ding'
 release = '0.0.10'
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
-extensions = []
+import os
+import sys
+sys.path.append(os.path.abspath('../..'))
+sys.path.append(os.path.abspath('./image'))
+
+extensions = [
+'sphinx.ext.autodoc',
+'sphinx.ext.autosummary',
+'sphinx.ext.napoleon',
+'sphinx_autodoc_typehints',
+'sphinx.ext.viewcode'
+]
 
 templates_path = ['_templates']
 exclude_patterns = []
 
-
+# https://www.sphinx-doc.org/en/master/usage/configuration.html#confval-toc_object_entries
+toc_object_entries=False
 
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
-html_theme = 'alabaster'
-html_static_path = ['_static']
+html_theme = 'sphinx_book_theme'
+html_theme_options = {
+    "repository_url": "https://github.com/pyedifice/pyedifice",
+    "use_repository_button": True,
+}
+# html_static_path = ['_static']
+# html_logo = "image/"
+

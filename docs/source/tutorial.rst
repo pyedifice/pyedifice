@@ -1,7 +1,7 @@
 Tutorial
 ========
 
-.. figure:: example_tutorial.png
+.. figure:: /image/example_tutorial.png
 
 This tutorial will help you create your first Edifice app.
 We will create an app that converts measurements in different units.

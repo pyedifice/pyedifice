@@ -184,34 +184,51 @@ class QtWidgetComponent(WidgetComponent):
 
     Args:
         style: style for the widget. Could either be a dictionary or a list of dictionaries.
+
             See docs/style.md for a primer on styling.
-        tool_tip: the tool tip displayed when hovering over the widget.
-        cursor: the shape of the cursor when mousing over this widget. Must be one of:
+        tool_tip:
+            the tool tip displayed when hovering over the widget.
+        cursor:
+            the shape of the cursor when mousing over this widget. Must be one of:
             default, arrow, pointer, grab, grabbing, text, crosshair, move, wait, ew-resize,
             ns-resize, nesw-resize, nwse-resize, not-allowed, forbidden
-        context_menu: the context menu to display when the user right clicks on the widget.
+        context_menu:
+            the context menu to display when the user right clicks on the widget.
             Expressed as a dict mapping the name of the context menu entry to either a function
             (which will be called when this entry is clicked) or to another sub context menu.
             For example, {"Copy": copy_fun, "Share": {"Twitter": twitter_share_fun, "Facebook": facebook_share_fun}}
-        css_class: a string or a list of strings, which will be stored in the "css_class" property of the Qt Widget.
+        css_class:
+            a string or a list of strings, which will be stored in the "css_class" property of the Qt Widget.
             This can be used in an application stylesheet, like:
+
                 QLabel[css_class="heading"] { font-size: 18px; }
-        size_policy: https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QSizePolicy.html
-        on_click: callback for click events (mouse pressed and released). Takes a QMouseEvent object as argument
-        on_key_down: callback for key down events (key pressed). Takes a QKeyEvent object as argument.
+
+        size_policy:
+            horizontal and vertical resizing policy, of type `QSizePolicy <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QSizePolicy.html>`_
+        on_click:
+            callback for click events (mouse pressed and released). Takes a QMouseEvent object as argument
+        on_key_down:
+            callback for key down events (key pressed). Takes a QKeyEvent object as argument.
             The key() method of QKeyEvent returns the raw key pressed (an element of the QtCore.Qt.Key enum,
             which is conveniently exposed as edifice.Key).
             The text() method returns the unicode of the key press, taking modifier keys (e.g. Shift)
             into account.
-        on_key_up: callback for key up events (key released). Takes a QKeyEvent object as argument.
-        on_mouse_down: callback for mouse down events (mouse pressed). Takes a QMouseEvent object as argument
-        on_mouse_up: callback for mouse up events (mouse released). Takes a QMouseEvent object as argument
-        on_mouse_enter: callback for mouse enter events (triggered once every time mouse enters widget).
+        on_key_up:
+            callback for key up events (key released). Takes a QKeyEvent object as argument.
+        on_mouse_down:
+            callback for mouse down events (mouse pressed). Takes a QMouseEvent object as argument
+        on_mouse_up:
+            callback for mouse up events (mouse released). Takes a QMouseEvent object as argument
+        on_mouse_enter:
+            callback for mouse enter events (triggered once every time mouse enters widget).
             Takes a QMouseEvent object as argument
-        on_mouse_leave: callback for mouse leave events (triggered once every time mouse leaves widget).
+        on_mouse_leave:
+            callback for mouse leave events (triggered once every time mouse leaves widget).
             Takes a QMouseEvent object as argument
-        on_mouse_move: callback for mouse move events (triggered every time mouse moves within widget).
+        on_mouse_move:
+            callback for mouse move events (triggered every time mouse moves within widget).
             Takes a QMouseEvent object as argument
+
     """
 
     @register_props
@@ -596,11 +613,15 @@ class Window(RootComponent):
             App(MyApp()).start()
 
     Args:
-        title: the window title
-        icon: the window icon
-        menu: the window's menu bar. In some GUI settings, for example Mac OS,
+        title:
+            the window title
+        icon:
+            the window icon
+        menu:
+            the window's menu bar. In some GUI settings, for example Mac OS,
             this menu will appear seperately from the window.
-        on_close: event handler for when this window is closed.
+        on_close:
+            event handler for when this window is closed.
     """
 
     @register_props
@@ -696,7 +717,7 @@ class GroupBox(QtWidgetComponent):
 class Icon(QtWidgetComponent):
     """Display an Icon
 
-    .. figure:: ../widget_images/icons.png
+    .. figure:: /image/icons.png
        :width: 300
 
        Two icons. Note that you can set the color and rotation.
@@ -715,12 +736,18 @@ class Icon(QtWidgetComponent):
     You can browse and search for icons here: https://fontawesome.com/icons?d=gallery&s=regular,solid
 
     Args:
-        name: name of the icon. Search for the name on https://fontawesome.com/icons?d=gallery&s=regular,solid
-        size: size of the icon.
-        collection: the icon package. Currently only font-awesome is supported.
-        sub_collection: for font awesome, either solid or regular
-        color: the RGBA value for the icon color
-        rotation: an angle (in degrees) for the icon rotation
+        name:
+            name of the icon. Search for the name on https://fontawesome.com/icons?d=gallery&s=regular,solid
+        size:
+            size of the icon.
+        collection:
+            the icon package. Currently only font-awesome is supported.
+        sub_collection:
+            for font awesome, either solid or regular
+        color:
+            the RGBA value for the icon color
+        rotation:
+            an angle (in degrees) for the icon rotation
     """
 
     @register_props
@@ -757,7 +784,7 @@ class Icon(QtWidgetComponent):
 class Button(QtWidgetComponent):
     """Basic button widget.
 
-    .. figure:: ../widget_images/textinput_button.png
+    .. figure:: /image/textinput_button.png
        :width: 300
 
        Button on the right
@@ -765,8 +792,10 @@ class Button(QtWidgetComponent):
     Set the on_click prop (inherited from QtWidgetComponent) to define the behavior on click.
 
     Args:
-        title: the button text
-        style: the styling of the button
+        title:
+            the button text
+        style:
+            the styling of the button
     """
 
     @register_props
@@ -795,7 +824,7 @@ class Button(QtWidgetComponent):
 class IconButton(Button):
     """Display an Icon Button.
 
-    .. figure:: ../widget_images/icons.png
+    .. figure:: /image/icons.png
        :width: 300
 
        Icon button on the very right.
@@ -851,14 +880,13 @@ class IconButton(Button):
 class Label(QtWidgetComponent):
     """Basic widget for displaying text.
 
-    .. figure:: ../widget_images/label.png
+    .. figure:: /image/label.png
        :width: 500
 
        Three different label objects. You can embed HTML in labels to get rich text formatting.
 
     Args:
-        text: the text to display. Can be any Python type; the text prop is converted
-            to a string using str before being displayed
+        text: the text to display. Can be any Python type; the text prop is converted to a string using str before being displayed
         word_wrap: enable/disable word wrapping.
         link_open: whether hyperlinks will open to the operating system. Defaults to False.
         selectable: whether the content of the label can be selected. Defaults to False.
@@ -984,7 +1012,7 @@ class Completer(object):
 class TextInput(QtWidgetComponent):
     """Basic widget for a one line text input
 
-    .. figure:: ../widget_images/textinput_button.png
+    .. figure:: /image/textinput_button.png
        :width: 300
 
        TextInput on the left. Note that you can set an optional Completer, giving the dropdown for completion.
@@ -1056,7 +1084,7 @@ class TextInput(QtWidgetComponent):
 class Dropdown(QtWidgetComponent):
     """Basic widget for a dropdown menu.
 
-    .. figure:: ../widget_images/checkbox_dropdown.png
+    .. figure:: /image/checkbox_dropdown.png
        :width: 300
 
        Dropdown on the right.
@@ -1139,7 +1167,7 @@ class Dropdown(QtWidgetComponent):
 class RadioButton(QtWidgetComponent):
     """Radio buttons.
 
-    .. figure:: ../widget_images/radio_button.png
+    .. figure:: /image/radio_button.png
        :width: 300
 
        Three mutually exclusive radio buttons.
@@ -1193,7 +1221,7 @@ class RadioButton(QtWidgetComponent):
 class CheckBox(QtWidgetComponent):
     """Checkbox widget.
 
-    .. figure:: ../widget_images/checkbox_dropdown.png
+    .. figure:: /image/checkbox_dropdown.png
        :width: 300
 
        Checkbox on the left.
@@ -1207,8 +1235,7 @@ class CheckBox(QtWidgetComponent):
     Args:
         checked: whether or not the checkbox is checked initially
         text: text for the label of the checkbox
-        on_change: callback for when the check box state changes.
-            The callback receives the new state of the check box as an argument.
+        on_change: callback for when the check box state changes. The callback receives the new state of the check box as an argument.
     """
 
     @register_props
@@ -1252,7 +1279,7 @@ NumericType = tp.Union[float, int]
 class Slider(QtWidgetComponent):
     """Slider bar widget.
 
-    .. figure:: ../widget_images/slider.png
+    .. figure:: /image/slider.png
        :width: 300
 
        Horizontal and vertical sliders
@@ -1469,7 +1496,7 @@ class View(_LinearView):
 class ScrollView(_LinearView):
     """Scrollable layout widget for grouping children together.
 
-    .. figure:: ../widget_images/scroll_view.png
+    .. figure:: /image/scroll_view.png
        :width: 500
 
        A ScrollView containing a Label.
@@ -1654,7 +1681,7 @@ class GridView(QtWidgetComponent):
 class TabView(_LinearView):
     """Widget with multiple tabs.
 
-    .. figure:: ../widget_images/tab_view.png
+    .. figure:: /image/tab_view.png
        :width: 300
 
        A TabView with 2 children.

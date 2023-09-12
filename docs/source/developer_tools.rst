@@ -11,7 +11,7 @@ Edifice comes with two tools to aid in development:
 Dynamic reloading
 -----------------
 
-.. figure:: edifice-workflow.gif
+.. figure:: /image/edifice-workflow.gif
 
 One of the most tedious aspects of UI development is testing minor tweaks.
 Suppose you just want to get the background color right.
@@ -65,7 +65,7 @@ If you want to explicitly specify another path to listen to, use the --dir flag:
 Component Inspector
 -------------------
 
-.. figure:: inspector.png
+.. figure:: /image/inspector.png
 
 Another pain point of GUI development (and even more generally) is figuring out
 the internal state of your application for debugging purposes.
