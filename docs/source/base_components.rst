@@ -17,6 +17,7 @@ Base Components
    GridView
    Label
    Image
+   ImageSvg
    Icon
    IconButton
    Button
@@ -92,7 +93,7 @@ To allow the rest of the application to run while the fetch is happening, you ca
 While the fetch_from_network function is running, control is returned to the event loop,
 allowing the application to continue handling button clicks.
 
-See docs for :doc:`QtWidgetComponent<stubs.edifice.base_components.QtWidgetComponent>` for a list of supported events.
+See docs for :class:`QtWidgetComponent<edifice.QtWidgetComponent>` for a list of supported events.
 
 
 .. _custom_widget:

@@ -141,6 +141,8 @@
       };
 
       lib = {
+        # TODO discuss flake `outputs.lib` overlays for `qasync` and `pyedifice`
+        # in the README or somewhere.
         qasync = qasync_;
         pyedifice = pyedifice_;
       };

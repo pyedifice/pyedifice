@@ -26,22 +26,23 @@ class Form(Component):
     The precise form element generated can be specified by the optional config prop.
     For entries whose form element is not specified in config,
     the following defaults are used, according to the type of :code:`value`:
-        - str: TextInput
-        - int or float: TextInput. The input will the validated to be a number, and if the user
-          enters a non number and unfocuses from the TextInput, an error message is printed.
-        - bool: Checkbox
-        - tuple (selection, options): A dropdown with the current selection and the list of options
-        - Enum: dropdown
-        - pathlib.Path: a file choice dialog
-        - function: a label that displays the value of the function evaluated on the current form. The function
-                    is passed a dictionary containing all current values.
-        - datetime.date: Three drop downs for year, month, and day.
-        - datetime.time: **NOT SUPPORTED YET** Three dropdowns for hour, minute, second
-        - datetime.datetime: **NOT SUPPORTED YET** Six dropdowns combining date and time
-        - list: **NOT SUPPORTED YET** a list view. This is purely for display, and the user can't modify this state.
-        - np.array or pd.DataFrame: **NOT SUPPORTED YET** A table. This is purely for display, and the user can't modify this state.
-        - StateManager: **NOT SUPPORTED YET**a group box containing a sub-form. This sub-form cannot be submitted,
-          except as part of the larger form's submission process.
+
+    - :code:`str`: :class:`edifice.TextInput`
+    - :code:`int` or :code:`float`: :class:`edifice.TextInput`. The input will the validated to be a number, and if the user
+      enters a non number and unfocuses from the TextInput, an error message is printed.
+    - :code:`bool`: :class:`edifice.Checkbox`
+    - :code:`tuple (selection, options)`: A dropdown with the current selection and the list of options
+    - :code:`Enum`: dropdown
+    - :code:`pathlib.Path`: a file choice dialog
+    - function: a label that displays the value of the function evaluated on the current form. The function
+      is passed a dictionary containing all current values.
+    - :code:`datetime.date`: Three drop downs for year, month, and day.
+    - :code:`datetime.time`: **NOT SUPPORTED YET** Three dropdowns for hour, minute, second
+    - :code:`datetime.datetime`: **NOT SUPPORTED YET** Six dropdowns combining date and time
+    - list: **NOT SUPPORTED YET** a list view. This is purely for display, and the user can't modify this state.
+    - :code:`np.array` or :code:`pd.DataFrame`: **NOT SUPPORTED YET** A table. This is purely for display, and the user can't modify this state.
+    - :class:`edifice.StateManager`: **NOT SUPPORTED YET** a group box containing a sub-form. This sub-form cannot be submitted,
+      except as part of the larger form's submission process.
 
     If the defaults dict is provided, a Reset button will appear, allowing the user to reset the form to default values.
 
@@ -71,29 +72,37 @@ class Form(Component):
 
     Args:
         data: the data that the Form displays and modifies
-        config: (optional) **NOT SUPPORTED YET** the form element to use in displaying each entry in data.
+        config:
+            (optional) **NOT SUPPORTED YET** the form element to use in displaying each entry in data.
             You don't have to provide configs for every key in data;
             sensible defaults will be used if the config is unspecified.
-        label_map: (optional) the label to use for each key. By default, the key itself is used.
+        label_map:
+            (optional) the label to use for each key. By default, the key itself is used.
             You don't have to provide overrides for every key in data.
-        defaults: (optional) the default value for each key. Providing this dictionary will
+        defaults:
+            (optional) the default value for each key. Providing this dictionary will
             cause a reset button to appear.
             You don't have to provide defaults for every key in data; only the provided keys
             will be reset.
-        on_submit: (optional) the callback once the user presses the submit button.
+        on_submit:
+            (optional) the callback once the user presses the submit button.
             If not provided, a submit button will not appear.
             The callback is passed a dictionary containing the current form values.
         submit_text: the text for the submit button.
         layout: a description of how the form is to be laid out. By default, each form element
             would appear in its own row.
             If layout is "row" or "column", the elements will be laid out in a row or column.
-            If layout is a 1-D list of keys in data, the layout will be a row:
+            If layout is a 1-D list of keys in data, the layout will be a row::
+
                 ["First Name", "Last Name", ...]
-            If layout is a 2-D list, each internal list will be a row, and the outer list will be a stack of rows:
+
+            If layout is a 2-D list, each internal list will be a row, and the outer list will be a stack of rows::
+
                 [["First Name", "Last Name"],
                  ["Date of Birth"],
                  ["Street Address"],
                  ["City", "State", "Zipcode"]]
+
     """
 
     @register_props

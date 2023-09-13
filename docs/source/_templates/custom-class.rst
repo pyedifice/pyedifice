@@ -6,12 +6,11 @@
 .. currentmodule:: {{ module }}
 
 .. autoclass:: {{ objname }}
-   :members:                                    <-- add at least this line
-   :show-inheritance:                           <-- plus I want to show inheritance...
+   :members:
+   :show-inheritance:
 
 
    {% block methods %}
-   .. automethod:: __init__
 
    {% if methods %}
    .. rubric:: {{ _('Methods') }}

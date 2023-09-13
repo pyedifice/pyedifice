@@ -3,10 +3,10 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Edifice: A Declarative UI Library
-=================================
+Edifice
+=======
 
-   "Make simple UI easy and complex ones straightforward."
+Declarative UI for Python
 
 .. image:: /image/example_calculator.png
    :width: 200
@@ -15,36 +15,41 @@ Edifice: A Declarative UI Library
    :width: 250
 
 
-Installation for version 0.0.8:
+Installation:
 
 .. code-block:: shell
 
     pip install pyedifice
 
 .. code-block:: python
-    :caption: Hello World in Edifice
+    :caption: *Hello World* in Edifice
 
     import edifice
     from edifice import Label
 
     edifice.App(Label("Hello World!")).start()
 
-Edifice is a Python library for building reactive UI, inspired by modern Javascript libraries such as React.
-Edifice makes it simple to build a fully reactive UI without ever leaving Python, getting the best of both worlds:
+Edifice is a Python library for building declarative application user interfaces.
 
-- Modern paradigms from web development that simplify UI creation
-- Fast iteration via hot reloading
-- Seamless integration with the Python ecosystem (standard library, numpy, matplotlib, pandas, etc)
-- A native desktop app without the overhead of bundling a browser.
+- Modern declarative UI paradigm from web development.
+- 100% Python application development, no language inter-op.
+- A native desktop app instead of a bundled web browser.
+- Fast iteration via hot reloading.
 
-Edifice uses Qt as a backend (although it could be generalized to other backends).
+This modern declarative UI paradigm is also known as
+“`Model-View-Update <https://thomasbandt.com/model-view-update>`_,”
+or “`The Elm Architecture <https://guide.elm-lang.org/architecture/>`_.”
 
+Edifice uses `PySide6 <https://doc.qt.io/qtforpython-6/>`_
+or `PyQt6 <https://www.riverbankcomputing.com/static/Docs/PyQt6/introduction.html>`_
+as a backend. So Edifice is like
+`React <https://react.dev/>`_, but with
+Python instead of JavaScript, and Qt instead of the HTML DOM.
+If you have experience with React,
+you will find Edifice very easy to pick up.
 
 Getting Started
 ---------------
-
-Edifice is inspired by `React JS <https://reactjs.org/>`_. If you have experience with React,
-you will find Edfice very easy to pick up.
 
 The easiest way to get started is via the :doc:`tutorial`.
 To understand the core conception behind Edifice,
@@ -187,7 +192,7 @@ For example, you can write:
         Label(self.number)
     )
 
-and get the expected result: the GUI always displays 
+and get the expected result: the GUI always displays
 a button and a label displaying the current value of self.number.
 Clicking the button adds 5 to the number,
 and Edifice will handle updating the GUI.
@@ -227,12 +232,11 @@ However, it is easy to interface with Qt, either :ref:`incorporating a Qt Widget
 or :doc:`incorporating Edifice components<stubs/stubs/edifice.App.export_widgets>` in a Qt application.
 
 
-Documentation
--------------
+Table of Contents
+-----------------
 
 .. toctree::
    :maxdepth: 2
-   :caption: Contents:
 
    tutorial
    examples
@@ -250,16 +254,16 @@ License and Code Availability
 -----------------------------
 
 Edifice is released under the `MIT License <https://en.wikipedia.org/wiki/MIT_License>`_.
-The source code is avaliable `here <https://github.com/fding/pyedifice>`_.
+The source code is avaliable `on GitHub <https://github.com/pyedifice/pyedifice>`_.
 
 Support
 -------
 
-File all bug reports or feature requests using `Github issues <https://github.com/fding/pyedifice/issues>`_.
+File all bug reports or feature requests using `Github issues <https://github.com/pyedifice/pyedifice/issues>`_.
 
 
 Indices and tables
-==================
+------------------
 
 * :ref:`genindex`
 * :ref:`modindex`

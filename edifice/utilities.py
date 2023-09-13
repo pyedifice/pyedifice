@@ -13,7 +13,7 @@ class Timer(object):
     """A Timer for calling a function periodically.
 
     The function passed in the constructor will be called
-    every time_in_ms milliseconds after the Timer is started,
+    every :code:`time_in_ms` milliseconds after the Timer is started,
     until the Timer is stopped.
 
     Args:
@@ -77,10 +77,12 @@ def file_dialog(caption: tp.Text = "",
     Args:
         caption: the file dialog's caption
         directory: starting directory for the file dialog
-        file_filter: Sequence of allowed file extensions
-            For example:
+        file_filter:
+            Sequence of allowed file extensions. For example::
+
                 "*.cpp *.cc *.C *.c++"
                 "C++ files (*.cpp *.cc *.C *.c++)"
+
             are both valid ways of specifying a file filter.
     Returns:
         Path of chosen file

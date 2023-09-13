@@ -12,22 +12,22 @@ First, install Edifice::
 
 .. note::
 
-    Edifice supports both the PySide2 library and the PyQt5 library
+    Edifice supports both the PySide6 library and the PyQt6 library
     for Qt bindings (both are covered in the automated unit tests).
-    Edifice uses the PySide2 library by default and includes it as a dependency.
-    If you have no preference between PySide2 and PyQt5, you can ignore this aside.
+    Edifice uses the PySide6 library by default and includes it as a dependency.
+    If you have no preference between PySide6 and PyQt6, you can ignore this aside.
 
-    If you would prefer to use the PyQt5 library and do not wish to
-    install PySide2, you can run::
-        
+    If you would prefer to use the PyQt6 library and do not wish to
+    install PySide6, you can run::
+
         pip install watchdog  # A dependency required for dynamic reloads
         pip install qasync  # A dependency required for asyncio integration
-        pip install --no-dependencies pyedifice 
+        pip install --no-dependencies pyedifice
 
-    You can switch to using PyQt5 by setting the :code:`EDIFICE_QT_VERSION` environment variable to :code:`PyQt5`::
+    You can switch to using PyQt6 by setting the :code:`EDIFICE_QT_VERSION` environment variable to :code:`PyQt6`::
 
         # Add to your bashrc
-        export EDIFICE_QT_VERSION=PyQt5
+        export EDIFICE_QT_VERSION=PyQt6
 
 
 Let us create the basic skeleton of our UI.
@@ -45,7 +45,7 @@ Copy this code into a new file, for example tutorial.py::
    if __name__ == "__main__":
        ed.App(window).start()
 
-What does this code do? View is an example of a :doc:`Component<stubs/edifice.Component>`, which are the building blocks of an application.
+What does this code do? View is an example of a :class:`Component<edifice.Component>`, which are the building blocks of an application.
 The View component receives :code:`layout="row"` as an argument in its constructor.
 We refer to layout as a **"prop"** of the View component -- it is a property passed to the View.
 We also see this funny notation where we call the constructed View object with several arguments:
@@ -62,14 +62,14 @@ In HTML or XML, you might have written it as:
         </View>
 
 We pass the created View (which we called :code:`window`)
-to an :doc:`edifice App<stubs/edifice.App>`,
+to an :class:`App<edifice.App>`,
 which is responsible for actually doing the rendering.
 
 For the simplest applications, this is all you need to make a GUI.
 When you start managing more state (e.g. currently input values in the textbox, user preferences, etc), or when you want to break complex UI
 into smaller parts, or when you want to share UI logic across multiple
 parts of your application and across many applications,
-defining your own :doc:`Component<stubs/edifice.Component>` class makes life much easier with almost no conceptual or code overhead::
+defining your own :class:`Component<edifice.Component>` class makes life much easier with almost no conceptual or code overhead::
 
    import edifice as ed
    from edifice import Label, TextInput, View
@@ -103,7 +103,7 @@ As you might expect, you can run this application simply with :code:`python tuto
 However, let us take advantage of Edifice's :doc:`dynamic loading capability<developer_tools>`,
 so that we do not have to continually close the app and re-issue the command every time we change something.
 To run the app with dynamic loading, do::
-    
+
     python -m edifice tutorial.py MyApp
 
 You should see a basic form emerge. However, it's not pretty, and it doesn't really do anything.

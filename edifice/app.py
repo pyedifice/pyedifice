@@ -93,7 +93,8 @@ class App(object):
         application_name: DEPRECATED the Qt application name to set when creating a new QApplication.
             This option is only relevant if create_application is True.
         qapplication: (default None)
-            The QtWidgets.QApplication. If you do not provide one, it will be created for you.
+            The `QtWidgets.QApplication <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QApplication.html>`_.
+            If you do not provide one, it will be created for you.
         mount_into_window: (default True) whether or not to mount a window-less component into a window by default.
             If the passed in component is not part of any window, leaving this flag on will put the component in a window.
             Set this to False if you just want the App to output a widget.

@@ -37,7 +37,7 @@ def merge(d1, d2):
 
 # We store application state centrally. Each component can query this central store and
 # set state, and all components that use that state will automatically update.
-# See https://www.pyedifice.org/state.html
+# See https://pyedifice.github.io/state.html
 app_state = ed.StateManager(merge(_create_state_for_plot("plot0"), {
     "all_plots": ["plot0"],
     "next_i": 1,
@@ -55,7 +55,7 @@ def AxisDescriptor(self, name, key, children):
     data_type, ticker = data.value
     transform = app_state.subscribe(self, f"{key}.transform")
     transform_type, param = transform.value
-    # We can use CSS styling. See https://www.pyedifice.org/styling.html
+    # We can use CSS styling. See https://pyedifice.github.io/styling.html
     row_style = {"align": "left", "width": 350}
     return View(layout="column")(
         View(layout="row", style=row_style)(

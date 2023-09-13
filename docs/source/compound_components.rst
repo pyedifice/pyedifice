@@ -9,7 +9,6 @@ To use them, you have to import the module from :code:`edifice.components`::
 
     from edifice.components import plotting
 
-Currently, only one higher-level component has been implemented, and one is planned.
 User contributions are of course welcome!
 
 .. currentmodule:: edifice.components
@@ -20,3 +19,9 @@ User contributions are of course welcome!
 
    plotting.Figure
    forms.Form
+   forms.FormDialog
+   button_view.ButtonView
+   flow_view.FlowView
+   table_grid_view.TableGridView
+   table_grid_view.TableChildren
+   image_aspect.ImageAspect

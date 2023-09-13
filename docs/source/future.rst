@@ -43,5 +43,6 @@ here are some planned features (in no particular order):
 5. Components that integrate with data analysis workflows. One important use case for Python is data analysis.
    Components that allow interactive data analysis (to the extent not possible in a Jupyter notebook) could be extremely valuable.
    Here are some proposals:
-        - ML model visualization, in particular graphical models and tree/forest models. This could be integrated with sci-kit or XGBoost models.
-        - Tables for Pandas Dataframes, with built in search/filtering, column statistics, etc.
+
+   - ML model visualization, in particular graphical models and tree/forest models. This could be integrated with sci-kit or XGBoost models.
+   - Tables for Pandas Dataframes, with built in search/filtering, column statistics, etc.

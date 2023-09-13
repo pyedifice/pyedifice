@@ -12,7 +12,7 @@ else:
 
 try:
     MATPLOTLIB_LOADED = True
-    from matplotlib.backends.backend_qt5agg import FigureCanvas
+    from matplotlib.backends.backend_qtagg import FigureCanvas
     from matplotlib.figure import Figure as MatplotlibFigure
 except:
     MATPLOTLIB_LOADED = False
