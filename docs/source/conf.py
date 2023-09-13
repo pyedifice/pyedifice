@@ -9,8 +9,8 @@
 project = 'Edifice'
 # Copyright is broken, renders as '1980, David Ding' for some reason
 # project_copyright = '2021, David Ding'
-author = 'David Ding'
-release = '0.0.10'
+author = 'David Ding © 2021'
+release = '0.1.0'
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
@@ -28,7 +28,7 @@ extensions = [
 'sphinx.ext.viewcode'
 ]
 
-templates_path = ['_templates']
+templates_path = ['_templates', 'sphinx_book_theme_override']
 exclude_patterns = []
 
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#confval-toc_object_entries
@@ -42,6 +42,14 @@ html_theme_options = {
     "repository_url": "https://github.com/pyedifice/pyedifice",
     "use_repository_button": True,
 }
-# html_static_path = ['_static']
-# html_logo = "image/"
 
+# The globaltoc_maxdepth option doesn't work.
+# Override this sbt-sidebar-nav.html file so that we can set maxdepth=2.
+# https://github.com/executablebooks/sphinx-book-theme/issues/757
+# https://sphinx-book-theme.readthedocs.io/en/latest/sections/sidebar-primary.html#control-the-left-sidebar-items
+html_sidebars = {
+    "**": ["navbar-logo.html", "sbt-sidebar-nav-override.html"]
+}
+
+html_logo = "image/EdificePyramid.svg"
+html_favicon = "image/EdificePyramid.ico"

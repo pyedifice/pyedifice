@@ -7,15 +7,15 @@ These components may all be imported from the edifice namespace::
 
     # you can now access edifice.Button, View, etc.
 
-All components in this module inherit from :doc:`QtWidgetComponent<edifice.base_components.QtWidgetComponent>`
-and its props, such as `style` and `on_click`.
+All components in this module inherit from :class:`QtWidgetComponent<edifice.QtWidgetComponent>`
+and its props, such as :code:`style` and :code:`on_click`.
 This means that all widgets could potentially respond to clicks and are stylable using css-like stylesheets.
 
 The components here can roughly be divided into layout components and content components.
 
 Layout components take a list of children and function as a container for its children;
-it is most analogous to the `<div>` html tag.
-The two basic layout components are :doc:`View<edifice.base_components.View>` and :doc:`ScrollView<edifice.base_components.ScrollView>`,
+it is most analogous to the :code:`<div>` html tag.
+The two basic layout components are :class:`View<edifice.View>` and :class:`ScrollView<edifice.ScrollView>`.
 They take a layout prop, which controls whether children are laid out in a row,
 a column, or without any preset layout.
 A layout component without children will appear as an empty spot in the window;
@@ -24,12 +24,12 @@ and size, making this a handy way of reserving blank spot on the screen
 or drawing an empty rectangle.
 
 Content components display some information or control on the window.
-The basic component for displaying text is :doc:`Label<edifice.base_components.Label>`,
+The basic component for displaying text is :class:`Label<edifice.Label>`,
 which simply displays the given text (or any Python object).
 The font can be controlled using the style prop.
-The :doc:`Icon<edifice.base_components.Icon>` component is another handy component, displaying an icon from the
+The :class:`Icon<edifice.Icon>` component is another handy component, displaying an icon from the
 Font Awesome icon set.
-Finally, the :doc:`Button<edifice.base_components.Button>` and :doc:`TextInput<stubs.edifice.base_components.TextInput>`
+Finally, the :class:`Button<edifice.Button>` and :class:`TextInput<edifice.TextInput>`
 components allow you to collect input from the user.
 """
 
@@ -888,7 +888,7 @@ class Label(QtWidgetComponent):
     Args:
         text: the text to display. Can be any Python type; the text prop is converted to a string using str before being displayed
         word_wrap: enable/disable word wrapping.
-        link_open: whether hyperlinks will open to the operating system. Defaults to False.
+        link_open: whether hyperlinks will open to the operating system. Defaults to False. `PySide6.QtWidgets.PySide6.QtWidgets.QLabel.setOpenExternalLinks <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QLabel.html#PySide6.QtWidgets.PySide6.QtWidgets.QLabel.setOpenExternalLinks>`_
         selectable: whether the content of the label can be selected. Defaults to False.
         editable: whether the content of the label can be edited. Defaults to False.
     """
@@ -1423,7 +1423,7 @@ class View(_LinearView):
     """Basic layout widget for grouping children together
 
     Content that does not fit into the View layout will be clipped.
-    To allow scrolling in case of overflow, use :doc:`ScrollView<edifice.base_components.ScrollView>`.
+    To allow scrolling in case of overflow, use :class:`ScrollView<edifice.ScrollView>`.
 
     Args:
         layout: one of column, row, or none.
@@ -1501,7 +1501,7 @@ class ScrollView(_LinearView):
 
        A ScrollView containing a Label.
 
-    Unlike :doc:`View<edifice.base_components.View>`, overflows in both the x and y direction
+    Unlike :class:`View<edifice.View>`, overflows in both the x and y direction
     will cause a scrollbar to show.
 
     Args:
@@ -1595,7 +1595,7 @@ class GridView(QtWidgetComponent):
     """Grid layout widget for rendering children on a 2D rectangular grid.
 
     Grid views allow you to precisely control 2D positioning of widgets.
-    While you can also layout widgets using nested :doc:`Views<edifice.base_components.View>`,
+    While you can also layout widgets using nested :class:`View<edifice.View>`,
     specifying the exact location of children relative to each other (with proper alignment)
     requires extensive fine tuning of style attributes.
     The GridView allows you to lay out widgets at specified grid indices and size.

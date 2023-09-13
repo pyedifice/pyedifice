@@ -31,7 +31,7 @@ The application allows the user to plot arbitrary number of charts on the same a
 For each chart, both x and y axis can point to any data source (date, stock price, volume) with an optional EMA transform (the half life is adjustable with a slider, and adjustments automatically update the graph).
 This enables a wide spectrum of analyses, from cluster plots of two different stocks to understand their correlation, to comparing the stock price with a running average.
 
-This application would be fairly complex to program in raw QT but takes fewer than 200 well documented lines of code (and ample whitespace) with Edifice. Most importantly, the logic is straightforward. The application state is the full list of descriptions of each plot. Each gui element displays part of the state (e.g. the x-axis of plot 0, the actual graph, etc.), and some GUI elements allow the user to change a part of the state. 
+This application would be fairly complex to program in raw QT but takes fewer than 200 well documented lines of code (and ample whitespace) with Edifice. Most importantly, the logic is straightforward. The application state is the full list of descriptions of each plot. Each gui element displays part of the state (e.g. the x-axis of plot 0, the actual graph, etc.), and some GUI elements allow the user to change a part of the state.
 
 
 ## Forms
@@ -49,7 +49,7 @@ etc.
 You can also pass a function, which would generate a label whose content is the function evaluated on the inputs.
 
 The Form component was created using the same high-level Edifice api provided to users,
-so [its source code](https://github.com/fding/pyedifice/blob/master/edifice/components/forms.py) is technically another example!
+so [its source code](https://github.com/pyedifice/pyedifice/blob/master/edifice/components/forms.py) is technically another example!
 
 
 ## Harmonic Oscillator
