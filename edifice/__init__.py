@@ -27,13 +27,14 @@ A PropsDict allows iteration, get item (:code:`self.props["value"]`), and get at
 
 The internal state, henceforth referred to as the **state**, belong to the Component.
 These are attributes of the Component object, for instance self.my_state.
-You can initialize the state as usual in the constructor (e.g. self.my_state = {"a": 1}),
+You can initialize the state as usual in the constructor
+(e.g. :code:`self.my_state = {"a": 1}`),
 and the state persists so long as the Component is still mounted.
 
 Changes in state and props will automatically trigger a re-render
-(unless you override this behavior by modifying `should_update`).
-State should be changed using either the `component.set_state` function
-or the `component.render_changes()` context manager.
+(unless you override this behavior by modifying :code:`should_update`).
+State should be changed using either the :code:`component.set_state` function
+or the :code:`component.render_changes()` context manager.
 See documentation for Component for more details.
 
 The main method of Component is render, which should describe the rendered UI
@@ -76,7 +77,7 @@ In HTML/XML, this would be written as:
     </View>
 
 You can thus describe your entire application as a single root Component,
-which is composed of various sub-components representing different parts of your application.  
+which is composed of various sub-components representing different parts of your application.
 Each Component is responsible for managing its own state,
 updating it as necessary given user interactions and events.
 Because state is self-contained, you can compose Components arbitarily,
@@ -133,13 +134,14 @@ will resolve which Components to maintain and which to replace;
 see documentation of Component class for details.
 
 Some useful utilities are also provided:
-    * register_props: A decorator for the __init__ function that records
-      all arguments as props
-    * make_component: A decorator to turn a render function into a
-      Component. This is useful if your Component has no internal state.
-    * set_trace: An analogue of pdb.set_trace that works with Qt
-      (pdb.set_trace interrupts the Qt event flow, causing an unpleasant
-      debugging experience). Use this set_trace if you want to set breakpoings.
+
+* :func:`register_props` : A decorator for the :code:`init` function that records
+  all arguments as props
+* :func:`make_component`: A decorator to turn a render function into a
+  Component. This is useful if your Component has no internal state.
+* :func:`edifice.utilities.set_trace`: An analogue of :code:`pdb.set_trace` that works with Qt
+  (:code:`pdb.set_trace` interrupts the Qt event flow, causing an unpleasant
+  debugging experience). Use this :code:`set_trace` if you want to set breakpoings.
 """
 
 

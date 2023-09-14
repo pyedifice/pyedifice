@@ -13,3 +13,11 @@ nix develop ..#poetry2nix
 make html
 ```
 
+Manually update the https://github.com/pyedifice/pyedifice.github.io website:
+
+```
+rm -r ../../pyedifice.github.io/*
+```
+```
+cp -r build/html/* ../../pyedifice.github.io/
+```

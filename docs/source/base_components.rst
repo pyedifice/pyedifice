@@ -66,7 +66,8 @@ When the Fetch button is clicked, the event handler will call a lengthy :code:`f
 blocking the application from further progress.
 In the mean time, if the user clicks the increment button, nothing will happen until the fetch is complete.
 
-To allow the rest of the application to run while the fetch is happening, you can define the on_click handler as a coroutine::
+To allow the rest of the application to run while the fetch is happening, you can define
+the :code:`on_click` handler as a coroutine::
 
     class Component(edifice.Component):
 
@@ -90,7 +91,7 @@ To allow the rest of the application to run while the fetch is happening, you ca
                 edifice.Button("Increment", on_click=lambda e: self.set_state(counter=self.counter + 1))
             )
 
-While the fetch_from_network function is running, control is returned to the event loop,
+While the :code:`fetch_from_network` function is running, control is returned to the event loop,
 allowing the application to continue handling button clicks.
 
 See docs for :class:`QtWidgetComponent<edifice.QtWidgetComponent>` for a list of supported events.

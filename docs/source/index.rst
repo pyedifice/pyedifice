@@ -15,9 +15,8 @@ Declarative UI for Python
    :width: 250
 
 
-Installation:
-
 .. code-block:: shell
+    :caption: Installation
 
     pip install pyedifice
 
