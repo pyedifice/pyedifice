@@ -1738,9 +1738,9 @@ class CustomWidget(QtWidgetComponent):
                     elif prop == "value":
                         widget.setValue(newprops[prop])
 
-    The two methods to override are :code`create_widget`,
+    The two methods to override are :code:`create_widget`,
     which should return the Qt widget,
-    and :code`paint`,
+    and :code:`paint`,
     which takes the current widget and new props,
     and should update the widget according to the new props.
     The created widget inherits all the properties of Qt widgets,
