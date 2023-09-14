@@ -1,5 +1,5 @@
 <h3 align="center">
-<img src="https://raw.githubusercontent.com/pyedifice/pyedifice/revive/docs/source/image/EdificePyramid.svg" width="200">
+<img src="https://raw.githubusercontent.com/pyedifice/pyedifice/master/docs/source/image/EdificePyramid.svg" width="200">
 </h3>
 
 <h1 align="center">Edifice: a declarative GUI library for Python</h1>
