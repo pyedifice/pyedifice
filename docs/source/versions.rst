@@ -3,7 +3,7 @@ Release Notes
 
 0.1.0
 ------
-Released:
+Released: 2023-09-14
 
 * **Upgrade to PySide6/PyQt6.** Deprecate PySide2/PyQt5.
 * New Base Component :code:`ImageSvg`.
