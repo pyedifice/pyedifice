@@ -26,7 +26,7 @@ A PropsDict allows iteration, get item (:code:`self.props["value"]`), and get at
 (:code:`self.props.value`), but not set item or set attribute.
 
 The internal state, henceforth referred to as the **state**, belong to the Component.
-These are attributes of the Component object, for instance self.my_state.
+These are attributes of the Component object, for instance :code:`self.my_state`.
 You can initialize the state as usual in the constructor
 (e.g. :code:`self.my_state = {"a": 1}`),
 and the state persists so long as the Component is still mounted.
@@ -135,8 +135,8 @@ see documentation of Component class for details.
 
 Some useful utilities are also provided:
 
-* :func:`register_props` : A decorator for the :code:`init` function that records
-  all arguments as props
+* :func:`register_props` : A decorator for the :code:`__init__` function that records
+  all arguments as props.
 * :func:`make_component`: A decorator to turn a render function into a
   Component. This is useful if your Component has no internal state.
 * :func:`edifice.utilities.set_trace`: An analogue of :code:`pdb.set_trace` that works with Qt
