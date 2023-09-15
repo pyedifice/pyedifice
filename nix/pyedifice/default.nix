@@ -10,7 +10,7 @@
 
 buildPythonPackage rec {
   pname = "pyedifice";
-  version = "0.0.10";
+  version = "0.1.1";
 
   # src = pkgs.fetchPypi {
   #   inherit pname version;
@@ -58,7 +58,7 @@ buildPythonPackage rec {
   doCheck = false;
 
   meta = with lib; {
-    description = "declarative GUI library for Python";
+    description = "Declarative GUI framework for Python and Qt";
     homepage = "https://github.com/pyedifice/pyedifice";
     license = licenses.mit;
     maintainers = with maintainers; [ ];

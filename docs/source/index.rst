@@ -6,7 +6,7 @@
 Edifice
 =======
 
-Declarative UI for Python
+Declarative GUI framework for Python and Qt
 
 .. image:: /image/example_calculator.png
    :width: 200
@@ -24,16 +24,16 @@ Declarative UI for Python
     :caption: *Hello World* in Edifice
 
     import edifice
-    from edifice import Label
+    from edifice import App, Label
 
-    edifice.App(Label("Hello World!")).start()
+    App(Label("Hello World!")).start()
 
 Edifice is a Python library for building declarative application user interfaces.
 
-- Modern declarative UI paradigm from web development.
-- 100% Python application development, no language inter-op.
-- A native desktop app instead of a bundled web browser.
-- Fast iteration via hot reloading.
+- Modern **declarative** UI paradigm from web development.
+- **100% Python** application development, no language inter-op.
+- A **native** desktop app instead of a bundled web browser.
+- Fast iteration via **hot reloading**.
 
 This modern declarative UI paradigm is also known as
 “`Model-View-Update <https://thomasbandt.com/model-view-update>`_,”
@@ -43,7 +43,8 @@ Edifice uses `PySide6 <https://doc.qt.io/qtforpython-6/>`_
 or `PyQt6 <https://www.riverbankcomputing.com/static/Docs/PyQt6/introduction.html>`_
 as a backend. So Edifice is like
 `React <https://react.dev/>`_, but with
-Python instead of JavaScript, and Qt instead of the HTML DOM.
+Python instead of JavaScript, and `Qt Widgets <https://doc.qt.io/qt-6/qtwidgets-index.html>`_
+instead of the HTML DOM.
 If you have experience with React,
 you will find Edifice very easy to pick up.
 
@@ -65,6 +66,7 @@ strings to TextInput, bools to Checkbox, etc.
 The example below shows how you can collect information from the user in a Dialog.
 
 .. code-block:: python
+    :caption: Form Dialog
 
     import datetime
     import edifice
@@ -253,13 +255,19 @@ License and Code Availability
 -----------------------------
 
 Edifice is released under the `MIT License <https://en.wikipedia.org/wiki/MIT_License>`_.
+
+Edifice uses Qt under the hood, and both PyQt6 and PySide6 are supported.
+Note that PyQt6 is distributed with the *GPL* license while PySide6 is distributed
+under the more flexible *LGPL* license.
+See `PyQt vs PySide Licensing <https://www.pythonguis.com/faq/pyqt-vs-pyside/>`.
+
 The source code is avaliable `on GitHub <https://github.com/pyedifice/pyedifice>`_.
 
 Support
 -------
 
-File all bug reports or feature requests using `Github issues <https://github.com/pyedifice/pyedifice/issues>`_.
-
+Submit questions, bug reports or feature requests using
+`Github issues <https://github.com/pyedifice/pyedifice/issues>`_.
 
 Indices and tables
 ------------------

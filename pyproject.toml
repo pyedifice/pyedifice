@@ -1,11 +1,11 @@
 [tool.poetry]
 name = "pyedifice"
 version = "0.1.1"
-description = "Declarative UI framework for Qt"
+description = "Declarative GUI framework for Python and Qt"
 authors = ["David Ding", "James Dawson Brock"]
 license = "MIT"
 readme = "README.md"
-homepage = "https://github.com/pyedifice/pyedifice"
+homepage = "https://pyedifice.github.io"
 repository = "https://github.com/pyedifice/pyedifice"
 packages = [{include = "edifice", from = "."}]
 

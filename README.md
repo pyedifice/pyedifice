@@ -2,14 +2,14 @@
 <img src="https://raw.githubusercontent.com/pyedifice/pyedifice/master/docs/source/image/EdificePyramid.svg" width="200">
 </h3>
 
-<h1 align="center">Edifice: a declarative GUI library for Python</h1>
+<h1 align="center">Edifice: Declarative GUI framework for Python and Qt</h1>
 
 Edifice is a Python library for building declarative application user interfaces.
 
-- Modern declarative UI paradigm from web development.
-- 100% Python application development, no language inter-op.
-- A native desktop app instead of a bundled web browser.
-- Fast iteration via hot reloading.
+- Modern **declarative** UI paradigm from web development.
+- **100% Python** application development, no language inter-op.
+- A **native** desktop app instead of a bundled web browser.
+- Fast iteration via **hot reloading**.
 
 This modern declarative UI paradigm is also known as
 “[Model-View-Update](https://thomasbandt.com/model-view-update),”
@@ -154,7 +154,7 @@ to enable use of the debugger
 Contributions are welcome; please send pull requests!
 
 ## License
-Edifice is MIT Licensed.
+Edifice is [MIT Licensed](https://en.wikipedia.org/wiki/MIT_License).
 
 Edifice uses Qt under the hood, and both PyQt6 and PySide6 are supported. Note that PyQt6 is distributed with the *GPL* license while PySide6 is distributed
 under the more flexible *LGPL* license.
