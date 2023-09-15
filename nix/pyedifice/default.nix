@@ -59,7 +59,7 @@ buildPythonPackage rec {
 
   meta = with lib; {
     description = "declarative GUI library for Python";
-    homepage = "https://github.com/xc-jp/pyedifice";
+    homepage = "https://github.com/pyedifice/pyedifice";
     license = licenses.mit;
     maintainers = with maintainers; [ ];
   };

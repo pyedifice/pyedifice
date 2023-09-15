@@ -19,7 +19,7 @@ Edifice uses [PySide6](https://doc.qt.io/qtforpython-6/)
 or [PyQt6](https://www.riverbankcomputing.com/static/Docs/PyQt6/introduction.html)
 as a backend. So Edifice is like
 [React](https://react.dev/), but with
-Python instead of JavaScript, and Qt instead of the HTML DOM.
+Python instead of JavaScript, and [Qt Widgets](https://doc.qt.io/qt-6/qtwidgets-index.html) instead of the HTML DOM.
 
 If you have React experience, you'll find Edifice to be very easy to pick up.
 For example, for the React `setState` function, Edifice has `set_state`, and for React's `this.props`,
@@ -31,15 +31,13 @@ and "Component" is removed from functions like `shouldComponentUpdate` (renamed 
 
 ## Getting Started
 
-Installation:
-
-```
-pip install pyedifice
-```
-
-Published at https://pypi.org/project/pyedifice/
-
-Documentation at https://pyedifice.github.io
+* **Installation**
+  ```
+  pip install pyedifice
+  ```
+* **Source** published at https://github.com/pyedifice/pyedifice
+* **Package** published at https://pypi.org/project/pyedifice/
+* **Documentation** published at https://pyedifice.github.io
 
 ## Why Edifice?
 
@@ -51,7 +49,7 @@ To create a dynamic application using these libraries,
 you must not only think about what to display to the user given state changes,
 but also how to issue the commands to achieve the desired effect.
 
-Edifice allows you to describe the GUI as a function mapping state to displayed widgets,
+Edifice allows you to declare the GUI as a function mapping state to displayed widgets,
 leaving the how to the library.
 User interactions update the state, and state changes update the GUI.
 Edifice makes it possible to write code like:
@@ -84,8 +82,8 @@ Edifice provides two key features to make development easier:
 
 - Dynamic reloading of changed source code. This is especially useful for tweaking the looks of your application, allowing you to test if the margin should be *10px* or *15px* instantly without closing the app, reopening it, and waiting for everything to load.
 - Component inspector. Similar to the Inspect Elements tool of a browser, the component inspector will show you all Components in your application along with the props and state, allowing you to examine the internal state of your complex component without writing a million print statements.
-  Since the UI is specified as a (pure) function of state, the state you see completely describes your application,
-  and you can even do things like rewinding to a previous state.
+Since the UI is specified as a (pure) function of state, the state you see completely describes your application,
+and you can even do things like rewinding to a previous state.
 
 
 QML is another declarative GUI framework for Qt. Edifice differs from QML in these aspects:
@@ -102,14 +100,14 @@ Edifice and React allow fully dynamic applications to be specified declaratively
 
 ## How it works:
 An Edifice Component encapsulates application state and defines the mapping from the state to UI in the `render` function.
-The state of a Component is divided into `props` and `state`.
-`props` are state passed to the Component in the constructor,
-whereas `state` is the Component's own internal state.
-Changes to `props` and `state` will trigger a rerender of the Component and all its children.
+The state of a Component is divided into **props** and **state**.
+props are state passed to the Component in the constructor,
+whereas state is the Component's own internal state.
+Changes to props and state will trigger a rerender of the Component and all its children.
 The old and new Component trees will be compared to one another,
 and a diffing algorithm will determine which components previously existed and which ones are new
 (the algorithm behaves similarly to the React diff algorithm).
-Components that previously existed will maintain their `state`, whereas their `props` will be updated.
+Components that previously existed will maintain their state, whereas their props will be updated.
 Finally, Edifice will try to ensure that the minimal update commands are issued to the UI.
 All this logic is handled by the library, and the Components need not care about it.
 
@@ -151,16 +149,16 @@ but it can properly pause the PyQt event loop
 to enable use of the debugger
 (users of PySide need not worry about this).
 
-## Other information
-### Contribution
+## Contribution
 
-Contributions are welcome; feel free to send pull requests!
+Contributions are welcome; please send pull requests!
 
-### License
+## License
 Edifice is MIT Licensed.
 
-Edifice uses Qt under the hood, and both PyQt6 and PySide6 are supported. Note that PyQt6 is distributed with the GPL license while PySide6 is distributed
-under the more flexible LGPL license.
+Edifice uses Qt under the hood, and both PyQt6 and PySide6 are supported. Note that PyQt6 is distributed with the *GPL* license while PySide6 is distributed
+under the more flexible *LGPL* license.
+See [PyQt vs PySide Licensing](https://www.pythonguis.com/faq/pyqt-vs-pyside/).
 
 ## Poetry Build System
 
@@ -189,13 +187,20 @@ pyedifice = {git = "https://github.com/pyedifice/pyedifice.git"}
 pyside6 = "6.5.1.1"
 ```
 
+
+## Version History / Change Log / Release Notes
+
+See [Release Notes](https://pyedifice.github.io/versions.html)
+(source: [versions.rst](docs/source/versions.rst))
+
+
 ## Development
 
-For development of this package, you can use the `poetry shell` environment.
+For development of this package, you can use the
+[`poetry shell`](https://python-poetry.org/docs/cli#shell) environment.
 
 Also there is a [Nix Flake](https://nixos.wiki/wiki/Flakes) with
 three development environments:
-
 
 1. `nix develop .#default`
 
@@ -228,14 +233,3 @@ three development environments:
    In this environment the tests should pass.
 
        ./run_tests.sh
-
-### Generate the favicon
-
-```
-nix run nixpkgs#imagemagick -- convert -resize 32x32 -background none EdificePyramid.svg EdificePyramid.ico
-```
-
-## Version History / Change Log / Release Notes
-
-See [Release Notes](https://pyedifice.github.io/versions.html)
-(source: [versions.rst](docs/source/versions.rst))

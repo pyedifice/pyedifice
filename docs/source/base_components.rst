@@ -25,6 +25,7 @@ Base Components
    CheckBox
    RadioButton
    Slider
+   Dropdown
 
 Events
 ------

@@ -336,8 +336,9 @@ class BaseComponentsTest(unittest.TestCase):
             }
         }
 
-        completer1 = base_components.Completer(["option1", "option2"])
-        completer2 = base_components.Completer(["option1", "option2"], "inline")
+		# TODO
+        # completer1 = base_components.Completer(["option1", "option2"])
+        # completer2 = base_components.Completer(["option1", "option2"], "inline")
         self._test_comp(base_components.Window(
             title="title",
             menu={"Playback": context_menu},
@@ -352,11 +353,13 @@ class BaseComponentsTest(unittest.TestCase):
         self._test_comp(base_components.Button("play", on_click=lambda e: None))
         self._test_comp(base_components.Dropdown(selection="Option1", options=["Option1, Option2"], on_select=lambda text: None))
         self._test_comp(base_components.Dropdown(editable=True, selection="Option1", options=["Option1, Option2"], on_change=lambda text: None))
-        self._test_comp(base_components.Dropdown(
-            editable=True, selection="Option1", options=["Option1, Option2"],
-            completer=completer2, on_change=lambda text: None))
+        # TODO
+        # self._test_comp(base_components.Dropdown(
+        #     editable=True, selection="Option1", options=["Option1, Option2"],
+        #     completer=completer2, on_change=lambda text: None))
         self._test_comp(base_components.TextInput("initial_text", on_change=lambda text: None))
-        self._test_comp(base_components.TextInput("initial_text", completer=completer1, on_change=lambda text: None))
+        # TODO
+        # self._test_comp(base_components.TextInput("initial_text", completer=completer1, on_change=lambda text: None))
         self._test_comp(base_components.CheckBox(checked=True, text="Test", on_change=lambda checked: None))
         self._test_comp(base_components.RadioButton(checked=True, text="Test", on_change=lambda checked: None))
         self._test_comp(base_components.Slider(value=1, min_value=0, max_value=3, on_change=lambda value: None))

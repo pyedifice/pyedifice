@@ -991,9 +991,25 @@ class ImageSvg(QtWidgetComponent):
                 commands.append((self.underlying.load, self.props.src))
         return commands
 
+# TODO
+# It seems to me that the type for Completer should be
+#
+#     Callable[[str], str]
+#
+# But Qt doesn’t like higher-order functions and they’ve done something
+# much weirder and more complicated.
+# https://doc.qt.io/qtforpython-5/PySide2/QtWidgets/QCompleter.html
+# https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QCompleter.html
 class Completer(object):
-
-    def __init__(self, options, mode="popup"):
+    # """
+    # Parameters for a `QCompleter <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QCompleter.html>`_.
+    # """
+    def __init__(self,
+        options,
+        # TODO In PySide6, there is no longer an options, instead its a model.
+        mode : str = "popup"
+        # TODO Should mode be this type instead? https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QCompleter.html#PySide6.QtWidgets.PySide6.QtWidgets.QCompleter.CompletionMode
+    ):
         self.options = options
         if mode == "popup":
             self.mode = QtWidgets.QCompleter.CompletionMode.PopupCompletion
@@ -1010,23 +1026,35 @@ class Completer(object):
 
 
 class TextInput(QtWidgetComponent):
-    """Basic widget for a one line text input
+    """Basic widget for a one line text input.
 
     .. figure:: /image/textinput_button.png
        :width: 300
 
-       TextInput on the left. Note that you can set an optional Completer, giving the dropdown for completion.
+       TextInput on the left.
 
     Args:
         text: Initial text of the text input
-        on_change: callback for the value of the text input changes. The callback is passed the changed
-            value of the text
+        on_change:
+            Callback for when the value of the text input changes.
+            The callback is passed the changed
+            value of the text.
+        on_edit_finish:
+            Callback for the
+            `editingFinished <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QLineEdit.html#PySide6.QtWidgets.PySide6.QtWidgets.QLineEdit.editingFinished>`_
+            event, when the Return or Enter key is pressed, or if the line edit
+            loses focus and its contents have changed
     """
+    #TODO Note that you can set an optional Completer, giving the dropdown for completion.
 
     @register_props
-    def __init__(self, text: tp.Any = "", on_change: tp.Callable[[tp.Text], None] = (lambda text: None),
-                 on_edit_finish: tp.Callable[[], None] = (lambda: None),
-                 completer: tp.Optional[Completer] = None, **kwargs):
+    def __init__(self,
+        text: tp.Any = "",
+        on_change: tp.Callable[[tp.Text], None] = (lambda text: None),
+        on_edit_finish: tp.Callable[[], None] = (lambda: None),
+        # completer: tp.Optional[Completer] = None,
+        **kwargs
+    ):
         super().__init__(**kwargs)
         self._on_change_connected = False
         self._editing_finished_connected = False
@@ -1038,7 +1066,7 @@ class TextInput(QtWidgetComponent):
         self._set_size(size * len(self.props.text), size)
         self.underlying.setObjectName(str(id(self)))
 
-    def set_on_change(self, on_change):
+    def _set_on_change(self, on_change):
         def on_change_fun(text):
             if text != self.props.text:
                 return _ensure_future(on_change)(text)
@@ -1047,7 +1075,7 @@ class TextInput(QtWidgetComponent):
         self.underlying.textChanged[str].connect(on_change_fun)
         self._on_change_connected = True
 
-    def set_on_edit_finish(self, on_edit_finish):
+    def _set_on_edit_finish(self, on_edit_finish):
         def on_edit_finish_fun():
             return _ensure_future(on_edit_finish)()
         if self._editing_finished_connected:
@@ -1055,13 +1083,13 @@ class TextInput(QtWidgetComponent):
         self.underlying.editingFinished.connect(on_edit_finish_fun)
         self._editing_finished_connected = True
 
-    def set_completer(self, completer):
-        if completer:
-            qt_completer = QtWidgets.QCompleter(completer.options)
-            qt_completer.setCompletionMode(completer.mode)
-            self.underlying.setCompleter(qt_completer)
-        else:
-            self.underlying.setCompleter(None)
+    # def _set_completer(self, completer):
+    #     if completer:
+    #         qt_completer = QtWidgets.QCompleter(completer.options)
+    #         qt_completer.setCompletionMode(completer.mode)
+    #         self.underlying.setCompleter(qt_completer)
+    #     else:
+    #         self.underlying.setCompleter(None)
 
     def _qt_update_commands(self, children, newprops, newstate):
         if self.underlying is None:
@@ -1073,11 +1101,11 @@ class TextInput(QtWidgetComponent):
                          self.underlying.cursorPosition()))
         for prop in newprops:
             if prop == "on_change":
-                commands.append((self.set_on_change, newprops[prop]))
+                commands.append((self._set_on_change, newprops[prop]))
             elif prop == "on_edit_finish":
-                commands.append((self.set_on_edit_finish, newprops[prop]))
-            elif prop == "completer":
-                commands.append((self.set_completer, newprops[prop]))
+                commands.append((self._set_on_edit_finish, newprops[prop]))
+    #         elif prop == "completer":
+    #             commands.append((self._set_completer, newprops[prop]))
         return commands
 
 
@@ -1090,19 +1118,30 @@ class Dropdown(QtWidgetComponent):
        Dropdown on the right.
 
     Args:
-        text: Initial text of the text input
-        on_change: callback for the value of the text input changes. The callback is passed the changed
-            value of the text
+    	selection: Current selection text of the text input.
+        text: Initial text of the text input.
+        options: Options to select from.
+        editable: True if the text input should be editable.
+        on_change:
+            Callback for the value of the text input changes. The callback is passed the changed
+            value of the text.
+        on_select:
+            Callback for when the selection changes.
+            The callback is passed the new value of the text.
     """
 
     @register_props
-    def __init__(self, selection: tp.Text = "", text: tp.Text = "",
-                 options: tp.Optional[tp.Sequence[tp.Text]] = None,
-                 editable: bool = False,
-                 completer: tp.Optional[Completer] = None,
-                 on_change: tp.Optional[tp.Callable[[tp.Text], None]] = None,
-                 on_select: tp.Optional[tp.Callable[[tp.Text], None]] = None,
-                 **kwargs):
+    def __init__(self,
+        selection: tp.Text = "",
+        text: tp.Text = "",
+        options: tp.Optional[tp.Sequence[tp.Text]] = None,
+        editable: bool = False,
+        # TODO
+        # completer: tp.Optional[Completer] = None,
+        on_change: tp.Optional[tp.Callable[[tp.Text], None]] = None,
+        on_select: tp.Optional[tp.Callable[[tp.Text], None]] = None,
+        **kwargs
+    ):
         super().__init__(**kwargs)
         self._on_change_connected = False
         self._on_select_connected = False
@@ -1114,15 +1153,16 @@ class Dropdown(QtWidgetComponent):
         self.underlying = QtWidgets.QComboBox()
         self.underlying.setObjectName(str(id(self)))
 
-    def set_completer(self, completer):
-        if completer:
-            qt_completer = QtWidgets.QCompleter(completer.options)
-            qt_completer.setCompletionMode(completer.mode)
-            self.underlying.setCompleter(qt_completer)
-        else:
-            self.underlying.setCompleter(None)
+	# TODO
+    # def _set_completer(self, completer):
+    #     if completer:
+    #         qt_completer = QtWidgets.QCompleter(completer.options)
+    #         qt_completer.setCompletionMode(completer.mode)
+    #         self.underlying.setCompleter(qt_completer)
+    #     else:
+    #         self.underlying.setCompleter(None)
 
-    def set_on_change(self, on_change):
+    def _set_on_change(self, on_change):
         def on_change_fun(text):
             return _ensure_future(on_change)(text)
         if self._on_change_connected:
@@ -1131,7 +1171,7 @@ class Dropdown(QtWidgetComponent):
             self.underlying.editTextChanged[str].connect(on_change_fun)
             self._on_change_connected = True
 
-    def set_on_select(self, on_select):
+    def _set_on_select(self, on_select):
         def on_select_fun(text):
             return _ensure_future(on_select)(text)
         if self._on_select_connected:
@@ -1152,15 +1192,15 @@ class Dropdown(QtWidgetComponent):
                             ])
         for prop in newprops:
             if prop == "on_change":
-                commands.append((self.set_on_change, newprops[prop]))
+                commands.append((self._set_on_change, newprops[prop]))
             elif prop == "on_select":
-                commands.append((self.set_on_select, newprops[prop]))
+                commands.append((self._set_on_select, newprops[prop]))
             elif prop == "text":
                 commands.append((self.underlying.setEditText, newprops[prop]))
             elif prop == "selection":
                 commands.append((self.underlying.setCurrentText, newprops[prop]))
             elif prop == "completer":
-                commands.append((self.set_completer, newprops[prop]))
+                commands.append((self._set_completer, newprops[prop]))
         return commands
 
 
@@ -1196,7 +1236,7 @@ class RadioButton(QtWidgetComponent):
         self._set_size(size * len(self.props.text), size)
         self.underlying.setObjectName(str(id(self)))
 
-    def set_on_change(self, on_change):
+    def _set_on_change(self, on_change):
         def on_change_fun(checked):
             return _ensure_future(on_change)(checked)
         if self._connected:
@@ -1212,7 +1252,7 @@ class RadioButton(QtWidgetComponent):
         commands.append((self.underlying.setChecked, self.props.checked))
         for prop in newprops:
             if prop == "on_change":
-                commands.append((self.set_on_change, newprops[prop]))
+                commands.append((self._set_on_change, newprops[prop]))
             elif prop == "text":
                 commands.append((self.underlying.setText, str(newprops[prop])))
         return commands
@@ -1229,13 +1269,14 @@ class CheckBox(QtWidgetComponent):
     A checkbox allows the user to specify some boolean state.
 
     The checked prop determines the initial check-state of the widget.
-    When the user toggles the check state, the on_change callback is called
+    When the user toggles the check state, the :code:`on_change` callback is called
     with the new check state.
 
     Args:
         checked: whether or not the checkbox is checked initially
         text: text for the label of the checkbox
-        on_change: callback for when the check box state changes. The callback receives the new state of the check box as an argument.
+        on_change: callback for when the check box state changes.
+        The callback receives the new state of the check box as an argument.
     """
 
     @register_props
@@ -1251,7 +1292,7 @@ class CheckBox(QtWidgetComponent):
         self._set_size(size * len(self.props.text), size)
         self.underlying.setObjectName(str(id(self)))
 
-    def set_on_change(self, on_change):
+    def _set_on_change(self, on_change):
         def on_change_fun(checked):
             return _ensure_future(on_change)(checked)
         if self._connected:
@@ -1268,7 +1309,7 @@ class CheckBox(QtWidgetComponent):
         commands.append((self.underlying.setCheckState, check_state))
         for prop in newprops:
             if prop == "on_change":
-                commands.append((self.set_on_change, newprops[prop]))
+                commands.append((self._set_on_change, newprops[prop]))
             elif prop == "text":
                 commands.append((self.underlying.setText, str(newprops[prop])))
         return commands
@@ -1344,7 +1385,7 @@ class Slider(QtWidgetComponent):
         #     self._set_size(size * len(self.props.text), size)
         self.underlying.setObjectName(str(id(self)))
 
-    def set_on_change(self, on_change):
+    def _set_on_change(self, on_change):
         def on_change_fun(value):
             if self.props.dtype == float:
                 min_value, max_value = self.props.min_value, self.props.max_value
@@ -1376,7 +1417,7 @@ class Slider(QtWidgetComponent):
         commands.append((self.underlying.setValue, value))
         for prop in newprops:
             if prop == "on_change":
-                commands.append((self.set_on_change, newprops[prop]))
+                commands.append((self._set_on_change, newprops[prop]))
         return commands
 
 
