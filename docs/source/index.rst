@@ -259,15 +259,18 @@ Edifice is released under the `MIT License <https://en.wikipedia.org/wiki/MIT_Li
 Edifice uses Qt under the hood, and both PyQt6 and PySide6 are supported.
 Note that PyQt6 is distributed with the *GPL* license while PySide6 is distributed
 under the more flexible *LGPL* license.
-See `PyQt vs PySide Licensing <https://www.pythonguis.com/faq/pyqt-vs-pyside/>`.
+See `PyQt vs PySide Licensing <https://www.pythonguis.com/faq/pyqt-vs-pyside/>`_.
 
 The source code is avaliable `on GitHub <https://github.com/pyedifice/pyedifice>`_.
 
 Support
 -------
 
-Submit questions, bug reports or feature requests using
-`Github issues <https://github.com/pyedifice/pyedifice/issues>`_.
+Submit bug reports or feature requests on
+`Github Issues <https://github.com/pyedifice/pyedifice/issues>`_.
+
+Submit any questions on
+`Github Discussions <https://github.com/pyedifice/pyedifice/discussions>`_.
 
 Indices and tables
 ------------------

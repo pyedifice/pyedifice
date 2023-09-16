@@ -149,10 +149,6 @@ but it can properly pause the PyQt event loop
 to enable use of the debugger
 (users of PySide need not worry about this).
 
-## Contribution
-
-Contributions are welcome; please send pull requests!
-
 ## License
 Edifice is [MIT Licensed](https://en.wikipedia.org/wiki/MIT_License).
 
@@ -193,6 +189,14 @@ pyside6 = "6.5.1.1"
 See [Release Notes](https://pyedifice.github.io/versions.html)
 (source: [versions.rst](docs/source/versions.rst))
 
+
+## Contribution
+
+Contributions are welcome; please send Pull Requests!
+
+When submitting a Pull Request, think about adding tests to [tests](tests) and
+adding a line to the **Unreleased** section of the
+change log [versions.rst](docs/source/versions.rst).
 
 ## Development
 
