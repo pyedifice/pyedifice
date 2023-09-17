@@ -17,11 +17,11 @@ User contributions are of course welcome!
    :recursive:
    :template: custom-class.rst
 
-   plotting.Figure
-   forms.Form
-   forms.FormDialog
-   button_view.ButtonView
-   flow_view.FlowView
-   table_grid_view.TableGridView
-   table_grid_view.TableChildren
-   image_aspect.ImageAspect
+   ~plotting.Figure
+   ~forms.Form
+   ~forms.FormDialog
+   ~button_view.ButtonView
+   ~flow_view.FlowView
+   ~table_grid_view.TableGridView
+   ~table_grid_view.TableChildren
+   ~image_aspect.ImageAspect
