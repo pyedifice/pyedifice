@@ -156,9 +156,30 @@ Edifice uses Qt under the hood, and both PyQt6 and PySide6 are supported. Note t
 under the more flexible *LGPL* license.
 See [PyQt vs PySide Licensing](https://www.pythonguis.com/faq/pyqt-vs-pyside/).
 
+## Version History / Change Log / Release Notes
+
+See [Release Notes](https://pyedifice.github.io/versions.html)
+(source: [versions.rst](docs/source/versions.rst))
+
+
+## Contribution
+
+Contributions are welcome; please send Pull Requests!
+
+When submitting a Pull Request, think about adding tests to [tests](tests) and
+adding a line to the **Unreleased** section of the
+change log [versions.rst](docs/source/versions.rst).
+
 ## Poetry Build System
 
 The Poetry `pyproject.toml` specifies the package dependecies.
+
+For development of this package, you can use the
+[`poetry shell`](https://python-poetry.org/docs/cli#shell) environment.
+
+In this environment the tests should pass.
+
+    ./run_tests.sh
 
 Because Edifice supports PySide6 and PyQt6 at the same time, neither
 are required by `[tool.poetry.dependencies]`. Instead they are both
@@ -184,26 +205,9 @@ pyside6 = "6.5.1.1"
 ```
 
 
-## Version History / Change Log / Release Notes
+## Nix Build System
 
-See [Release Notes](https://pyedifice.github.io/versions.html)
-(source: [versions.rst](docs/source/versions.rst))
-
-
-## Contribution
-
-Contributions are welcome; please send Pull Requests!
-
-When submitting a Pull Request, think about adding tests to [tests](tests) and
-adding a line to the **Unreleased** section of the
-change log [versions.rst](docs/source/versions.rst).
-
-## Development
-
-For development of this package, you can use the
-[`poetry shell`](https://python-poetry.org/docs/cli#shell) environment.
-
-Also there is a [Nix Flake](https://nixos.wiki/wiki/Flakes) with
+There is a [Nix Flake](https://nixos.wiki/wiki/Flakes) with
 three development environments:
 
 1. `nix develop .#default`
@@ -228,12 +232,16 @@ three development environments:
    [publishing to PyPI](https://python-poetry.org/docs/libraries/#publishing-to-pypi)
    should work.
 
-
 3. `nix develop .#poetry2nix`
 
    poetry2nix [`mkPoetryEnv`](https://github.com/nix-community/poetry2nix#mkpoetryenv)
-   environment.
+   environment with editable `edifice/` source files.
 
    In this environment the tests should pass.
 
        ./run_tests.sh
+
+   In this environment building the [Docs](docs) should work.
+
+There are also Nix Flake `apps` for running the tests and the examples, see
+[Examples](https://pyedifice.github.io/examples.html) or `nix flake show`.

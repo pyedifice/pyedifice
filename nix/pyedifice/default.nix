@@ -45,6 +45,7 @@ buildPythonPackage rec {
       "flake.nix"
       "flake.lock"
     ]);
+    # src = pkgs.nix-gitignore.gitignoreRecursiveSource (lib.cleanSource ../..);
   };
 
   propagatedBuildInputs = [

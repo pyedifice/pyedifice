@@ -14,6 +14,15 @@ The code is available at `calculator.py <https://github.com/pyedifice/pyedifice/
 .. image:: /image/example_calculator.png
    :width: 300
 
+.. code-block:: shell
+   :caption: Run in Python environment
+
+   python -m edifice examples/calculator.py Calculator
+
+.. code-block:: shell
+   :caption: Run with `Nix <https://determinate.systems/posts/nix-run>`__
+
+   nix run github:pyedifice/pyedifice#example-calculator
 
 Financial Charting
 ------------------
@@ -41,6 +50,17 @@ The code is available at `financial_charts.py <https://github.com/pyedifice/pyed
 .. figure:: /image/example_financial_charting2.png
    :width: 600
 
+.. code-block:: shell
+   :caption: Run in Python environment
+
+   python -m edifice examples/financial_charts.py App
+
+.. code-block:: shell
+   :caption: Run with `Nix <https://determinate.systems/posts/nix-run>`__
+
+   nix run github:pyedifice/pyedifice#example-financial-charting
+
+
 Forms
 -----
 
@@ -61,6 +81,16 @@ The code is available at `form.py <https://github.com/pyedifice/pyedifice/tree/m
 .. figure:: /image/example_form.png
    :width: 300
 
+.. code-block:: shell
+   :caption: Run in Python environment
+
+   PYTHONPATH=. python examples/form.py
+
+.. code-block:: shell
+   :caption: Run with `Nix <https://determinate.systems/posts/nix-run>`__
+
+   nix run github:pyedifice/pyedifice#example-forms
+
 Harmonic Oscillator
 -------------------
 
@@ -74,3 +104,12 @@ The code is available at `harmonic_oscillator.py <https://github.com/pyedifice/p
 .. figure:: /image/example_harmonic_oscillator.gif
    :width: 500
 
+.. code-block:: shell
+   :caption: Run in Python environment
+
+   python -m edifice examples/harmonic_oscillator.py Oscillator
+
+.. code-block:: shell
+   :caption: Run with `Nix <https://determinate.systems/posts/nix-run>`__
+
+   nix run github:pyedifice/pyedifice#example-harmonic-oscillator

@@ -88,7 +88,8 @@
       # 3. nix develop .#poetry2nix
       #
       #    https://github.com/nix-community/poetry2nix#mkpoetryenv
-      #    environment.
+      #    environment with editable edifice/ source files.
+
       #    In this environment the tests should pass.
       #
       #        ./run_tests.sh
@@ -150,33 +151,99 @@
       apps =
       let
         run_tests_sh = pkgs.writeScript "run_tests_sh" (builtins.readFile ./run_tests.sh);
-        script = pkgs.writeShellApplication {
-          name = "edifice-run-tests";
-          runtimeInputs = [
-            (pkgs.poetry2nix.mkPoetryEnv poetryEnvAttrs)
-          ];
-          text = "${run_tests_sh}";
-        };
-        script-virtualX = pkgs.writeShellApplication {
-          name = "edifice-run-tests";
-          runtimeInputs = [
-            (pkgs.poetry2nix.mkPoetryEnv poetryEnvAttrs)
-            pkgs.xvfb-run
-          ];
-          text = "xvfb-run ${run_tests_sh}";
-        };
       in
       {
         run_tests =
-        {
-          type = "app";
-          program = "${script}/bin/edifice-run-tests";
-        };
+          let
+            script = pkgs.writeShellApplication {
+              name = "edifice-run-tests";
+              runtimeInputs = [
+                (pkgs.poetry2nix.mkPoetryEnv poetryEnvAttrs)
+              ];
+              text = "${run_tests_sh}";
+            };
+          in
+          {
+            type = "app";
+            program = "${script}/bin/edifice-run-tests";
+          };
         run_tests-virtualX =
-        {
-          type = "app";
-          program = "${script-virtualX}/bin/edifice-run-tests";
-        };
+          let
+            script-virtualX = pkgs.writeShellApplication {
+              name = "edifice-run-tests";
+              runtimeInputs = [
+                (pkgs.poetry2nix.mkPoetryEnv poetryEnvAttrs)
+                pkgs.xvfb-run
+              ];
+              text = "xvfb-run ${run_tests_sh}";
+            };
+          in
+          {
+            type = "app";
+            program = "${script-virtualX}/bin/edifice-run-tests";
+          };
+        example-calculator =
+          let
+            script = pkgs.writeShellApplication {
+              name = "edifice-example";
+              runtimeInputs = [
+                (pkgs.poetry2nix.mkPoetryEnv poetryEnvAttrs)
+              ];
+              text = "python -m edifice examples/calculator.py Calculator";
+            };
+          in
+          {
+            type = "app";
+            program = "${script}/bin/edifice-example";
+          };
+        example-forms =
+          let
+            script = pkgs.writeShellApplication {
+              name = "edifice-example";
+              runtimeInputs = [
+                (pkgs.poetry2nix.mkPoetryEnv poetryEnvAttrs)
+              ];
+              text = "PYTHONPATH=. python examples/form.py";
+            };
+          in
+          {
+            type = "app";
+            program = "${script}/bin/edifice-example";
+          };
+        example-financial-charting =
+          let
+            script = pkgs.writeShellApplication {
+              name = "edifice-example";
+              runtimeInputs = [
+                (pkgs.poetry2nix.mkPoetryEnv (poetryEnvAttrs // {
+                  extraPackages = ps: with ps; [
+                    pandas
+                    yfinance
+                    matplotlib
+                  ];
+                }))
+              ];
+              text = "python -m edifice examples/financial_charts.py App";
+            };
+          in
+          {
+            type = "app";
+            program = "${script}/bin/edifice-example";
+          };
+        example-harmonic-oscillator =
+          let
+            script = pkgs.writeShellApplication {
+              name = "edifice-example";
+              runtimeInputs = [
+                (pkgs.poetry2nix.mkPoetryEnv poetryEnvAttrs)
+              ];
+              text = "python -m edifice examples/harmonic_oscillator.py Oscillator";
+            };
+          in
+          {
+            type = "app";
+            program = "${script}/bin/edifice-example";
+          };
       };
     });
 }
