@@ -189,7 +189,7 @@
               runtimeInputs = [
                 (pkgs.poetry2nix.mkPoetryEnv poetryEnvAttrs)
               ];
-              text = "python -m edifice examples/calculator.py Calculator";
+              text = "python -m edifice --inspect examples/calculator.py Calculator";
             };
           in
           {
@@ -223,7 +223,7 @@
                   ];
                 }))
               ];
-              text = "python -m edifice examples/financial_charts.py App";
+              text = "python -m edifice --inspect examples/financial_charts.py App";
             };
           in
           {
@@ -237,7 +237,7 @@
               runtimeInputs = [
                 (pkgs.poetry2nix.mkPoetryEnv poetryEnvAttrs)
               ];
-              text = "python -m edifice examples/harmonic_oscillator.py Oscillator";
+              text = "python -m edifice --inspect examples/harmonic_oscillator.py Oscillator";
             };
           in
           {
