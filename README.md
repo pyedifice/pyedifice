@@ -244,4 +244,8 @@ three development environments:
    In this environment building the [Docs](docs) should work.
 
 There are also Nix Flake `apps` for running the tests and the examples, see
-[Examples](https://pyedifice.github.io/examples.html) or `nix flake show`.
+[Examples](https://pyedifice.github.io/examples.html) or
+
+```
+nix flake show github:pyedifice/pyedifice
+```
