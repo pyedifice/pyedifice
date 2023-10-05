@@ -1,9 +1,12 @@
 Release Notes
 =============
 
-Unreleased
-----------
+0.1.2
+-----
+Released:
 
+* :code:`PropsDict` type annotations.
+* Documentation and metadata improvements.
 
 0.1.1
 -----
