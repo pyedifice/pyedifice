@@ -23,10 +23,10 @@ class PropsDict(object):
     def __init__(self, dictionary: tp.Mapping[tp.Text, tp.Any]):
         super().__setattr__("_d", dictionary)
 
-    def __getitem__(self, key):
+    def __getitem__(self, key) -> tp.Any:
         return self._d[key]
 
-    def __setitem__(self, key, value):
+    def __setitem__(self, key, value) -> tp.NoReturn:
         raise ValueError("Props are immutable")
 
     @property
@@ -53,16 +53,16 @@ class PropsDict(object):
         """
         return self._d.get(key, default)
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self._d)
 
     def __iter__(self):
         return iter(self._d)
 
-    def __contains__(self, k):
+    def __contains__(self, k) -> bool:
         return k in self._d
 
-    def __getattr__(self, key):
+    def __getattr__(self, key) -> tp.Any:
         if key in self._d:
             return self._d[key]
         raise KeyError("%s not in props" % key)
@@ -70,10 +70,10 @@ class PropsDict(object):
     def __repr__(self):
         return "PropsDict(%s)" % repr(self._d)
 
-    def __str__(self):
+    def __str__(self) -> str:
         return "PropsDict(%s)" % str(self._d)
 
-    def __setattr__(self, key, value):
+    def __setattr__(self, key, value) -> tp.NoReturn:
         raise ValueError("Props are immutable")
 
 

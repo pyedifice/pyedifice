@@ -137,7 +137,9 @@
             sphinx-book-theme
             sphinx-autodoc-typehints
           ];
-        })).env;
+        })).env.overrideAttrs (oldAttrs:{
+          buildInputs = [ pkgs.nodePackages.pyright ];
+        });
 
       };
 

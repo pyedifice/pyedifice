@@ -39,3 +39,7 @@ matplotlib = ">= 3.3.3" # "^3.7.2"
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.pyright]
+include = ["edifice"]
+exclude = ["**/__pycache__"]
