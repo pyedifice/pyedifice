@@ -2,6 +2,15 @@
 
 How to work on Edifice.
 
+## Poetry Build System
+
+For development of this package, you can use the
+[`poetry shell`](https://python-poetry.org/docs/cli#shell) environment.
+
+In this environment the tests should pass.
+
+    ./run_tests.sh
+
 ## Nix Build System
 
 There is a [Nix Flake](https://nixos.wiki/wiki/Flakes) with

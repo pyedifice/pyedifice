@@ -176,13 +176,6 @@ change log [versions.rst](docs/source/versions.rst).
 
 The Poetry `pyproject.toml` specifies the package dependecies.
 
-For development of this package, you can use the
-[`poetry shell`](https://python-poetry.org/docs/cli#shell) environment.
-
-In this environment the tests should pass.
-
-    ./run_tests.sh
-
 Because Edifice supports PySide6 and PyQt6 at the same time, neither
 are required by `[tool.poetry.dependencies]`. Instead they are both
 optional `[tool.poetry.group.dev.dependencies]`. A project which depends
