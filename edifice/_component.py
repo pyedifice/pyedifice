@@ -8,10 +8,15 @@ import typing as tp
 class PropsDict(object):
     """An immutable dictionary for storing props.
 
-    Props may be accessed either by indexing (props["myprop"]) or by
-    attribute (props.myprop).
+    Props may be accessed either by indexing
 
-    By convention, all PropsDict methods will start with _ to
+        props["myprop"]
+
+    or by attribute
+
+        props.myprop
+
+    By convention, all PropsDict methods will start with :code:`_` to
     not conflict with keys.
 
     .. document private functions
@@ -78,14 +83,14 @@ class PropsDict(object):
 
 
 class Reference(object):
-    """Reference to a Component to allow imperative modifications.
+    """Reference to a :class:`Component` to allow imperative modifications.
 
     While Edifice is a declarative library and tries to abstract away the need to issue
     imperative commands to widgets,
     this is not always possible, either due to limitations with the underlying backened,
     or because some feature implemented by the backend is not yet supported by the declarative layer.
     In these cases, you might need to issue imperative commands to the underlying widgets and components,
-    and References gives you a handle to the currently rendered Component.
+    and :class:`Reference` gives you a handle to the currently rendered :class:`Component`.
 
     Consider the following code::
 
@@ -114,15 +119,20 @@ class Reference(object):
             def render(self):
                 return AnotherComponent(on_click=self.issue_command).register_ref(self.ref)
 
-    Under the hood, register_ref registers the Reference object to the component returned by the render function.
-    While rendering, Edifice will examine all requested references and attaches them to the correct Component.
+    Under the hood, :code:`register_ref` registers the :class:`Reference` object
+    to the component returned by the :code:`render` function.
+    While rendering, Edifice will examine all requested references and attaches
+    them to the correct :class:`Component`.
 
-    Initially, a Reference object will point to None. After the first render, they will point to the rendered Component.
-    When the rendered component dismounts, the reference will once again point to None.
-    You may assume that References are valid whenever they are not None.
-    References evaluate false if the underlying value is None.
+    Initially, a :class:`Reference` object will point to :code:`None`.
+    After the first render, they will point to the rendered :class:`Component`.
+    When the rendered component dismounts, the reference will once again
+    point to :code:`None`.
+    You may assume that :class:`Reference` is valid whenever it is
+    not :code:`None`.
+    :class:`Reference` will evaluate false if the underlying value is :code:`None`.
 
-    References can be dereferenced by calling them. An idiomatic way of using references is::
+    :class:`Reference` can be dereferenced by calling it. An idiomatic way of using references is::
 
         if ref:
             ref().do_something()
@@ -158,24 +168,25 @@ class Reference(object):
 class Component(object):
     """The base class for Edifice Components.
 
-    A Component is a stateful container wrapping a stateless render function.
+    A :class:`Component` is a stateful container wrapping a stateless :code:`render` function.
     Components have both internal and external properties.
 
-    The external properties, **props**, are passed into the Component by another
-    Component's render function through the constructor. These values are owned
-    by the external caller and should not be modified by this Component.
-    They may be accessed via the field props (self.props), which is a PropsDict.
-    A PropsDict allows iteration, get item (self.props["value"]), and get attribute
-    (self.props.value), but not set item or set attribute. This limitation
+    The external properties, **props**, are passed into the :class:`Component` by another
+    :class:`Component`’s render function through the constructor. These values are owned
+    by the external caller and should not be modified by this :class:`Component`.
+    They may be accessed via the field props :code:`self.props`, which is a :class:`PropsDict`.
+    A :class:`PropsDict` allows iteration, get item ( :code:`self.props["value"]` ), and get attribute
+    ( :code:`self.props.value` ), but not set item or set attribute. This limitation
     is set to protect the user from accidentally modifying props, which may cause
     bugs. (Note though that a mutable prop, e.g. a list, can still be modified;
     be careful not to do so)
 
     The internal properties, the **state**, belong to this Component, and may be
     used to keep track of internal state. You may set the state as
-    attributes of the Component object, for instance self.my_state.
-    You can initialize the state as usual in the constructor (e.g. self.my_state = {"a": 1}),
-    and the state persists so long as the Component is still mounted.
+    attributes of the :class:`Component` object, for instance :code:`self.my_state`.
+    You can initialize the state as usual in the constructor
+    (e.g. :code:`self.my_state = {"a": 1}` ),
+    and the state persists so long as the :class:`Component` is still mounted.
 
     In most cases, changes in state would ideally trigger a rerender.
     There are two ways to ensure this.
@@ -190,24 +201,26 @@ class Component(object):
             self.myotherstate = 2
 
     When the context manager exits, a state change will be triggered.
-    The render_changes() context manager also ensures that all state changes
+    The :code:`render_changes()` context manager also ensures that all state changes
     happen atomically: if an exception occurs inside the context manager,
     all changes will be unwound. This helps ensure consistency in the
-    Component's state.
+    :class:`Component`’s state.
 
-    Note if you set self.mystate = 1 outside the render_changes() context manager,
+    Note if you set :class:`self.mystate = 1` outside
+    the :code:`render_changes()` context manager,
     this change will not trigger a re-render. This might be occasionally useful
     but usually is unintended.
 
-    The main function of Component is render, which should return the subcomponents
+    The main function of :class:`Component` is :code:`render`, which should return the subcomponents
     of this component. These may be your own higher-level components as well as
-    the core Components, such as Label, Button, and View.
-    Components may be composed in a tree like fashion:
+    the core :class:`Component` s, such as
+    :class:`Label`, :class:`Button`, and :class:`View`.
+    :class:`Component` s may be composed in a tree like fashion:
     one special prop is children, which will always be defined (defaults to an
     empty list).
-    To better enable the visualization of the tree-structure of a Component
+    To better enable the visualization of the tree-structure of a :class:`Component`
     in the code,
-    the call method of a Component has been overriden to set the arguments
+    the :code:`call` method of a :class:`Component` has been overriden to set the arguments
     of the call as children of the component.
     This allows you to write tree-like code remniscent of HTML::
 
@@ -222,25 +235,28 @@ class Component(object):
             ),
         )
 
-    The render function is called when self.should_update(newprops, newstate)
-    returns True. This function is called when the props change (as set by the
+    The :code:`render` function is called when
+    :code:`self.should_update(newprops, newstate)`
+    returns :code:`True`. This function is called when the props change (as set by the
     render function of this component) or when the state changes (when
-    using set_state or render_changes()). By default, all changes in newprops
-    and newstate will trigger a re-render.
+    using :code:`set_state` or :code:`render_changes()`). By default, all changes
+    in :code:`newprops`
+    and :code:`newstate` will trigger a re-render.
 
     When the component is rendered,
-    the render function is called. This output is then compared against the output
+    the :code:`render` function is called. This output is then compared against the output
     of the previous render (if that exists). The two renders are diffed,
-    and on certain conditions, the Component objects from the previous render
+    and on certain conditions, the :class:`Component` objects from the previous render
     are maintained and updated with new props.
 
-    Two Components belonging to different classes will always be re-rendered,
-    and Components belonging to the same class are assumed to be the same
+    Two :class:`Component` s belonging to different classes will always be re-rendered,
+    and :class:`Component` s belonging to the same class are assumed to be the same
     and thus maintained (preserving the old state).
 
-    When comparing a list of Components, the Component's **_key** attribute will
-    be compared. Components with the same _key and same class are assumed to be
-    the same. You can set the key using the set_key method, which returns the component
+    When comparing a list of :class:`Component` s, the :class:`Component`’s
+    :code:`_key` attribute will
+    be compared. :class:`Component` s with the same :code:`_key` and same class are assumed to be
+    the same. You can set the key using the :code:`set_key` method, which returns the component
     to allow for chaining::
 
         View(layout="row")(
@@ -248,9 +264,9 @@ class Component(object):
             MyComponent("World").set_key("world"),
         )
 
-    If the _key is not provided, the diff algorithm will assign automatic keys
+    If the :code:`_key` is not provided, the diff algorithm will assign automatic keys
     based on index, which could result in subpar performance due to unnecessary rerenders.
-    To ensure control over the rerender process, it is recommended to set_keys
+    To ensure control over the rerender process, it is recommended to :code:`set_key`
     whenever you have a list of children.
     """
 
@@ -270,7 +286,8 @@ class Component(object):
     def register_props(self, props: tp.Mapping[tp.Text, tp.Any]):
         """Register props.
 
-        Call this function if you do not use the register_props decorator and you have
+        Call this function if you do not use the
+        :func:`register_props <edifice.register_props>` decorator and you have
         props to register.
 
         Args:
@@ -410,12 +427,13 @@ class Component(object):
     def should_update(self, newprops: PropsDict, newstate: tp.Mapping[tp.Text, tp.Any]) -> bool:
         """Determines if the component should rerender upon receiving new props and state.
 
-        The arguments, newprops and newstate, reflect the props and state that change: they
+        The arguments, :code:`newprops` and :code:`newstate`, reflect the
+        props and state that change: they
         may be a subset of the props and the state. When this function is called,
         all props and state of this Component are the old values, so you can compare
-        `component.props` and `newprops` to determine changes.
+        :code:`component.props` and :code:`newprops` to determine changes.
 
-        By default, this function returns true, even if props and state are unchanged.
+        By default, this function returns :code:`True`, even if props and state are unchanged.
 
         Args:
             newprops: the new set of props
@@ -499,10 +517,10 @@ class Component(object):
 
 
 def make_component(f):
-    """Decorator turning a render function into a Component.
+    """Decorator turning a render function into a :class:`Component`.
 
     Some components do not have internal state, and these components are often little more than
-    a render function. Creating a Component class results in a lot of boiler plate code::
+    a :code:`render` function. Creating a :class:`Component` class results in a lot of boiler plate code::
 
         class MySimpleComp(Component):
             @register_props
@@ -512,7 +530,8 @@ def make_component(f):
             def render(self):
                 # Only here is there actual logic.
 
-    To cut down on the amount of boilerplate, you can use the make_component decorator::
+    To cut down on the amount of boilerplate, you can use the
+    :doc:`make_component <edifice.make_component>` decorator::
 
         @make_component
         def MySimpleComp(self, prop1, prop2, prop3, children):
@@ -526,7 +545,7 @@ def make_component(f):
         def MySimpleComp(prop1, prop2, prop3):
             return View()(Label(prop1), Label(self.prop2), Label(prop3))
 
-    instead. The difference is, with the decorator, an actual Component object is created,
+    instead. The difference is, with the decorator, an actual :class:`Component` object is created,
     which can be viewed, for example, in the inspector.
     If this component uses :doc:`State Values or State Managers</state>`,
     only this component and (possibly) its children will be re-rendered.
@@ -563,12 +582,14 @@ def make_component(f):
 
 
 def register_props(f):
-    """Decorator for Component __init__ method to record props.
+    """Decorator for :class:`Component` :code:`__init__` method to record props.
 
     This decorator will record all arguments (both vector and keyword arguments)
-    of the __init__ function as belonging to the props of the component.
-    It will call Component.register_props to store these arguments in the
-    props field of the Component.
+    of the :code:`__init__` function as belonging to the props of the component.
+    It will call
+    :func:`Component.register_props <edifice.Component.register_props>` to
+    store these arguments in the
+    props field of the :class:`Component`.
 
     Arguments that begin with an underscore will be ignored.
 
@@ -587,11 +608,12 @@ def register_props(f):
                     Label(self.props.c),
                 )
 
-    MyComponent(5, c="w") will then have props.a=5, props.b=2, and props.c="w".
-    props._d is undefined
+    :code:`MyComponent(5, c="w")` will then have
+    :code:`props.a=5`, :code:`props.b=2`, and :code:`props.c="w"`.
+    :code:`props._d` is undefined.
 
     Args:
-        f: the __init__ function of a Component subclass
+        f: the :code:`__init__` function of a :class:`Component` subclass
     Returns:
         decorated function
 

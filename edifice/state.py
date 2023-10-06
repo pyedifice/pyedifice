@@ -1,5 +1,6 @@
 """
-Often in an application, certain state is shared across multiple Components, and changes
+Often in an application, certain state is shared across multiple
+:class:`Component <edifice.Component>` s, and changes
 to the state might be requested at multiple endpoints.
 In the Edifice data flow, where state flows exclusively from parent to children,
 this requires setting one parent as the owner of that state,
@@ -7,26 +8,30 @@ and passing this state to all its descendants.
 Changes to this state requires requesting the parent to change its state,
 which will trigger the render method call for all its descendents.
 This is potentially wasteful,
-since many of the intermediate Components are mere "message-passers"
+since many of the intermediate :class:`Component <edifice.Component>` s
+are mere “message-passers”
 that only pass the state to their children and does not use it directly.
 
-:class:`edifice.StateValue` and :class:`edifice.StateManager` provide an
+:class:`StateValue` and :class:`StateManager` provide an
 alternative model of state storage,
 with the principal advantages that
 
 - There is no need to pass both a "getter" and a "setter" for every state
   down the Component Tree. Indeed, if you choose to create a global
-  :class:`edifice.StateValue`
-  or a global :class:`edifice.StateManager` object, there is no need to
+  :class:`StateValue`
+  or a global :class:`StateManager` object, there is no need to
   pass any state down
   the Component Tree.
 - Changes to the value will trigger automatic re-render, just like calling
-  :code:`set_state`. However, only the nodes that actually use the state will be
+  :func:`set_state <edifice.Component.set_state>`.
+  However, only the nodes that actually use the state will be
   re-rendered.
 
-A :code:`StateValue` is a value (any Python object) that Edifice will keep track of.
-The principal methods of a :code:`StateValue` are :code:`set` and :code:`subscribe`.
-:code:`subscribe` is the method you use to get the underlying value of the state value.
+A :class:`StateValue` is a value (any Python object) that Edifice will keep track of.
+The principal methods of a :class:`StateValue` are :func:`set <edifice.StateValue.set>`
+and :func:`subscribe <edifice.StateValue.subscribe>`.
+:func:`subscribe <edifice.StateValue.subscribe>` is the method you use to
+get the underlying value of the state value.
 It should be called only in the render function or after the component mounts.
 The method returns the underlying value, and also subscribes the component
 to all updates of the underlying value, so that changes to the value
@@ -41,26 +46,28 @@ will cause the component to re-render. For example::
 
 This component will rerender whenever user or balance changes.
 
-:code:`set` is the method you use to set the value of a :code:`StateValue`.
+:func:`set <edifice.StateValue.set>` is the method you use to set the value
+of a :class:`StateValue`.
 It will trigger re-renders of all subscribed components::
 
     def on_click(self):
         USER.set(self.text_input_value)
 
-Like all Edifice render triggers (the render_changes context, set_state),
-the :code:`StateValue.set` method is robust to exceptions.
+Like all Edifice render triggers (the render_changes context,
+:func:`set_state <edifice.Component.set_state>`),
+the :func:`set <edifice.StateValue.set>` method is robust to exceptions.
 If any exception is thrown while re-rendering,
-all changes are unwound, including the :code:`StateValue`,
+all changes are unwound, including the :class:`StateValue`,
 allowing you to properly handle the exception with guarantees of consistency.
 
-A :code:`StateManager` is very similar in concept to a :code:`StateValue`;
+A :class:`StateManager` is very similar in concept to a :class:`StateValue`;
 you can think of it as a key-value store for multiple values.
-:code:`StateManager` allows you to store related state together and update them in batch.
-Components subscribe to individual keys in the :code:`StateManager`,
-and a :code:`StateValue`
-tied to that key is returned. This can be used by the Component directly,
+:class:`StateManager` allows you to store related state together and update them in batch.
+Components subscribe to individual keys in the :class:`StateManager`,
+and a :class:`StateValue`
+tied to that key is returned. This can be used by the :class:`Component <edifice.Component>` directly,
 or passed to children, who would not need to know about the underlying
-:code:`StateManager`.
+:class:`StateManager`.
 """
 
 from collections import defaultdict, OrderedDict
