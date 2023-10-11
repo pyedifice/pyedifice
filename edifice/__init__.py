@@ -1,13 +1,15 @@
 """
-An edifice application is created by rendering a Component with an App.
+An edifice application is created by rendering a :class:`Component` with an
+:class:`App`.
 Let's examine what these objects are to understand what this statement means.
 
 Components are the basic building blocks of your GUI.
 A Component object is a stateful container wrapping a stateless render function,
 which describes what to render given the current Component state.
 Components can be composed of other components,
-both native components (View, Button, Text) and other composite
-components created by you or others.
+both native components
+(:class:`View`, :class:`Button`, :class:`Label`)
+and other composite Components created by you or others.
 
 Components have both internal state and external properties.
 The external properties, **props**, are passed into the Component by another
@@ -21,9 +23,10 @@ Component::
     Foo(a=1, b=2, c=3)  # Create a Foo with props a=1, b=2, c=3.
 
 These values are owned by the external caller and should not be modified by this Component.
-They may be accessed via the field props (:code:`self.props`), which is a PropsDict.
-A PropsDict allows iteration, get item (:code:`self.props["value"]`), and get attribute
-(:code:`self.props.value`), but not set item or set attribute.
+They may be accessed via the field props :code:`self.props`, which is a
+:class:`PropsDict`.
+A :class:`PropsDict` allows iteration, “get item” :code:`self.props["value"]`,
+and “get attribute” :code:`self.props.value`, but not “set item” or “set attribute”.
 
 The internal state, henceforth referred to as the **state**, belong to the Component.
 These are attributes of the Component object, for instance :code:`self.my_state`.
@@ -32,21 +35,22 @@ You can initialize the state as usual in the constructor
 and the state persists so long as the Component is still mounted.
 
 Changes in state and props will automatically trigger a re-render
-(unless you override this behavior by modifying :code:`should_update`).
-State should be changed using either the :code:`component.set_state` function
-or the :code:`component.render_changes()` context manager.
-See documentation for Component for more details.
+(unless you override this behavior by modifying :func:`Component.should_update`).
+State should be changed using either the :func:`Component.set_state` function
+or the :func:`Component.render_changes` context manager.
+See documentation for :class:`Component` for more details.
 
-The main method of Component is render, which should describe the rendered UI
+The main method of Component is :func:`Component.render`, which should describe the rendered UI
 given the current Component state.
 The render result is composed of your own higher-level components as well as
-the core Components, such as Label, Button, and View.
+the core Components, such as
+:class:`Label`, :class:`Button`, and :class:`View`.
 Components may be composed in a tree like fashion:
-one special prop is children, which will always be defined (defaults to an
+one special prop is :code:`children`, which will always be defined (defaults to an
 empty list).
 To better enable the visualization of the tree-structure of a Component
 in the code,
-the call method of a Component has been overriden to set the arguments
+the :code:`call()` method of Component has been overriden to set the arguments
 of the call as children of the component.
 This allows you to write tree-like code remniscent of HTML::
 
@@ -113,15 +117,15 @@ all state changes will be reflected in the UI.
 
 An App object encapsulates the rendering engine that's responsible
 for issuing the commands necessary to render the each of the declared Components.
-The App object is created by passing in the root Component,
+The :class:`App` object is created by passing in the root :class:`Component`,
 and it tracks all state changes in the Component tree with the given root.
-Calling the start method on the App object will run your application
+Calling the :func:`App.start` method on the App object will run your application
 and display the GUI you created::
 
     if __name__ == "__main__":
         App(MyApp()).start()
 
-When components are rendered, the render function is called.
+When components are rendered, the :func:`Component.render` function is called.
 This output is then compared against the output
 of the previous render (if that exists). The two renders are diffed,
 and on certain conditions, the Component objects from the previous render
@@ -129,9 +133,10 @@ are maintained and updated with new props.
 Two Components belonging to different classes will always be re-rendered,
 and Components belonging to the same class are assumed to be the same
 and thus maintained (preserving the old state).
+
 For lists of Components, a more complex procedure (the same as in ReactJS)
-will resolve which Components to maintain and which to replace;
-see documentation of Component class for details.
+will determine which Components to maintain and which to replace;
+see documentation of :class:`Component` class for details.
 
 Some useful utilities are also provided:
 
