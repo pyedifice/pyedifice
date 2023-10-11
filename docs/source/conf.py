@@ -10,7 +10,7 @@ project = 'Edifice'
 # Copyright is broken, renders as '1980, David Ding' for some reason
 # project_copyright = '2021, David Ding'
 author = 'David Ding © 2021'
-release = '0.1.1'
+release = '0.1.2'
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration

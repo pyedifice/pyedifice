@@ -57,8 +57,10 @@ nix flake show github:pyedifice/pyedifice
 ```
 ## Release Checklist
 
-- `pyproject.toml` `version`
-- `docs/source/version.rst`
+- version agreement
+   - `pyproject.toml` `version`
+   - `docs/source/version.rst`
+   - `docs/conf.py` `release`
 - `nix run .#run_tests`
 
 ```
