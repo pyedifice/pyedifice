@@ -352,9 +352,10 @@ class Component(object):
     def render_changes(self, ignored_variables: tp.Optional[tp.Sequence[tp.Text]] = None):
         """Context manager for managing changes to state.
 
-        This context manager provides two functions:
+        This context manager does two things:
+
         - Make a group of assignments to state atomically: if an exception occurs,
-        all changes will be rolled back.
+          all changes will be rolled back.
         - Renders changes to the state upon successful completion.
 
         Note that this context manager will not keep track of changes to mutable objects.
@@ -403,7 +404,8 @@ class Component(object):
         """Set state and render changes.
 
         The keywords are the names of the state attributes of the class, e.g.
-        for the state self.mystate, you call set_state with set_state(mystate=2).
+        for the state :code:`self.mystate`, you call :code:`set_state(mystate=2)`.
+
         At the end of this call, all changes will be rendered.
         All changes are guaranteed to appear atomically: upon exception,
         no changes to state will occur.
@@ -431,7 +433,8 @@ class Component(object):
         props and state that change: they
         may be a subset of the props and the state. When this function is called,
         all props and state of this Component are the old values, so you can compare
-        :code:`component.props` and :code:`newprops` to determine changes.
+        :code:`self.props` to :code:`newprops` and :code`self` to :code:`newstate`
+        to determine changes.
 
         By default, this function returns :code:`True`, even if props and state are unchanged.
 
