@@ -4,6 +4,10 @@ import functools
 import inspect
 import typing as tp
 
+_CommandType = tp.Tuple[tp.Callable[..., None], ...]
+"""
+Deferred function call. A tuple with a Callable, and all of the values of its arguments.
+"""
 
 class PropsDict(object):
     """An immutable dictionary for storing props.
@@ -273,7 +277,7 @@ class Component(object):
     _render_changes_context = None
     _render_unwind_context = None
     _ignored_variables = set()
-    _edifice_internal_parent = None
+    _edifice_internal_parent: 'Component' = None
     _controller = None
     _edifice_internal_references = None
 
@@ -650,6 +654,6 @@ class LayoutComponent(BaseComponent):
 
 class RootComponent(BaseComponent):
 
-    def _qt_update_commands(self, children, newprops, newstate):
+    def _qt_update_commands(self, children, newprops, newstate) -> list[_CommandType]:
         del children, newprops, newstate
         return []

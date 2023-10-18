@@ -1,12 +1,14 @@
-from . import logger
-
 import contextlib
 import inspect
 import itertools
 import logging
+import typing as tp
+
+from . import logger
+
 logger = logging.getLogger("Edifice")
 
-from ._component import BaseComponent, Component, PropsDict
+from ._component import BaseComponent, Component, PropsDict, RootComponent, _CommandType
 from .utilities import set_trace
 
 
@@ -39,7 +41,7 @@ class _ChangeManager(object):
                     setattr(obj, key, None)
 
 @contextlib.contextmanager
-def _storage_manager():
+def _storage_manager(): # -> tp.Generator[_ChangeManager, tp.Any, None]:
     changes = _ChangeManager()
     try:
         yield changes
@@ -52,46 +54,6 @@ def _try_neq(a, b):
         return bool(a != b)
     except:
         return a is not b
-
-class _WidgetTree(object):
-    __slots__ = ("component", "children")
-
-    def __init__(self, component, children):
-        self.component = component
-        self.children = children
-
-    def _dereference(self, address):
-        widget_tree = self
-        for index in address:
-            widget_tree = widget_tree.children[index]
-        return widget_tree
-
-    def gen_qt_commands(self, render_context):
-        commands = []
-        for child in self.children:
-            rendered = child.gen_qt_commands(render_context)
-            commands.extend(rendered)
-
-        if not render_context.need_rerender(self.component):
-            return commands
-
-        old_props = render_context.get_old_props(self.component)
-        new_props = PropsDict({k: v for k, v in self.component.props._items if k not in old_props or _try_neq(old_props[k], v)})
-        commands.extend(self.component._qt_update_commands(self.children, new_props, {}))
-        return commands
-
-    def __hash__(self):
-        return id(self)
-
-    def print_tree(self, indent=0):
-        tags = self.component._tags()
-        if self.children:
-            print("\t" * indent + tags[0])
-            for child in self.children:
-                child.print_tree(indent=indent + 1)
-            print("\t" * indent + tags[1])
-        else:
-            print("\t" * indent + tags[2])
 
 
 class _RenderContext(object):
@@ -109,7 +71,7 @@ class _RenderContext(object):
         self.enqueued_deletions = []
 
         self._callback_queue = []
-        self.component_parent = None
+        self.component_parent: Component = None
 
     def schedule_callback(self, callback, args=None, kwargs=None):
         args = args or []
@@ -145,6 +107,46 @@ class _RenderContext(object):
     def need_rerender(self, component):
         return self.need_qt_command_reissue.get(component, False)
 
+class _WidgetTree(object):
+    __slots__ = ("component", "children")
+
+    def __init__(self, component: RootComponent, children):
+        self.component : RootComponent = component
+        self.children : list[_WidgetTree]= children
+
+    def _dereference(self, address):
+        widget_tree : _WidgetTree = self
+        for index in address:
+            widget_tree = widget_tree.children[index]
+        return widget_tree
+
+    def gen_qt_commands(self, render_context: _RenderContext) -> list[_CommandType]:
+        commands : list[_CommandType] = []
+        for child in self.children:
+            rendered = child.gen_qt_commands(render_context)
+            commands.extend(rendered)
+
+        if not render_context.need_rerender(self.component):
+            return commands
+
+        old_props = render_context.get_old_props(self.component)
+        new_props = PropsDict({k: v for k, v in self.component.props._items if k not in old_props or _try_neq(old_props[k], v)})
+        commands.extend(self.component._qt_update_commands(self.children, new_props, {}))
+        return commands
+
+    def __hash__(self):
+        return id(self)
+
+    def print_tree(self, indent=0):
+        tags = self.component._tags()
+        if self.children:
+            print("\t" * indent + tags[0])
+            for child in self.children:
+                child.print_tree(indent=indent + 1)
+            print("\t" * indent + tags[1])
+        else:
+            print("\t" * indent + tags[2])
+
 
 class RenderResult(object):
     """Encapsulates the results of a render.
@@ -153,10 +155,15 @@ class RenderResult(object):
     which must be executed by the caller.
     """
 
-    def __init__(self, trees, commands, render_context):
-        self.trees = trees
-        self.commands = commands
-        self.render_context = render_context
+    def __init__(
+        self,
+        trees: list[_WidgetTree],
+        commands: list[_CommandType],
+        render_context: _RenderContext
+    ):
+        self.trees : list [_WidgetTree] = trees
+        self.commands : list[_CommandType] = commands
+        self.render_context : _RenderContext = render_context
 
     def run(self):
         for command in self.commands:
@@ -168,13 +175,13 @@ class RenderEngine(object):
     __slots__ = ("_component_tree", "_widget_tree", "_root", "_app")
 
     def __init__(self, root, app=None):
-        self._component_tree = {}
+        self._component_tree = {} # : Is this the correct type? dict[Component, Component | list[Component]]= {}
         self._widget_tree = {}
         self._root = root
-        self._root._edifice_internal_parent = None
+        self._root._edifice_internal_parent: Component = None
         self._app = app
 
-    def _delete_component(self, component, recursive):
+    def _delete_component(self, component: Component, recursive: bool):
         # Delete component from render trees
         sub_components = self._component_tree[component]
         if recursive:
@@ -191,7 +198,7 @@ class RenderEngine(object):
         del self._component_tree[component]
         del self._widget_tree[component]
 
-    def _refresh_by_class(self, classes):
+    def _refresh_by_class(self, classes) -> RenderResult:
         # Algorithm:
         # 1) Find all old components that's not a child of another component
 
@@ -265,7 +272,12 @@ class RenderEngine(object):
         return ret
 
 
-    def _update_old_component(self, component, new_component, render_context: _RenderContext):
+    def _update_old_component(
+        self,
+        component: Component,
+        new_component: Component,
+        render_context: _RenderContext
+    ):
         # This function is called whenever we want to update component to have props of new_component
         newprops = new_component.props
         render_context.set(component, "_edifice_internal_references",
@@ -286,13 +298,13 @@ class RenderEngine(object):
         self._update_old_component(d[key], newchild, render_context)
         return d[key]
 
-    def _attach_keys(self, component, render_context: _RenderContext):
+    def _attach_keys(self, component: Component, render_context: _RenderContext):
         for i, child in enumerate(component.children):
             if not hasattr(child, "_key"):
                 # logger.warning("Setting child key of %s to: %s", component, "KEY" + str(i))
                 render_context.set(child, "_key", "KEY" + str(i))
 
-    def _recycle_children(self, component, render_context):
+    def _recycle_children(self, component: Component, render_context: _RenderContext):
         # Returns children, which contains all the future children of the component:
         # a mixture of old components (if they can be updated) and new ones
 
@@ -325,7 +337,7 @@ class RenderEngine(object):
                 render_context.enqueued_deletions.append(old_child)
         return children
 
-    def _render_base_component(self, component, render_context):
+    def _render_base_component(self, component: RootComponent, render_context: _RenderContext) -> _WidgetTree:
         if len(component.children) > 1:
             self._attach_keys(component, render_context)
         if component not in self._component_tree:
@@ -404,21 +416,21 @@ class RenderEngine(object):
         render_context.component_parent = component._edifice_internal_parent
         return render_context.widget_tree[component]
 
-    def _gen_commands(self, widget_trees, render_context):
+    def _gen_commands(self, widget_trees: list[_WidgetTree], render_context: _RenderContext) -> list[_CommandType]:
         commands = []
         for widget_tree in widget_trees:
             commands.extend(widget_tree.gen_qt_commands(render_context))
         return commands
 
-    def _gen_widget_trees(self, components, render_context):
-        widget_trees = []
+    def _gen_widget_trees(self, components: list[Component], render_context: _RenderContext) -> list[_WidgetTree]:
+        widget_trees : list[_WidgetTree] = []
         for component in components:
             if component not in render_context.widget_tree:
                 render_context.component_parent = component._edifice_internal_parent
                 widget_trees.append(self._render(component, render_context))
         return widget_trees
 
-    def _request_rerender(self, components):
+    def _request_rerender(self, components: list[Component]) -> RenderResult:
         # Generate the widget trees
         with _storage_manager() as storage_manager:
             render_context = _RenderContext(storage_manager)
