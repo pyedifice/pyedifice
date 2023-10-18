@@ -191,7 +191,7 @@
               runtimeInputs = [
                 (pkgs.poetry2nix.mkPoetryEnv poetryEnvAttrs)
               ];
-              text = "python -m edifice --inspect examples/calculator.py Calculator";
+              text = "cd ${inputs.self.outPath}; python -m edifice --inspect examples/calculator.py Calculator";
             };
           in
           {
@@ -205,7 +205,7 @@
               runtimeInputs = [
                 (pkgs.poetry2nix.mkPoetryEnv poetryEnvAttrs)
               ];
-              text = "PYTHONPATH=. python examples/form.py";
+              text = "cd ${inputs.self.outPath}; PYTHONPATH=. python examples/form.py";
             };
           in
           {
@@ -225,7 +225,7 @@
                   ];
                 }))
               ];
-              text = "python -m edifice --inspect examples/financial_charts.py App";
+              text = "cd ${inputs.self.outPath}; python -m edifice --inspect examples/financial_charts.py App";
             };
           in
           {
@@ -239,7 +239,7 @@
               runtimeInputs = [
                 (pkgs.poetry2nix.mkPoetryEnv poetryEnvAttrs)
               ];
-              text = "python -m edifice --inspect examples/harmonic_oscillator.py Oscillator";
+              text = "cd ${inputs.self.outPath}; python -m edifice --inspect examples/harmonic_oscillator.py Oscillator";
             };
           in
           {
