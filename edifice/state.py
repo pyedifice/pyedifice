@@ -78,8 +78,10 @@ import typing as tp
 
 from ._component import Component
 
+# https://stackoverflow.com/questions/53845024/defining-a-recursive-type-hint-in-python
+ComponentSubscriptions = OrderedDict[Component, 'ComponentSubscriptions']
 
-def _add_subscription(previous, new_comp):
+def _add_subscription(previous: ComponentSubscriptions, new_comp: Component):
     # Adds a subscription in topological sort order,
     # so that ancestors will appear before descendants.
     if new_comp in previous:
@@ -119,16 +121,17 @@ class StateValue(object):
 
     def __init__(self, initial_value: tp.Any):
         self._value = initial_value
-        self._subscriptions = OrderedDict()
+        self._subscriptions: ComponentSubscriptions = OrderedDict()
 
-    def _set_subscriptions(self, new_subscriptions):
+    def _set_subscriptions(self, new_subscriptions: ComponentSubscriptions):
         # This helper method is overridden by StateManager
         self._subscriptions = new_subscriptions
 
     def subscribe(self, component: Component) -> tp.Any:
         """Subscribes a component to this value's updates and returns the current value.
 
-        Call this method in the Component render method (or after Component mounts).
+        Call this method in the :func:`Component.render` method
+        (or :func:`Component.did_mount`).
 
         Args:
             component: Edifice Component
@@ -144,7 +147,7 @@ class StateValue(object):
 
         **This will not subscribe your component to this value. Changes in the value will not cause your component to rerender!!!**
 
-        Most of the time you probably want to use subscribe.
+        Most of the time you probably want to use :func:`subscribe`.
 
         Returns:
             Current value.
@@ -152,11 +155,11 @@ class StateValue(object):
         return self._value
 
     def set(self, value: tp.Any):
-        """Sets the current value and trigger rerender.
+        """Sets the current value and trigger re-render.
 
         Re-renders will only be triggered for subscribed components.
         If an exception occurs while re-rendering, all changes are unwound
-        and the StateValue retains the old value.
+        and the :code:`StateValue` retains the old value.
 
         Args:
             value: value to set to.
@@ -189,7 +192,7 @@ class StateManager(object):
 
     def __init__(self, initial_values: tp.Optional[tp.Mapping[tp.Text, tp.Any]] = None):
         self._values = initial_values or {}
-        self._subscriptions_for_key = defaultdict(OrderedDict)
+        self._subscriptions_for_key = defaultdict(ComponentSubscriptions)
 
     def _set_subscriptions(self, key, new_subscriptions):
         self._subscriptions_for_key[key] = new_subscriptions

@@ -48,7 +48,7 @@ import typing as tp
 
 import numpy as np
 
-from ._component import BaseComponent, WidgetComponent, RootComponent, register_props
+from ._component import BaseComponent, WidgetComponent, RootComponent, register_props, _CommandType
 
 from .qt import QT_VERSION
 if QT_VERSION == "PyQt6":
@@ -59,6 +59,7 @@ else:
     from PySide6 import QtCore, QtWidgets, QtSvg, QtGui, QtSvgWidgets
 
 Key = QtCore.Qt.Key
+_UnderlyingType = QtWidgets.QWidget
 
 def _ensure_future(fn):
     # Ensures future if fn is a coroutine, otherwise don't modify fn
@@ -277,7 +278,7 @@ class QtWidgetComponent(WidgetComponent):
                 raise ValueError("Unrecognized cursor %s. Cursor must be one of %s" % (cursor, list(_CURSORS.keys())))
 
     def _destroy_widgets(self):
-        self.underlying = None
+        self.underlying = None # No guarantee that self.underlying exists
         for child in self._widget_children:
             child._destroy_widgets()
 
@@ -331,7 +332,7 @@ class QtWidgetComponent(WidgetComponent):
         if self._on_click:
             self._on_click(ev)
 
-    def _set_on_click(self, underlying, on_click):
+    def _set_on_click(self, underlying: _UnderlyingType, on_click):
         if on_click is not None:
             self._on_click = _ensure_future(on_click)
         else:
@@ -343,7 +344,7 @@ class QtWidgetComponent(WidgetComponent):
             self._default_mouse_release_event = self.underlying.mouseReleaseEvent
         self.underlying.mouseReleaseEvent = self._mouse_release
 
-    def _set_on_key_down(self, underlying, on_key_down):
+    def _set_on_key_down(self, underlying: _UnderlyingType, on_key_down):
         if self._default_on_key_down is None:
             self._default_on_key_down = self.underlying.keyPressEvent
         if on_key_down is not None:
@@ -352,7 +353,7 @@ class QtWidgetComponent(WidgetComponent):
             self._on_key_down = self._default_on_key_down
         self.underlying.keyPressEvent = self._on_key_down
 
-    def _set_on_key_up(self, underlying, on_key_up):
+    def _set_on_key_up(self, underlying: _UnderlyingType, on_key_up):
         if self._default_on_key_up is None:
             self._default_on_key_up = self.underlying.keyReleaseEvent
         if on_key_up is not None:
@@ -361,7 +362,7 @@ class QtWidgetComponent(WidgetComponent):
             self._on_key_up = self._default_on_key_up
         self.underlying.keyReleaseEvent = self._on_key_up
 
-    def _set_on_mouse_down(self, underlying, on_mouse_down):
+    def _set_on_mouse_down(self, underlying: _UnderlyingType, on_mouse_down):
         if on_mouse_down is not None:
             self._on_mouse_down = _ensure_future(on_mouse_down)
         else:
@@ -370,7 +371,7 @@ class QtWidgetComponent(WidgetComponent):
             self._default_mouse_press_event = self.underlying.mousePressEvent
         self.underlying.mousePressEvent = self._mouse_press
 
-    def _set_on_mouse_up(self, underlying, on_mouse_up):
+    def _set_on_mouse_up(self, underlying: _UnderlyingType, on_mouse_up):
         if on_mouse_up is not None:
             self._on_mouse_up = _ensure_future(on_mouse_up)
         else:
@@ -379,7 +380,7 @@ class QtWidgetComponent(WidgetComponent):
             self._default_mouse_release_event = self.underlying.mouseReleaseEvent
         self.underlying.mouseReleaseEvent = self._mouse_release
 
-    def _set_on_mouse_enter(self, underlying, on_mouse_enter):
+    def _set_on_mouse_enter(self, underlying: _UnderlyingType, on_mouse_enter):
         if self._default_mouse_enter_event is None:
             self._default_mouse_enter_event = self.underlying.enterEvent
         if on_mouse_enter is not None:
@@ -389,7 +390,7 @@ class QtWidgetComponent(WidgetComponent):
             self._on_mouse_enter = None
             self.underlying.enterEvent = self._default_mouse_enter_event
 
-    def _set_on_mouse_leave(self, underlying, on_mouse_leave):
+    def _set_on_mouse_leave(self, underlying: _UnderlyingType, on_mouse_leave):
         if self._default_mouse_leave_event is None:
             self._default_mouse_leave_event = self.underlying.leaveEvent
         if on_mouse_leave is not None:
@@ -399,7 +400,7 @@ class QtWidgetComponent(WidgetComponent):
             self.underlying.leaveEvent = self._default_mouse_leave_event
             self._on_mouse_leave = None
 
-    def _set_on_mouse_move(self, underlying, on_mouse_move):
+    def _set_on_mouse_move(self, underlying: _UnderlyingType, on_mouse_move):
         if self._default_mouse_move_event is None:
             self._default_mouse_move_event = self.underlying.mouseMoveEvent
         if on_mouse_move is not None:
@@ -523,7 +524,7 @@ class QtWidgetComponent(WidgetComponent):
         commands.append((self.underlying.setStyleSheet, css_string))
         return commands
 
-    def _set_context_menu(self, underlying):
+    def _set_context_menu(self, underlying: _UnderlyingType):
         if self._context_menu_connected:
             underlying.customContextMenuRequested.disconnect()
         self._context_menu_connected = True
@@ -536,7 +537,14 @@ class QtWidgetComponent(WidgetComponent):
             menu.move(pos)
             menu.show()
 
-    def _qt_update_commands(self, children, newprops, newstate, underlying, underlying_layout=None):
+    def _qt_update_commands(
+        self,
+        children,
+        newprops,
+        newstate,
+        underlying: _UnderlyingType,
+        underlying_layout=None
+    ) -> list[_CommandType]:
         commands = []
         for prop in newprops:
             if prop == "style":
