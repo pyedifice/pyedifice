@@ -4,11 +4,13 @@ import logging
 logger = logging.getLogger("Edifice")
 
 import asyncio
+import contextlib
 import os
 import sys
 import queue
 import time
 import traceback
+import typing as tp
 
 from .qt import QT_VERSION
 
@@ -66,12 +68,12 @@ class _RateLimitedLogger(object):
 class App(object):
     """The main application object.
 
-    To start the application, call the start method::
+    To start the application, call the :func:`App.start` method::
 
         App(MyRootComponent()).start()
 
     If you just want to create a widget (that you'll integrate with an existing codebase),
-    call the export_widgets method::
+    call the :func:`App.export_widgets` method::
 
         widget = App(MyRootComponent()).export_widgets()
 
@@ -102,14 +104,14 @@ class App(object):
 
     def __init__(self,
             component: Component,
-            inspector=False,
-            create_application=True,
-            application_name=None,
-            qapplication=None,
-            mount_into_window=True
+            inspector: bool = False,
+            create_application: bool = True,
+            application_name: str | None = None,
+            qapplication: QtWidgets.QApplication = None,
+            mount_into_window: bool = True
     ):
         if qapplication is None:
-            if create_application: # TODO Does anyone need this? A “test suite” perhaps?
+            if create_application:
                 self.app = QtWidgets.QApplication([application_name] if application_name is not None else [])
         else:
             self.app = qapplication
@@ -187,7 +189,7 @@ class App(object):
     def __hash__(self):
         return id(self)
 
-    def _request_rerender(self, components, newstate):
+    def _request_rerender(self, components: list[Component], newstate):
         del newstate
         start_time = time.process_time()
         render_result = self._render_engine._request_rerender(components)
@@ -252,27 +254,74 @@ class App(object):
 
         return _make_widget_helper(self._root)
 
-    def start(self):
-        """Start the QEventLoop.
+    def start(self) -> tp.Any:
+        """
+        Start the application event loop.
+
+        Args:
+            None
+        Returns:
+            The result of :code:`loop.run_forever()`.
+        """
+
+        with self.start_loop() as loop:
+            ret = loop.run_forever()
+        return ret
+
+    @contextlib.contextmanager
+    def start_loop(self):
+        """
+        Start the application event loop manually.
+
+        A context manager alternative to :func:`App.start` which allows
+        access to the application’s
+        `qasync.QEventLoop <https://github.com/CabbageDevelopment/qasync>`_.
+
+        The `asyncio event loop <https://docs.python.org/3/library/asyncio-eventloop.html>`_
+        uses the `QEventLoop` as the current event loop. You can also access the
+        **asyncio** current event loop in the usual way with
+        `asyncio.get_running_loop() <https://docs.python.org/3/library/asyncio-eventloop.html?highlight=run_forever#asyncio.get_running_loop>`_.
+
+        When you use :func:`start_loop`, you must explicitly run the event loop,
+        for example with `run_forever() <https://docs.python.org/3/library/asyncio-eventloop.html#asyncio.loop.run_forever>`_.
+        When the user closes the :class:`App` it will stop the event loop,
+        see `QApplication.exit_() <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QApplication.html#PySide6.QtWidgets.PySide6.QtWidgets.QApplication.exec_>`_.
+
+        In this example, we add a Unix :code:`SIGINT` handler which will also stop
+        the event loop.
+
+        Example::
+
+            app = edifice.App(MyAppComponent())
+            with app.start_loop() as loop:
+                loop.add_signal_handler(signal.SIGINT, loop.stop)
+                loop.run_forever()
+
         """
         loop = QEventLoop(self.app)
-        asyncio.set_event_loop(loop)
+        try:
+            asyncio.set_event_loop(loop)
+            self._request_rerender([self._root], {})
+            if self._inspector:
+                logger.info("Running inspector")
+                def cleanup(e):
+                    self._inspector_component = None
 
-        self._request_rerender([self._root], {})
-        if self._inspector:
-            logger.info("Running inspector")
-            def cleanup(e):
-                self._inspector_component = None
-
-            self._inspector_component = inspector.Inspector(
-                self._render_engine._component_tree, self._root,
-                refresh=(lambda: (self._render_engine._component_tree, self._root)))
-            icon_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), "inspector/icon.png")
-            component = Window(title="Component Inspector", on_close=cleanup, icon=icon_path)(self._inspector_component)
-            component._edifice_internal_parent = None
-            self._request_rerender([component], {})
-
-        with loop:
-            ret = loop.run_forever()
-        self._render_engine._delete_component(self._root, True)
-        return ret
+                self._inspector_component = inspector.Inspector(
+                    self._render_engine._component_tree, self._root,
+                    refresh=(lambda: (self._render_engine._component_tree, self._root)))
+                icon_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), "inspector/icon.png")
+                component = Window(title="Component Inspector", on_close=cleanup, icon=icon_path)(self._inspector_component)
+                component._edifice_internal_parent = None
+                self._request_rerender([component], {})
+            yield loop
+        finally:
+            # This is not right. Intead of run_forever() and then stop()ing the
+            # event loop, we should run_until_complete(). To exit, we should
+            # unmount all components, which would then remove all of the
+            # waiting event completions from the event loop, which would
+            # then cause the event loop to exit.
+            # See
+            # https://github.com/CabbageDevelopment/qasync/blob/ee9b0a3ab9548240c71d4a52e6c6a060a633e930/qasync/__init__.py#L404
+            loop.close()
+            self._render_engine._delete_component(self._root, True)
