@@ -112,9 +112,14 @@ class App(object):
     ):
         if qapplication is None:
             if create_application:
-                self.app = QtWidgets.QApplication([application_name] if application_name is not None else [])
+                if QtWidgets.QApplication.instance() is None:
+                    self.app = QtWidgets.QApplication([application_name] if application_name is not None else [])
+                else:
+                    raise RuntimeError("There is already an instance of QtWidgets.QApplication")
+            else:
+                self.app = QtWidgets.QApplication.instance()
         else:
-            self.app = qapplication
+            self.app : QtWidgets.QApplication = qapplication
 
         if mount_into_window:
             if isinstance(component, BaseComponent):
@@ -301,20 +306,23 @@ class App(object):
         loop = QEventLoop(self.app)
         try:
             asyncio.set_event_loop(loop)
-            self._request_rerender([self._root], {})
-            if self._inspector:
-                logger.info("Running inspector")
-                def cleanup(e):
-                    self._inspector_component = None
+            async def first_render():
+                self._request_rerender([self._root], {})
+                if self._inspector:
+                    logger.info("Running inspector")
+                    def cleanup(e):
+                        self._inspector_component = None
 
-                self._inspector_component = inspector.Inspector(
-                    self._render_engine._component_tree, self._root,
-                    refresh=(lambda: (self._render_engine._component_tree, self._root)))
-                icon_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), "inspector/icon.png")
-                component = Window(title="Component Inspector", on_close=cleanup, icon=icon_path)(self._inspector_component)
-                component._edifice_internal_parent = None
-                self._request_rerender([component], {})
+                    self._inspector_component = inspector.Inspector(
+                        self._render_engine._component_tree, self._root,
+                        refresh=(lambda: (self._render_engine._component_tree, self._root)))
+                    icon_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), "inspector/icon.png")
+                    component = Window(title="Component Inspector", on_close=cleanup, icon=icon_path)(self._inspector_component)
+                    component._edifice_internal_parent = None
+                    self._request_rerender([component], {})
+            t = loop.create_task(first_render())
             yield loop
+            del t
         finally:
             # This is not right. Intead of run_forever() and then stop()ing the
             # event loop, we should run_until_complete(). To exit, we should

@@ -6,6 +6,15 @@ import enum
 import edifice
 from edifice.components import forms
 
+from edifice.qt import QT_VERSION
+if QT_VERSION == "PyQt6":
+    from PyQt6 import QtWidgets
+else:
+    from PySide6 import QtWidgets
+
+if QtWidgets.QApplication.instance() is None:
+    app_obj = QtWidgets.QApplication(["-platform", "offscreen"])
+
 class FormTest(unittest.TestCase):
 
     def test_form_render(self):
@@ -36,11 +45,9 @@ class FormTest(unittest.TestCase):
         }
         form = forms.Form(data, layout=["a", ["b", "c", "d"], ["e"], "f", "g", "h", "i"], defaults={"a": 1}, label_map=label_map)
         my_app = edifice.App(form, create_application=False)
-        class MockQtApp(object):
-            def exec_(self):
-                pass
-        my_app.app = MockQtApp()
-        my_app.start()
+        with my_app.start_loop() as loop:
+            loop.call_later(0.1, loop.stop)
+            loop.run_forever()
 
     def test_field_changed(self):
         class Color(enum.Enum):
