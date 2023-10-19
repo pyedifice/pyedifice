@@ -8,9 +8,9 @@ import edifice._component as component
 
 from edifice.qt import QT_VERSION
 if QT_VERSION == "PyQt6":
-    from PyQt6 import QtCore, QtWidgets, QtGui
+    from PyQt6 import QtWidgets
 else:
-    from PySide6 import QtCore, QtWidgets, QtGui
+    from PySide6 import QtWidgets
 
 if QtWidgets.QApplication.instance() is None:
     app_obj = QtWidgets.QApplication(["-platform", "offscreen"])
@@ -61,19 +61,15 @@ class IntegrationTestCase(unittest.TestCase):
 
     def test_integration(self):
         my_app = app.App(base_components.Label("Hello World!"), create_application=False)
-        class MockQtApp(object):
-            def exec_(self):
-                pass
-        my_app.app = MockQtApp()
-        my_app.start()
+        with my_app.start_loop() as loop:
+            loop.call_later(0.1, loop.stop)
+            loop.run_forever()
 
     def test_integration_with_inspector(self):
-        my_app = app.App(base_components.Label("Hello World!"), create_application=False, inspector=True)
-        class MockQtApp(object):
-            def exec_(self):
-                pass
-        my_app.app = MockQtApp()
-        my_app.start()
+        my_app = app.App(base_components.Label("Hello World!"), inspector=True, create_application=False)
+        with my_app.start_loop() as loop:
+            loop.call_later(0.1, loop.stop)
+            loop.run_forever()
 
     def test_subscribe_unmount(self):
         """
@@ -103,6 +99,7 @@ class IntegrationTestCase(unittest.TestCase):
                 v = self.props.state_value.subscribe(self)
                 observations_CompChild1.append(v)
                 return base_components.Label(text="child1")
+                loop = asyncio.get_running_loop()
             def did_render(self):
                 loop = asyncio.get_running_loop()
                 loop.call_soon(self.props.state_value.set, 2)
@@ -119,7 +116,7 @@ class IntegrationTestCase(unittest.TestCase):
                 loop.call_soon(loop.stop)
 
         state_value = state.StateValue(1)
-        my_app = app.App(TestComp(state_value), qapplication=QtWidgets.QApplication.instance())
+        my_app = app.App(TestComp(state_value), create_application=False)
         with my_app.start_loop() as loop:
             loop.run_forever()
 
@@ -142,7 +139,7 @@ class IntegrationTestCase(unittest.TestCase):
     def test_start_loop(self):
         my_app = app.App(
             base_components.Label(text="start_loop"),
-            qapplication=QtWidgets.QApplication.instance()
+            create_application=False
         )
         with my_app.start_loop() as loop:
             loop.call_later(0.1, loop.stop)
