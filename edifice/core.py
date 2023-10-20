@@ -1,7 +1,7 @@
 from collections.abc import Callable
+import sys
 import threading
-from typing import Any, Generic, ParamSpec, TypeVar, cast, overload, Literal, Optional
-from contextlib import ExitStack
+from typing import Generic, ParamSpec, TypeVar, cast, overload, Literal, Optional
 
 local_state = threading.local()
 
@@ -25,7 +25,6 @@ class Tracker:
     def __init__(self, el) -> None:
         self.el = el
         self.created = []
-
     def add(self, el):
         self.created.append(el)
 
@@ -54,14 +53,17 @@ class Element(Generic[W]):
         ctx = get_render_context(required=False)
         if ctx is not None and len(ctx.trackers) > 0:
             ctx.trackers[-1].add(self)
+        print("init", self.name)
 
     def __enter__(self):
+        print("enter", self.name)
         ctx = get_render_context()
         tracker = Tracker(self)
         ctx.trackers.append(tracker)
         return self
 
     def __exit__(self, *args):
+        print("exit", self.name)
         ctx = get_render_context()
         tracker = ctx.trackers.pop()
         children = tracker.collect()
@@ -130,10 +132,10 @@ class _RenderContext:
 
     def _render(self, element: Element):
         self.trackers = []
-        # TODO: introduce container?
-        root = element.component.render(*element.args, **element.kwargs)
+        with container() as main:
+            root = element.component.render(*element.args, **element.kwargs)
         if root is None:
-            root = element
+            root = main
 
 def find_elements(el: Element | list[Element]) -> set[Element]:
     match el:
@@ -144,6 +146,13 @@ def find_elements(el: Element | list[Element]) -> set[Element]:
             for child in el:
                 elements |= find_elements(child)
             return elements
+
+@component
+def container():
+    pass
+
+# Example components
+
 @component
 def Row():
     pass
@@ -154,8 +163,10 @@ def Label(text: str):
 
 @component
 def View():
+    print("in View")
     with Row():
-        Label(text="Hello")
+        with Label(text="Hello"):
+            Label(text="Asd")
         Label(text="Hello")
         Label(text="Hello")
 
@@ -177,8 +188,12 @@ def example():
             with B() as inner:
                 print(f"inner={inner}")
 
-el = example()
-print("CTX")
-ctx = _RenderContext(el)
-ctx.render(el)
-print(ctx.element)
+def main():
+    el = View()
+    print("CTX")
+    ctx = _RenderContext(el)
+    ctx.render(el)
+    print(ctx.element)
+
+if __name__ == "__main__":
+    main()
