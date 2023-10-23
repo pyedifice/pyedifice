@@ -77,6 +77,9 @@
                 addAutoPatchelfSearchPath ${pyfinal.shiboken6}/${pyfinal.python.sitePackages}/shiboken6
               '';
               buildInputs = old.buildInputs ++ qt6-libs;
+              postInstall = ''
+                rm -r $out/${pyfinal.python.sitePackages}/PySide6/__pycache__
+              '';
             });
             pyside6-addons = pyprev.pyside6-addons.overridePythonAttrs (old: {
               autoPatchelfIgnoreMissingDeps = [ "libmysqlclient.so.21" "libmimerapi.so" "libQt6Quick3DSpatialAudio.so.6" ];
@@ -85,6 +88,9 @@
                 addAutoPatchelfSearchPath ${pyfinal.pyside6-essentials}/${pyfinal.python.sitePackages}/PySide6
               '';
               buildInputs = old.buildInputs ++ qt6-libs;
+              postInstall = ''
+                rm -r $out/${pyfinal.python.sitePackages}/PySide6/__pycache__
+              '';
             });
           });
         python = pkgs.python310;
@@ -174,10 +180,6 @@
         # in the README or somewhere.
         qasync = qasync_;
         pyedifice = pyedifice_;
-      };
-
-      legacyPackages = pkgs // {
-        inherit poetryEnv;
       };
 
       apps =
