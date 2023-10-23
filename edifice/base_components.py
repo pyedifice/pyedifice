@@ -32,31 +32,30 @@ Font Awesome icon set.
 Finally, the :class:`Button<edifice.Button>` and :class:`TextInput<edifice.TextInput>`
 components allow you to collect input from the user.
 """
-
-# pylint:disable=unused-argument
-from . import logger
-
 import asyncio
 import functools
 import inspect
 import logging
 import math
-logger = logging.getLogger("Edifice")
 import os
 import re
 import typing as tp
 
 import numpy as np
 
-from ._component import BaseComponent, WidgetComponent, RootComponent, register_props, _CommandType
+from ._component import WidgetComponent, RootComponent, register_props, _CommandType
 
 from .qt import QT_VERSION
+
+
 if QT_VERSION == "PyQt6":
     from PyQt6 import QtWidgets
     from PyQt6 import QtSvg, QtGui
     from PyQt6 import QtCore
 else:
     from PySide6 import QtCore, QtWidgets, QtSvg, QtGui, QtSvgWidgets
+
+logger = logging.getLogger("Edifice")
 
 Key = QtCore.Qt.Key
 _UnderlyingType = QtWidgets.QWidget
@@ -333,6 +332,7 @@ class QtWidgetComponent(WidgetComponent):
             self._on_click(ev)
 
     def _set_on_click(self, underlying: _UnderlyingType, on_click):
+        # FIXME: Should this not use `underlying`?
         if on_click is not None:
             self._on_click = _ensure_future(on_click)
         else:

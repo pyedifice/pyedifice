@@ -1,7 +1,4 @@
-from . import logger
-logger_mod = logger
 import logging
-logger = logging.getLogger("Edifice")
 
 import asyncio
 import contextlib
@@ -27,6 +24,9 @@ from ._component import BaseComponent, Component, RootComponent
 from .base_components import Window
 from .engine import RenderEngine
 from .inspector import inspector
+
+logger = logging.getLogger("Edifice")
+logger_mod = logger
 
 
 class _TimingAvg(object):
@@ -107,7 +107,7 @@ class App(object):
             inspector: bool = False,
             create_application: bool = True,
             application_name: str | None = None,
-            qapplication: QtWidgets.QApplication = None,
+            qapplication: QtWidgets.QApplication | None = None,
             mount_into_window: bool = True
     ):
         if qapplication is None:

@@ -3,6 +3,8 @@ import contextlib
 import functools
 import inspect
 import typing as tp
+from typing_extensions import Self
+import threading
 
 _CommandType = tp.Tuple[tp.Callable[..., None], ...]
 """
@@ -168,15 +170,35 @@ class Reference(object):
     def __call__(self):
         return self._value
 
+T = tp.TypeVar("T")
 
-class _Controller(tp.Protocol):
-    """
-    The _controller is always instantiated as an :doc:`App <edifice.App>` but
-    we need this `Protocol` to break the cirucal dependencies between the
-    modules.
-    """
+class ControllerProtocol(tp.Protocol):
     def _request_rerender(self, components: Iterable["Component"], kwargs: dict[str, tp.Any]):
         pass
+
+
+class Tracker:
+    children: list["Component"]
+    def __init__(self, component: "Component"):
+        self.component = component
+        self.children = []
+
+    def append_child(self, component: "Component"):
+        self.children.append(component)
+
+    def collect(self) -> list["Component"]:
+        children = set()
+        for child in self.children:
+            children |= find_components(child) - {child}
+        return [child for child in self.children if child not in children]
+
+class RenderContextProtocol(tp.Protocol):
+    trackers: list[Tracker]
+
+local_state = threading.local()
+
+def get_render_context() -> RenderContextProtocol:
+    return getattr(local_state, "render_context")
 
 class Component:
     """The base class for Edifice Components.
@@ -287,7 +309,7 @@ class Component:
     _render_unwind_context: dict | None = None
     _ignored_variables: set[tp.Text] | None = None
     _edifice_internal_parent: tp.Optional["Component"] = None
-    _controller: _Controller | None = None
+    _controller: ControllerProtocol | None = None
     _edifice_internal_references: set[Reference] | None = None
 
     def __init__(self):
@@ -295,8 +317,28 @@ class Component:
         super().__setattr__("_edifice_internal_references", set())
         if not hasattr(self, "_props"):
             self._props = {"children": []}
+        ctx = get_render_context()
+        trackers = ctx.trackers
+        if len(trackers) > 0:
+            parent = trackers[-1]
+            parent.append_child(self)
 
-    def register_props(self, props: tp.Mapping[tp.Text, tp.Any]):
+    def __enter__(self: Self) -> Self:
+        ctx = get_render_context()
+        tracker = Tracker(self)
+        ctx.trackers.append(tracker)
+        return self
+
+    def __exit__(self, *args):
+        ctx = get_render_context()
+        tracker = ctx.trackers.pop()
+        children = tracker.collect()
+        prop = self._props.get("children", [])
+        for child in children:
+            prop.append(child)
+        self._props["children"] = prop
+
+    def register_props(self, props: tp.Mapping[tp.Text, tp.Any]) -> None:
         """Register props.
 
         Call this function if you do not use the
@@ -310,7 +352,7 @@ class Component:
             self._props = {"children": []}
         self._props.update(props)
 
-    def set_key(self, key: tp.Text):
+    def set_key(self: Self, key: tp.Text) -> Self:
         """Sets the key of the component.
 
         The key is used by the re-rendering logic to match a new list of components
@@ -336,7 +378,7 @@ class Component:
         self._key = key
         return self
 
-    def register_ref(self, reference: Reference):
+    def register_ref(self: Self, reference: Reference) -> Self:
         """Registers provided reference to this component.
 
         During render, the provided reference will be set to point to the currently rendered instance of this component
@@ -353,7 +395,7 @@ class Component:
         return self
 
     @property
-    def children(self):
+    def children(self) -> list["Component"]:
         """The children of this component."""
         return self._props["children"]
 
@@ -363,7 +405,7 @@ class Component:
         return PropsDict(self._props)
 
     @contextlib.contextmanager
-    def render_changes(self, ignored_variables: tp.Optional[tp.Sequence[tp.Text]] = None):
+    def render_changes(self, ignored_variables: tp.Optional[tp.Sequence[tp.Text]] = None) -> Iterator[None]:
         """Context manager for managing changes to state.
 
         This context manager does two things:
@@ -405,7 +447,7 @@ class Component:
                 if not exception_raised:
                     self.set_state(**changes_context)
 
-    def __setattr__(self, k, v):
+    def __setattr__(self, k, v) -> None:
         changes_context = self._render_changes_context
         ignored_variables = self._ignored_variables
         if changes_context is not None and k not in ignored_variables:
@@ -442,6 +484,7 @@ class Component:
             for s in old_vals:
                 super().__setattr__(s, old_vals[s])
             raise e
+
 
     def should_update(self, newprops: PropsDict, newstate: tp.Mapping[tp.Text, tp.Any]) -> bool:
         """Determines if the component should rerender upon receiving new props and state.
@@ -536,12 +579,13 @@ class Component:
         raise NotImplementedError
 
 P = tp.ParamSpec("P")
+C = tp.TypeVar("C", bound=Component)
 
 def not_ignored(arg: tuple[str, tp.Any]) -> bool:
     return arg[0][0] != "_"
 
 # TODO: Should we really allow the function to return `Any`?
-def component(f: Callable[tp.Concatenate[Component,P], tp.Any]) -> type[Component]:
+def component(f: Callable[tp.Concatenate[C,P], None]) -> Callable[P,Component]:
     """Decorator turning a render function into a :class:`Component`.
 
     Some components do not have internal state, and these components are often little more than
@@ -580,7 +624,7 @@ def component(f: Callable[tp.Concatenate[Component,P], tp.Any]) -> type[Componen
     Component that called the function, and so any re-renders will have to start from that level.
 
     Args:
-        f: the function to wrap. Its first argument must be self, and children must be one of its parameters.
+        f: the function to wrap. Its first argument must be self.
     Returns:
         Component class.
     """
@@ -591,9 +635,6 @@ def component(f: Callable[tp.Concatenate[Component,P], tp.Any]) -> type[Componen
         for k, v in signature.items()
         if v.default is not inspect.Parameter.empty and k[0] != "_"
     }
-    if "children" not in signature:
-        raise ValueError("All function components must take children as last argument.")
-
 
     class MyComponent(Component):
 
@@ -607,10 +648,25 @@ def component(f: Callable[tp.Concatenate[Component,P], tp.Any]) -> type[Componen
 
         def render(self):
             # We cannot type this because PropsDict forgets the types
-            return f(self, **self.props._d) # type: ignore[reportGeneralTypeIssues]
+            with Container() as root:
+                f(self, **self.props._d) # type: ignore[reportGeneralTypeIssues]
+            children = root.children
+            if len(children) == 1:
+                return children[0]
+            else:
+                return children
     MyComponent.__name__ = f.__name__
     return MyComponent
 
+def find_components(el: Component | list[Component]) -> set[Component]:
+    match el:
+        case Component():
+            return {el}
+        case list():
+            elements = set()
+            for child in el:
+                elements |= find_components(child)
+            return elements
 
 def register_props(f):
     """Decorator for :class:`Component` :code:`__init__` method to record props.
@@ -666,6 +722,9 @@ def register_props(f):
 
     return func
 
+@component
+def Container(self):
+    pass
 
 class BaseComponent(Component):
     """Base Component, whose rendering is defined by the backend."""
