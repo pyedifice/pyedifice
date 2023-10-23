@@ -121,9 +121,10 @@
 
         poetry2nix = (pkgs.poetry2nix.mkPoetryEnv (poetryEnvAttrs // {
           python=pkgs.python310;
-          editablePackageSources = {
-            edifice = ./edifice;
-          };
+          # Do not set editablePackageSources. I don't think it does any good?
+          # editablePackageSources = {
+          #   pyedifice = ./edifice;
+          # };
           extras = [ "*" ];
           extraPackages = ps: with ps; [
             pip

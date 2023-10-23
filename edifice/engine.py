@@ -59,9 +59,10 @@ def _try_neq(a, b):
 class _RenderContext(object):
     """Encapsulates various state that's needed for rendering."""
     __slots__ = ("storage_manager", "need_qt_command_reissue", "component_to_old_props",
-                 "force_refresh", "component_tree", "widget_tree", "enqueued_deletions", "_callback_queue", "component_parent")
-    def __init__(self, storage_manager, force_refresh=False):
-        self.storage_manager = storage_manager
+                 "force_refresh", "component_tree", "widget_tree", "enqueued_deletions",
+                 "_callback_queue", "component_parent")
+    def __init__(self, storage_manager: _ChangeManager, force_refresh=False):
+        self.storage_manager: _ChangeManager = storage_manager
         self.need_qt_command_reissue = {}
         self.component_to_old_props = {}
         self.force_refresh = force_refresh
@@ -171,7 +172,11 @@ class RenderResult(object):
         self.render_context.run_callbacks()
 
 
+
 class RenderEngine(object):
+    """
+    One RenderEngine instance persists across the life of the App.
+    """
     __slots__ = ("_component_tree", "_widget_tree", "_root", "_app")
 
     def __init__(self, root, app=None):
@@ -195,6 +200,16 @@ class RenderEngine(object):
         for ref in component._edifice_internal_references:
             ref._value = None
         component.will_unmount()
+        for hook_state in component._hook_state:
+            del hook_state
+        for cleanup in component._hook_effect_cleanup:
+            if cleanup is not None: # None indicates that the setup effect failed.
+                cleanup()
+        for queue in component._hook_async_queue:
+            queue.clear()
+        for tsk in component._hook_async_task:
+            if tsk is not None:
+                tsk.cancel()
         del self._component_tree[component]
         del self._widget_tree[component]
 
@@ -395,6 +410,10 @@ class RenderEngine(object):
             render_context.component_parent = component._edifice_internal_parent
             return ret
 
+        # Before the render, set the hooks indices of the Component to 0.
+        component._hook_state_index = 0
+        component._hook_effect_index = 0
+        component._hook_async_index = 0
         # Call user provided render function and retrieve old results
         sub_component = component.render()
         old_rendering = self._component_tree.get(component, None)
