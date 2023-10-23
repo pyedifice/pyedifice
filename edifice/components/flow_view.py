@@ -59,7 +59,7 @@ class FlowLayout(QLayout):
     #
     # So we have to write insertWidget in terms of addWidget and removeWidget.
     #
-    # This is crazy, but maybe we won`t do a lot of inserting into the middle
+    # This is crazy, but maybe we won’t do a lot of inserting into the middle
     # of a large FlowLayout?
     def insertWidget(self, index, w:QWidget):
         stack = []
