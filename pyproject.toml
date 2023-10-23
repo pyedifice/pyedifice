@@ -16,6 +16,8 @@ format = "poetry-core"
 python = ">= 3.8,<3.12" # "^3.10"
 numpy = ">= 1.19.4" # "^1.25.1"
 qasync = ">= 0.13.0" # "^0.24.0"
+ruff = "^0.1.1"
+ruff-lsp = "^0.0.41"
 
 [tool.poetry.group.dev.dependencies]
 certifi = ">= 2020.12.5" # "^2023.5.7"
