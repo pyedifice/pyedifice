@@ -145,7 +145,7 @@ class MakeComponentTestCase(unittest.TestCase):
 
     def test_make_component(self):
 
-        @component.make_component
+        @component.component
         def Component1234(self, prop1, prop2, children):
             return 1234
 

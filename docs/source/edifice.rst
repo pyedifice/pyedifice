@@ -17,7 +17,7 @@ Class overview
    Component
    PropsDict
    register_props
-   make_component
+   component
    Reference
    App
    Timer
