@@ -169,7 +169,11 @@ class Reference(object):
         return self._value
 
 
-class Component(object):
+class _Controller(tp.Protocol):
+    def _request_rerender(self, components: Iterable["Component"], kwargs: dict[str, tp.Any]):
+        pass
+
+class Component:
     """The base class for Edifice Components.
 
     A :class:`Component` is a stateful container wrapping a stateless :code:`render` function.
@@ -274,12 +278,12 @@ class Component(object):
     whenever you have a list of children.
     """
 
-    _render_changes_context = None
-    _render_unwind_context = None
-    _ignored_variables = set()
-    _edifice_internal_parent: 'Component' = None
-    _controller = None
-    _edifice_internal_references = None
+    _render_changes_context: dict | None = None
+    _render_unwind_context: dict | None = None
+    _ignored_variables: set[tp.Text] | None = None
+    _edifice_internal_parent: tp.Optional["Component"] = None
+    _controller: _Controller | None = None
+    _edifice_internal_references: set[Reference] | None = None
 
     def __init__(self):
         super().__setattr__("_ignored_variables", set())
@@ -339,6 +343,7 @@ class Component(object):
         Returns:
             The component itself.
         """
+        assert self._edifice_internal_references is not None
         self._edifice_internal_references.add(reference)
         return self
 
@@ -369,13 +374,12 @@ class Component(object):
                                These changes will not be reverted upon exception.
         """
         entered = False
-        ignored_variables = ignored_variables or set()
-        ignored_variables = set(ignored_variables)
+        ignored: set[tp.Text] = set(ignored_variables) if ignored_variables else set()
         exception_raised = False
         if self._render_changes_context is None:
             super().__setattr__("_render_changes_context", {})
             super().__setattr__("_render_unwind_context", {})
-            super().__setattr__("_ignored_variables", ignored_variables)
+            super().__setattr__("_ignored_variables", ignored)
             entered = True
         try:
             yield
@@ -386,6 +390,8 @@ class Component(object):
             if entered:
                 changes_context = self._render_changes_context
                 unwind_context = self._render_unwind_context
+                assert changes_context is not None
+                assert unwind_context is not None
                 super().__setattr__("_render_changes_context", None)
                 super().__setattr__("_render_unwind_context", None)
                 super().__setattr__("_ignored_variables", set())
@@ -399,6 +405,7 @@ class Component(object):
         ignored_variables = self._ignored_variables
         if changes_context is not None and k not in ignored_variables:
             unwind_context = self._render_unwind_context
+            assert unwind_context is not None
             if k not in unwind_context:
                 unwind_context[k] = super().__getattribute__(k)
             changes_context[k] = v
@@ -424,6 +431,7 @@ class Component(object):
                 old_vals[s] = old_val
                 super().__setattr__(s, kwargs[s])
             if should_update:
+                assert self._controller is not None
                 self._controller._request_rerender([self], kwargs)
         except Exception as e:
             for s in old_vals:
@@ -524,6 +532,9 @@ class Component(object):
 
 P = tp.ParamSpec("P")
 
+def not_ignored(arg: tuple[str, tp.Any]) -> bool:
+    return arg[0][0] != "_"
+
 # TODO: Should we really allow the function to return `Any`?
 def component(f: Callable[tp.Concatenate[Component,P], tp.Any]) -> type[Component]:
     """Decorator turning a render function into a :class:`Component`.
@@ -583,7 +594,7 @@ def component(f: Callable[tp.Concatenate[Component,P], tp.Any]) -> type[Componen
 
         def __init__(self, *args: P.args, **kwargs: P.kwargs):
             name_to_val = defaults.copy()
-            name_to_val.update(filter((lambda tup: (tup[0][0] != "_")), zip(varnames, args)))
+            name_to_val.update(filter(not_ignored, zip(varnames, args, strict=False)))
             name_to_val.update(((k, v) for (k, v) in kwargs.items() if k[0] != "_"))
             name_to_val["children"] = name_to_val.get("children") or []
             self.register_props(name_to_val)
@@ -633,7 +644,7 @@ def register_props(f):
         decorated function
 
     """
-    varnames = f.__code__.co_varnames[1:]
+    varnames: Iterable[str] = f.__code__.co_varnames[1:]
     signature = inspect.signature(f).parameters
     defaults = {
         k: v.default for k, v in signature.items() if v.default is not inspect.Parameter.empty and k[0] != "_"
@@ -642,7 +653,7 @@ def register_props(f):
     @functools.wraps(f)
     def func(self, *args, **kwargs):
         name_to_val = defaults.copy()
-        name_to_val.update(filter((lambda tup: (tup[0][0] != "_")), zip(varnames, args)))
+        name_to_val.update(filter(not_ignored, zip(varnames, args, strict=False)))
         name_to_val.update(((k, v) for (k, v) in kwargs.items() if k[0] != "_"))
         self.register_props(name_to_val)
         Component.__init__(self)
