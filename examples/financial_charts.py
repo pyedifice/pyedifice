@@ -46,8 +46,8 @@ app_state = ed.StateManager(merge(_create_state_for_plot("plot0"), {
 
 # We create a component which describes the options for each axis (data source, transform).
 # Since this component owns no state, we can simply write a render function and use the
-# make_component decorator.
-@ed.make_component
+# component decorator.
+@ed.component
 def AxisDescriptor(self, name, key, children):
     # We subscribe to app_state, so that state changes would trigger a re-render
     # Subscribe returns the data stored in app_state
@@ -99,7 +99,7 @@ def add_divider(comp):
 
 # Now we make a component to describe the entire plot: the descriptions of both axis,
 # plot type, and color
-@ed.make_component
+@ed.component
 def PlotDescriptor(self, name, children):
     plot_type = app_state.subscribe(self, f"{name}.type")
     color = app_state.subscribe(self, f"{name}.color")

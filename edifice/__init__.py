@@ -142,7 +142,7 @@ Some useful utilities are also provided:
 
 * :func:`register_props` : A decorator for the :code:`__init__` function that records
   all arguments as props.
-* :func:`make_component`: A decorator to turn a render function into a
+* :func:`component`: A decorator to turn a render function into a
   Component. This is useful if your Component has no internal state.
 * :func:`edifice.utilities.set_trace`: An analogue of :code:`pdb.set_trace` that works with Qt
   (:code:`pdb.set_trace` interrupts the Qt event flow, causing an unpleasant
@@ -150,7 +150,7 @@ Some useful utilities are also provided:
 """
 
 
-from ._component import PropsDict, Component, make_component, register_props, Reference
+from ._component import PropsDict, Component, component, register_props, Reference
 from .state import StateValue, StateManager
 from .app import App
 from .base_components import *

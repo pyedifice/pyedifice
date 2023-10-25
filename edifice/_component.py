@@ -1,4 +1,4 @@
-from collections.abc import Iterator
+from collections.abc import Callable, Iterator, Iterable
 import contextlib
 import functools
 import inspect
@@ -522,8 +522,10 @@ class Component(object):
         """
         raise NotImplementedError
 
+P = tp.ParamSpec("P")
 
-def make_component(f):
+# TODO: Should we really allow the function to return `Any`?
+def component(f: Callable[tp.Concatenate[Component,P], tp.Any]) -> type[Component]:
     """Decorator turning a render function into a :class:`Component`.
 
     Some components do not have internal state, and these components are often little more than
@@ -538,9 +540,9 @@ def make_component(f):
                 # Only here is there actual logic.
 
     To cut down on the amount of boilerplate, you can use the
-    :doc:`make_component <edifice.make_component>` decorator::
+    :doc:`component <edifice.component>` decorator::
 
-        @make_component
+        @component
         def MySimpleComp(self, prop1, prop2, prop3, children):
             # Here you put what you'd normally put in the render logic
             # Note that you can access prop1 via the variable, or via self.props
@@ -553,7 +555,9 @@ def make_component(f):
             return View()(Label(prop1), Label(self.prop2), Label(prop3))
 
     instead. The difference is, with the decorator, an actual :class:`Component` object is created,
-    which can be viewed, for example, in the inspector.
+    which can be viewed, for example, in the inspector. Moreover, you need a :class:`Component` to
+    be able to use hooks such as use_state, since those are bound to containing :class:`Component`.
+
     If this component uses :doc:`State Values or State Managers</state>`,
     only this component and (possibly) its children will be re-rendered.
     If you don't use the decorator, the returned components are directly attached to the
@@ -567,14 +571,17 @@ def make_component(f):
     varnames = f.__code__.co_varnames[1:]
     signature = inspect.signature(f).parameters
     defaults = {
-        k: v.default for k, v in signature.items() if v.default is not inspect.Parameter.empty and k[0] != "_"
+        k: v.default
+        for k, v in signature.items()
+        if v.default is not inspect.Parameter.empty and k[0] != "_"
     }
     if "children" not in signature:
         raise ValueError("All function components must take children as last argument.")
 
+
     class MyComponent(Component):
 
-        def __init__(self, *args, **kwargs):
+        def __init__(self, *args: P.args, **kwargs: P.kwargs):
             name_to_val = defaults.copy()
             name_to_val.update(filter((lambda tup: (tup[0][0] != "_")), zip(varnames, args)))
             name_to_val.update(((k, v) for (k, v) in kwargs.items() if k[0] != "_"))
@@ -583,7 +590,8 @@ def make_component(f):
             super().__init__()
 
         def render(self):
-            return f(self, **self.props._d)
+            # We cannot type this because PropsDict forgets the types
+            return f(self, **self.props._d) # type: ignore[reportGeneralTypeIssues]
     MyComponent.__name__ = f.__name__
     return MyComponent
 
