@@ -170,6 +170,11 @@ class Reference(object):
 
 
 class _Controller(tp.Protocol):
+    """
+    The _controller is always instantiated as an :doc:`App <edifice.App>` but
+    we need this `Protocol` to break the cirucal dependencies between the
+    modules.
+    """
     def _request_rerender(self, components: Iterable["Component"], kwargs: dict[str, tp.Any]):
         pass
 
