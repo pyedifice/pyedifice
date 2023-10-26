@@ -200,6 +200,9 @@ local_state = threading.local()
 def get_render_context() -> RenderContextProtocol:
     return getattr(local_state, "render_context")
 
+def get_render_context_maybe() -> RenderContextProtocol | None:
+    return getattr(local_state, "render_context", None)
+
 class Component:
     """The base class for Edifice Components.
 
@@ -317,11 +320,12 @@ class Component:
         super().__setattr__("_edifice_internal_references", set())
         if not hasattr(self, "_props"):
             self._props = {"children": []}
-        ctx = get_render_context()
-        trackers = ctx.trackers
-        if len(trackers) > 0:
-            parent = trackers[-1]
-            parent.append_child(self)
+        ctx = get_render_context_maybe()
+        if ctx is not None:
+            trackers = ctx.trackers
+            if len(trackers) > 0:
+                parent = trackers[-1]
+                parent.append_child(self)
 
     def __enter__(self: Self) -> Self:
         ctx = get_render_context()
@@ -647,14 +651,21 @@ def component(f: Callable[tp.Concatenate[C,P], None]) -> Callable[P,Component]:
             super().__init__()
 
         def render(self):
-            # We cannot type this because PropsDict forgets the types
             with Container() as root:
-                f(self, **self.props._d) # type: ignore[reportGeneralTypeIssues]
+                props: dict[str, tp.Any] = self.props._d
+                params = props.copy()
+                if "children" not in varnames:
+                    del params["children"]
+                # We cannot type this because PropsDict forgets the types
+                f(self, **params) # type: ignore[reportGeneralTypeIssues]
             children = root.children
             if len(children) == 1:
                 return children[0]
             else:
                 return children
+
+        def __repr__(self):
+            return f.__name__
     MyComponent.__name__ = f.__name__
     return MyComponent
 

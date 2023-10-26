@@ -13,6 +13,9 @@ else:
 if QtWidgets.QApplication.instance() is None:
     app = QtWidgets.QApplication(["-platform", "offscreen"])
 
+@component.component
+def Value(self, value):
+    self.value = value
 
 class MockComponent(component.Component):
 
@@ -146,11 +149,64 @@ class MakeComponentTestCase(unittest.TestCase):
     def test_make_component(self):
 
         @component.component
-        def Component1234(self, prop1, prop2, children):
-            return 1234
+        def Component1234(self, prop1, prop2):
+            Value(1234)
 
         self.assertEqual(Component1234.__name__, "Component1234")
         comp = Component1234(1, 2)
         self.assertEqual(comp.__class__, Component1234)
         self.assertEqual(comp.props._d, {"prop1": 1, "prop2": 2, "children": []})
-        self.assertEqual(comp.render(), 1234)
+        value_component = comp.render()
+        self.assertEqual(value_component.__class__.__name__, "Value")
+        # Render to value to update the state
+        value_component.render()
+        self.assertEqual(value_component.value, 1234)
+
+    def test_make_components(self):
+
+        @component.component
+        def Component1234(self, prop1, prop2):
+            Value(1337)
+            Value(42)
+            Value(69)
+            Value(420)
+
+        self.assertEqual(Component1234.__name__, "Component1234")
+        comp = Component1234(1, 2)
+        self.assertEqual(comp.__class__, Component1234)
+        self.assertEqual(comp.props._d, {"prop1": 1, "prop2": 2, "children": []})
+        components = comp.render()
+        for comp in components:
+            self.assertEqual(comp.__class__.__name__, "Value")
+        for comp in components:
+            # Render to value to update the state
+            comp.render()
+        values = [comp.value for comp in components]
+        self.assertEqual(values, [1337, 42, 69, 420])
+
+    def test_make_nested_component(self):
+
+        @component.component
+        def A(self):
+            Value(13)
+
+        @component.component
+        def Component1234(self, prop1, prop2):
+            with A():
+                Value(9)
+
+        self.assertEqual(Component1234.__name__, "Component1234")
+        comp = Component1234(1, 2)
+        self.assertEqual(comp.__class__, Component1234)
+        self.assertEqual(comp.props._d, {"prop1": 1, "prop2": 2, "children": []})
+        root = comp.render()
+        self.assertEqual(root.__class__.__name__, "A")
+        nested = root.render()
+        nested.render()
+        self.assertEqual(nested.__class__.__name__, "Value")
+        self.assertEqual(nested.value, 13)
+        children = root.children
+        for child in children:
+            child.render()
+        values = [comp.value for comp in children]
+        self.assertEqual(values, [9])
