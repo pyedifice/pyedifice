@@ -1,8 +1,6 @@
 {
   inputs = {
-    # Before we try to upgrade nixpkgs we better make sure this is fixed:
-    # https://github.com/nix-community/poetry2nix/issues/1291#issuecomment-1702272801
-    nixpkgs.url = "github:nixos/nixpkgs/nixos-23.05";
+    nixpkgs.url = "github:nixos/nixpkgs";
     flake-utils.url = "github:numtide/flake-utils";
     poetry2nix = {
       url = "github:nix-community/poetry2nix";
@@ -25,10 +23,11 @@
         let
           # https://github.com/NixOS/nixpkgs/blob/master/doc/languages-frameworks/python.section.md#including-a-derivation-using-callpackage-including-a-derivation-using-callpackage
           packageOverrides = pyself: pysuper: {
-            qasync = pyself.pythonPackages.callPackage qasync_ {};
-            pyedifice = pyself.pythonPackages.callPackage pyedifice_ {};
+            qasync = pyself.pythonPackages.callPackage qasync_ { };
+            pyedifice = pyself.pythonPackages.callPackage pyedifice_ { };
           };
-        in pkgs.python310.override { inherit packageOverrides; self = pythonOverride; };
+        in
+        pkgs.python310.override { inherit packageOverrides; self = pythonOverride; };
 
       pythonWithPackages = pythonOverride.withPackages (p: with p; [
         pip # for reading dependency information with pip list
@@ -43,9 +42,9 @@
       ]);
 
       qtOverride = attrs: attrs // {
-          # https://github.com/NixOS/nixpkgs/issues/80147#issuecomment-784857897
-          QT_PLUGIN_PATH = with pkgs.qt6; "${qtbase}/${qtbase.qtPluginPrefix}";
-        };
+        # https://github.com/NixOS/nixpkgs/issues/80147#issuecomment-784857897
+        QT_PLUGIN_PATH = with pkgs.qt6; "${qtbase}/${qtbase.qtPluginPrefix}";
+      };
 
       pythonEnv = qtOverride pythonWithPackages.env;
 
@@ -54,16 +53,7 @@
         # https://github.com/nix-community/poetry2nix/issues/1076
         projectDir = ./.;
         preferWheels = true;
-        overrides = pkgs.poetry2nix.overrides.withDefaults
-          (pyfinal: pyprev: {
-            # When we're building with Nix, use the pyside6 from nixpkgs,
-            # not the one from PyPI, because I can't figure out how to
-            # link it with Qt.
-            pyside6 = pyfinal.pkgs.python3.pkgs.pyside6;
-            shiboken6 = pyfinal.pkgs.python3.pkgs.shiboken6;
-            pyqt6 = pyfinal.pkgs.python3.pkgs.pyqt6;
-            pyqt6-sip = pyfinal.pkgs.python3.pkgs.pyqt6-sip;
-          });
+        overrides = pkgs.poetry2nix.overrides.withDefaults (pyfinal: pyprev: { });
       };
     in
     {
@@ -96,10 +86,12 @@
       #
       devShells = {
 
-        default = pythonEnv;
+        default = inputs.self.devShells.${system}.poetry2nix;
+
+        inherit pythonEnv;
 
         poetry = pkgs.mkShell {
-          packages= [ pkgs.python310 pkgs.poetry pkgs.qt6.qtbase ];
+          packages = [ pkgs.python310 pkgs.poetry pkgs.qt6.qtbase ];
           shellHook =
             let
               libraries = [
@@ -137,7 +129,7 @@
             sphinx-book-theme
             sphinx-autodoc-typehints
           ];
-        })).env.overrideAttrs (oldAttrs:{
+        })).env.overrideAttrs (oldAttrs: {
           buildInputs = [ pkgs.nodePackages.pyright ];
         });
 
@@ -151,102 +143,101 @@
       };
 
       apps =
-      let
-        run_tests_sh = pkgs.writeScript "run_tests_sh" (builtins.readFile ./run_tests.sh);
-      in
-      {
-        run_tests =
-          let
-            script = pkgs.writeShellApplication {
-              name = "edifice-run-tests";
-              runtimeInputs = [
-                (pkgs.poetry2nix.mkPoetryEnv poetryEnvAttrs)
-              ];
-              text = "${run_tests_sh}";
+        let
+          run_tests_sh = pkgs.writeScript "run_tests_sh" (builtins.readFile ./run_tests.sh);
+        in
+        {
+          run_tests =
+            let
+              script = pkgs.writeShellApplication {
+                name = "edifice-run-tests";
+                runtimeInputs = [
+                  (pkgs.poetry2nix.mkPoetryEnv poetryEnvAttrs)
+                ];
+                text = "${run_tests_sh}";
+              };
+            in
+            {
+              type = "app";
+              program = "${script}/bin/edifice-run-tests";
             };
-          in
-          {
-            type = "app";
-            program = "${script}/bin/edifice-run-tests";
-          };
-        run_tests-virtualX =
-          let
-            script-virtualX = pkgs.writeShellApplication {
-              name = "edifice-run-tests";
-              runtimeInputs = [
-                (pkgs.poetry2nix.mkPoetryEnv poetryEnvAttrs)
-                pkgs.xvfb-run
-              ];
-              text = "xvfb-run ${run_tests_sh}";
+          run_tests-virtualX =
+            let
+              script-virtualX = pkgs.writeShellApplication {
+                name = "edifice-run-tests";
+                runtimeInputs = [
+                  (pkgs.poetry2nix.mkPoetryEnv poetryEnvAttrs)
+                  pkgs.xvfb-run
+                ];
+                text = "xvfb-run ${run_tests_sh}";
+              };
+            in
+            {
+              type = "app";
+              program = "${script-virtualX}/bin/edifice-run-tests";
             };
-          in
-          {
-            type = "app";
-            program = "${script-virtualX}/bin/edifice-run-tests";
-          };
-        example-calculator =
-          let
-            script = pkgs.writeShellApplication {
-              name = "edifice-example";
-              runtimeInputs = [
-                (pkgs.poetry2nix.mkPoetryEnv poetryEnvAttrs)
-              ];
-              text = "cd ${inputs.self.outPath}; python -m edifice --inspect examples/calculator.py Calculator";
+          example-calculator =
+            let
+              script = pkgs.writeShellApplication {
+                name = "edifice-example";
+                runtimeInputs = [
+                  (pkgs.poetry2nix.mkPoetryEnv poetryEnvAttrs)
+                ];
+                text = "cd ${inputs.self.outPath}; python -m edifice --inspect examples/calculator.py Calculator";
+              };
+            in
+            {
+              type = "app";
+              program = "${script}/bin/edifice-example";
             };
-          in
-          {
-            type = "app";
-            program = "${script}/bin/edifice-example";
-          };
-        example-forms =
-          let
-            script = pkgs.writeShellApplication {
-              name = "edifice-example";
-              runtimeInputs = [
-                (pkgs.poetry2nix.mkPoetryEnv poetryEnvAttrs)
-              ];
-              text = "cd ${inputs.self.outPath}; PYTHONPATH=. python examples/form.py";
+          example-forms =
+            let
+              script = pkgs.writeShellApplication {
+                name = "edifice-example";
+                runtimeInputs = [
+                  (pkgs.poetry2nix.mkPoetryEnv poetryEnvAttrs)
+                ];
+                text = "cd ${inputs.self.outPath}; PYTHONPATH=. python examples/form.py";
+              };
+            in
+            {
+              type = "app";
+              program = "${script}/bin/edifice-example";
             };
-          in
-          {
-            type = "app";
-            program = "${script}/bin/edifice-example";
-          };
-        example-financial-charting =
-          let
-            script = pkgs.writeShellApplication {
-              name = "edifice-example";
-              runtimeInputs = [
-                (pkgs.poetry2nix.mkPoetryEnv (poetryEnvAttrs // {
-                  extraPackages = ps: with ps; [
-                    pandas
-                    yfinance
-                    matplotlib
-                  ];
-                }))
-              ];
-              text = "cd ${inputs.self.outPath}; python -m edifice --inspect examples/financial_charts.py App";
+          example-financial-charting =
+            let
+              script = pkgs.writeShellApplication {
+                name = "edifice-example";
+                runtimeInputs = [
+                  (pkgs.poetry2nix.mkPoetryEnv (poetryEnvAttrs // {
+                    extraPackages = ps: with ps; [
+                      pandas
+                      yfinance
+                      matplotlib
+                    ];
+                  }))
+                ];
+                text = "cd ${inputs.self.outPath}; python -m edifice --inspect examples/financial_charts.py App";
+              };
+            in
+            {
+              type = "app";
+              program = "${script}/bin/edifice-example";
             };
-          in
-          {
-            type = "app";
-            program = "${script}/bin/edifice-example";
-          };
-        example-harmonic-oscillator =
-          let
-            script = pkgs.writeShellApplication {
-              name = "edifice-example";
-              runtimeInputs = [
-                (pkgs.poetry2nix.mkPoetryEnv poetryEnvAttrs)
-              ];
-              text = "cd ${inputs.self.outPath}; python -m edifice --inspect examples/harmonic_oscillator.py Oscillator";
+          example-harmonic-oscillator =
+            let
+              script = pkgs.writeShellApplication {
+                name = "edifice-example";
+                runtimeInputs = [
+                  (pkgs.poetry2nix.mkPoetryEnv poetryEnvAttrs)
+                ];
+                text = "cd ${inputs.self.outPath}; python -m edifice --inspect examples/harmonic_oscillator.py Oscillator";
+              };
+            in
+            {
+              type = "app";
+              program = "${script}/bin/edifice-example";
             };
-          in
-          {
-            type = "app";
-            program = "${script}/bin/edifice-example";
-          };
-      };
+        };
     });
 }
-
