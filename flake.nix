@@ -120,6 +120,7 @@
         };
 
         poetry2nix = (pkgs.poetry2nix.mkPoetryEnv (poetryEnvAttrs // {
+          python=pkgs.python310;
           editablePackageSources = {
             edifice = ./edifice;
           };
