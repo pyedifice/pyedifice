@@ -381,11 +381,10 @@ class Element:
         Example::
 
             # inside a render call
-            return edifice.View()(
-                edifice.Label("Hello").set_key("en"),
-                edifice.Label("Bonjour").set_key("fr"),
-                edifice.Label("Hola").set_key("es"),
-            )
+            with edifice.View():
+                edifice.Label("Hello").set_key("en")
+                edifice.Label("Bonjour").set_key("fr")
+                edifice.Label("Hola").set_key("es")
 
         Args:
             key: the key to label the component with

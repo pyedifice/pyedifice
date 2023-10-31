@@ -2,8 +2,7 @@ import contextlib
 import inspect
 import logging
 import typing as tp
-
-from edifice.base_components import View
+from textwrap import dedent
 
 from ._component import BaseElement, Element, PropsDict, _CommandType, Tracker, local_state, Container
 
@@ -424,11 +423,12 @@ class RenderEngine(object):
             if len(container.children) == 1:
                 sub_component = container.children[0]
             else:
-                raise ValueError(f"""
+                newline = "\n"
+                message = dedent(f"""\
                     An Element must render as exactly one Element.
-
-                    Element {component} renders as {len(container.children)} elements.
-                """)
+                    Element {component} renders as {len(container.children)} elements.""") \
+                    + newline.join([child.__str__() for child in container.children])
+                raise ValueError(message)
         old_rendering: Element | list[Element] | None = self._component_tree.get(component, None)
 
         if sub_component.__class__ == old_rendering.__class__ and isinstance(old_rendering, Element):
