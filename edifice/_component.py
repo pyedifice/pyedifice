@@ -568,7 +568,7 @@ class Element:
         tags = self._tags()
         return tags[2]
 
-    def render(self):
+    def render(self) -> tp.Optional["Element"]:
         """Logic for rendering, must be overridden.
 
         The render logic for this component, not implemented for this abstract class.
@@ -578,7 +578,7 @@ class Element:
         Args:
             None
         Returns:
-            A Element object.
+            An Element object.
         """
         raise NotImplementedError
 
@@ -651,19 +651,13 @@ def component(f: Callable[tp.Concatenate[C,P], None]) -> Callable[P,Element]:
             super().__init__()
 
         def render(self):
-            with Container() as root:
-                props: dict[str, tp.Any] = self.props._d
-                params = props.copy()
-                if "children" not in varnames:
-                    del params["children"]
-                # We cannot type this because PropsDict forgets the types
-                # call the render function
-                f(self, **params) # type: ignore[reportGeneralTypeIssues]
-            children = root.children
-            if len(children) == 1:
-                return children[0]
-            else:
-                return children
+            props: dict[str, tp.Any] = self.props._d
+            params = props.copy()
+            if "children" not in varnames:
+                del params["children"]
+            # We cannot type this because PropsDict forgets the types
+            # call the render function
+            f(self, **params) # type: ignore[reportGeneralTypeIssues]
 
         def __repr__(self):
             return f.__name__

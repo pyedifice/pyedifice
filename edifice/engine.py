@@ -1,10 +1,11 @@
-from collections.abc import Callable
 import contextlib
 import inspect
 import logging
 import typing as tp
 
-from ._component import BaseElement, Element, PropsDict, _CommandType, Tracker, local_state
+from edifice.base_components import View
+
+from ._component import BaseElement, Element, PropsDict, _CommandType, Tracker, local_state, Container
 
 logger = logging.getLogger("Edifice")
 T = tp.TypeVar("T")
@@ -66,7 +67,7 @@ class _RenderContext(object):
         self.force_refresh = force_refresh
 
         self.component_tree = {}
-        self.widget_tree = {}
+        self.widget_tree: dict[Element, _WidgetTree] = {}
         self.enqueued_deletions = []
 
         self._callback_queue = []
@@ -112,9 +113,9 @@ class _RenderContext(object):
 class _WidgetTree(object):
     __slots__ = ("component", "children")
 
-    def __init__(self, component: BaseElement, children):
+    def __init__(self, component: Element, children):
         self.component = component
-        self.children : list[_WidgetTree]= children
+        self.children : list[_WidgetTree] = children
 
     def _dereference(self, address):
         widget_tree : _WidgetTree = self
@@ -286,7 +287,7 @@ class RenderEngine(object):
         component: Element,
         new_component: Element,
         render_context: _RenderContext
-    ):
+    ) -> _WidgetTree:
         # This function is called whenever we want to update component to have props of new_component
         assert component._edifice_internal_references is not None
         assert new_component._edifice_internal_references is not None
@@ -409,11 +410,29 @@ class RenderEngine(object):
             return ret
 
         # Call user provided render function and retrieve old results
-        sub_component = component.render()
+        with Container() as container:
+            sub_component = component.render()
+        # If the component.render() call evaluates to an Element
+        # we use that as the sub_component the component renders as.
+        if sub_component is None:
+            # If the render() method doesn't render as
+            # an Element (always the case for @component Components)
+            # we obtain the rendered sub_component as either:
+            #
+            # 1. The only child of the Container wrapping the render, or
+            # 2. A View element containing the children of the Container
+            if len(container.children) == 1:
+                sub_component = container.children[0]
+            else:
+                raise ValueError(f"""
+                    An Element must render as exactly one Element.
+
+                    Element {component} renders as {len(container.children)} elements.
+                """)
         old_rendering: Element | list[Element] | None = self._component_tree.get(component, None)
 
         if sub_component.__class__ == old_rendering.__class__ and isinstance(old_rendering, Element):
-            # TODO: Call will _eceive_props hook
+            # TODO: Call will _receive_props hook
             assert old_rendering is not None
             render_context.widget_tree[component] = self._update_old_component(
                 old_rendering, sub_component, render_context)

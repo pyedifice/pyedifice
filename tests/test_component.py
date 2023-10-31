@@ -16,6 +16,7 @@ if QtWidgets.QApplication.instance() is None:
 @component.component
 def Value(self, value):
     self.value = value
+    base_components.View()
 
 class MockElement(component.Element):
 
@@ -156,7 +157,9 @@ class MakeElementTestCase(unittest.TestCase):
         comp = Element1234(1, 2)
         self.assertEqual(comp.__class__, Element1234)
         self.assertEqual(comp.props._d, {"prop1": 1, "prop2": 2, "children": []})
-        value_component = comp.render()
+        with component.Container() as container:
+            comp.render()
+        value_component = container.children[0]
         self.assertEqual(value_component.__class__.__name__, "Value")
         # Render to value to update the state
         value_component.render()
@@ -166,16 +169,20 @@ class MakeElementTestCase(unittest.TestCase):
 
         @component.component
         def Element1234(self, prop1, prop2):
-            Value(1337)
-            Value(42)
-            Value(69)
-            Value(420)
+            with base_components.View():
+                Value(1337)
+                Value(42)
+                Value(69)
+                Value(420)
 
         self.assertEqual(Element1234.__name__, "Element1234")
         comp = Element1234(1, 2)
         self.assertEqual(comp.__class__, Element1234)
         self.assertEqual(comp.props._d, {"prop1": 1, "prop2": 2, "children": []})
-        components = comp.render()
+        with component.Container() as container:
+            comp.render()
+        view = container.children[0]
+        components = view.children
         for comp in components:
             self.assertEqual(comp.__class__.__name__, "Value")
         for comp in components:
@@ -199,9 +206,13 @@ class MakeElementTestCase(unittest.TestCase):
         comp = Element1234(1, 2)
         self.assertEqual(comp.__class__, Element1234)
         self.assertEqual(comp.props._d, {"prop1": 1, "prop2": 2, "children": []})
-        root = comp.render()
+        with component.Container() as container:
+            comp.render()
+        root = container.children[0]
         self.assertEqual(root.__class__.__name__, "A")
-        nested = root.render()
+        with component.Container() as container:
+            root.render()
+        nested = container.children[0]
         nested.render()
         self.assertEqual(nested.__class__.__name__, "Value")
         self.assertEqual(nested.value, 13)
