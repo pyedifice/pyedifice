@@ -1,6 +1,7 @@
 import unittest
 import unittest.mock
 import edifice._component as component
+from edifice.app import App
 import edifice.engine as engine
 import edifice.base_components as base_components
 
@@ -16,6 +17,14 @@ if QtWidgets.QApplication.instance() is None:
 @component.component
 def Value(self, value):
     self.value = value
+    base_components.View()
+
+@component.component
+def Bad(self, flag):
+    if not hasattr(self, "flag"):
+        self.flag = flag
+    if self.flag:
+        raise ValueError("This should error")
     base_components.View()
 
 class MockElement(component.Element):
@@ -221,3 +230,17 @@ class MakeElementTestCase(unittest.TestCase):
             child.render()
         values = [comp.value for comp in children]
         self.assertEqual(values, [9])
+
+    def test_raised_errors(self):
+        component = Bad(False)
+        app = App(component, create_application=False)
+        def update():
+            try:
+                with component.render_changes():
+                    component.flag = True
+            except ValueError as e:
+                self.assertEqual(e.__str__(), "This should error")
+        with app.start_loop() as loop:
+            loop.call_later(0.1, loop.stop)
+            loop.call_soon(update)
+            loop.run_forever()
