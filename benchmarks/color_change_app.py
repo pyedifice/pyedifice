@@ -3,7 +3,7 @@ import math
 import numpy as np
 
 
-class RecurseTree(ed.Component):
+class RecurseTree(ed.Element):
 
     @ed.register_props
     def __init__(self, level, t):
@@ -24,7 +24,7 @@ class RecurseTree(ed.Component):
 
 
 
-class MainComponent(ed.Component):
+class MainElement(ed.Element):
 
     @ed.register_props
     def __init__(self, level=2):
@@ -49,4 +49,4 @@ class MainComponent(ed.Component):
         return RecurseTree(level=7, t=self.t)
 
 if __name__ == "__main__":
-    ed.App(MainComponent()).start()
+    ed.App(MainElement()).start()

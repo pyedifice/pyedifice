@@ -20,7 +20,7 @@ else:
 
 from qasync import QEventLoop
 
-from ._component import BaseComponent, Component, RootComponent
+from ._component import BaseElement, Element, RootElement
 from .base_components import Window
 from .engine import RenderEngine
 from .inspector import inspector
@@ -70,12 +70,12 @@ class App(object):
 
     To start the application, call the :func:`App.start` method::
 
-        App(MyRootComponent()).start()
+        App(MyRootElement()).start()
 
     If you just want to create a widget (that you'll integrate with an existing codebase),
     call the :func:`App.export_widgets` method::
 
-        widget = App(MyRootComponent()).export_widgets()
+        widget = App(MyRootElement()).export_widgets()
 
     This widget can then be plugged into the rest of your application, and there's no need
     to manage the rendering of the widget -- state changes will trigger automatic re-render
@@ -83,7 +83,7 @@ class App(object):
 
     Args:
         component: the root component of the application.
-            If it is not an instance of Window or RootComponent, a Window
+            If it is not an instance of Window or RootElement, a Window
             will be created with the passed in component as a child.
         inspector: whether or not to run an instance of the Edifice Inspector
             alongside the main app. Defaults to False
@@ -103,7 +103,7 @@ class App(object):
     """
 
     def __init__(self,
-            component: Component,
+            component: Element,
             inspector: bool = False,
             create_application: bool = True,
             application_name: str | None = None,
@@ -122,12 +122,12 @@ class App(object):
             self.app : QtWidgets.QApplication = qapplication
 
         if mount_into_window:
-            if isinstance(component, BaseComponent):
+            if isinstance(component, BaseElement):
                 rendered_component = component
             else:
                 rendered_component = component.render()
-            if isinstance(rendered_component, RootComponent):
-                self._root = RootComponent()(component)
+            if isinstance(rendered_component, RootElement):
+                self._root = RootElement()(component)
             else:
                 self._root = Window()(component)
         else:
@@ -179,7 +179,7 @@ class App(object):
                         render_result.run()
                         self._class_rerender_queue.task_done()
                         self._class_rerender_response_queue.put_nowait(True)
-                        logger.info("Rerendering Components in %s due to source change", file_name)
+                        logger.info("Rerendering Elements in %s due to source change", file_name)
                     return True
                 else:
                     return super().event(e)
@@ -194,7 +194,7 @@ class App(object):
     def __hash__(self):
         return id(self)
 
-    def _request_rerender(self, components: list[Component], newstate):
+    def _request_rerender(self, components: list[Element], newstate):
         del newstate
         start_time = time.process_time()
         render_result = self._render_engine._request_rerender(components)
@@ -207,7 +207,7 @@ class App(object):
             self._logger.info("Rendered %d times, with average render time of %.2f ms and worst render time of %.2f ms",
                          render_timing.count(), 1000 * render_timing.mean(), 1000 * render_timing.max())
         self._first_render = False
-        if self._inspector_component is not None and not all(isinstance(comp, inspector.InspectorComponent) for comp in components):
+        if self._inspector_component is not None and not all(isinstance(comp, inspector.InspectorElement) for comp in components):
             self._inspector_component._refresh()
 
     def set_stylesheet(self, stylesheet):
@@ -222,7 +222,7 @@ class App(object):
         return self
 
     def export_widgets(self):
-        """Exports the Qt widgets underlying the Edifice Component.
+        """Exports the Qt widgets underlying the Edifice Element.
 
         Depending on how the root component is defined, either one or multiple
         widgets are returned
@@ -233,7 +233,7 @@ class App(object):
         You can mount these widgets to your pre-existing Qt Application this way::
 
             # Suppose parent_widget is defined in Qt code.
-            app = edifice.App(MyAwesomeComponent())
+            app = edifice.App(MyAwesomeElement())
             widget = app.export_widgets()
             widget.setParent(parent_widget)
 
@@ -297,7 +297,7 @@ class App(object):
 
         Example::
 
-            app = edifice.App(MyAppComponent())
+            app = edifice.App(MyAppElement())
             with app.start_loop() as loop:
                 loop.add_signal_handler(signal.SIGINT, loop.stop)
                 loop.run_forever()
@@ -317,7 +317,7 @@ class App(object):
                         self._render_engine._component_tree, self._root,
                         refresh=(lambda: (self._render_engine._component_tree, self._root)))
                     icon_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), "inspector/icon.png")
-                    component = Window(title="Component Inspector", on_close=cleanup, icon=icon_path)(self._inspector_component)
+                    component = Window(title="Element Inspector", on_close=cleanup, icon=icon_path)(self._inspector_component)
                     component._edifice_internal_parent = None
                     self._request_rerender([component], {})
             t = loop.create_task(first_render())

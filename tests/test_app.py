@@ -40,7 +40,7 @@ class TimingAvgTestCase(unittest.TestCase):
 class IntegrationTestCase(unittest.TestCase):
 
     def test_widget_creation(self):
-        class TestComp(component.Component):
+        class TestComp(component.Element):
 
             @component.register_props
             def __init__(self):
@@ -78,7 +78,7 @@ class IntegrationTestCase(unittest.TestCase):
 
         observations_CompChild1: list[int] = []
 
-        class TestComp(component.Component):
+        class TestComp(component.Element):
             @component.register_props
             def __init__(self, state_value):
                 super().__init__()
@@ -91,7 +91,7 @@ class IntegrationTestCase(unittest.TestCase):
                 else:
                     return base_components.Label(text="unreachable")
 
-        class CompChild1(component.Component):
+        class CompChild1(component.Element):
             @component.register_props
             def __init__(self, state_value):
                 super().__init__()
@@ -104,7 +104,7 @@ class IntegrationTestCase(unittest.TestCase):
                 loop = asyncio.get_running_loop()
                 loop.call_soon(self.props.state_value.set, 2)
 
-        class CompChild2(component.Component):
+        class CompChild2(component.Element):
             @component.register_props
             def __init__(self, state_value):
                 super().__init__()
@@ -124,7 +124,7 @@ class IntegrationTestCase(unittest.TestCase):
 
         # TODO
         # I think this is a failing test. The number of subscriptions here
-        # should be 0, because all of these Components have been unmounted.
+        # should be 0, because all of these Elements have been unmounted.
         #
         # self.assertEqual(len(state_value._subscriptions), 0)
         self.assertNotEqual(len(state_value._subscriptions), 0)

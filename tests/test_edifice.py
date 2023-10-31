@@ -17,7 +17,7 @@ if QtWidgets.QApplication.instance() is None:
 class TestReference(unittest.TestCase):
 
     def test_reference(self):
-        class TestComp(component.Component):
+        class TestComp(component.Element):
             def __init__(self):
                 super().__init__()
                 self.render_count = 0
@@ -31,7 +31,7 @@ class TestReference(unittest.TestCase):
                 else:
                     return base_components.Label("Test").register_ref(self.ref2)
 
-        class TestCompWrapper(component.Component):
+        class TestCompWrapper(component.Element):
 
             def __init__(self):
                 super().__init__()
@@ -70,7 +70,7 @@ class TestReference(unittest.TestCase):
         self.assertEqual(sub_comp.ref2(), None)
 
 
-class _TestComponentInner(component.Component):
+class _TestElementInner(component.Element):
 
     @component.register_props
     def __init__(self, prop_a):
@@ -82,7 +82,7 @@ class _TestComponentInner(component.Component):
             base_components.Label(self.state_a),
         )
 
-class _TestComponentOuter(component.Component):
+class _TestElementOuter(component.Element):
     """
     The rendered tree should be (with index address):
         View(               # []
@@ -104,12 +104,12 @@ class _TestComponentOuter(component.Component):
 
     def render(self):
         return base_components.View()(
-            _TestComponentInner(self.state_a),
-            _TestComponentInner(self.state_b),
+            _TestElementInner(self.state_a),
+            _TestElementInner(self.state_b),
             base_components.Label(self.state_c),
         )
 
-class _TestComponentOuterList(component.Component):
+class _TestElementOuterList(component.Element):
     """
     The rendered tree should be (with index address):
         View(               # []
@@ -133,14 +133,14 @@ class _TestComponentOuterList(component.Component):
         if self.use_keys:
             if self.use_state_as_key:
                 return base_components.View()(
-                    *[_TestComponentInner(text).set_key(text) for text in self.state]
+                    *[_TestElementInner(text).set_key(text) for text in self.state]
                 )
             else:
                 return base_components.View()(
-                    *[_TestComponentInner(text).set_key(str(i)) for i, text in enumerate(self.state)]
+                    *[_TestElementInner(text).set_key(str(i)) for i, text in enumerate(self.state)]
                 )
         return base_components.View()(
-            *[_TestComponentInner(text) for text in self.state]
+            *[_TestElementInner(text) for text in self.state]
         )
 
 
@@ -154,7 +154,7 @@ def _commands_for_address(qt_tree, address):
 class RenderTestCase(unittest.TestCase):
 
     def test_basic_render(self):
-        component = _TestComponentOuter()
+        component = _TestElementOuter()
         app = engine.RenderEngine(component)
         render_result = app._request_rerender([component])
         qt_tree = render_result.trees[0]
@@ -179,7 +179,7 @@ class RenderTestCase(unittest.TestCase):
         self.assertEqual(qt_commands, [])
 
     def test_state_changes(self):
-        component = _TestComponentOuter()
+        component = _TestElementOuter()
         app = engine.RenderEngine(component)
         render_result = app._request_rerender([component])
         qt_tree = render_result.trees[0]
@@ -207,7 +207,7 @@ class RenderTestCase(unittest.TestCase):
         self.assertEqual(qt_commands, expected_commands)
 
     def test_keyed_list_add(self):
-        component = _TestComponentOuterList(True, True)
+        component = _TestElementOuterList(True, True)
         app = engine.RenderEngine(component)
         render_result = app._request_rerender([component])
         qt_tree = render_result.trees[0]
@@ -232,7 +232,7 @@ class RenderTestCase(unittest.TestCase):
         self.assertEqual(qt_commands, expected_commands)
 
     def test_keyed_list_reshuffle(self):
-        component = _TestComponentOuterList(True, True)
+        component = _TestElementOuterList(True, True)
         app = engine.RenderEngine(component)
         render_result = app._request_rerender([component])
         qt_tree = render_result.trees[0]
@@ -252,7 +252,7 @@ class RenderTestCase(unittest.TestCase):
         self.assertEqual(qt_commands, expected_commands)
 
     def test_keyed_list_nochange(self):
-        component = _TestComponentOuterList(True, False)
+        component = _TestElementOuterList(True, False)
         app = engine.RenderEngine(component)
         render_result = app._request_rerender([component])
         qt_tree = render_result.trees[0]
@@ -267,7 +267,7 @@ class RenderTestCase(unittest.TestCase):
         self.assertEqual(qt_commands, expected_commands)
 
     def test_keyed_list_delete_child(self):
-        component = _TestComponentOuterList(True, True)
+        component = _TestElementOuterList(True, True)
         app = engine.RenderEngine(component)
         render_result = app._request_rerender([component])
         qt_tree = render_result.trees[0]
@@ -284,7 +284,7 @@ class RenderTestCase(unittest.TestCase):
         self.assertEqual(qt_commands, expected_commands)
 
     def test_one_child_rerender(self):
-        class TestCompInner(component.Component):
+        class TestCompInner(component.Element):
 
             @component.register_props
             def __init__(self, val):
@@ -294,7 +294,7 @@ class RenderTestCase(unittest.TestCase):
                 self.count += 1
                 return base_components.Label(self.props.val)
 
-        class TestCompOuter(component.Component):
+        class TestCompOuter(component.Element):
             def render(self):
                 return base_components.View()(TestCompInner(self.value))
 
@@ -313,7 +313,7 @@ class RenderTestCase(unittest.TestCase):
         self.assertEqual(inner_comp.props.val, 4)
 
     def test_render_exception(self):
-        class TestCompInner1(component.Component):
+        class TestCompInner1(component.Element):
 
             @component.register_props
             def __init__(self, val):
@@ -325,7 +325,7 @@ class RenderTestCase(unittest.TestCase):
                 self.success_count += 1
                 return base_components.Label(self.props.val)
 
-        class TestCompInner2(component.Component):
+        class TestCompInner2(component.Element):
 
             @component.register_props
             def __init__(self, val):
@@ -338,7 +338,7 @@ class RenderTestCase(unittest.TestCase):
                 self.success_count += 1
                 return base_components.Label(self.props.val)
 
-        class TestCompOuter(component.Component):
+        class TestCompOuter(component.Element):
             def render(self):
                 return base_components.View()(
                     TestCompInner1(self.value * 2),
@@ -370,7 +370,7 @@ class RenderTestCase(unittest.TestCase):
 class RefreshClassTestCase(unittest.TestCase):
 
     def test_refresh_child(self):
-        class OldInnerClass(component.Component):
+        class OldInnerClass(component.Element):
 
             @component.register_props
             def __init__(self, val):
@@ -381,7 +381,7 @@ class RefreshClassTestCase(unittest.TestCase):
                 self.count += 1
                 return base_components.Label(self.props.val)
 
-        class NewInnerClass(component.Component):
+        class NewInnerClass(component.Element):
 
             @component.register_props
             def __init__(self, val):
@@ -391,7 +391,7 @@ class RefreshClassTestCase(unittest.TestCase):
                 self.count += 1
                 return base_components.Label(self.props.val * 2)
 
-        class OuterClass(component.Component):
+        class OuterClass(component.Element):
 
             @component.register_props
             def __init__(self):
@@ -416,7 +416,7 @@ class RefreshClassTestCase(unittest.TestCase):
         self.assertEqual(inner_comp.props.val, 5)
 
     def test_refresh_child_error(self):
-        class OldInnerClass(component.Component):
+        class OldInnerClass(component.Element):
 
             @component.register_props
             def __init__(self, val):
@@ -427,7 +427,7 @@ class RefreshClassTestCase(unittest.TestCase):
                 self.count += 1
                 return base_components.Label(self.props.val)
 
-        class NewInnerClass(component.Component):
+        class NewInnerClass(component.Element):
 
             @component.register_props
             def __init__(self, val):
@@ -438,7 +438,7 @@ class RefreshClassTestCase(unittest.TestCase):
                 assert False
                 return base_components.Label(self.props.val * 2)
 
-        class OuterClass(component.Component):
+        class OuterClass(component.Element):
 
             @component.register_props
             def __init__(self):

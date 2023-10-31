@@ -45,7 +45,7 @@ Copy this code into a new file, for example tutorial.py::
    if __name__ == "__main__":
        ed.App(window).start()
 
-What does this code do? View is an example of a :class:`Component<edifice.Component>`, which are the building blocks of an application.
+What does this code do? View is an example of a :class:`Element<edifice.Element>`, which are the building blocks of an application.
 The View component receives :code:`layout="row"` as an argument in its constructor.
 We refer to layout as a **"prop"** of the View component -- it is a property passed to the View.
 We also see this funny notation where we call the constructed View object with several arguments:
@@ -69,13 +69,13 @@ For the simplest applications, this is all you need to make a GUI.
 When you start managing more state (e.g. currently input values in the textbox, user preferences, etc), or when you want to break complex UI
 into smaller parts, or when you want to share UI logic across multiple
 parts of your application and across many applications,
-defining your own :class:`Component<edifice.Component>` class makes life much easier with almost no conceptual or code overhead::
+defining your own :class:`Element<edifice.Element>` class makes life much easier with almost no conceptual or code overhead::
 
    import edifice as ed
    from edifice import Label, TextInput, View
 
    # Declare your own component, MyApp. The render function describes how your custom component is to be rendered
-   class MyApp(ed.Component):
+   class MyApp(ed.Element):
        def render(self):
            return View(layout="row")(
                Label("Measurement in meters:"),
@@ -86,17 +86,17 @@ defining your own :class:`Component<edifice.Component>` class makes life much ea
    if __name__ == "__main__":
        ed.App(MyApp()).start()
 
-The (admittedly-humble) Component you created can be shared across apps or composed in this single application.
-Most importantly, when you start having more Components,
-each Component is a self-contained unit with all its business logic bundled together.
+The (admittedly-humble) Element you created can be shared across apps or composed in this single application.
+Most importantly, when you start having more Elements,
+each Element is a self-contained unit with all its business logic bundled together.
 
-The render function of a Component describes how the component is to be rendered. Note that
+The render function of a Element describes how the component is to be rendered. Note that
 what it returns is only a description --- the actual rendering does not happen here!
 In Edifice, the Edifice rendering engine, which is contained in :code:`edifice.App`,
 is responsible for actually doing the rendering.
-It takes the description of each Component, and it decides when and how to render it and its children.
-It does so by monitoring the state of each Component, and it will re-render
-when the Component state changes.
+It takes the description of each Element, and it decides when and how to render it and its children.
+It does so by monitoring the state of each Element, and it will re-render
+when the Element state changes.
 Don't worry, we'll see an example of this in action!
 
 As you might expect, you can run this application simply with :code:`python tutorial.py`.
@@ -117,7 +117,7 @@ For example::
     import edifice as ed
     from edifice import Label, TextInput, View
 
-    class MyApp(ed.Component):
+    class MyApp(ed.Element):
         def render(self):
             meters_label_style = {"width": 170}
             feet_label_style = {"margin-left": 20, "width": 200}
@@ -150,7 +150,7 @@ box and in the label are in sync::
             return 0.0
 
 
-    class MyApp(ed.Component):
+    class MyApp(ed.Element):
 
         def __init__(self):
             super().__init__()
@@ -176,7 +176,7 @@ box and in the label are in sync::
 We add a constructor for this class, where we initialize the attribute :code:`meters`.
 Meters is a **state** variable;
 we expect all changes to meters to be reflected in the UI.
-Indeed, we can think of the render function as a map from the Component state,
+Indeed, we can think of the render function as a map from the Element state,
 meters, to UI.
 
 In the render function, we read the value of meters and convert it to feet,
@@ -191,15 +191,15 @@ It is important to call set_state instead of setting :code:`self.meters = text`
 directly,
 so that Edifice knows about state changes and could re-render the UI to accurately reflect the current state.
 
-If you want to see the state changes in action, you can open the Component Inspector::
+If you want to see the state changes in action, you can open the Element Inspector::
 
     python -m edifice --inspect tutorial.py MyApp
 
-The Component Inspector allows you to see the current state and props for all components in an UI (which, of course,
+The Element Inspector allows you to see the current state and props for all components in an UI (which, of course,
 was created with Edifice). Play around with the application and see how the state changes.
 
 Now suppose we want to add conversion from feet to meters. Instead of copying our code and repeating
-it for each measurement pair, we can factor out the conversion logic into its own Component::
+it for each measurement pair, we can factor out the conversion logic into its own Element::
 
     import edifice as ed
     from edifice import Label, TextInput, View
@@ -213,7 +213,7 @@ it for each measurement pair, we can factor out the conversion logic into its ow
             return 0.0
 
 
-    class ConversionWidget(ed.Component):
+    class ConversionWidget(ed.Element):
 
         @ed.register_props
         def __init__(self, from_unit, to_unit, factor):
@@ -234,7 +234,7 @@ it for each measurement pair, we can factor out the conversion logic into its ow
                 Label(f"Measurement in {self.props.to_unit}: {to_text}", style=to_label_style),
             )
 
-    class MyApp(ed.Component):
+    class MyApp(ed.Element):
 
         def render(self):
             return ed.View(layout="column")(
@@ -247,7 +247,7 @@ it for each measurement pair, we can factor out the conversion logic into its ow
 
 Factoring out the logic makes it trivial to add conversions between pounds and kilograms, liters and gallons, etc.
 
-Oh, by the way---you can do the exact same thing in 18 lines of code, using the Form Component
+Oh, by the way---you can do the exact same thing in 18 lines of code, using the Form Element
 (implemented using Edifice, similar to but more general than the ConversionWidget component above)::
 
     import edifice as ed

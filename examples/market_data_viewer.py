@@ -32,7 +32,7 @@ stylesheet = ed.PropsDict(dict(
     },
 ))
 
-class PriceLevel(ed.Component):
+class PriceLevel(ed.Element):
 
     @ed.register_props
     def __init__(self, price, size, side, last=False):
@@ -63,7 +63,7 @@ class PriceLevel(ed.Component):
             ed.Label("", style=size_bar_style).set_key("vis_size")
         )
 
-class Book(ed.Component):
+class Book(ed.Element):
 
     @ed.register_props
     def __init__(self, book):
@@ -81,7 +81,7 @@ class Book(ed.Component):
         )
 
 
-class App(ed.Component):
+class App(ed.Element):
 
     def __init__(self):
         super().__init__()

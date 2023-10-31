@@ -31,7 +31,7 @@ class ButtonView(View):
     """
     A Button where the label is the Button’s children rendered in a :class:`edifice.View`.
 
-    Inherits all the props from :class:`edifice.QtWidgetComponent`.
+    Inherits all the props from :class:`edifice.QtWidgetElement`.
 
     Args:
         on_trigger:

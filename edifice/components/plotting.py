@@ -1,7 +1,7 @@
 import time
 import threading
 from ..base_components import CustomWidget
-from .._component import Component, register_props
+from .._component import Element, register_props
 
 from ..qt import QT_VERSION
 if QT_VERSION == "PyQt6":

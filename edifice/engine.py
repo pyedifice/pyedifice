@@ -4,7 +4,7 @@ import inspect
 import logging
 import typing as tp
 
-from ._component import BaseComponent, Component, PropsDict, _CommandType, Tracker, local_state
+from ._component import BaseElement, Element, PropsDict, _CommandType, Tracker, local_state
 
 logger = logging.getLogger("Edifice")
 T = tp.TypeVar("T")
@@ -70,7 +70,7 @@ class _RenderContext(object):
         self.enqueued_deletions = []
 
         self._callback_queue = []
-        self.component_parent: Component | None = None
+        self.component_parent: Element | None = None
 
         self.trackers = []
 
@@ -112,7 +112,7 @@ class _RenderContext(object):
 class _WidgetTree(object):
     __slots__ = ("component", "children")
 
-    def __init__(self, component: BaseComponent, children):
+    def __init__(self, component: BaseElement, children):
         self.component = component
         self.children : list[_WidgetTree]= children
 
@@ -187,13 +187,12 @@ class RenderEngine(object):
         self._root = root
         self._root._edifice_internal_parent = None
         self._app = app
-        self._hook_state : dict[Component, dict[int, tp.Any]] = {}
 
-    def _delete_component(self, component: Component, recursive: bool):
+    def _delete_component(self, component: Element, recursive: bool):
         # Delete component from render trees
         sub_components = self._component_tree[component]
         if recursive:
-            if isinstance(sub_components, Component):
+            if isinstance(sub_components, Element):
                 self._delete_component(sub_components, recursive)
             else:
                 for sub_comp in sub_components:
@@ -264,7 +263,7 @@ class RenderEngine(object):
                 logger.warning(
                     f"Cannot reload {new_comp} (rendered by {parent_comp}) "
                     "because calling render function is just a wrapper."
-                    "Consider putting it inside an edifice.View or another Component that has the children prop")
+                    "Consider putting it inside an edifice.View or another Element that has the children prop")
 
         # 5) call _render for all new component parents
         try:
@@ -284,8 +283,8 @@ class RenderEngine(object):
 
     def _update_old_component(
         self,
-        component: Component,
-        new_component: Component,
+        component: Element,
+        new_component: Element,
         render_context: _RenderContext
     ):
         # This function is called whenever we want to update component to have props of new_component
@@ -310,20 +309,20 @@ class RenderEngine(object):
         self._update_old_component(d[key], newchild, render_context)
         return d[key]
 
-    def _attach_keys(self, component: Component, render_context: _RenderContext):
+    def _attach_keys(self, component: Element, render_context: _RenderContext):
         for i, child in enumerate(component.children):
             if not hasattr(child, "_key"):
                 # logger.warning("Setting child key of %s to: %s", component, "KEY" + str(i))
                 render_context.set(child, "_key", "KEY" + str(i))
 
-    def _recycle_children(self, component: Component, render_context: _RenderContext):
+    def _recycle_children(self, component: Element, render_context: _RenderContext):
         # Returns children, which contains all the future children of the component:
         # a mixture of old components (if they can be updated) and new ones
 
         # Determine list of former children
         old_children = self._component_tree[component]
 
-        # TODO: match on if old_children is a single Component or not
+        # TODO: match on if old_children is a single Element or not
         if len(component.children) == 1 and len(old_children) == 1:
             # If both former and current child lists are length 1, just compare class
             if component.children[0].__class__ == old_children[0].__class__:
@@ -350,7 +349,7 @@ class RenderEngine(object):
                 render_context.enqueued_deletions.append(old_child)
         return children
 
-    def _render_base_component(self, component: BaseComponent, render_context: _RenderContext) -> _WidgetTree:
+    def _render_base_component(self, component: BaseElement, render_context: _RenderContext) -> _WidgetTree:
         if len(component.children) > 1:
             self._attach_keys(component, render_context)
         if component not in self._component_tree:
@@ -390,7 +389,7 @@ class RenderEngine(object):
         render_context.mark_props_change(component, PropsDict(props_dict))
         return render_context.widget_tree[component]
 
-    def _render(self, component: Component, render_context: _RenderContext):
+    def _render(self, component: Element, render_context: _RenderContext):
         if component in render_context.widget_tree:
             return render_context.widget_tree[component]
         try:
@@ -404,16 +403,16 @@ class RenderEngine(object):
         component._controller = self._app
         component._edifice_internal_parent = render_context.component_parent
         render_context.component_parent = component
-        if isinstance(component, BaseComponent):
+        if isinstance(component, BaseElement):
             ret = self._render_base_component(component, render_context)
             render_context.component_parent = component._edifice_internal_parent
             return ret
 
         # Call user provided render function and retrieve old results
         sub_component = component.render()
-        old_rendering: Component | list[Component] | None = self._component_tree.get(component, None)
+        old_rendering: Element | list[Element] | None = self._component_tree.get(component, None)
 
-        if sub_component.__class__ == old_rendering.__class__ and isinstance(old_rendering, Component):
+        if sub_component.__class__ == old_rendering.__class__ and isinstance(old_rendering, Element):
             # TODO: Call will _eceive_props hook
             assert old_rendering is not None
             render_context.widget_tree[component] = self._update_old_component(
@@ -437,7 +436,7 @@ class RenderEngine(object):
             commands.extend(widget_tree.gen_qt_commands(render_context))
         return commands
 
-    def _gen_widget_trees(self, components: list[Component], render_context: _RenderContext) -> list[_WidgetTree]:
+    def _gen_widget_trees(self, components: list[Element], render_context: _RenderContext) -> list[_WidgetTree]:
         widget_trees : list[_WidgetTree] = []
         for component in components:
             if component not in render_context.widget_tree:
@@ -445,7 +444,7 @@ class RenderEngine(object):
                 widget_trees.append(self._render(component, render_context))
         return widget_trees
 
-    def _request_rerender(self, components: list[Component]) -> RenderResult:
+    def _request_rerender(self, components: list[Element]) -> RenderResult:
         # Generate the widget trees
         with _storage_manager() as storage_manager:
             render_context = _RenderContext(storage_manager)

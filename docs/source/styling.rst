@@ -7,7 +7,7 @@ In web development, HTML would represent the content structure,
 while CSS represents the formatting of the presentation.
 
 Edfice supports `Qt widget styling <https://doc.qt.io/qtforpython-6/overviews/stylesheet-syntax.html>`_.
-The **style prop** of Edifice base :class:`Component <edifice.Component>` allows you to set the style for that component.
+The **style prop** of Edifice base :class:`Element <edifice.Element>` allows you to set the style for that component.
 It is either a dictionary or a list of dictionaries, in which case the dictionaries are merged from left to right.
 The keys of the dictionary are the supported style name, and the values are the value of that style name.
 

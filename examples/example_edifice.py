@@ -1,7 +1,7 @@
 import edifice
 from edifice import View, Label, TextInput
 
-class App(edifice.Component):
+class App(edifice.Element):
     def __init__(self):
         super(App, self).__init__()
         self.text = ""

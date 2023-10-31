@@ -4,7 +4,7 @@ import edifice
 from edifice.inspector import inspector
 
 
-class ComponentB(edifice.Component):
+class ElementB(edifice.Element):
 
     @edifice.register_props
     def __init__(self, a, b, c):
@@ -14,17 +14,17 @@ class ComponentB(edifice.Component):
     def render(self):
         return edifice.Label("Test")
 
-class ComponentA(edifice.Component):
+class ElementA(edifice.Element):
 
     def render(self):
-        return ComponentB(a=1, b=2, c=3)
+        return ElementB(a=1, b=2, c=3)
 
 
 class InspectorTestCase(unittest.TestCase):
 
     def test_inspector_render(self):
-        comp_b = ComponentB(a=1, b=2, c=3)
-        root = ComponentA()
+        comp_b = ElementB(a=1, b=2, c=3)
+        root = ElementA()
         component_tree = {
             root: comp_b,
             comp_b: []
@@ -34,11 +34,11 @@ class InspectorTestCase(unittest.TestCase):
             component_tree, root, (lambda: component_tree, root))
         inspector_component.selected = comp_b
         inspector_component.render()
-        inspector.ComponentView(comp_b).render()
+        inspector.ElementView(comp_b).render()
         inspector.StateView(comp_b).render()
         inspector.TreeView(root, root.__class__.__name__,
                            lambda e: None, lambda: [], lambda: True,).render()
-        inspector.ComponentLabel(
+        inspector.ElementLabel(
             root,
             on_click = lambda e: None).render()
         inspector.Collapsible(

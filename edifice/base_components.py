@@ -1,5 +1,5 @@
 """
-Base Components are the building blocks for your Edifice application.
+Base Elements are the building blocks for your Edifice application.
 These components may all be imported from the edifice namespace::
 
     import edifice
@@ -7,7 +7,7 @@ These components may all be imported from the edifice namespace::
 
     # you can now access edifice.Button, View, etc.
 
-All components in this module inherit from :class:`QtWidgetComponent<edifice.QtWidgetComponent>`
+All components in this module inherit from :class:`QtWidgetElement<edifice.QtWidgetElement>`
 and its props, such as :code:`style` and :code:`on_click`.
 This means that all widgets could potentially respond to clicks and are stylable using css-like stylesheets.
 
@@ -43,7 +43,7 @@ import typing as tp
 
 import numpy as np
 
-from ._component import WidgetComponent, RootComponent, register_props, _CommandType
+from ._component import WidgetElement, RootElement, register_props, _CommandType
 
 from .qt import QT_VERSION
 
@@ -176,7 +176,7 @@ def _create_qmenu(menu: ContextMenuType, parent, title: tp.Optional[tp.Text] = N
     return widget
 
 
-class QtWidgetComponent(WidgetComponent):
+class QtWidgetElement(WidgetElement):
     """Base Qt Widget.
 
     All Qt widgets inherit from this component and its props, which add basic functionality
@@ -603,14 +603,14 @@ class QtWidgetComponent(WidgetComponent):
         return commands
 
 
-class Window(RootComponent):
-    """Component that displays its child as a window.
+class Window(RootElement):
+    """Element that displays its child as a window.
 
     Window will mount its child as a window.
     It can be created as a child of any standard container.
     This is useful if a window is logically associated with ::
 
-        class MyApp(Component):
+        class MyApp(Element):
 
             def render(self):
                 return View()(
@@ -701,7 +701,7 @@ class Window(RootComponent):
         return commands
 
 
-class GroupBox(QtWidgetComponent):
+class GroupBox(QtWidgetElement):
 
     @register_props
     def __init__(self, title):
@@ -722,7 +722,7 @@ class GroupBox(QtWidgetComponent):
         commands.append((self.underlying.setTitle, self.props.title))
         return commands
 
-class Icon(QtWidgetComponent):
+class Icon(QtWidgetElement):
     """Display an Icon
 
     .. figure:: /image/icons.png
@@ -789,7 +789,7 @@ class Icon(QtWidgetComponent):
         return commands
 
 
-class Button(QtWidgetComponent):
+class Button(QtWidgetElement):
     """Basic button widget.
 
     .. figure:: /image/textinput_button.png
@@ -797,7 +797,7 @@ class Button(QtWidgetComponent):
 
        Button on the right
 
-    Set the on_click prop (inherited from QtWidgetComponent) to define the behavior on click.
+    Set the on_click prop (inherited from QtWidgetElement) to define the behavior on click.
 
     Args:
         title:
@@ -885,7 +885,7 @@ class IconButton(Button):
         return commands
 
 
-class Label(QtWidgetComponent):
+class Label(QtWidgetElement):
     """Basic widget for displaying text.
 
     .. figure:: /image/label.png
@@ -946,7 +946,7 @@ class Label(QtWidgetComponent):
         return commands
 
 
-class Image(QtWidgetComponent):
+class Image(QtWidgetElement):
     """An image container.
 
     Args:
@@ -974,7 +974,7 @@ class Image(QtWidgetComponent):
                 commands.append((self.underlying.setPixmap, _image_descriptor_to_pixmap(self.props.src)))
         return commands
 
-class ImageSvg(QtWidgetComponent):
+class ImageSvg(QtWidgetElement):
     """An SVG Image container.
 
     Args:
@@ -1033,7 +1033,7 @@ class Completer(object):
         return (self.options != other.options) or (self.mode != other.mode)
 
 
-class TextInput(QtWidgetComponent):
+class TextInput(QtWidgetElement):
     """Basic widget for a one line text input.
 
     .. figure:: /image/textinput_button.png
@@ -1117,7 +1117,7 @@ class TextInput(QtWidgetComponent):
         return commands
 
 
-class Dropdown(QtWidgetComponent):
+class Dropdown(QtWidgetElement):
     """Basic widget for a dropdown menu.
 
     .. figure:: /image/checkbox_dropdown.png
@@ -1212,7 +1212,7 @@ class Dropdown(QtWidgetComponent):
         return commands
 
 
-class RadioButton(QtWidgetComponent):
+class RadioButton(QtWidgetElement):
     """Radio buttons.
 
     .. figure:: /image/radio_button.png
@@ -1266,7 +1266,7 @@ class RadioButton(QtWidgetComponent):
         return commands
 
 
-class CheckBox(QtWidgetComponent):
+class CheckBox(QtWidgetElement):
     """Checkbox widget.
 
     .. figure:: /image/checkbox_dropdown.png
@@ -1325,7 +1325,7 @@ class CheckBox(QtWidgetComponent):
 
 NumericType = tp.Union[float, int]
 
-class Slider(QtWidgetComponent):
+class Slider(QtWidgetElement):
     """Slider bar widget.
 
     .. figure:: /image/slider.png
@@ -1429,7 +1429,7 @@ class Slider(QtWidgetComponent):
         return commands
 
 
-class _LinearView(QtWidgetComponent):
+class _LinearView(QtWidgetElement):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -1640,7 +1640,7 @@ def _layout_str_to_grid_spec(layout):
     return (num_rows, num_cols, ls)
 
 
-class GridView(QtWidgetComponent):
+class GridView(QtWidgetElement):
     """Grid layout widget for rendering children on a 2D rectangular grid.
 
     Grid views allow you to precisely control 2D positioning of widgets.
@@ -1767,13 +1767,13 @@ class TabView(_LinearView):
         return commands
 
 
-class CustomWidget(QtWidgetComponent):
+class CustomWidget(QtWidgetElement):
     """Custom widgets that you can define.
 
     Not all widgets are currently supported by Edifice.
     You can create your own base component by overriding this class::
 
-        class MyWidgetComponent(CustomWidget):
+        class MyWidgetElement(CustomWidget):
             def create_widget(self):
                 # This function should return the new widget
                 # (with parent set to None; Edifice will handle parenting)
@@ -1817,7 +1817,7 @@ class CustomWidget(QtWidgetComponent):
         return commands
 
 
-class List(RootComponent):
+class List(RootElement):
 
     @register_props
     def __init__(self):
@@ -1831,7 +1831,7 @@ class List(RootComponent):
 
 ### TODO: Tables are not well tested
 
-class Table(QtWidgetComponent):
+class Table(QtWidgetElement):
 
     @register_props
     def __init__(self, rows: int, columns: int,

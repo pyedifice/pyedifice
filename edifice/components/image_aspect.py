@@ -11,7 +11,7 @@ else:
     import PySide6.QtWidgets as QtWidgets
 
 from .._component import register_props
-from ..base_components import QtWidgetComponent, _image_descriptor_to_pixmap
+from ..base_components import QtWidgetElement, _image_descriptor_to_pixmap
 
 class ScaledLabel(QtWidgets.QLabel):
     """
@@ -41,7 +41,7 @@ class ScaledLabel(QtWidgets.QLabel):
         self._rescale()
 
 
-class ImageAspect(QtWidgetComponent):
+class ImageAspect(QtWidgetElement):
     """An image widget which scales the image to fit inside the widget,
     while keeping the image aspect ratio fixed.
 

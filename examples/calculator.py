@@ -11,7 +11,7 @@ OPERATORS = {
 }
 
 
-class Calculator(ed.Component):
+class Calculator(ed.Element):
     # Simple calculator that doesn't reflect order of operations
 
     def __init__(self):

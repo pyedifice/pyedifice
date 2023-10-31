@@ -25,7 +25,7 @@ If you have React experience, you'll find Edifice to be very easy to pick up.
 For example, for the React `setState` function, Edifice has `set_state`, and for React's `this.props`,
 Edifice has `self.props`.
 All function names use underscores instead of camel case to conform to Python standards,
-and "Component" is removed from functions like `shouldComponentUpdate` (renamed to `should_update`).
+and "Element" is removed from functions like `shouldComponentUpdate` (renamed to `should_update`).
 
 <img src="https://raw.githubusercontent.com/pyedifice/pyedifice/master/examples/example_calculator.png" width=200/><img src="https://raw.githubusercontent.com/pyedifice/pyedifice/master/examples/example_harmonic_oscillator.gif" width=200/>
 
@@ -81,7 +81,7 @@ Declarative UIs are also easier for developer tools to work with.
 Edifice provides two key features to make development easier:
 
 - Dynamic reloading of changed source code. This is especially useful for tweaking the looks of your application, allowing you to test if the margin should be *10px* or *15px* instantly without closing the app, reopening it, and waiting for everything to load.
-- Component inspector. Similar to the Inspect Elements tool of a browser, the component inspector will show you all Components in your application along with the props and state, allowing you to examine the internal state of your complex component without writing a million print statements.
+- Element inspector. Similar to the Inspect Elements tool of a browser, the component inspector will show you all Elements in your application along with the props and state, allowing you to examine the internal state of your complex component without writing a million print statements.
 Since the UI is specified as a (pure) function of state, the state you see completely describes your application,
 and you can even do things like rewinding to a previous state.
 
@@ -99,17 +99,17 @@ they require imperative logic to add dynamism.
 Edifice and React allow fully dynamic applications to be specified declaratively.
 
 ## How it works:
-An Edifice Component encapsulates application state and defines the mapping from the state to UI in the `render` function.
-The state of a Component is divided into **props** and **state**.
-props are state passed to the Component in the constructor,
-whereas state is the Component's own internal state.
-Changes to props and state will trigger a rerender of the Component and all its children.
-The old and new Component trees will be compared to one another,
+An Edifice Element encapsulates application state and defines the mapping from the state to UI in the `render` function.
+The state of a Element is divided into **props** and **state**.
+props are state passed to the Element in the constructor,
+whereas state is the Element's own internal state.
+Changes to props and state will trigger a rerender of the Element and all its children.
+The old and new Element trees will be compared to one another,
 and a diffing algorithm will determine which components previously existed and which ones are new
 (the algorithm behaves similarly to the React diff algorithm).
-Components that previously existed will maintain their state, whereas their props will be updated.
+Elements that previously existed will maintain their state, whereas their props will be updated.
 Finally, Edifice will try to ensure that the minimal update commands are issued to the UI.
-All this logic is handled by the library, and the Components need not care about it.
+All this logic is handled by the library, and the Elements need not care about it.
 
 Currently, Edifice uses Qt under the hood, though it could be adapated to delegate to other imperative GUI frameworks as well.
 
@@ -119,7 +119,7 @@ Edifice also offers a few tools to aid in development.
 
 ### Dynamic reload
 One other advantage of declarative code is that it is easier for humans and machines to reason about.
-Edifice takes advantage of this by offering hot reloading of Components.
+Edifice takes advantage of this by offering hot reloading of Elements.
 When a file in your application is changed, the loader will reload all components in that file
 with preserved props (since that state comes from the caller) and reset state.
 Because rendering is abstracted away, it is simple to diff the UI trees and have the Edifice renderer figure out
@@ -128,18 +128,18 @@ what to do using its normal logic.
 To run your application with dynamic reload, run:
 
 ```
-python -m edifice path/to/app.py RootComponent
+python -m edifice path/to/app.py RootElement
 ```
 
-This will run `app.py` with `RootComponent` mounted as the root.
+This will run `app.py` with `RootElement` mounted as the root.
 A separate thread will listen to changes in all Python files in the directory containing `app.py` (recursing into subdirectories),
 and will reload and trigger a re-render in the main thread.
 You can customize which directory to listen to using the `--dir` flag.
 
 
-### Component Inspector
+### Element Inspector
 
-The Edifice component inspector shows the Component tree of your application along with the props and state of each component.
+The Edifice component inspector shows the Element tree of your application along with the props and state of each component.
 
 ### set_trace
 

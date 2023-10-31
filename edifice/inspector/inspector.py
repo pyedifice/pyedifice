@@ -9,11 +9,11 @@ current_selection = ed.StateManager({
 })
 
 
-class InspectorComponent(ed.Component):
+class InspectorElement(ed.Element):
     pass
 
 
-class ComponentLabel(InspectorComponent):
+class ElementLabel(InspectorElement):
 
     @ed.register_props
     def __init__(self, root, on_click):
@@ -33,7 +33,7 @@ class ComponentLabel(InspectorComponent):
                         style={"background-color": SELECTION_COLOR} if selected else {},
                         on_click=on_click)
 
-class Collapsible(InspectorComponent):
+class Collapsible(InspectorElement):
 
     @ed.register_props
     def __init__(self, collapsed, on_click, root, toggle):
@@ -58,7 +58,7 @@ class Collapsible(InspectorComponent):
                 ed.Label(self.props.root.__class__.__name__, style=root_style, on_click=self.props.on_click).set_key("title"),
             )
 
-class TreeView(InspectorComponent):
+class TreeView(InspectorElement):
 
     @ed.register_props
     def __init__(self, root, on_click, load_fun, must_refresh, initial_collapsed=False):
@@ -113,7 +113,7 @@ class TreeView(InspectorComponent):
             ).set_key("children")
         )
 
-class StateView(InspectorComponent):
+class StateView(InspectorElement):
 
     @ed.register_props
     def __init__(self, component):
@@ -128,7 +128,7 @@ class StateView(InspectorComponent):
               ).set_key(key) for key in state]
         )
 
-class PropsView(InspectorComponent):
+class PropsView(InspectorElement):
 
     @ed.register_props
     def __init__(self, props):
@@ -145,7 +145,7 @@ class PropsView(InspectorComponent):
         )
 
 
-class ComponentView(InspectorComponent):
+class ElementView(InspectorElement):
 
     @ed.register_props
     def __init__(self, component):
@@ -175,7 +175,7 @@ class ComponentView(InspectorComponent):
         )
 
 
-class Inspector(InspectorComponent):
+class Inspector(InspectorElement):
 
     @ed.register_props
     def __init__(self, component_tree, root_component, refresh):
@@ -204,7 +204,7 @@ class Inspector(InspectorComponent):
 
     def _build_tree(self, root, recurse_level=0):
         children = self.component_tree[root]
-        if isinstance(children, ed.Component):
+        if isinstance(children, ed.Element):
             children = [children]
 
         if len(children) > 0:
@@ -214,7 +214,7 @@ class Inspector(InspectorComponent):
                             initial_collapsed=len(children) > 1 or recurse_level > 2,
                             load_fun=lambda: [self._build_tree(child, recurse_level+1) for child in children])
 
-        return ComponentLabel(root, on_click=lambda e: self.select_component(root))
+        return ElementLabel(root, on_click=lambda e: self.select_component(root))
 
     def render(self):
         if self.must_refresh or self._cached_tree is None:
@@ -230,6 +230,6 @@ class Inspector(InspectorComponent):
                 ).set_key("tree"),
             ).set_key("left_pane"),
             ed.View(layout="column", style={"min-width": 450, "min-height": 450})(
-                self.selected and ComponentView(self.selected).set_key("component_view")
+                self.selected and ElementView(self.selected).set_key("component_view")
             ).set_key("right_pane")
         )

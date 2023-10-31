@@ -10,14 +10,14 @@ if QT_VERSION == "PyQt6":
 else:
     from PySide6 import QtCore, QtWidgets
 
-from .._component import Component, register_props, RootComponent
+from .._component import Element, register_props, RootElement
 from ..state import StateManager
 from .. import base_components as ed
 
 class FormElement(object):
     pass
 
-class Form(Component):
+class Form(Element):
     """A simple Form element to allow editting values stored in a StateManager.
 
     For every key, value pair in the StateManager, a field is created in the Form,
@@ -259,7 +259,7 @@ class Form(Component):
             buttons
         )
 
-class FormDialog(Component):
+class FormDialog(Element):
     """A convenience component that renders a Form in a dialog window.
 
     After submit is clicked, the window is closed.

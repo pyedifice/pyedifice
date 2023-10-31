@@ -1,9 +1,9 @@
 import edifice
 
 
-class ComponentA(edifice.Component):
+class ElementA(edifice.Element):
     pass
 
 
-class ComponentB(edifice.Component):
+class ElementB(edifice.Element):
     pass

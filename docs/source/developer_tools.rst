@@ -6,7 +6,7 @@ to introspect application code.
 Edifice comes with two tools to aid in development:
 
 - Dynamic reloading: changes in source file will automatically be reloaded by the App. This is especially for adjusting styling and testing out layouts.
-- Component inspector: say goodbye to (most but not all) print statements. You can look at the state and props of every component to diagnose what went wrong.
+- Element inspector: say goodbye to (most but not all) print statements. You can look at the state and props of every component to diagnose what went wrong.
 
 Dynamic reloading
 -----------------
@@ -39,8 +39,8 @@ All external references to these components will point to the new one.
 
 .. caution::
     It is important to import the module directly, via :code:`import path.to.module as module`
-    or :code:`from path.to import module`. If you import the Component class directly,
-    e.g. :code:`from path.to.module import MyComponent`, all references to MyComponent will permanently point
+    or :code:`from path.to import module`. If you import the Element class directly,
+    e.g. :code:`from path.to.module import MyElement`, all references to MyElement will permanently point
     to the original version.
 
 All unaffected component states (i.e. states of components defined outside the file) will be maintained.
@@ -51,18 +51,18 @@ saving you the time of navigating through your app to get to the changed widget.
 Running your app through Edifice is extremely simple.
 On the command line::
 
-    python -m edifice path/to/your/app.py RootComponent
+    python -m edifice path/to/your/app.py RootElement
 
-This will run app.py, mounting the specified Component as the root,
+This will run app.py, mounting the specified Element as the root,
 listening to changes to all Python files contained in
 path/to/your (and recursively in all sub directories)
 and dynamically reloading all changes.
 If you want to explicitly specify another path to listen to, use the --dir flag::
 
-    python -m edifice --dir directory/to/watch path/to/your/app.py RootComponent
+    python -m edifice --dir directory/to/watch path/to/your/app.py RootElement
 
 
-Component Inspector
+Element Inspector
 -------------------
 
 .. figure:: /image/inspector.png
@@ -73,24 +73,24 @@ Quite frequently, you would resort to print statements
 (which are now easier to add due to dynamic reloading,
 since you don't have to restart your app to see new prints).
 We of course do not presume we can replace the full utility of print statements,
-but we offer a tool, Component Inspector, which can eliminate many cases of
+but we offer a tool, Element Inspector, which can eliminate many cases of
 "shoot I forgot to print this variable".
 
-The Component Inspector, like the Inspect Elements tool of web browsers
+The Element Inspector, like the Inspect Elements tool of web browsers
 or the React inspector tool,
 allows you to peer into the internal state of your components.
-It displays the entire Component Tree, as well as the props and state of
+It displays the entire Element Tree, as well as the props and state of
 every component,
 so you do not have to worry about printing those values.
 
 To launch the inspector, use the :code:`--inspect` flag for the Edifice runner::
 
-    python -m edifice --inspect path/to/your/app.py RootComponent
+    python -m edifice --inspect path/to/your/app.py RootElement
 
 Currently the inspector, like Edifice, is in a very early alpha stage.
-In future iterations, we plan to add the following features to the Component Inspector:
+In future iterations, we plan to add the following features to the Element Inspector:
 
 - Support logging of state changes
 - A visual debugger
-- Highlighting of the displayed widgets corresponding to each Component.
+- Highlighting of the displayed widgets corresponding to each Element.
 - Injecting state into the application

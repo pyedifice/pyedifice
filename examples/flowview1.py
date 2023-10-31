@@ -6,7 +6,7 @@ import edifice as ed
 from edifice.components.flow_view import FlowView
 from edifice.components.button_view import ButtonView
 
-class FlowView1(ed.Component):
+class FlowView1(ed.Element):
 
     def __init__(self):
         super().__init__()

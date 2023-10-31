@@ -89,18 +89,18 @@ class PropsDict(object):
 
 
 class Reference(object):
-    """Reference to a :class:`Component` to allow imperative modifications.
+    """Reference to a :class:`Element` to allow imperative modifications.
 
     While Edifice is a declarative library and tries to abstract away the need to issue
     imperative commands to widgets,
     this is not always possible, either due to limitations with the underlying backened,
     or because some feature implemented by the backend is not yet supported by the declarative layer.
     In these cases, you might need to issue imperative commands to the underlying widgets and components,
-    and :class:`Reference` gives you a handle to the currently rendered :class:`Component`.
+    and :class:`Reference` gives you a handle to the currently rendered :class:`Element`.
 
     Consider the following code::
 
-        class MyComp(Component):
+        class MyComp(Element):
             def __init__(self):
                 self.ref = None
 
@@ -108,14 +108,14 @@ class Reference(object):
                 self.ref.issue_command()
 
             def render(self):
-                self.ref = AnotherComponent(on_click=self.issue_command)
+                self.ref = AnotherElement(on_click=self.issue_command)
                 return self.ref
 
-    This code is **incorrect** since the component returned by render is not necessarily the Component rendered on Screen,
+    This code is **incorrect** since the component returned by render is not necessarily the Element rendered on Screen,
     since the old component (with all its state) will be reused when possible.
     The right way of solving the problem is via references::
 
-        class MyComp(Component):
+        class MyComp(Element):
             def __init__(self):
                 self.ref = Reference()
 
@@ -123,15 +123,15 @@ class Reference(object):
                 self.ref().issue_command()
 
             def render(self):
-                return AnotherComponent(on_click=self.issue_command).register_ref(self.ref)
+                return AnotherElement(on_click=self.issue_command).register_ref(self.ref)
 
     Under the hood, :code:`register_ref` registers the :class:`Reference` object
     to the component returned by the :code:`render` function.
     While rendering, Edifice will examine all requested references and attaches
-    them to the correct :class:`Component`.
+    them to the correct :class:`Element`.
 
     Initially, a :class:`Reference` object will point to :code:`None`.
-    After the first render, they will point to the rendered :class:`Component`.
+    After the first render, they will point to the rendered :class:`Element`.
     When the rendered component dismounts, the reference will once again
     point to :code:`None`.
     You may assume that :class:`Reference` is valid whenever it is
@@ -146,7 +146,7 @@ class Reference(object):
     If you want to access the Qt widget underlying a base component,
     you can use the :code:`underlying` attribute of the component::
 
-        class MyComp(Component):
+        class MyComp(Element):
             def __init__(self):
                 self.ref = Reference()
 
@@ -173,20 +173,20 @@ class Reference(object):
 T = tp.TypeVar("T")
 
 class ControllerProtocol(tp.Protocol):
-    def _request_rerender(self, components: Iterable["Component"], kwargs: dict[str, tp.Any]):
+    def _request_rerender(self, components: Iterable["Element"], kwargs: dict[str, tp.Any]):
         pass
 
 
 class Tracker:
-    children: list["Component"]
-    def __init__(self, component: "Component"):
+    children: list["Element"]
+    def __init__(self, component: "Element"):
         self.component = component
         self.children = []
 
-    def append_child(self, component: "Component"):
+    def append_child(self, component: "Element"):
         self.children.append(component)
 
-    def collect(self) -> list["Component"]:
+    def collect(self) -> list["Element"]:
         children = set()
         for child in self.children:
             children |= find_components(child) - {child}
@@ -203,15 +203,15 @@ def get_render_context() -> RenderContextProtocol:
 def get_render_context_maybe() -> RenderContextProtocol | None:
     return getattr(local_state, "render_context", None)
 
-class Component:
-    """The base class for Edifice Components.
+class Element:
+    """The base class for Edifice Elements.
 
-    A :class:`Component` is a stateful container wrapping a stateless :code:`render` function.
-    Components have both internal and external properties.
+    A :class:`Element` is a stateful container wrapping a stateless :code:`render` function.
+    Elements have both internal and external properties.
 
-    The external properties, **props**, are passed into the :class:`Component` by another
-    :class:`Component`’s render function through the constructor. These values are owned
-    by the external caller and should not be modified by this :class:`Component`.
+    The external properties, **props**, are passed into the :class:`Element` by another
+    :class:`Element`’s render function through the constructor. These values are owned
+    by the external caller and should not be modified by this :class:`Element`.
     They may be accessed via the field props :code:`self.props`, which is a :class:`PropsDict`.
     A :class:`PropsDict` allows iteration, get item ( :code:`self.props["value"]` ), and get attribute
     ( :code:`self.props.value` ), but not set item or set attribute. This limitation
@@ -219,12 +219,12 @@ class Component:
     bugs. (Note though that a mutable prop, e.g. a list, can still be modified;
     be careful not to do so)
 
-    The internal properties, the **state**, belong to this Component, and may be
+    The internal properties, the **state**, belong to this Element, and may be
     used to keep track of internal state. You may set the state as
-    attributes of the :class:`Component` object, for instance :code:`self.my_state`.
+    attributes of the :class:`Element` object, for instance :code:`self.my_state`.
     You can initialize the state as usual in the constructor
     (e.g. :code:`self.my_state = {"a": 1}` ),
-    and the state persists so long as the :class:`Component` is still mounted.
+    and the state persists so long as the :class:`Element` is still mounted.
 
     In most cases, changes in state would ideally trigger a rerender.
     There are two ways to ensure this.
@@ -242,23 +242,23 @@ class Component:
     The :code:`render_changes()` context manager also ensures that all state changes
     happen atomically: if an exception occurs inside the context manager,
     all changes will be unwound. This helps ensure consistency in the
-    :class:`Component`’s state.
+    :class:`Element`’s state.
 
     Note if you set :class:`self.mystate = 1` outside
     the :code:`render_changes()` context manager,
     this change will not trigger a re-render. This might be occasionally useful
     but usually is unintended.
 
-    The main function of :class:`Component` is :code:`render`, which should return the subcomponents
+    The main function of :class:`Element` is :code:`render`, which should return the subcomponents
     of this component. These may be your own higher-level components as well as
-    the core :class:`Component` s, such as
+    the core :class:`Element` s, such as
     :class:`Label`, :class:`Button`, and :class:`View`.
-    :class:`Component` s may be composed in a tree like fashion:
+    :class:`Element` s may be composed in a tree like fashion:
     one special prop is children, which will always be defined (defaults to an
     empty list).
-    To better enable the visualization of the tree-structure of a :class:`Component`
+    To better enable the visualization of the tree-structure of a :class:`Element`
     in the code,
-    the :code:`call` method of a :class:`Component` has been overriden to set the arguments
+    the :code:`call` method of a :class:`Element` has been overriden to set the arguments
     of the call as children of the component.
     This allows you to write tree-like code remniscent of HTML::
 
@@ -284,22 +284,22 @@ class Component:
     When the component is rendered,
     the :code:`render` function is called. This output is then compared against the output
     of the previous render (if that exists). The two renders are diffed,
-    and on certain conditions, the :class:`Component` objects from the previous render
+    and on certain conditions, the :class:`Element` objects from the previous render
     are maintained and updated with new props.
 
-    Two :class:`Component` s belonging to different classes will always be re-rendered,
-    and :class:`Component` s belonging to the same class are assumed to be the same
+    Two :class:`Element` s belonging to different classes will always be re-rendered,
+    and :class:`Element` s belonging to the same class are assumed to be the same
     and thus maintained (preserving the old state).
 
-    When comparing a list of :class:`Component` s, the :class:`Component`’s
+    When comparing a list of :class:`Element` s, the :class:`Element`’s
     :code:`_key` attribute will
-    be compared. :class:`Component` s with the same :code:`_key` and same class are assumed to be
+    be compared. :class:`Element` s with the same :code:`_key` and same class are assumed to be
     the same. You can set the key using the :code:`set_key` method, which returns the component
     to allow for chaining::
 
         View(layout="row")(
-            MyComponent("Hello").set_key("hello"),
-            MyComponent("World").set_key("world"),
+            MyElement("Hello").set_key("hello"),
+            MyElement("World").set_key("world"),
         )
 
     If the :code:`_key` is not provided, the diff algorithm will assign automatic keys
@@ -311,7 +311,7 @@ class Component:
     _render_changes_context: dict | None = None
     _render_unwind_context: dict | None = None
     _ignored_variables: set[tp.Text] | None = None
-    _edifice_internal_parent: tp.Optional["Component"] = None
+    _edifice_internal_parent: tp.Optional["Element"] = None
     _controller: ControllerProtocol | None = None
     _edifice_internal_references: set[Reference] | None = None
 
@@ -386,8 +386,8 @@ class Component:
         """Registers provided reference to this component.
 
         During render, the provided reference will be set to point to the currently rendered instance of this component
-        (i.e. if another instance of the Component is rendered and the RenderEngine decides to reconcile the existing
-        and current instances, the reference will eventually point to that previously existing Component.
+        (i.e. if another instance of the Element is rendered and the RenderEngine decides to reconcile the existing
+        and current instances, the reference will eventually point to that previously existing Element.
 
         Args:
             reference: the Reference to register
@@ -399,7 +399,7 @@ class Component:
         return self
 
     @property
-    def children(self) -> list["Component"]:
+    def children(self) -> list["Element"]:
         """The children of this component."""
         return self._props["children"]
 
@@ -496,7 +496,7 @@ class Component:
         The arguments, :code:`newprops` and :code:`newstate`, reflect the
         props and state that change: they
         may be a subset of the props and the state. When this function is called,
-        all props and state of this Component are the old values, so you can compare
+        all props and state of this Element are the old values, so you can compare
         :code:`self.props` to :code:`newprops` and :code`self` to :code:`newstate`
         to determine changes.
 
@@ -506,7 +506,7 @@ class Component:
             newprops: the new set of props
             newstate: the new set of state
         Returns:
-            Whether or not the Component should be rerendered.
+            Whether or not the Element should be rerendered.
         """
         del newprops, newstate
         return True
@@ -578,24 +578,24 @@ class Component:
         Args:
             None
         Returns:
-            A Component object.
+            A Element object.
         """
         raise NotImplementedError
 
 P = tp.ParamSpec("P")
-C = tp.TypeVar("C", bound=Component)
+C = tp.TypeVar("C", bound=Element)
 
 def not_ignored(arg: tuple[str, tp.Any]) -> bool:
     return arg[0][0] != "_"
 
 # TODO: Should we really allow the function to return `Any`?
-def component(f: Callable[tp.Concatenate[C,P], None]) -> Callable[P,Component]:
-    """Decorator turning a render function into a :class:`Component`.
+def component(f: Callable[tp.Concatenate[C,P], None]) -> Callable[P,Element]:
+    """Decorator turning a render function into a :class:`Element`.
 
     Some components do not have internal state, and these components are often little more than
-    a :code:`render` function. Creating a :class:`Component` class results in a lot of boiler plate code::
+    a :code:`render` function. Creating a :class:`Element` class results in a lot of boiler plate code::
 
-        class MySimpleComp(Component):
+        class MySimpleComp(Element):
             @register_props
             def __init__(self, prop1, prop2, prop3):
                 super().__init__()
@@ -618,19 +618,19 @@ def component(f: Callable[tp.Concatenate[C,P], None]) -> Callable[P,Component]:
         def MySimpleComp(prop1, prop2, prop3):
             return View()(Label(prop1), Label(self.prop2), Label(prop3))
 
-    instead. The difference is, with the decorator, an actual :class:`Component` object is created,
-    which can be viewed, for example, in the inspector. Moreover, you need a :class:`Component` to
-    be able to use hooks such as use_state, since those are bound to containing :class:`Component`.
+    instead. The difference is, with the decorator, an actual :class:`Element` object is created,
+    which can be viewed, for example, in the inspector. Moreover, you need a :class:`Element` to
+    be able to use hooks such as use_state, since those are bound to containing :class:`Element`.
 
     If this component uses :doc:`State Values or State Managers</state>`,
     only this component and (possibly) its children will be re-rendered.
     If you don't use the decorator, the returned components are directly attached to the
-    Component that called the function, and so any re-renders will have to start from that level.
+    Element that called the function, and so any re-renders will have to start from that level.
 
     Args:
         f: the function to wrap. Its first argument must be self.
     Returns:
-        Component class.
+        Element class.
     """
     varnames = f.__code__.co_varnames[1:]
     signature = inspect.signature(f).parameters
@@ -640,7 +640,7 @@ def component(f: Callable[tp.Concatenate[C,P], None]) -> Callable[P,Component]:
         if v.default is not inspect.Parameter.empty and k[0] != "_"
     }
 
-    class MyComponent(Component):
+    class MyElement(Element):
 
         def __init__(self, *args: P.args, **kwargs: P.kwargs):
             name_to_val = defaults.copy()
@@ -657,6 +657,7 @@ def component(f: Callable[tp.Concatenate[C,P], None]) -> Callable[P,Component]:
                 if "children" not in varnames:
                     del params["children"]
                 # We cannot type this because PropsDict forgets the types
+                # call the render function
                 f(self, **params) # type: ignore[reportGeneralTypeIssues]
             children = root.children
             if len(children) == 1:
@@ -666,12 +667,12 @@ def component(f: Callable[tp.Concatenate[C,P], None]) -> Callable[P,Component]:
 
         def __repr__(self):
             return f.__name__
-    MyComponent.__name__ = f.__name__
-    return MyComponent
+    MyElement.__name__ = f.__name__
+    return MyElement
 
-def find_components(el: Component | list[Component]) -> set[Component]:
+def find_components(el: Element | list[Element]) -> set[Element]:
     match el:
-        case Component():
+        case Element():
             return {el}
         case list():
             elements = set()
@@ -680,20 +681,20 @@ def find_components(el: Component | list[Component]) -> set[Component]:
             return elements
 
 def register_props(f):
-    """Decorator for :class:`Component` :code:`__init__` method to record props.
+    """Decorator for :class:`Element` :code:`__init__` method to record props.
 
     This decorator will record all arguments (both vector and keyword arguments)
     of the :code:`__init__` function as belonging to the props of the component.
     It will call
-    :func:`Component.register_props <edifice.Component.register_props>` to
+    :func:`Element.register_props <edifice.Element.register_props>` to
     store these arguments in the
-    props field of the :class:`Component`.
+    props field of the :class:`Element`.
 
     Arguments that begin with an underscore will be ignored.
 
     Example::
 
-        class MyComponent(Component):
+        class MyElement(Element):
 
             @register_props
             def __init__(self, a, b=2, c="xyz", _d=None):
@@ -706,12 +707,12 @@ def register_props(f):
                     Label(self.props.c),
                 )
 
-    :code:`MyComponent(5, c="w")` will then have
+    :code:`MyElement(5, c="w")` will then have
     :code:`props.a=5`, :code:`props.b=2`, and :code:`props.c="w"`.
     :code:`props._d` is undefined.
 
     Args:
-        f: the :code:`__init__` function of a :class:`Component` subclass
+        f: the :code:`__init__` function of a :class:`Element` subclass
     Returns:
         decorated function
 
@@ -728,7 +729,7 @@ def register_props(f):
         name_to_val.update(filter(not_ignored, zip(varnames, args, strict=False)))
         name_to_val.update(((k, v) for (k, v) in kwargs.items() if k[0] != "_"))
         self.register_props(name_to_val)
-        Component.__init__(self)
+        Element.__init__(self)
         f(self, *args, **kwargs)
 
     return func
@@ -737,16 +738,16 @@ def register_props(f):
 def Container(self):
     pass
 
-class BaseComponent(Component):
-    """Base Component, whose rendering is defined by the backend."""
+class BaseElement(Element):
+    """Base Element, whose rendering is defined by the backend."""
 
-class WidgetComponent(BaseComponent):
+class WidgetElement(BaseElement):
     pass
 
-class LayoutComponent(BaseComponent):
+class LayoutElement(BaseElement):
     pass
 
-class RootComponent(BaseComponent):
+class RootElement(BaseElement):
 
     def _qt_update_commands(self, children, newprops, newstate) -> list[_CommandType]:
         del children, newprops, newstate

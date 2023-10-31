@@ -1,6 +1,6 @@
 import edifice as ed
 
-class MouseEvents(ed.Component):
+class MouseEvents(ed.Element):
 
     @ed.register_props
     def __init__(self):

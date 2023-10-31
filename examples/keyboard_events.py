@@ -1,6 +1,6 @@
 import edifice as ed
 
-class KeyboardEvents(ed.Component):
+class KeyboardEvents(ed.Element):
 
     @ed.register_props
     def __init__(self):
