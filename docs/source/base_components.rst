@@ -1,4 +1,4 @@
-Base Components
+Base Elements
 ===============
 
 .. automodule:: edifice.base_components
@@ -9,7 +9,7 @@ Base Components
    :recursive:
    :template: custom-class.rst
 
-   QtWidgetComponent
+   QtWidgetElement
    Window
    View
    ScrollView
@@ -44,7 +44,7 @@ For such cases, you can use an asyncio `coroutine <https://docs.python.org/3/lib
 
 Consider this code::
 
-    class Component(edifice.Component):
+    class Element(edifice.Element):
 
         def __init__(self):
             super().__init__()
@@ -70,7 +70,7 @@ In the mean time, if the user clicks the increment button, nothing will happen u
 To allow the rest of the application to run while the fetch is happening, you can define
 the :code:`on_click` handler as a coroutine::
 
-    class Component(edifice.Component):
+    class Element(edifice.Element):
 
         def __init__(self):
             super().__init__()
@@ -95,7 +95,7 @@ the :code:`on_click` handler as a coroutine::
 While the :code:`fetch_from_network` function is running, control is returned to the event loop,
 allowing the application to continue handling button clicks.
 
-See docs for :class:`QtWidgetComponent<edifice.QtWidgetComponent>` for a list of supported events.
+See docs for :class:`QtWidgetElement<edifice.QtWidgetElement>` for a list of supported events.
 
 
 .. _custom_widget:

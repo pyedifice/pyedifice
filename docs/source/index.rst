@@ -86,7 +86,7 @@ The example below shows how you can collect information from the user in a Dialo
 
     print(fields["Name"])
 
-A Stateful Component
+A Stateful Element
 ####################
 
 A component can maintain internal state, stored as attributes of the component.
@@ -98,7 +98,7 @@ the component will be re-rendered using the provided :code:`render` function.
 
     import edifice
 
-    class Timer(edifice.Component):
+    class Timer(edifice.Element):
         def __init__(self):
             super().__init__()
             self.seconds = 0
@@ -115,7 +115,7 @@ the component will be re-rendered using the provided :code:`render` function.
 An Application
 ##############
 
-Components can be composed to create composite components.
+Elements can be composed to create composite components.
 By making components modular, you can reuse them in your application and across applications.
 
 
@@ -126,7 +126,7 @@ By making components modular, you can reuse them in your application and across 
     import edifice
     from edifice import Button, Label, TextInput, ScrollView, View
 
-    class TodoApp(edifice.Component):
+    class TodoApp(edifice.Element):
         def __init__(self):
             super().__init__()
             self.items = []
@@ -151,10 +151,11 @@ By making components modular, you can reuse them in your application and across 
             new_item = dict(text=self.text, id=datetime.datetime.now())
             self.set_state(items=self.items + [new_item])
 
-    class TodoList(edifice.Component):
-        @edifice.register_props
+    class TodoList(edifice.Element):
         def __init__(self, items):
-            pass
+            self.register_props({
+                "items": items,
+            })
 
         def render(self):
             return ScrollView()(
@@ -212,7 +213,7 @@ Declarative UIs are also easier for developer tools to work with.
 Edifice provides two key features to make development easier:
 
 - Dynamic reloading of changed source code. This is especially useful for tweaking the looks of your application, allowing you to test if the margin should be 10px or 15px instantly without closing the app, reopening it, and waiting for everything to load.
-- Component inspector. Similar to the Inspect Elements tool of a browser, the component inspector will show you all Components in your application along with the props and state, allowing you to examine the internal state of your complex component without writing a million print statements.
+- Element inspector. Similar to the Inspect Elements tool of a browser, the component inspector will show you all Elements in your application along with the props and state, allowing you to examine the internal state of your complex component without writing a million print statements.
   Since the UI is specified as a (pure) function of state, the state you see completely describes your application,
   and you can even do things like rewinding to a previous state.
 
@@ -278,4 +279,3 @@ Indices and tables
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
-

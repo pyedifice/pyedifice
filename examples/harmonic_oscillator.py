@@ -4,7 +4,7 @@ from edifice.components import plotting
 import numpy as np
 
 
-class Oscillator(ed.Component):
+class Oscillator(ed.Element):
     """
     The high level logic is: there are two sets of state, spring parameters, and simulation parameters.
     The spring parameters can be changed by a slider for each of the parameters.

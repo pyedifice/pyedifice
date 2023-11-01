@@ -25,17 +25,22 @@ stylesheet = ed.PropsDict(dict(
         "align": "left",
     },
     play_button={
-        "width": "50px", 
+        "width": "50px",
         "height": "25px",
         "left": 150,
         "margin-left": "5px"
     },
 ))
 
-class PriceLevel(ed.Component):
+class PriceLevel(ed.Element):
 
-    @ed.register_props
     def __init__(self, price, size, side, last=False):
+        self.register_props({
+            "price": price,
+            "size": size,
+            "side": side,
+            "last": last,
+        })
         super().__init__()
 
     def render(self):
@@ -63,10 +68,12 @@ class PriceLevel(ed.Component):
             ed.Label("", style=size_bar_style).set_key("vis_size")
         )
 
-class Book(ed.Component):
+class Book(ed.Element):
 
-    @ed.register_props
     def __init__(self, book):
+        self.register_props({
+            "book": book,
+        })
         pass
 
     def render(self):
@@ -81,7 +88,7 @@ class Book(ed.Component):
         )
 
 
-class App(ed.Component):
+class App(ed.Element):
 
     def __init__(self):
         super().__init__()

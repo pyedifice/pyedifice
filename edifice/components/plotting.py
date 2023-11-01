@@ -1,7 +1,7 @@
 import time
 import threading
 from ..base_components import CustomWidget
-from .._component import Component, register_props
+from .._component import Element
 
 from ..qt import QT_VERSION
 if QT_VERSION == "PyQt6":
@@ -20,8 +20,10 @@ except:
 
 class Figure(CustomWidget):
 
-    @register_props
     def __init__(self, plot_fun):
+        self.register_props({
+            "plot_fun": plot_fun,
+        })
         super().__init__()
         self.figure_added = False
         self.figure_canvas = None

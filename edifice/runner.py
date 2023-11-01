@@ -18,7 +18,7 @@ try:
 except ImportError:
     FSEventsObserver = None
 
-from ._component import Component
+from ._component import Element
 from .app import App
 
 from edifice.qt import QT_VERSION
@@ -38,7 +38,7 @@ def _file_to_module_name():
     return d
 
 def _module_to_components(module):
-    return inspect.getmembers(module, lambda x: inspect.isclass(x) and issubclass(x, Component))
+    return inspect.getmembers(module, lambda x: inspect.isclass(x) and issubclass(x, Element))
 
 def _reload(module):
     return importlib.reload(module)
@@ -141,7 +141,7 @@ def runner():
             if src_path not in old_file_mapping:
                 return
 
-            # Reload the old module and get old and new Components
+            # Reload the old module and get old and new Elements
             module = sys.modules[old_file_mapping[src_path]]
             components_list, new_components = _reload_components(module)
             if components_list is None:

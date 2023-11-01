@@ -10,10 +10,14 @@ def str_to_float(s):
     except ValueError:
         return 0.0
 
-class ConversionWidget(ed.Component):
+class ConversionWidget(ed.Element):
 
-    @ed.register_props
     def __init__(self, from_unit, to_unit, factor):
+        self.register_props({
+            "from_unit": from_unit,
+            "to_unit": to_unit,
+            "factor": factor,
+        })
         super().__init__()
         self.current_text = "0.0"
 
@@ -31,7 +35,7 @@ class ConversionWidget(ed.Component):
             Label(f"Measurement in {self.props.to_unit}: {to_text}", style=to_label_style),
         )
 
-class MyApp(ed.Component):
+class MyApp(ed.Element):
 
     def render(self):
         return ed.View(layout="column", style={})(

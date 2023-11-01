@@ -1,6 +1,7 @@
 import unittest
 import unittest.mock
 import edifice._component as component
+from edifice.app import App
 import edifice.engine as engine
 import edifice.base_components as base_components
 
@@ -13,11 +14,25 @@ else:
 if QtWidgets.QApplication.instance() is None:
     app = QtWidgets.QApplication(["-platform", "offscreen"])
 
+@component.component
+def Value(self, value):
+    self.value = value
+    base_components.View()
 
-class MockComponent(component.Component):
+@component.component
+def Bad(self, flag):
+    if not hasattr(self, "flag"):
+        self.flag = flag
+    if self.flag:
+        raise ValueError("This should error")
+    base_components.View()
 
-    @component.register_props
+class MockElement(component.Element):
+
     def __init__(self, recursion_level):
+        self.register_props({
+            "recursion_level": recursion_level,
+        })
         super().__init__()
         self.will_unmount = unittest.mock.MagicMock()
         self.did_mount = unittest.mock.MagicMock()
@@ -28,13 +43,13 @@ class MockComponent(component.Component):
             return base_components.Label("Test")
         else:
             return base_components.View()(
-                MockComponent(self.props.recursion_level + 1)
+                MockElement(self.props.recursion_level + 1)
             )
 
-class ComponentLifeCycleTestCase(unittest.TestCase):
+class ElementLifeCycleTestCase(unittest.TestCase):
 
     def test_mount_and_dismount(self):
-        component = MockComponent(0)
+        component = MockElement(0)
         app = engine.RenderEngine(component)
         render_results = app._request_rerender([component])
         render_results.run()
@@ -42,18 +57,16 @@ class ComponentLifeCycleTestCase(unittest.TestCase):
         component.did_render.assert_called_once()
 
 
-class OtherMockComponent(component.Component):
+class OtherMockElement(component.Element):
 
-    @component.register_props
     def __init__(self):
         super().__init__()
         class MockController(object):
             _request_rerender = unittest.mock.MagicMock()
         self._controller = MockController()
 
-class MockBrokenComponent(component.Component):
+class MockBrokenElement(component.Element):
 
-    @component.register_props
     def __init__(self):
         super().__init__()
         class MockController(object):
@@ -86,10 +99,10 @@ class StorageManagerTestCase(unittest.TestCase):
             pass
         self.assertEqual(obj.value, 0)
 
-class ComponentTestCase(unittest.TestCase):
+class ElementTestCase(unittest.TestCase):
 
     def test_render_changes(self):
-        a = OtherMockComponent()
+        a = OtherMockElement()
         a.foo = 1
         a.bar = 2
         with a.render_changes():
@@ -112,7 +125,7 @@ class ComponentTestCase(unittest.TestCase):
         a._controller._request_rerender.assert_not_called()
 
     def test_state_change_unwind(self):
-        a = MockBrokenComponent()
+        a = MockBrokenElement()
         a.foo = 1
         a.bar = 2
 
@@ -141,16 +154,93 @@ class ComponentTestCase(unittest.TestCase):
         self.assertEqual(a.foo, 1)
         self.assertEqual(a.bar, 2)
 
-class MakeComponentTestCase(unittest.TestCase):
+class MakeElementTestCase(unittest.TestCase):
 
     def test_make_component(self):
 
         @component.component
-        def Component1234(self, prop1, prop2, children):
-            return 1234
+        def Element1234(self, prop1, prop2):
+            Value(1234)
 
-        self.assertEqual(Component1234.__name__, "Component1234")
-        comp = Component1234(1, 2)
-        self.assertEqual(comp.__class__, Component1234)
+        self.assertEqual(Element1234.__name__, "Element1234")
+        comp = Element1234(1, 2)
+        self.assertEqual(comp.__class__, Element1234)
         self.assertEqual(comp.props._d, {"prop1": 1, "prop2": 2, "children": []})
-        self.assertEqual(comp.render(), 1234)
+        with component.Container() as container:
+            comp.render()
+        value_component = container.children[0]
+        self.assertEqual(value_component.__class__.__name__, "Value")
+        # Render to value to update the state
+        value_component.render()
+        self.assertEqual(value_component.value, 1234)
+
+    def test_make_components(self):
+
+        @component.component
+        def Element1234(self, prop1, prop2):
+            with base_components.View():
+                Value(1337)
+                Value(42)
+                Value(69)
+                Value(420)
+
+        self.assertEqual(Element1234.__name__, "Element1234")
+        comp = Element1234(1, 2)
+        self.assertEqual(comp.__class__, Element1234)
+        self.assertEqual(comp.props._d, {"prop1": 1, "prop2": 2, "children": []})
+        with component.Container() as container:
+            comp.render()
+        view = container.children[0]
+        components = view.children
+        for comp in components:
+            self.assertEqual(comp.__class__.__name__, "Value")
+        for comp in components:
+            # Render to value to update the state
+            comp.render()
+        values = [comp.value for comp in components]
+        self.assertEqual(values, [1337, 42, 69, 420])
+
+    def test_make_nested_component(self):
+
+        @component.component
+        def A(self):
+            Value(13)
+
+        @component.component
+        def Element1234(self, prop1, prop2):
+            with A():
+                Value(9)
+
+        self.assertEqual(Element1234.__name__, "Element1234")
+        comp = Element1234(1, 2)
+        self.assertEqual(comp.__class__, Element1234)
+        self.assertEqual(comp.props._d, {"prop1": 1, "prop2": 2, "children": []})
+        with component.Container() as container:
+            comp.render()
+        root = container.children[0]
+        self.assertEqual(root.__class__.__name__, "A")
+        with component.Container() as container:
+            root.render()
+        nested = container.children[0]
+        nested.render()
+        self.assertEqual(nested.__class__.__name__, "Value")
+        self.assertEqual(nested.value, 13)
+        children = root.children
+        for child in children:
+            child.render()
+        values = [comp.value for comp in children]
+        self.assertEqual(values, [9])
+
+    def test_raised_errors(self):
+        component = Bad(False)
+        app = App(component, create_application=False)
+        def update():
+            try:
+                with component.render_changes():
+                    component.flag = True
+            except ValueError as e:
+                self.assertEqual(e.__str__(), "This should error")
+        with app.start_loop() as loop:
+            loop.call_later(0.1, loop.stop)
+            loop.call_soon(update)
+            loop.run_forever()

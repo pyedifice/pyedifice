@@ -10,14 +10,14 @@ if QT_VERSION == "PyQt6":
 else:
     from PySide6 import QtCore, QtWidgets
 
-from .._component import Component, register_props, RootComponent
+from .._component import Element, RootElement
 from ..state import StateManager
 from .. import base_components as ed
 
 class FormElement(object):
     pass
 
-class Form(Component):
+class Form(Element):
     """A simple Form element to allow editting values stored in a StateManager.
 
     For every key, value pair in the StateManager, a field is created in the Form,
@@ -105,14 +105,26 @@ class Form(Component):
 
     """
 
-    @register_props
-    def __init__(self, data: StateManager,
-                 config: tp.Optional[tp.Mapping[tp.Text, FormElement]] = None,
-                 label_map: tp.Optional[tp.Mapping[tp.Text, tp.Text]] = None,
-                 defaults: tp.Optional[tp.Mapping[tp.Text, tp.Any]] = None,
-                 on_submit: tp.Optional[tp.Callable[[tp.Mapping[tp.Text, tp.Any]], None]] = None,
-                 submit_text: tp.Text = "Submit",
-                 layout: tp.Any = None):
+    def __init__(
+        self,
+        data: StateManager,
+        config: tp.Optional[tp.Mapping[tp.Text, FormElement]] = None,
+        label_map: tp.Optional[tp.Mapping[tp.Text, tp.Text]] = None,
+        defaults: tp.Optional[tp.Mapping[tp.Text, tp.Any]] = None,
+        on_submit: tp.Optional[tp.Callable[[tp.Mapping[tp.Text, tp.Any]], None]] = None,
+        submit_text: tp.Text = "Submit",
+        layout: tp.Any = None,
+    ):
+        self.register_props({
+            "data": data,
+            "config": config,
+            "label_map": label_map,
+            "defaults": defaults,
+            "on_submit": on_submit,
+            "submit_text": submit_text,
+            "layout": layout,
+        })
+        super().__init__()
         self.internal_data = data.copy()
         self.error_msgs = {}
 
@@ -259,7 +271,7 @@ class Form(Component):
             buttons
         )
 
-class FormDialog(Component):
+class FormDialog(Element):
     """A convenience component that renders a Form in a dialog window.
 
     After submit is clicked, the window is closed.
@@ -269,16 +281,29 @@ class FormDialog(Component):
         title: The title of the window
     """
 
-    @register_props
-    def __init__(self, data: StateManager,
-                 title: str = "Form",
-                 config: tp.Optional[tp.Mapping[tp.Text, FormElement]] = None,
-                 label_map: tp.Optional[tp.Mapping[tp.Text, tp.Text]] = None,
-                 defaults: tp.Optional[tp.Mapping[tp.Text, tp.Any]] = None,
-                 on_submit: tp.Optional[tp.Callable[[tp.Mapping[tp.Text, tp.Any]], None]] = None,
-                 submit_text: tp.Text = "Submit",
-                 layout: tp.Any = None):
+    def __init__(
+        self,
+        data: StateManager,
+        title: str = "Form",
+        config: tp.Optional[tp.Mapping[tp.Text, FormElement]] = None,
+        label_map: tp.Optional[tp.Mapping[tp.Text, tp.Text]] = None,
+        defaults: tp.Optional[tp.Mapping[tp.Text, tp.Any]] = None,
+        on_submit: tp.Optional[tp.Callable[[tp.Mapping[tp.Text, tp.Any]], None]] = None,
+        submit_text: tp.Text = "Submit",
+        layout: tp.Any = None,
+    ):
         self.is_open = True
+        self.register_props({
+            "data": data,
+            "title": title,
+            "config": config,
+            "label_map": label_map,
+            "defaults": defaults,
+            "on_submit": on_submit,
+            "submit_text": submit_text,
+            "layout": layout,
+        })
+        super().__init__()
 
     def on_submit(self, data):
         if self.props.on_submit is not None:
@@ -291,4 +316,3 @@ class FormDialog(Component):
                  defaults=self.props.defaults, on_submit=self.on_submit,
                  submit_text=self.props.submit_text, layout=self.props.layout)
         ))
-

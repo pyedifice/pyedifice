@@ -14,7 +14,7 @@ Class overview
    :recursive:
    :template: custom-class.rst
 
-   Component
+   Element
    PropsDict
    register_props
    component

@@ -17,7 +17,7 @@ if QtWidgets.QApplication.instance() is None:
     app = QtWidgets.QApplication(["-platform", "offscreen"])
 
 
-class MockComponent(base_components.QtWidgetComponent):
+class MockElement(base_components.QtWidgetElement):
 
     class MockUnderlying(object):
         setStyleSheet = "setStyleSheet"
@@ -57,7 +57,7 @@ class StyleTestCase(unittest.TestCase):
             "margin": 5,
         }
         layout = Layout()
-        comp = MockComponent(style=style)
+        comp = MockElement(style=style)
         commands = comp._gen_styling_commands([], style, None, layout)
         self.assertTrue("margin" not in style)
         self.assertCountEqual(
@@ -73,7 +73,7 @@ class StyleTestCase(unittest.TestCase):
             "margin-bottom": "9.0",
         }
         layout = Layout()
-        comp = MockComponent(style=style)
+        comp = MockElement(style=style)
         commands = comp._gen_styling_commands([], style, None, layout)
         self.assertTrue("margin" not in style)
         self.assertCountEqual(
@@ -92,7 +92,7 @@ class StyleTestCase(unittest.TestCase):
                 "align": align,
             }
             layout = Layout()
-            comp = MockComponent(style=style)
+            comp = MockElement(style=style)
             commands = comp._gen_styling_commands([], style, None, layout)
             self.assertTrue("align" not in style)
             self.assertCountEqual(
@@ -112,7 +112,7 @@ class StyleTestCase(unittest.TestCase):
             style = {
                 "align": align,
             }
-            comp = MockComponent(style=style)
+            comp = MockElement(style=style)
             commands = comp._gen_styling_commands([], style, None, None)
             self.assertTrue("align" not in style)
             self.assertEqual(style["qproperty-alignment"], qt_align)
@@ -128,7 +128,7 @@ class StyleTestCase(unittest.TestCase):
         style = {
             "font-size": 12,
         }
-        comp = MockComponent(style=style)
+        comp = MockElement(style=style)
         comp._size_from_font = None
         commands = comp._gen_styling_commands([], style, None, None)
         self.assertEqual(style["font-size"], "12px")
@@ -138,7 +138,7 @@ class StyleTestCase(unittest.TestCase):
             "top": 12,
             "left": 24,
         }
-        comp = MockComponent(style=style)
+        comp = MockElement(style=style)
         commands = comp._gen_styling_commands([], style, None, None)
         self.assertTrue((comp.underlying.move, 24, 12) in commands)
 
@@ -318,7 +318,7 @@ class WidgetTreeTestCase(unittest.TestCase):
             ])
 
 
-class BaseComponentsTest(unittest.TestCase):
+class BaseElementsTest(unittest.TestCase):
 
     def _test_comp(self, comp, children=None):
         children = children or []

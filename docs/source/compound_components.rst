@@ -1,4 +1,4 @@
-Higher-level Components
+Higher-level Elements
 =======================
 
 Edifice also provides a few higher level components that provide useful but non-core convenience features.

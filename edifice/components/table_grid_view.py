@@ -4,12 +4,12 @@ if QT_VERSION == "PyQt6":
 else:
     from PySide6.QtWidgets import QGridLayout, QWidget
 
-from .._component import Component
-from ..base_components import QtWidgetComponent, register_props
+from .._component import Element
+from ..base_components import QtWidgetElement
 
-def TableChildren(children: list[list[Component]]) -> list[Component]:
+def TableChildren(children: list[list[Element]]) -> list[Element]:
     """
-    Convert a column list of row lists of :code:`Component` into the
+    Convert a column list of row lists of :code:`Element` into the
     children list for a :class:`TableGridView`.
     """
     children_ = []
@@ -20,9 +20,9 @@ def TableChildren(children: list[list[Component]]) -> list[Component]:
             children_.append(child)
     return children_
 
-def _get_tablerowcolumn(c:Component):
+def _get_tablerowcolumn(c:Element):
     """
-    Sometimes it’s on the QtWidgetComponent, sometimes on the Component’s _edifice_internal_parent.
+    Sometimes it’s on the QtWidgetElement, sometimes on the Element’s _edifice_internal_parent.
 
     We need it, so crash if we don't find it.
     We can proceed without a _key but not without a _tablerowcolumn
@@ -32,9 +32,9 @@ def _get_tablerowcolumn(c:Component):
     else:
         return c._edifice_internal_parent.__getattribute__("_tablerowcolumn")
 
-def _get_key(c:Component, default:str = ""):
+def _get_key(c:Element, default:str = ""):
     """
-    Sometimes it’s on the QtWidgetComponent, sometimes on the Component’s _edifice_internal_parent.
+    Sometimes it’s on the QtWidgetElement, sometimes on the Element’s _edifice_internal_parent.
     """
     if hasattr(c, "_key"):
         # We can proceed without a _key but not without a _tablerowcolumn
@@ -55,7 +55,7 @@ def _childdict(children):
         d[(row,column,key)] = child.component
     return d
 
-class TableGridView(QtWidgetComponent):
+class TableGridView(QtWidgetElement):
     """Table-style GridLayout widget. Displays its children as aligned rows of columns.
 
     This component has similar behavior to an `HTML
@@ -81,7 +81,6 @@ class TableGridView(QtWidgetComponent):
 
     """
 
-    @register_props
     def __init__(
             self,
             row_stretch : list[int] = [], # noqa: B006
@@ -90,6 +89,13 @@ class TableGridView(QtWidgetComponent):
             column_minwidth : list[int] = [], # noqa: B006
             **kwargs,
         ):
+        self.register_props({
+            "row_stretch": row_stretch,
+            "column_stretch": column_stretch,
+            "row_minheight": row_minheight,
+            "column_minwidth": column_minwidth,
+        })
+        self.register_props(kwargs)
         self.underlying = None
         self._widget_children_dict = {}
         self._row_stretch = row_stretch

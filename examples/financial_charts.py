@@ -126,7 +126,7 @@ def PlotDescriptor(self, name, children):
 # Finally, we create a component that contains the plot descriptions, a button to add a plot,
 # and the actual Matplotlib figure.
 # To better organize the code, we create a class so that we can put plotting logic in methods.
-class App(ed.Component):
+class App(ed.Element):
 
     # Adding a plot is very simple conceptually (and in Edifice).
     # Just add new state for the new plot!
@@ -184,7 +184,7 @@ class App(ed.Component):
         )
 
 
-# Finally to start the the app, we pass the Component to the edifice.App object
+# Finally to start the the app, we pass the Element to the edifice.App object
 # and call the start function to start the event loop.
 if __name__ == "__main__":
     ed.App(App(), inspector=True).start()

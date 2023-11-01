@@ -7,29 +7,29 @@ class ReloadTestCase(unittest.TestCase):
 
     def test_reload(self):
         import example_file
-        old_comp_a, old_comp_b = example_file.ComponentA, example_file.ComponentB
+        old_comp_a, old_comp_b = example_file.ElementA, example_file.ElementB
         print("Oldest", id(old_comp_a))
 
         comp_list, new_components = runner._reload_components(example_file)
-        new_comp_a, new_comp_b = example_file.ComponentA, example_file.ComponentB
+        new_comp_a, new_comp_b = example_file.ElementA, example_file.ElementB
 
         self.assertNotEqual(old_comp_a, new_comp_a)
         self.assertNotEqual(old_comp_b, new_comp_b)
 
-        self.assertEqual(new_components, [("ComponentA", new_comp_a), ("ComponentB", new_comp_b)])
+        self.assertEqual(new_components, [("ElementA", new_comp_a), ("ElementB", new_comp_b)])
         self.assertEqual(comp_list, [(old_comp_a, new_comp_a), (old_comp_b, new_comp_b)])
 
         old_comp_a, old_comp_b = new_comp_a, new_comp_b
         # This mimics the loading of the newer components in the cache after a successful reload
-        runner.MODULE_CLASS_CACHE[example_file] = [("ComponentA", new_comp_a), ("ComponentB", new_comp_b)]
+        runner.MODULE_CLASS_CACHE[example_file] = [("ElementA", new_comp_a), ("ElementB", new_comp_b)]
 
         comp_list, new_components = runner._reload_components(example_file)
-        new_comp_a, new_comp_b = example_file.ComponentA, example_file.ComponentB
+        new_comp_a, new_comp_b = example_file.ElementA, example_file.ElementB
 
         self.assertNotEqual(old_comp_a, new_comp_a)
         self.assertNotEqual(old_comp_b, new_comp_b)
 
-        self.assertEqual(new_components, [("ComponentA", new_comp_a), ("ComponentB", new_comp_b)])
+        self.assertEqual(new_components, [("ElementA", new_comp_a), ("ElementB", new_comp_b)])
         self.assertEqual(comp_list, [(old_comp_a, new_comp_a), (old_comp_b, new_comp_b)])
 
     def test_file_to_module_name(self):

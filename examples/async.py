@@ -2,7 +2,7 @@ import asyncio
 import edifice as ed
 
 
-class Component(ed.Component):
+class Element(ed.Element):
 
     def __init__(self):
         super().__init__()
