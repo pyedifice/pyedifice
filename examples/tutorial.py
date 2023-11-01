@@ -1,5 +1,5 @@
 import edifice as ed
-from edifice import Label, TextInput, View
+from edifice import Label, TextInput
 
 METERS_TO_FEET = 3.28084
 

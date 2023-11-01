@@ -1,6 +1,4 @@
 import edifice as ed
-import math
-import numpy as np
 
 
 class RecurseTree(ed.Element):

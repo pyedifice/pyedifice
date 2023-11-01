@@ -71,8 +71,6 @@ or passed to children, who would not need to know about the underlying
 """
 
 from collections import defaultdict, OrderedDict
-import functools
-import itertools
 import typing as tp
 
 

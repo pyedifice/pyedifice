@@ -1,14 +1,13 @@
-from collections.abc import Callable, Iterator, Iterable
+from collections.abc import Callable, Coroutine, Iterator, Iterable
 import contextlib
-import functools
 import inspect
 import typing as tp
 from typing_extensions import Self
 import threading
-import traceback
-from sys import stderr
 
-_CommandType = tp.Tuple[tp.Callable[..., None], ...]
+_CommandType = tp.Tuple[Callable[..., None], ...]
+_T_use_state = tp.TypeVar("_T_use_state")
+
 """
 Deferred function call. A tuple with a Callable, and all of the values of its arguments.
 """
@@ -196,6 +195,20 @@ class Tracker:
 
 class RenderContextProtocol(tp.Protocol):
     trackers: list[Tracker]
+    def use_state(self, initial_state:_T_use_state) -> tuple[_T_use_state, Callable[[_T_use_state], None]]:
+        ...
+    def use_effect(
+        self,
+        setup: Callable[[], Callable[[], None]],
+        dependencies: tp.Any,
+    ) -> None:
+        ...
+    def use_async(
+        self,
+        fn_coroutine: Callable[[], Coroutine[None, None, None]],
+        dependencies: tp.Any,
+    ) -> None:
+        ...
 
 local_state = threading.local()
 
@@ -323,7 +336,7 @@ class Element:
         if not hasattr(self, "_props"):
             self._props = {"children": []}
         # Ensure we only construct this element once
-        assert getattr(self, "_initialized", False) == False
+        assert getattr(self, "_initialized", False) is False
         self._initialized = True
         ctx = get_render_context_maybe()
         if ctx is not None:
@@ -493,7 +506,6 @@ class Element:
                 super().__setattr__(s, old_vals[s])
             raise e
 
-
     def should_update(self, newprops: PropsDict, newstate: tp.Mapping[tp.Text, tp.Any]) -> bool:
         """Determines if the component should rerender upon receiving new props and state.
 
@@ -578,6 +590,9 @@ class Element:
         The render logic for this component, not implemented for this abstract class.
         The render function itself should be purely stateless, because the application
         state should not depend on whether or not the render function is called.
+
+        To introduce state or effects in the render function, use
+        :func:`use_state` or :func:`use_effect`.
 
         Args:
             None
@@ -695,8 +710,11 @@ class WidgetElement(BaseElement):
 class LayoutElement(BaseElement):
     pass
 
-class RootElement(BaseElement):
 
+class RootElement(BaseElement):
+    """
+    The root component of a component tree must be an instance of RootComponent.
+    """
     def _qt_update_commands(self, children, newprops, newstate) -> list[_CommandType]:
         del children, newprops, newstate
         return []

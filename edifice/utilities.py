@@ -101,7 +101,7 @@ def set_trace():
     '''Set a tracepoint in the Python debugger that works with Qt'''
     import pdb
     if QT_VERSION == "PyQt6":
-        from PyQt6.QtCore import pyqtRemoveInputHook, pyqtRestoreInputHook
+        from PyQt6.QtCore import pyqtRemoveInputHook
         pyqtRemoveInputHook()
     pdb.set_trace()
     # # set up the debugger

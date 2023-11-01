@@ -1,26 +1,26 @@
 import time
 import threading
 from ..base_components import CustomWidget
-from .._component import Element
 
 from ..qt import QT_VERSION
 if QT_VERSION == "PyQt6":
     from PyQt6 import QtWidgets
-    from PyQt6 import QtCore
 else:
-    from PySide6 import QtCore, QtWidgets
+    from PySide6 import QtWidgets
 
 try:
     MATPLOTLIB_LOADED = True
     from matplotlib.backends.backend_qtagg import FigureCanvas
     from matplotlib.figure import Figure as MatplotlibFigure
-except:
+except ImportError:
     MATPLOTLIB_LOADED = False
 
 
 class Figure(CustomWidget):
 
     def __init__(self, plot_fun):
+        if not MATPLOTLIB_LOADED:
+            raise ValueError("To use the Figure component, you must install matplotlib, e.g. by `pip install matplotlib`")
         self.register_props({
             "plot_fun": plot_fun,
         })
@@ -54,7 +54,7 @@ class Figure(CustomWidget):
 
     def create_widget(self):
         widget = QtWidgets.QWidget()
-        layout = QtWidgets.QVBoxLayout(widget)
+        QtWidgets.QVBoxLayout(widget)
         self.figure_added = False
         return widget
 
@@ -68,8 +68,3 @@ class Figure(CustomWidget):
                 self.current_plot_fun = self.props.plot_fun
                 widget.layout().addWidget(self.figure_canvas)
                 self.figure_added = True
-
-
-if not MATPLOTLIB_LOADED:
-    def Figure(*args, **kwargs):
-        raise ValueError("To use the Figure component, you must install matplotlib, e.g. by `pip install matplotlib`")

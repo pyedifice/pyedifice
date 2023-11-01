@@ -113,7 +113,7 @@ class StyleTestCase(unittest.TestCase):
                 "align": align,
             }
             comp = MockElement(style=style)
-            commands = comp._gen_styling_commands([], style, None, None)
+            comp._gen_styling_commands([], style, None, None)
             self.assertTrue("align" not in style)
             self.assertEqual(style["qproperty-alignment"], qt_align)
 
@@ -130,7 +130,7 @@ class StyleTestCase(unittest.TestCase):
         }
         comp = MockElement(style=style)
         comp._size_from_font = None
-        commands = comp._gen_styling_commands([], style, None, None)
+        comp._gen_styling_commands([], style, None, None)
         self.assertEqual(style["font-size"], "12px")
 
     def test_top_left(self):
@@ -157,16 +157,20 @@ class WidgetTreeTestCase(unittest.TestCase):
         button_str = "asdf"
         button = base_components.Button(title=button_str, on_click=on_click)
         button_tree = engine._WidgetTree(button, [])
+        eng = engine.RenderEngine(button)
         with engine._storage_manager() as manager:
-            commands = button_tree.gen_qt_commands(MockRenderContext(manager))
+            commands = button_tree.gen_qt_commands(MockRenderContext(manager, eng))
         qt_button = button.underlying
-        font_size = qt_button.font().pointSize()
+        assert qt_button is not None
+        style = qt_button.style()
+        assert style is not None
+        qt_button.font().pointSize()
         self.assertCountEqual(
             commands,
             [(qt_button.setText, button_str), (qt_button.setStyleSheet, "QWidget#%s{}" % id(button)),
              (qt_button.setProperty, "css_class", []),
-             (qt_button.style().unpolish, qt_button),
-             (qt_button.style().polish, qt_button),
+             (style.unpolish, qt_button),
+             (style.polish, qt_button),
              (button._set_on_click, qt_button, on_click),
              (button._set_on_key_down, qt_button, None),
              (button._set_on_key_up, qt_button, None),
@@ -196,20 +200,25 @@ class WidgetTreeTestCase(unittest.TestCase):
         rotation = 45
         icon = base_components.Icon(name="play", size=15, color=color, rotation=rotation)
         icon_tree = engine._WidgetTree(icon, [])
+        eng = engine.RenderEngine(icon)
         with engine._storage_manager() as manager:
-            commands = icon_tree.gen_qt_commands(MockRenderContext(manager))
+            commands = icon_tree.gen_qt_commands(MockRenderContext(manager, eng))
 
         render_img_args = (os.path.join(os.path.abspath(os.path.dirname(base_components.__file__)), "icons/font-awesome/solid/play.svg"),
                            size, color, rotation)
+        qt_icon = icon.underlying
+        assert qt_icon is not None
+        style = qt_icon.style()
+        assert style is not None
         self.assertCountEqual(
             commands,
             [(icon._render_image, ) + render_img_args,
-             (icon.underlying.setStyleSheet, "QWidget#%s{}" % id(icon)),
-             (icon.underlying.setProperty, "css_class", []),
-             (icon.underlying.style().unpolish, icon.underlying),
-             (icon.underlying.style().polish, icon.underlying),
-             (icon.underlying.setContextMenuPolicy, QtCore.Qt.ContextMenuPolicy.DefaultContextMenu),
-             (icon.underlying.setCursor, QtCore.Qt.CursorShape.ArrowCursor),
+             (qt_icon.setStyleSheet, "QWidget#%s{}" % id(icon)),
+             (qt_icon.setProperty, "css_class", []),
+             (style.unpolish, icon.underlying),
+             (style.polish, icon.underlying),
+             (qt_icon.setContextMenuPolicy, QtCore.Qt.ContextMenuPolicy.DefaultContextMenu),
+             (qt_icon.setCursor, QtCore.Qt.CursorShape.ArrowCursor),
              (icon._set_on_key_down, icon.underlying, None),
              (icon._set_on_key_up, icon.underlying, None),
              (icon._set_on_mouse_enter, icon.underlying, None),
@@ -225,19 +234,20 @@ class WidgetTreeTestCase(unittest.TestCase):
         label1 = base_components.Label(text="A")
         label2 = base_components.Label(text="B")
         view = base_components.View()(label1)
+        eng =  engine.RenderEngine(view)
 
         def label_tree(label):
             tree = engine._WidgetTree(label, [])
             with engine._storage_manager() as manager:
-                return tree, tree.gen_qt_commands(MockRenderContext(manager))
+                return tree, tree.gen_qt_commands(MockRenderContext(manager, eng))
 
         label1_tree, label1_commands = label_tree(label1)
         label2_tree, label2_commands = label_tree(label2)
         view_tree = engine._WidgetTree(view, [label1_tree])
         with engine._storage_manager() as manager:
-            commands = view_tree.gen_qt_commands(MockRenderContext(manager))
+            commands = view_tree.gen_qt_commands(MockRenderContext(manager, eng))
 
-        font_size = label1.underlying.font().pointSize()
+        label1.underlying.font().pointSize()
 
         self.assertCountEqual(commands, label1_commands + [
             (view.underlying.setStyleSheet, "QWidget#%s{}" % id(view)),
@@ -258,7 +268,7 @@ class WidgetTreeTestCase(unittest.TestCase):
 
         view_tree = engine._WidgetTree(view, [label1_tree, label2_tree])
         with engine._storage_manager() as manager:
-            commands = view_tree.gen_qt_commands(MockRenderContext(manager))
+            commands = view_tree.gen_qt_commands(MockRenderContext(manager, eng))
         self.assertCountEqual(commands, label1_commands + label2_commands + [
             (view.underlying.setStyleSheet, "QWidget#%s{}" % id(view)),
             (view.underlying.setProperty, "css_class", []),
@@ -281,7 +291,7 @@ class WidgetTreeTestCase(unittest.TestCase):
 
         view_tree = engine._WidgetTree(view, [label2_tree, engine._WidgetTree(inner_view, [])])
         with engine._storage_manager() as manager:
-            commands = view_tree.gen_qt_commands(MockRenderContext(manager))
+            commands = view_tree.gen_qt_commands(MockRenderContext(manager, eng))
         self.assertCountEqual(
             commands,
             label2_commands + [
