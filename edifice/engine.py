@@ -1,13 +1,19 @@
+import asyncio
+from collections.abc import Coroutine, Iterator
+from collections import defaultdict
 import contextlib
 import inspect
 import logging
 import typing as tp
 from textwrap import dedent
+from dataclasses import dataclass
 
-from ._component import BaseElement, Element, PropsDict, _CommandType, Tracker, local_state, Container
+from ._component import (
+    BaseElement, Element, PropsDict, _CommandType, Tracker, local_state, Container,
+)
 
 logger = logging.getLogger("Edifice")
-T = tp.TypeVar("T")
+_T_use_state = tp.TypeVar("_T_use_state")
 
 class _ChangeManager(object):
     __slots__ = ("changes",)
@@ -33,12 +39,13 @@ class _ChangeManager(object):
                     delattr(obj, key)
                 except AttributeError:
                     logger.warning(
-                        "Error while unwinding changes: Unable to delete %s from %s. Setting to None instead",
+                        "Error while unwinding changes: Unable to delete %s from %s. "
+                        "Setting to None instead",
                         key, obj.__class__.__name__)
                     setattr(obj, key, None)
 
 @contextlib.contextmanager
-def _storage_manager(): # -> tp.Generator[_ChangeManager, tp.Any, None]:
+def _storage_manager() -> Iterator[_ChangeManager]:
     changes = _ChangeManager()
     try:
         yield changes
@@ -57,9 +64,33 @@ class _RenderContext(object):
     """Encapsulates various state that's needed for rendering."""
     __slots__ = ("storage_manager", "need_qt_command_reissue", "component_to_old_props",
                  "force_refresh", "component_tree", "widget_tree", "enqueued_deletions",
-                 "_hook_state_index", "trackers", "_callback_queue", "component_parent")
+                 "trackers", "_callback_queue", "component_parent",
+                 "engine", "_hook_state_index", "_hook_effect_index", "_hook_async_index",
+                 "current_element",
+                 )
     trackers: list[Tracker]
-    def __init__(self, storage_manager: _ChangeManager, force_refresh=False):
+    _hook_state_index: int
+    """
+    The index of the next _hook_state referred to by use_state() in render().
+    """
+    _hook_effect_index: int
+    """
+    The index of the next _hook_effect_cleanup, _hook_effect_dependencies referred
+    to by use_effect() in render().
+    """
+    _hook_async_index: int
+    """
+    The index of the next _hook_async_task, _hook_async_dependencies referred
+    to by use_async() in render().
+    """
+    current_element: Element | None
+    def __init__(
+        self,
+        storage_manager: _ChangeManager,
+        engine: "RenderEngine",
+        force_refresh: bool =False,
+    ):
+        self.engine = engine
         self.storage_manager: _ChangeManager = storage_manager
         self.need_qt_command_reissue = {}
         self.component_to_old_props = {}
@@ -73,6 +104,12 @@ class _RenderContext(object):
         self.component_parent: Element | None = None
 
         self.trackers = []
+
+        self._hook_state_index = 0
+        self._hook_effect_index = 0
+        self._hook_async_index = 0
+
+        self.current_element = None
 
     def schedule_callback(self, callback, args=None, kwargs=None):
         args = args or []
@@ -108,6 +145,116 @@ class _RenderContext(object):
     def need_rerender(self, component):
         return self.need_qt_command_reissue.get(component, False)
 
+    def use_state(self, initial_state:_T_use_state) -> tuple[
+        _T_use_state, # current value
+        tp.Callable[[_T_use_state], None] # setter
+        ]:
+        element = self.current_element
+        assert element is not None
+        hook_state = self.engine._hook_state[element]
+
+        if len(hook_state) <= self._hook_state_index:
+            # then this is the first render
+            hook_state.append(_HookState(initial_state))
+
+        h_index = self._hook_state_index
+        self._hook_state_index += 1
+
+        def setter(x):
+            if x != hook_state[h_index].state:
+                hook_state[h_index].state = x
+                # FIXME: delay rerendering (all components) until the end of the render
+                app = self.engine._app
+                assert app is not None
+                app._request_rerender([element], {})
+
+        val = hook_state[h_index].state
+
+        return (val, setter)
+
+    def use_effect(
+        self,
+        setup: tp.Callable[[], tp.Callable[[], None]],
+        dependencies: tp.Any,
+    ) -> None:
+        element = self.current_element
+        assert element is not None
+        hook_effect = self.engine._hook_effect[element]
+
+        h_index = self._hook_effect_index
+        self._hook_effect_index += 1
+
+        if len(hook_effect) <= h_index:
+            # then this is the first render
+            effect = _HookEffect(None, dependencies)
+            hook_effect.append(effect)
+
+            try:
+                cleanup = setup()
+                effect.cleanup = cleanup
+            except Exception as ex:
+                effect.cleanup = None
+                raise ex
+
+        elif dependencies != hook_effect[h_index].dependencies:
+            try:
+                cleanup_old = hook_effect[h_index].cleanup
+                if cleanup_old is not None:
+                    cleanup_old()
+                cleanup_new = setup()
+                hook_effect[h_index].cleanup = cleanup_new
+            except Exception as ex:
+                hook_effect[h_index].cleanup = None
+                raise ex
+
+    def use_async(
+        self,
+        fn_coroutine: tp.Callable[[], Coroutine[None, None, None]],
+        dependencies: tp.Any,
+    ) -> None:
+        element = self.current_element
+        assert element is not None
+        hook_async = self.engine._hook_async[element]
+
+        h_index = self._hook_async_index
+        self._hook_async_index += 1
+
+        def done_callback(_):
+            # We might be unmounting at this time but I think that's okay.
+            hook_async[h_index].task = None
+            if len(hook_async[h_index].queue) > 0:
+                # There is another async task waiting in the queue
+                task = asyncio.create_task(hook_async[h_index].queue.pop(0)())
+                hook_async[h_index].task = task
+                task.add_done_callback(done_callback)
+
+        if len(hook_async) <= h_index:
+            # then this is the first render.
+            hook_async.append(_HookAsync(
+                task=None,
+                dependencies=dependencies,
+                queue=[],
+            ))
+            task = asyncio.create_task(fn_coroutine()) # This can't throw right?
+            hook_async[h_index].task = task
+            task.add_done_callback(done_callback)
+
+        elif dependencies != hook_async[h_index].dependencies:
+            # then this is not the first render.
+
+            if (t := hook_async[h_index].task) is not None:
+                # There's already an old async effect in flight, so enqueue
+                # the new async effect and cancel the old async effect.
+                # We also want to cancel all of the other async effects
+                # in the queue, so the queue should have max len 1.
+                # Maybe queue should be type Optional instead of list?
+                hook_async[h_index].queue.clear()
+                hook_async[h_index].queue.append(fn_coroutine)
+                t.cancel()
+            else:
+                task = asyncio.create_task(fn_coroutine())
+                hook_async[h_index].task = task
+                task.add_done_callback(done_callback)
 
 class _WidgetTree(object):
     __slots__ = ("component", "children")
@@ -132,7 +279,10 @@ class _WidgetTree(object):
             return commands
 
         old_props = render_context.get_old_props(self.component)
-        new_props = PropsDict({k: v for k, v in self.component.props._items if k not in old_props or _try_neq(old_props[k], v)})
+        new_props = PropsDict({
+            k: v for k, v in self.component.props._items
+            if k not in old_props or _try_neq(old_props[k], v)
+        })
         update_commands = getattr(self.component, "_qt_update_commands", None)
         assert update_commands is not None
         commands.extend(update_commands(self.children, new_props, {}))
@@ -174,14 +324,50 @@ class RenderResult(object):
             command[0](*command[1:])
         self.render_context.run_callbacks()
 
+@dataclass
+class _HookState:
+    state: tp.Any
 
+@dataclass
+class _HookEffect:
+    cleanup: tp.Callable[[], None] | None
+    """
+    Cleanup function called on unmount and overwrite
+    """
+    dependencies: tp.Any
+
+@dataclass
+class _HookAsync:
+    task: asyncio.Task[tp.Any] | None
+    """
+    The currently executing async effect task.
+    """
+    queue: list[tp.Callable[[], Coroutine[None,None,None]]]
+    """
+    The queue of waiting async effect tasks.
+    """
+    dependencies: tp.Any
+    """
+    The dependencies of use_async().
+    """
 
 class RenderEngine(object):
     """
     One RenderEngine instance persists across the life of the App.
     """
-    __slots__ = ("_component_tree", "_widget_tree", "_root", "_app")
-
+    __slots__ = (
+        "_component_tree", "_widget_tree", "_root", "_app",
+        "_hook_state", "_hook_effect", "_hook_async"
+    )
+    _hook_state: defaultdict[Element, list[_HookState]]
+    """
+    The states of use_state().
+    """
+    _hook_effect: defaultdict[Element, list[_HookEffect]]
+    """
+    The hook state for use_effect().
+    """
+    _hook_async: defaultdict[Element, list[_HookAsync]]
     def __init__(self, root, app=None):
         self._component_tree = {}
         """
@@ -191,6 +377,9 @@ class RenderEngine(object):
         self._root = root
         self._root._edifice_internal_parent = None
         self._app = app
+        self._hook_state = defaultdict(list)
+        self._hook_async = defaultdict(list)
+        self._hook_effect = defaultdict(list)
 
     def _delete_component(self, component: Element, recursive: bool):
         # Delete component from render trees
@@ -207,18 +396,32 @@ class RenderEngine(object):
         for ref in component._edifice_internal_references:
             ref._value = None
         component.will_unmount()
-        for hook_state in component._hook_state:
-            del hook_state
-        for cleanup in component._hook_effect_cleanup:
-            if cleanup is not None: # None indicates that the setup effect failed.
-                cleanup()
-        for queue in component._hook_async_queue:
-            queue.clear()
-        for tsk in component._hook_async_task:
-            if tsk is not None:
-                tsk.cancel()
         del self._component_tree[component]
         del self._widget_tree[component]
+
+        # Clean up hook state for the component
+        if component in self._hook_state:
+            for hook in self._hook_state[component]:
+                del hook.state
+                del hook
+            del self._hook_state[component]
+        if component in self._hook_effect:
+            for hook in self._hook_effect[component]:
+                if hook.cleanup is not None: # None indicates that the setup effect failed.
+                    hook.cleanup()
+                del hook.dependencies
+                del hook
+            del self._hook_effect[component]
+        if component in self._hook_async:
+            for hook in self._hook_async[component]:
+                if hook.task is not None:
+                    hook.task.cancel()
+                hook.queue.clear()
+                del hook.task
+                del hook.queue
+                del hook.dependencies
+                del hook
+            del self._hook_async[component]
 
     def _refresh_by_class(self, classes) -> RenderResult:
         # Algorithm:
@@ -253,10 +456,13 @@ class RenderEngine(object):
                           if v.default is inspect.Parameter.empty and k[0] != "_"}
             except KeyError:
                 k = None
-                for k, v in parameters[1:]:
+                for k, _ in parameters[1:]:
                     if k not in old_comp.props:
                         break
-                raise ValueError(f"Error while reloading {old_comp}: New class expects prop ({k}) not present in old class")
+                raise ValueError(
+                    f"Error while reloading {old_comp}: "
+                    f"New class expects prop ({k}) not present in old class"
+                )
             parts[3] = new_comp_class(**kwargs)
             parts[3]._props.update(old_comp._props)
             if hasattr(old_comp, "_key"):
@@ -409,9 +615,11 @@ class RenderEngine(object):
             for ref in component._edifice_internal_references:
                 render_context.set(ref, "_value", component)
         except TypeError:
-            raise ValueError(f"{component.__class__} is not correctly initialized. "
-                             "Did you remember to call super().__init__() in the constructor? "
-                             "(alternatively, the register_props decorator will also correctly initialize the component)")
+            raise ValueError(
+                f"{component.__class__} is not correctly initialized. "
+                "Did you remember to call super().__init__() in the constructor? "
+                "(alternatively, the register_props decorator will also correctly initialize the component)"
+            )
         component._controller = self._app
         component._edifice_internal_parent = render_context.component_parent
         render_context.component_parent = component
@@ -420,13 +628,15 @@ class RenderEngine(object):
             render_context.component_parent = component._edifice_internal_parent
             return ret
 
-        # Before the render, set the hooks indices of the Component to 0.
-        component._hook_state_index = 0
-        component._hook_effect_index = 0
-        component._hook_async_index = 0
+        # Before the render, set the hooks indices to 0.
+        render_context._hook_state_index = 0
+        render_context._hook_effect_index = 0
+        render_context._hook_async_index = 0
         # Call user provided render function and retrieve old results
         with Container() as container:
+            render_context.current_element = component
             sub_component = component.render()
+            render_context.current_element = None
         # If the component.render() call evaluates to an Element
         # we use that as the sub_component the component renders as.
         if sub_component is None:
@@ -482,7 +692,7 @@ class RenderEngine(object):
     def _request_rerender(self, components: list[Element]) -> RenderResult:
         # Generate the widget trees
         with _storage_manager() as storage_manager:
-            render_context = _RenderContext(storage_manager)
+            render_context = _RenderContext(storage_manager, self)
             local_state.render_context = render_context
             widget_trees = self._gen_widget_trees(components, render_context)
 

@@ -125,7 +125,10 @@ class App(object):
             if isinstance(component, BaseElement):
                 rendered_component = component
             else:
-                rendered_component = component.render()
+                # Create a temporary RenderEngine to render the root component
+                window_engine = RenderEngine(component, self)
+                window_engine._request_rerender([component])
+                rendered_component = window_engine._widget_tree[component]
             if isinstance(rendered_component, RootElement):
                 self._root = RootElement()(component)
             else:

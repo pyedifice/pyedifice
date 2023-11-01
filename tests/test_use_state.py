@@ -2,6 +2,7 @@ import asyncio as asyncio
 import unittest
 
 from edifice import App, Element, View, Label, Button
+from edifice.hooks import use_state
 
 from edifice.qt import QT_VERSION
 if QT_VERSION == "PyQt6":
@@ -23,7 +24,7 @@ class IntegrationTestCase(unittest.TestCase):
                 super().__init__()
 
             def render(self):
-                show, set_show = self.use_state(False)
+                show, set_show = use_state(False)
                 if show:
                     return View()(
                         Button(
@@ -49,7 +50,7 @@ class IntegrationTestCase(unittest.TestCase):
 
             def render(self):
                 print("TestComp instance " + str(id(self)))
-                x, x_setter = self.use_state(0)
+                x, x_setter = use_state(0)
                 return View(
                     style={
                         "align":"top"

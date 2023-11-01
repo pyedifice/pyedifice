@@ -1,20 +1,16 @@
-import asyncio
-from collections.abc import Callable, Iterator, Iterable, Coroutine
+from collections.abc import Callable, Coroutine, Iterator, Iterable
 import contextlib
-import functools
 import inspect
 import typing as tp
 from typing_extensions import Self
 import threading
-import traceback
-from sys import stderr
 
-_CommandType = tp.Tuple[tp.Callable[..., None], ...]
+_CommandType = tp.Tuple[Callable[..., None], ...]
+_T_use_state = tp.TypeVar("_T_use_state")
+
 """
 Deferred function call. A tuple with a Callable, and all of the values of its arguments.
 """
-
-_T_use_state = tp.TypeVar("_T_use_state")
 
 class PropsDict(object):
     """An immutable dictionary for storing props.
@@ -199,6 +195,20 @@ class Tracker:
 
 class RenderContextProtocol(tp.Protocol):
     trackers: list[Tracker]
+    def use_state(self, initial_state:_T_use_state) -> tuple[_T_use_state, Callable[[_T_use_state], None]]:
+        ...
+    def use_effect(
+        self,
+        setup: Callable[[], Callable[[], None]],
+        dependencies: tp.Any,
+    ) -> None:
+        ...
+    def use_async(
+        self,
+        fn_coroutine: Callable[[], Coroutine[None, None, None]],
+        dependencies: tp.Any,
+    ) -> None:
+        ...
 
 local_state = threading.local()
 
@@ -311,26 +321,6 @@ class Element:
     based on index, which could result in subpar performance due to unnecessary rerenders.
     To ensure control over the rerender process, it is recommended to :code:`set_key`
     whenever you have a list of children.
-
-    =====
-    Hooks
-    =====
-
-    The methods :func:`use_state`, :func:`use_effect`, and
-    :func:`use_async` are Hooks like the
-    `Hooks in React <https://react.dev/reference/react/hooks>`_.
-    They follow the same
-    `Rules of Hooks <https://react.dev/warnings/invalid-hook-call-warning>`_.
-
-    **“Don’t call Hooks inside loops, conditions, or nested functions.
-    Instead, always use Hooks at the top level of your React function,
-    before any early returns.”**
-
-    ============
-    Custom Hooks
-    ============
-
-    Impossible.
     """
 
     _render_changes_context: dict | None = None
@@ -339,44 +329,6 @@ class Element:
     _edifice_internal_parent: tp.Optional["Element"] = None
     _controller: ControllerProtocol | None = None
     _edifice_internal_references: set[Reference] | None = None
-    _hook_state: list[tp.Any]
-    """
-    The states of use_state().
-    """
-    _hook_state_index: int
-    """
-    The index of the next _hook_state referred to by use_state() in render().
-    """
-    _hook_effect_cleanup: list[tp.Callable[[], None] | None]
-    """
-    The cleanup functions of use_effect().
-    """
-    _hook_effect_dependencies: list[tp.Any]
-    """
-    The dependencies of use_effect().
-    """
-    _hook_effect_index: int
-    """
-    The index of the next _hook_effect_cleanup, _hook_effect_dependencies referred
-    to by use_effect() in render().
-    """
-    _hook_async_task: list[asyncio.Task[tp.Any] | None]
-    """
-    The currently executing async effect tasks.
-    """
-    _hook_async_queue: list[list[tp.Callable[[], Coroutine[None, None, None]]]]
-    """
-    The queues of waiting async effect tasks.
-    """
-    _hook_async_dependencies: list[tp.Any]
-    """
-    The dependencies of use_async().
-    """
-    _hook_async_index: int
-    """
-    The index of the next _hook_async_task, _hook_async_dependencies referred
-    to by use_async() in render().
-    """
 
     def __init__(self):
         super().__setattr__("_ignored_variables", set())
@@ -384,7 +336,7 @@ class Element:
         if not hasattr(self, "_props"):
             self._props = {"children": []}
         # Ensure we only construct this element once
-        assert getattr(self, "_initialized", False) == False
+        assert getattr(self, "_initialized", False) is False
         self._initialized = True
         ctx = get_render_context_maybe()
         if ctx is not None:
@@ -392,16 +344,6 @@ class Element:
             if len(trackers) > 0:
                 parent = trackers[-1]
                 parent.append_child(self)
-
-        self._hook_state = []
-        self._hook_state_index = 0
-        self._hook_effect_cleanup = []
-        self._hook_effect_dependencies = []
-        self._hook_effect_index = 0
-        self._hook_async_task = []
-        self._hook_async_queue = []
-        self._hook_async_dependencies = []
-        self._hook_async_index = 0
 
     def __enter__(self: Self) -> Self:
         ctx = get_render_context()
@@ -563,208 +505,6 @@ class Element:
             for s in old_vals:
                 super().__setattr__(s, old_vals[s])
             raise e
-
-    def use_state(self, initial_state:_T_use_state) -> tuple[
-        _T_use_state, # current value
-        tp.Callable[[_T_use_state], None] # setter
-        ]:
-        """
-        State Hook for use inside the :func:`render` function.
-
-        Behaves like `React useState <https://react.dev/reference/react/useState>`_.
-
-        Example::
-
-            def render():
-                x, x_setter = self.use_state(0)
-
-                if x < 1:
-                    x_setter(1)
-
-                return Label(text=str(x))
-
-        Args:
-            initial_state: The initial state value.
-        Returns:
-            A tuple containing
-
-                1. The current state value.
-                2. A setter function for setting the state value, which will
-                   cause a rerender of the component if the new state value
-                   is not :code:`__eq__`.
-        """
-        if len(self._hook_state) <= self._hook_state_index:
-            # then this is the first render
-            self._hook_state.append(initial_state)
-
-        h_index = self._hook_state_index
-        self._hook_state_index += 1
-
-        def setter(x):
-            if x != self._hook_state[h_index]:
-                self._hook_state[h_index] = x
-                assert self._controller is not None
-                self._controller._request_rerender([self], {}) #todo should_update
-
-        val = self._hook_state[h_index]
-
-        return (val, setter)
-
-    def use_effect(
-        self,
-        setup: tp.Callable[[], tp.Callable[[], None]],
-        dependencies: tp.Any,
-    ) -> None:
-        """
-        Effect Hook for use inside the :func:`render` function.
-
-        Behaves like `React useEffect <https://react.dev/reference/react/useEffect>`_.
-
-        Example::
-
-            def render(self):
-
-                def setup_handler():
-                    token = attach_event_handler(self.props.handler)
-                    def cleanup_handler():
-                        remove_event_handler(token)
-                    return cleanup_handler
-
-                self.use_effect(setup_handler, self.props.handler)
-
-        Args:
-            setup: An effect function which returns a cleanup function.
-
-                The cleanup function will be called by Edifice exactly once for
-                each call to the setup effect function.
-
-                If the setup function throws an Exception then the cleanup function
-                will not be called.
-            dependencies: The setup effect function will be called when the
-                dependencies are not :code:`__eq__` to the old dependencies.
-        Returns:
-            None
-        """
-        assert(len(self._hook_effect_dependencies) == len(self._hook_effect_cleanup))
-
-        h_index = self._hook_effect_index
-        self._hook_effect_index += 1
-
-        if len(self._hook_effect_dependencies) <= h_index:
-            # then this is the first render
-            self._hook_effect_dependencies.append(dependencies)
-            self._hook_effect_cleanup.append(None)
-
-            try:
-                cleanup = setup()
-                self._hook_effect_cleanup[h_index] = cleanup
-            except Exception as ex:
-                self._hook_effect_cleanup[h_index] = None
-                raise ex
-
-        elif dependencies != self._hook_effect_dependencies[h_index]:
-            try:
-                cleanup_old = self._hook_effect_cleanup[h_index]
-                if cleanup_old is not None:
-                    cleanup_old()
-                cleanup_new = setup()
-                self._hook_effect_cleanup[h_index] = cleanup_new
-            except Exception as ex:
-                self._hook_effect_cleanup[h_index] = None
-                raise ex
-
-    def use_async(
-        self,
-        fn_coroutine: tp.Callable[[], Coroutine[None, None, None]],
-        dependencies: tp.Any,
-    ) -> None:
-        """
-        Asynchronous Effect Hook for use inside the :func:`render` function.
-
-        Will create a new
-        `Task <https://docs.python.org/3/library/asyncio-task.html#asyncio.Task>`_
-        with the :code:`fn_coroutine` coroutine.
-
-        If the Component is unmounted before the :code:`fn_coroutine` Task completes, then
-        the :code:`fn_coroutine` Task will be cancelled by calling
-        `cancel() <https://docs.python.org/3/library/asyncio-task.html#asyncio.Task.cancel>`_
-        on the Task.
-        See also
-        `Task Cancellation <https://docs.python.org/3/library/asyncio-task.html#task-cancellation>`_.
-
-        If the dependencies change before the :code:`fn_coroutine` Task completes, then
-        the :code:`fn_coroutine` Task will be cancelled and then the new
-        :code:`fn_coroutine` Task will
-        be started after the old :code:`fn_coroutine` Task completes.
-
-        Write your :code:`fn_coroutine` function in such a way that it
-        cleans itself up after exceptions.
-        Make sure that the :code:`fn_coroutine` function
-        does not try to do anything with this Component after an
-        :code:`asyncio.CancelledError`
-        is raised, because this Component may at that time
-        already have been unmounted.
-
-        Example::
-
-            def render(self):
-                myword, myword_set = self.use_state("")
-
-                async def fetcher():
-                    x = await fetch_word_from_the_internet()
-                    myword_set(x)
-
-                self.use_async(fetcher, 0)
-                return Label(text=myword)
-
-        Args:
-            fn_coroutine: Async Coroutine function to be run as a Task.
-            dependencies: The :code:`fn_coroutine` Task will be started when the
-                dependencies are not :code:`__eq__` to the old dependencies.
-        Returns:
-            None
-        """
-        assert(len(self._hook_async_dependencies) == len(self._hook_async_task))
-        assert(len(self._hook_async_dependencies) == len(self._hook_async_queue))
-
-        h_index = self._hook_async_index
-        self._hook_async_index += 1
-
-        def done_callback(_t):
-            # We might be unmounting at this time but I think that's okay.
-            self._hook_async_task[h_index] = None
-            if len(self._hook_async_queue[h_index]) > 0:
-                # There is another async task waiting in the queue
-                task = asyncio.create_task(self._hook_async_queue[h_index].pop(0)())
-                self._hook_async_task[h_index] = task
-                task.add_done_callback(done_callback)
-
-        if len(self._hook_async_dependencies) <= h_index:
-            # then this is the first render.
-            self._hook_async_dependencies.append(dependencies)
-            self._hook_async_queue.append([])
-            self._hook_async_task.append(None)
-
-            task = asyncio.create_task(fn_coroutine()) # This can't throw right?
-            self._hook_async_task[h_index] = task
-            task.add_done_callback(done_callback)
-
-        elif dependencies != self._hook_async_dependencies[h_index]:
-            # then this is not the first render.
-
-            if (t := self._hook_async_task[h_index]) is not None:
-                # There's already an old async effect in flight, so enqueue
-                # the new async effect and cancel the old async effect.
-                # We also want to cancel all of the other async effects
-                # in the queue, so the queue should have max len 1.
-                # Maybe queue should be type Optional instead of list?
-                self._hook_async_queue[h_index].clear()
-                self._hook_async_queue[h_index].append(fn_coroutine)
-                t.cancel()
-            else:
-                task = asyncio.create_task(fn_coroutine())
-                self._hook_async_task[h_index] = task
-                task.add_done_callback(done_callback)
 
     def should_update(self, newprops: PropsDict, newstate: tp.Mapping[tp.Text, tp.Any]) -> bool:
         """Determines if the component should rerender upon receiving new props and state.

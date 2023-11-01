@@ -7,13 +7,14 @@ import sys, os
 # We need this sys.path line for running this example, especially in VSCode debugger.
 sys.path.insert(0, os.path.join(sys.path[0], '..'))
 from edifice import App, Element, View, Label, Button
+from edifice.hooks import use_state, use_effect
 
 class MainComp(Element):
     def __init__(self):
         super().__init__()
 
     def render(self):
-        show, set_show = self.use_state(False)
+        show, set_show = use_state(False)
         if show:
             return View()(
                 Button(
@@ -39,7 +40,7 @@ class TestComp(Element):
 
         print("TestComp instance " + str(id(self)))
 
-        x, x_setter = self.use_state(0)
+        x, x_setter = use_state(0)
 
         def setup():
             print("effect setup")
@@ -47,7 +48,7 @@ class TestComp(Element):
                 print("effect cleanup")
                 pass
             return cleanup
-        self.use_effect(setup, x)
+        use_effect(setup, x)
 
         return View(
             style={

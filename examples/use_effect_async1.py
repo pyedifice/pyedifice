@@ -7,13 +7,14 @@ import sys, os
 # We need this sys.path line for running this example, especially in VSCode debugger.
 sys.path.insert(0, os.path.join(sys.path[0], '..'))
 from edifice import App, Element, View, Label, Button
+from edifice.hooks import use_state, use_async
 
 class MainComp(Element):
     def __init__(self):
         super().__init__()
 
     def render(self):
-        show, set_show = self.use_state(False)
+        show, set_show = use_state(False)
         if show:
             return View(
                 style={
@@ -47,9 +48,9 @@ class TestComp(Element):
 
         print("TestComp instance " + str(id(self)))
 
-        x, x_setter = self.use_state(0)
+        x, x_setter = use_state(0)
 
-        result, result_set = self.use_state("")
+        result, result_set = use_state("")
 
         async def fetch():
             print("async effect")
@@ -71,7 +72,7 @@ class TestComp(Element):
             print(result)
             result_set(result_line)
 
-        self.use_async(fetch, x)
+        use_async(fetch, x)
 
         def fetch10(event):
             for i in range(x, x+10):
