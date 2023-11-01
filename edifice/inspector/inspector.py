@@ -15,8 +15,11 @@ class InspectorElement(ed.Element):
 
 class ElementLabel(InspectorElement):
 
-    @ed.register_props
     def __init__(self, root, on_click):
+        self.register_props({
+            "root": root,
+            "on_click": on_click,
+        })
         super().__init__()
 
     def should_update(self, newprops, newstate):
@@ -35,8 +38,13 @@ class ElementLabel(InspectorElement):
 
 class Collapsible(InspectorElement):
 
-    @ed.register_props
     def __init__(self, collapsed, on_click, root, toggle):
+        self.register_props({
+            "collapsed": collapsed,
+            "on_click": on_click,
+            "root": root,
+            "toggle": toggle,
+        })
         super().__init__()
 
     def should_update(self, newprops, newstate):
@@ -60,8 +68,14 @@ class Collapsible(InspectorElement):
 
 class TreeView(InspectorElement):
 
-    @ed.register_props
     def __init__(self, root, on_click, load_fun, must_refresh, initial_collapsed=False):
+        self.register_props({
+            "root": root,
+            "on_click": on_click,
+            "load_fun": load_fun,
+            "must_refresh": must_refresh,
+            "initial_collapsed": initial_collapsed,
+        })
         super().__init__()
         self.collapsed = initial_collapsed
         # We load children of the tree lazily, because the component tree can get pretty large!
@@ -115,8 +129,10 @@ class TreeView(InspectorElement):
 
 class StateView(InspectorElement):
 
-    @ed.register_props
     def __init__(self, component):
+        self.register_props({
+            "component": component,
+        })
         super().__init__()
 
     def render(self):
@@ -130,8 +146,10 @@ class StateView(InspectorElement):
 
 class PropsView(InspectorElement):
 
-    @ed.register_props
     def __init__(self, props):
+        self.register_props({
+            "props": props,
+        })
         super().__init__()
 
     def render(self):
@@ -147,8 +165,10 @@ class PropsView(InspectorElement):
 
 class ElementView(InspectorElement):
 
-    @ed.register_props
     def __init__(self, component):
+        self.register_props({
+            "component": component,
+        })
         super().__init__()
 
     def render(self):
@@ -161,11 +181,12 @@ class ElementView(InspectorElement):
             pass
         heading_style = {"font-size": "16px", "margin": 10, "margin-bottom": 0}
 
+        assert module is not None
         return ed.View(layout="column", style={"align": "top", "min-width": 450, "min-height": 450})(
             ed.Label(component.__class__.__name__,
                      selectable=True,
                      style={"font-size": "20px", "margin": 10}).set_key("class_name"),
-            ed.Label("Class defined in " + module.__file__ + ":" + str(lineno),
+            ed.Label("Class defined in " + str(module.__file__) + ":" + str(lineno),
                      selectable=True,
                      style={"margin-left": 10}).set_key("file"),
             ed.Label("Props", style=heading_style).set_key("props_header"),
@@ -177,8 +198,12 @@ class ElementView(InspectorElement):
 
 class Inspector(InspectorElement):
 
-    @ed.register_props
     def __init__(self, component_tree, root_component, refresh):
+        self.register_props({
+            "component_tree": component_tree,
+            "root_component": root_component,
+            "refresh": refresh,
+        })
         super().__init__()
         self.selected = None
         self.component_tree = component_tree

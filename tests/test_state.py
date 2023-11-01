@@ -99,8 +99,10 @@ class StateValueTestCase(unittest.TestCase):
 
         class InnerComp(component.Element):
 
-            @component.register_props
             def __init__(self, val):
+                self.register_props({
+                    "val": val,
+                })
                 super().__init__()
 
             def render(self):
@@ -108,6 +110,9 @@ class StateValueTestCase(unittest.TestCase):
                 return base_components.Label(self.props.val)
 
         class TestComp(component.Element):
+
+            def __init___(self):
+                super().__init__()
 
             def render(self):
                 if not hasattr(self, "render_called_count"):

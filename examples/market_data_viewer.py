@@ -25,7 +25,7 @@ stylesheet = ed.PropsDict(dict(
         "align": "left",
     },
     play_button={
-        "width": "50px", 
+        "width": "50px",
         "height": "25px",
         "left": 150,
         "margin-left": "5px"
@@ -34,8 +34,13 @@ stylesheet = ed.PropsDict(dict(
 
 class PriceLevel(ed.Element):
 
-    @ed.register_props
     def __init__(self, price, size, side, last=False):
+        self.register_props({
+            "price": price,
+            "size": size,
+            "side": side,
+            "last": last,
+        })
         super().__init__()
 
     def render(self):
@@ -65,8 +70,10 @@ class PriceLevel(ed.Element):
 
 class Book(ed.Element):
 
-    @ed.register_props
     def __init__(self, book):
+        self.register_props({
+            "book": book,
+        })
         pass
 
     def render(self):

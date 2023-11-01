@@ -152,9 +152,10 @@ By making components modular, you can reuse them in your application and across 
             self.set_state(items=self.items + [new_item])
 
     class TodoList(edifice.Element):
-        @edifice.register_props
         def __init__(self, items):
-            pass
+            self.register_props({
+                "items": items,
+            })
 
         def render(self):
             return ScrollView()(
@@ -278,4 +279,3 @@ Indices and tables
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
-

@@ -5,7 +5,7 @@ else:
     from PySide6.QtWidgets import QGridLayout, QWidget
 
 from .._component import Element
-from ..base_components import QtWidgetElement, register_props
+from ..base_components import QtWidgetElement
 
 def TableChildren(children: list[list[Element]]) -> list[Element]:
     """
@@ -81,7 +81,6 @@ class TableGridView(QtWidgetElement):
 
     """
 
-    @register_props
     def __init__(
             self,
             row_stretch : list[int] = [], # noqa: B006
@@ -90,6 +89,13 @@ class TableGridView(QtWidgetElement):
             column_minwidth : list[int] = [], # noqa: B006
             **kwargs,
         ):
+        self.register_props({
+            "row_stretch": row_stretch,
+            "column_stretch": column_stretch,
+            "row_minheight": row_minheight,
+            "column_minwidth": column_minwidth,
+        })
+        self.register_props(kwargs)
         self.underlying = None
         self._widget_children_dict = {}
         self._row_stretch = row_stretch

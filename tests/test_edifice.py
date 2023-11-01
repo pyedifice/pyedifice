@@ -72,9 +72,12 @@ class TestReference(unittest.TestCase):
 
 class _TestElementInner(component.Element):
 
-    @component.register_props
     def __init__(self, prop_a):
+        self.register_props({
+            "prop_a": prop_a,
+        })
         self.state_a = "A"
+        super().__init__()
 
     def render(self):
         return base_components.View()(
@@ -96,11 +99,11 @@ class _TestElementOuter(component.Element):
         )
     """
 
-    @component.register_props
     def __init__(self):
         self.state_a = "A"
         self.state_b = "B"
         self.state_c = "C"
+        super().__init__()
 
     def render(self):
         return base_components.View()(
@@ -286,9 +289,12 @@ class RenderTestCase(unittest.TestCase):
     def test_one_child_rerender(self):
         class TestCompInner(component.Element):
 
-            @component.register_props
             def __init__(self, val):
+                self.register_props({
+                    "val": val,
+                })
                 self.count = 0
+                super().__init__()
 
             def render(self):
                 self.count += 1
@@ -315,8 +321,11 @@ class RenderTestCase(unittest.TestCase):
     def test_render_exception(self):
         class TestCompInner1(component.Element):
 
-            @component.register_props
             def __init__(self, val):
+                self.register_props({
+                    "val": val,
+                })
+                super().__init__()
                 self.count = 0
                 self.success_count = 0
 
@@ -327,8 +336,11 @@ class RenderTestCase(unittest.TestCase):
 
         class TestCompInner2(component.Element):
 
-            @component.register_props
             def __init__(self, val):
+                self.register_props({
+                    "val": val,
+                })
+                super().__init__()
                 self.count = 0
                 self.success_count = 0
 
@@ -372,8 +384,11 @@ class RefreshClassTestCase(unittest.TestCase):
     def test_refresh_child(self):
         class OldInnerClass(component.Element):
 
-            @component.register_props
             def __init__(self, val):
+                self.register_props({
+                    "val": val,
+                })
+                super().__init__()
                 self.count = 0
                 self.will_unmount = unittest.mock.MagicMock()
 
@@ -383,8 +398,11 @@ class RefreshClassTestCase(unittest.TestCase):
 
         class NewInnerClass(component.Element):
 
-            @component.register_props
             def __init__(self, val):
+                self.register_props({
+                    "val": val,
+                })
+                super().__init__()
                 self.count = 0
 
             def render(self):
@@ -393,8 +411,8 @@ class RefreshClassTestCase(unittest.TestCase):
 
         class OuterClass(component.Element):
 
-            @component.register_props
             def __init__(self):
+                super().__init__()
                 self.count = 0
 
             def render(self):
@@ -418,8 +436,11 @@ class RefreshClassTestCase(unittest.TestCase):
     def test_refresh_child_error(self):
         class OldInnerClass(component.Element):
 
-            @component.register_props
             def __init__(self, val):
+                self.register_props({
+                    "val": val,
+                })
+                super().__init__()
                 self.count = 0
                 self.will_unmount = unittest.mock.MagicMock()
 
@@ -429,8 +450,11 @@ class RefreshClassTestCase(unittest.TestCase):
 
         class NewInnerClass(component.Element):
 
-            @component.register_props
             def __init__(self, val):
+                self.register_props({
+                    "val": val,
+                })
+                super().__init__()
                 self.count = 0
 
             def render(self):
@@ -440,8 +464,8 @@ class RefreshClassTestCase(unittest.TestCase):
 
         class OuterClass(component.Element):
 
-            @component.register_props
             def __init__(self):
+                super().__init__()
                 self.count = 0
 
             def render(self):

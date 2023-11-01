@@ -6,11 +6,15 @@ from edifice.inspector import inspector
 
 class ElementB(edifice.Element):
 
-    @edifice.register_props
     def __init__(self, a, b, c):
+        self.register_props({
+            "a": a,
+            "b": b,
+            "c": c,
+        })
         super().__init__()
         self.state = 0
-    
+
     def render(self):
         return edifice.Label("Test")
 

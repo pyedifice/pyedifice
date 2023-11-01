@@ -2,7 +2,6 @@ import edifice as ed
 
 class KeyboardEvents(ed.Element):
 
-    @ed.register_props
     def __init__(self):
         self.text = ""
 
@@ -14,4 +13,3 @@ class KeyboardEvents(ed.Element):
         return ed.View(on_key_down=self.key_down)(
             ed.Label(self.text)
         )
-

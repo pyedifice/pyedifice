@@ -10,7 +10,6 @@ else:
     import PySide6.QtGui as QtGui
     import PySide6.QtWidgets as QtWidgets
 
-from .._component import register_props
 from ..base_components import QtWidgetElement, _image_descriptor_to_pixmap
 
 class ScaledLabel(QtWidgets.QLabel):
@@ -49,8 +48,11 @@ class ImageAspect(QtWidgetElement):
         src: either the path to the image, or an np array. The np array must be 3 dimensional (height, width, channels)
     """
 
-    @register_props
     def __init__(self, src: tp.Any = "", **kwargs):
+        self.register_props({
+            "src": src,
+        })
+        self.register_props(kwargs)
         super().__init__(**kwargs)
         self.underlying : ScaledLabel | None = None
 

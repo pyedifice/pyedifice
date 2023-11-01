@@ -29,8 +29,10 @@ def Bad(self, flag):
 
 class MockElement(component.Element):
 
-    @component.register_props
     def __init__(self, recursion_level):
+        self.register_props({
+            "recursion_level": recursion_level,
+        })
         super().__init__()
         self.will_unmount = unittest.mock.MagicMock()
         self.did_mount = unittest.mock.MagicMock()
@@ -57,7 +59,6 @@ class ElementLifeCycleTestCase(unittest.TestCase):
 
 class OtherMockElement(component.Element):
 
-    @component.register_props
     def __init__(self):
         super().__init__()
         class MockController(object):
@@ -66,7 +67,6 @@ class OtherMockElement(component.Element):
 
 class MockBrokenElement(component.Element):
 
-    @component.register_props
     def __init__(self):
         super().__init__()
         class MockController(object):

@@ -5,6 +5,8 @@ import inspect
 import typing as tp
 from typing_extensions import Self
 import threading
+import traceback
+from sys import stderr
 
 _CommandType = tp.Tuple[tp.Callable[..., None], ...]
 """
@@ -608,8 +610,12 @@ def component(f: Callable[tp.Concatenate[C,P], None]) -> Callable[P,Element]:
     a :code:`render` function. Creating a :class:`Element` class results in a lot of boiler plate code::
 
         class MySimpleComp(Element):
-            @register_props
             def __init__(self, prop1, prop2, prop3):
+                self.register_props({
+                    "prop1": prop1,
+                    "prop2": prop2,
+                    "prop3": prop3,
+                })
                 super().__init__()
 
             def render(self):
@@ -685,60 +691,6 @@ def find_components(el: Element | list[Element]) -> set[Element]:
             for child in el:
                 elements |= find_components(child)
             return elements
-
-def register_props(f):
-    """Decorator for :class:`Element` :code:`__init__` method to record props.
-
-    This decorator will record all arguments (both vector and keyword arguments)
-    of the :code:`__init__` function as belonging to the props of the component.
-    It will call
-    :func:`Element.register_props <edifice.Element.register_props>` to
-    store these arguments in the
-    props field of the :class:`Element`.
-
-    Arguments that begin with an underscore will be ignored.
-
-    Example::
-
-        class MyElement(Element):
-
-            @register_props
-            def __init__(self, a, b=2, c="xyz", _d=None):
-                pass
-
-            def render(self):
-                return View()(
-                    Label(self.props.a),
-                    Label(self.props.b),
-                    Label(self.props.c),
-                )
-
-    :code:`MyElement(5, c="w")` will then have
-    :code:`props.a=5`, :code:`props.b=2`, and :code:`props.c="w"`.
-    :code:`props._d` is undefined.
-
-    Args:
-        f: the :code:`__init__` function of a :class:`Element` subclass
-    Returns:
-        decorated function
-
-    """
-    varnames: Iterable[str] = f.__code__.co_varnames[1:]
-    signature = inspect.signature(f).parameters
-    defaults = {
-        k: v.default for k, v in signature.items() if v.default is not inspect.Parameter.empty and k[0] != "_"
-    }
-
-    @functools.wraps(f)
-    def func(self, *args, **kwargs):
-        name_to_val = defaults.copy()
-        name_to_val.update(filter(not_ignored, zip(varnames, args, strict=False)))
-        name_to_val.update(((k, v) for (k, v) in kwargs.items() if k[0] != "_"))
-        self.register_props(name_to_val)
-        Element.__init__(self)
-        f(self, *args, **kwargs)
-
-    return func
 
 @component
 def Container(self):

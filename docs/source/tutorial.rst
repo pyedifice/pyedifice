@@ -215,8 +215,8 @@ it for each measurement pair, we can factor out the conversion logic into its ow
 
     class ConversionWidget(ed.Element):
 
-        @ed.register_props
         def __init__(self, from_unit, to_unit, factor):
+            self.register_props(...)
             super().__init__()
             self.current_text = "0.0"
 

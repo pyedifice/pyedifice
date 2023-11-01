@@ -2,7 +2,6 @@ import edifice as ed
 
 class MouseEvents(ed.Element):
 
-    @ed.register_props
     def __init__(self):
         self.pos = (0, 0)
         self.entered = False
@@ -23,4 +22,3 @@ class MouseEvents(ed.Element):
             ed.Label("Pressed" if self.pressed else ""),
             ed.Label(self.pos),
         )
-

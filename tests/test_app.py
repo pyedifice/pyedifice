@@ -42,7 +42,6 @@ class IntegrationTestCase(unittest.TestCase):
     def test_widget_creation(self):
         class TestComp(component.Element):
 
-            @component.register_props
             def __init__(self):
                 super().__init__()
                 self.text = ""
@@ -79,8 +78,10 @@ class IntegrationTestCase(unittest.TestCase):
         observations_CompChild1: list[int] = []
 
         class TestComp(component.Element):
-            @component.register_props
             def __init__(self, state_value):
+                self.register_props({
+                    "state_value": state_value,
+                })
                 super().__init__()
             def render(self):
                 v = self.props.state_value.subscribe(self)
@@ -92,8 +93,10 @@ class IntegrationTestCase(unittest.TestCase):
                     return base_components.Label(text="unreachable")
 
         class CompChild1(component.Element):
-            @component.register_props
             def __init__(self, state_value):
+                self.register_props({
+                    "state_value": state_value,
+                })
                 super().__init__()
             def render(self):
                 v = self.props.state_value.subscribe(self)
@@ -105,8 +108,10 @@ class IntegrationTestCase(unittest.TestCase):
                 loop.call_soon(self.props.state_value.set, 2)
 
         class CompChild2(component.Element):
-            @component.register_props
             def __init__(self, state_value):
+                self.register_props({
+                    "state_value": state_value,
+                })
                 super().__init__()
             def render(self):
                 v = self.props.state_value.subscribe(self)

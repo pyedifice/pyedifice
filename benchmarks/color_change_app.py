@@ -5,8 +5,11 @@ import numpy as np
 
 class RecurseTree(ed.Element):
 
-    @ed.register_props
     def __init__(self, level, t):
+        self.register_props({
+            "level": level,
+            "t": t,
+        })
         super().__init__()
 
     def render(self):
@@ -26,8 +29,10 @@ class RecurseTree(ed.Element):
 
 class MainElement(ed.Element):
 
-    @ed.register_props
     def __init__(self, level=2):
+        self.register_props({
+            "level": level,
+        })
         super().__init__()
         self.t = 5
 

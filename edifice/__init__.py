@@ -16,8 +16,8 @@ The external properties, **props**, are passed into the Element by another
 Element::
 
     class Foo(Element):
-        @edifice.register_props  # don't worry about this for now
         def __init__(self, a, b, c):  # a, b, c are the props
+            self.register_props({"a": a, "b": b, "c": c})  # don't worry about this for now
             pass
 
     Foo(a=1, b=2, c=3)  # Create a Foo with props a=1, b=2, c=3.
@@ -150,7 +150,7 @@ Some useful utilities are also provided:
 """
 
 
-from ._component import PropsDict, Element, component, register_props, Reference
+from ._component import PropsDict, Element, component, Reference
 from .state import StateValue, StateManager
 from .app import App
 from .base_components import *

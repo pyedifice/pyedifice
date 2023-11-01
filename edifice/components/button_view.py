@@ -10,7 +10,7 @@ else:
     from PySide6.QtGui import QKeyEvent, QMouseEvent
     from PySide6.QtWidgets import QPushButton, QVBoxLayout, QHBoxLayout
 
-from ..base_components import View, register_props
+from ..base_components import View
 
 class _PushButton(QPushButton):
     def __init__(self):
@@ -39,11 +39,15 @@ class ButtonView(View):
             the Spacebar or Enter key. Event type is either :code:`QMouseEvent` or :code:`QKeyEvent`.
             Use either this or :code:`on_click`, not both.
     """
-    @register_props
     def __init__(self,
             layout: str = "row",
             on_trigger: tp.Callable[[QKeyEvent], None] | tp.Callable[[QMouseEvent], None] | None = None,
             **kwargs):
+        self.register_props({
+            "layout": layout,
+            "on_trigger": on_trigger,
+        })
+        self.register_props(kwargs)
         super().__init__(layout, **kwargs)
 
     def _initialize(self):

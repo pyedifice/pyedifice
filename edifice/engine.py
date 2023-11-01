@@ -176,7 +176,7 @@ class RenderResult(object):
 
 
 class RenderEngine(object):
-    __slots__ = ("_component_tree", "_widget_tree", "_root", "_app", "_hook_state")
+    __slots__ = ("_component_tree", "_widget_tree", "_root", "_app")
 
     def __init__(self, root, app=None):
         self._component_tree = {}
@@ -205,8 +205,6 @@ class RenderEngine(object):
         component.will_unmount()
         del self._component_tree[component]
         del self._widget_tree[component]
-        if component in self._hook_state:
-            del self._hook_state[component]
 
     def _refresh_by_class(self, classes) -> RenderResult:
         # Algorithm:

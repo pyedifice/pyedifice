@@ -14,7 +14,6 @@ else:
     from PySide6.QtCore import QMargins, QPoint, QRect, QSize, Qt
     from PySide6.QtWidgets import QLayout, QSizePolicy, QWidget
 
-from .._component import register_props
 from ..base_components import _LinearView
 
 
@@ -142,8 +141,8 @@ class FlowView(_LinearView):
     wrap flex container <https://developer.mozilla.org/en-US/docs/Web/CSS/flex-wrap>`_.
     """
 
-    @register_props
     def __init__(self, **kwargs):
+        self.register_props(kwargs)
         super().__init__(**kwargs)
         self.underlying = None
 

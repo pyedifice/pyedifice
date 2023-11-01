@@ -12,8 +12,12 @@ def str_to_float(s):
 
 class ConversionWidget(ed.Element):
 
-    @ed.register_props
     def __init__(self, from_unit, to_unit, factor):
+        self.register_props({
+            "from_unit": from_unit,
+            "to_unit": to_unit,
+            "factor": factor,
+        })
         super().__init__()
         self.current_text = "0.0"
 
