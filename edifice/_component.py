@@ -191,13 +191,7 @@ class Tracker:
     def collect(self) -> list["Element"]:
         children = set()
         for child in self.children:
-            child_parent = getattr(child, "tracker", None)
-            # Ensure that the child element still has us as its parent tracker.
-            # I don't know if this is necessary, but I'd rather do this check
-            # than have a potential bug with inconsistent tracker - child
-            # pointers.
-            if child_parent is self:
-                children |= find_components(child) - {child}
+            children |= find_components(child) - {child}
         return [child for child in self.children if child not in children]
 
 class RenderContextProtocol(tp.Protocol):
@@ -328,19 +322,15 @@ class Element:
         super().__setattr__("_edifice_internal_references", set())
         if not hasattr(self, "_props"):
             self._props = {"children": []}
+        # Ensure we only construct this element once
+        assert getattr(self, "_initialized", False) == False
+        self._initialized = True
         ctx = get_render_context_maybe()
         if ctx is not None:
             trackers = ctx.trackers
             if len(trackers) > 0:
                 parent = trackers[-1]
-                old_tracker = getattr(self, "tracker", None)
-                # If we've already added ourself to the parent
-                # before, don't add us again. This causes the parent
-                # to contain multiple children (us) even though we just
-                # exist once.
-                if old_tracker is not parent:
-                    parent.append_child(self)
-                self.tracker = parent
+                parent.append_child(self)
 
     def __enter__(self: Self) -> Self:
         ctx = get_render_context()
