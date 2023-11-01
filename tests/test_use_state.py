@@ -17,7 +17,6 @@ class IntegrationTestCase(unittest.TestCase):
 
     def test_use_state1(self):
 
-        testcase = self
 
         class Wrapper(Element):
             def __init__(self):

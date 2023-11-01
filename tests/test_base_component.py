@@ -113,7 +113,7 @@ class StyleTestCase(unittest.TestCase):
                 "align": align,
             }
             comp = MockElement(style=style)
-            commands = comp._gen_styling_commands([], style, None, None)
+            comp._gen_styling_commands([], style, None, None)
             self.assertTrue("align" not in style)
             self.assertEqual(style["qproperty-alignment"], qt_align)
 
@@ -130,7 +130,7 @@ class StyleTestCase(unittest.TestCase):
         }
         comp = MockElement(style=style)
         comp._size_from_font = None
-        commands = comp._gen_styling_commands([], style, None, None)
+        comp._gen_styling_commands([], style, None, None)
         self.assertEqual(style["font-size"], "12px")
 
     def test_top_left(self):
@@ -164,7 +164,7 @@ class WidgetTreeTestCase(unittest.TestCase):
         assert qt_button is not None
         style = qt_button.style()
         assert style is not None
-        font_size = qt_button.font().pointSize()
+        qt_button.font().pointSize()
         self.assertCountEqual(
             commands,
             [(qt_button.setText, button_str), (qt_button.setStyleSheet, "QWidget#%s{}" % id(button)),
@@ -247,7 +247,7 @@ class WidgetTreeTestCase(unittest.TestCase):
         with engine._storage_manager() as manager:
             commands = view_tree.gen_qt_commands(MockRenderContext(manager, eng))
 
-        font_size = label1.underlying.font().pointSize()
+        label1.underlying.font().pointSize()
 
         self.assertCountEqual(commands, label1_commands + [
             (view.underlying.setStyleSheet, "QWidget#%s{}" % id(view)),

@@ -1,5 +1,4 @@
 from collections import OrderedDict
-import os
 
 import unittest
 import unittest.mock
@@ -30,7 +29,7 @@ class MockApp(object):
 
     def _request_rerender(self, components, newstate=None):
         self.render_count += 1
-        render_result = self._render_engine._request_rerender(components)
+        self._render_engine._request_rerender(components)
 
 
 class TopologicalUpdateTestCase(unittest.TestCase):
@@ -85,7 +84,7 @@ class StateValueTestCase(unittest.TestCase):
 
         test_comp = TestComp()
         app = MockApp(test_comp)
-        render_result = app._request_rerender([test_comp])
+        app._request_rerender([test_comp])
         self.assertEqual(test_comp.render_called_count, 1)
         self.assertEqual(test_comp.value, 2)
 
@@ -123,7 +122,7 @@ class StateValueTestCase(unittest.TestCase):
 
         test_comp = TestComp()
         app = MockApp(test_comp)
-        render_result = app._request_rerender([test_comp])
+        app._request_rerender([test_comp])
         inner_comp = app._render_engine._component_tree[test_comp]
         self.assertEqual(test_comp.render_called_count, 1)
         self.assertEqual(test_comp.value, 2)
@@ -184,7 +183,7 @@ class StateManagerTestCase(unittest.TestCase):
 
         test_comp = TestComp()
         app = MockApp(test_comp)
-        render_result = app._request_rerender([test_comp])
+        app._request_rerender([test_comp])
 
         test_comp1, test_comp2 = extract_inner_components(test_comp)
 
@@ -267,7 +266,7 @@ class StateManagerTestCase(unittest.TestCase):
 
         test_comp = TestComp()
         app = MockApp(test_comp)
-        render_result = app._request_rerender([test_comp])
+        app._request_rerender([test_comp])
 
         test_comp1, test_comp2 = extract_inner_components(test_comp)
 

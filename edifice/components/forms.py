@@ -10,7 +10,7 @@ if QT_VERSION == "PyQt6":
 else:
     from PySide6 import QtWidgets
 
-from .._component import Element, RootElement
+from .._component import Element
 from ..state import StateManager
 from .. import base_components as ed
 

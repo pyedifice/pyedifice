@@ -190,7 +190,7 @@ class RenderTestCase(unittest.TestCase):
 
         component.state_a = "AChanged"
         render_result = app._request_rerender([component])
-        new_qt_tree = render_result.trees[0]
+        render_result.trees[0]
         qt_commands = render_result.commands
         # TODO: Make it so that only the label (0, 0) needs to update!
         expected_commands = [(qt_tree._dereference([0, 0]).component.underlying.setText, "AChanged")]
@@ -204,7 +204,7 @@ class RenderTestCase(unittest.TestCase):
 
         component.state_c = "CChanged"
         render_result = app._request_rerender([component])
-        new_qt_tree = render_result.trees[0]
+        render_result.trees[0]
         qt_commands = render_result.commands
         expected_commands = [(qt_tree._dereference([2]).component.underlying.setText, "CChanged")]
         self.assertEqual(qt_commands, expected_commands)
@@ -240,8 +240,8 @@ class RenderTestCase(unittest.TestCase):
         render_result = app._request_rerender([component])
         qt_tree = render_result.trees[0]
         qt_commands = render_result.commands
-        old_child0 = qt_tree.children[0].component
-        old_child2 = qt_tree.children[2].component
+        qt_tree.children[0].component
+        qt_tree.children[2].component
 
         component.state = ["C", "B", "A"]
         render_result = app._request_rerender([component])
@@ -307,13 +307,13 @@ class RenderTestCase(unittest.TestCase):
         test_comp = TestCompOuter()
         test_comp.value = 2
         app = engine.RenderEngine(test_comp)
-        render_result = app._request_rerender([test_comp])
+        app._request_rerender([test_comp])
         inner_comp = app._component_tree[app._component_tree[test_comp]][0]
         self.assertEqual(inner_comp.count, 1)
         self.assertEqual(inner_comp.props.val, 2)
 
         test_comp.value = 4
-        render_result = app._request_rerender([test_comp])
+        app._request_rerender([test_comp])
         inner_comp = app._component_tree[app._component_tree[test_comp]][0]
         self.assertEqual(inner_comp.count, 2)
         self.assertEqual(inner_comp.props.val, 4)
@@ -360,7 +360,7 @@ class RenderTestCase(unittest.TestCase):
         test_comp = TestCompOuter()
         test_comp.value = 2
         app = engine.RenderEngine(test_comp)
-        render_result = app._request_rerender([test_comp])
+        app._request_rerender([test_comp])
         inner_comp1, inner_comp2 = app._component_tree[app._component_tree[test_comp]]
         self.assertEqual(inner_comp1.count, 1)
         self.assertEqual(inner_comp1.props.val, 4)
@@ -369,7 +369,7 @@ class RenderTestCase(unittest.TestCase):
 
         test_comp.value = 3
         try:
-            render_result = app._request_rerender([test_comp])
+            app._request_rerender([test_comp])
         except AssertionError:
             pass
         inner_comp1, inner_comp2 = app._component_tree[app._component_tree[test_comp]]

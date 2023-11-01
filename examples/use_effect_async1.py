@@ -56,13 +56,10 @@ class TestComp(Element):
             print("async effect")
             # https://docs.python.org/3/library/asyncio-stream.html#get-http-headers
             reader,writer = await asyncio.open_connection("www.google.com", 443, ssl=True)
-            query_incomplete = (
-                f"HEAD / HTTP/1.0\r\n"
-            )
             query = (
-                f"HEAD / HTTP/1.0\r\n"
-                f"Host: www.google.com\r\n"
-                f"\r\n"
+                "HEAD / HTTP/1.0\r\n"
+                "Host: www.google.com\r\n"
+                "\r\n"
             )
             writer.write(query.encode('latin-1'))
             line = await reader.readline()

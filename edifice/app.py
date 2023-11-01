@@ -247,7 +247,6 @@ class App(object):
         """
         self._request_rerender([self._root], {})
         def _make_widget_helper(comp):
-            widget = self._render_engine._widget_tree[comp].component
             try:
                 underlying = comp.underlying
             except AttributeError:

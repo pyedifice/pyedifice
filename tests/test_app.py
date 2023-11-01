@@ -102,7 +102,7 @@ class IntegrationTestCase(unittest.TestCase):
                 v = self.props.state_value.subscribe(self)
                 observations_CompChild1.append(v)
                 return base_components.Label(text="child1")
-                loop = asyncio.get_running_loop()
+                asyncio.get_running_loop()
             def did_render(self):
                 loop = asyncio.get_running_loop()
                 loop.call_soon(self.props.state_value.set, 2)
@@ -114,7 +114,7 @@ class IntegrationTestCase(unittest.TestCase):
                 })
                 super().__init__()
             def render(self):
-                v = self.props.state_value.subscribe(self)
+                self.props.state_value.subscribe(self)
                 return base_components.Label(text="child2")
             def did_render(self):
                 loop = asyncio.get_running_loop()
