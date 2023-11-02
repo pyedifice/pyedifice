@@ -122,17 +122,7 @@ class App(object):
             self.app : QtWidgets.QApplication = qapplication
 
         if mount_into_window:
-            if isinstance(component, BaseElement):
-                rendered_component = component
-            else:
-                # Create a temporary RenderEngine to render the root component
-                window_engine = RenderEngine(component, self)
-                window_engine._request_rerender([component])
-                rendered_component = window_engine._widget_tree[component]
-            if isinstance(rendered_component, RootElement):
-                self._root = RootElement()(component)
-            else:
-                self._root = Window()(component)
+            self._root = Window()(component)
         else:
             self._root = component
         self._render_engine = RenderEngine(self._root, self)
