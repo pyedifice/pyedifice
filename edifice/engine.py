@@ -61,29 +61,23 @@ def _try_neq(a, b):
 
 
 class _RenderContext(object):
-    """Encapsulates various state that's needed for rendering."""
+    """
+    Encapsulates various state that's needed for rendering.
+
+    One _RenderContext is created when a render begins, and it is destroyed
+    at the end of the render.
+    """
     __slots__ = ("storage_manager", "need_qt_command_reissue", "component_to_old_props",
                  "force_refresh", "component_tree", "widget_tree", "enqueued_deletions",
                  "trackers", "_callback_queue", "component_parent",
-                 "engine", "_hook_state_index", "_hook_effect_index", "_hook_async_index",
+                 "engine",
                  "current_element",
                  )
     trackers: list[Tracker]
-    _hook_state_index: int
-    """
-    The index of the next _hook_state referred to by use_state() in render().
-    """
-    _hook_effect_index: int
-    """
-    The index of the next _hook_effect_cleanup, _hook_effect_dependencies referred
-    to by use_effect() in render().
-    """
-    _hook_async_index: int
-    """
-    The index of the next _hook_async_task, _hook_async_dependencies referred
-    to by use_async() in render().
-    """
     current_element: Element | None
+    """
+    The Element currently being rendered.
+    """
     def __init__(
         self,
         storage_manager: _ChangeManager,
@@ -105,9 +99,6 @@ class _RenderContext(object):
 
         self.trackers = []
 
-        self._hook_state_index = 0
-        self._hook_effect_index = 0
-        self._hook_async_index = 0
 
         self.current_element = None
 
@@ -151,26 +142,27 @@ class _RenderContext(object):
         ]:
         element = self.current_element
         assert element is not None
-        hook_state = self.engine._hook_state[element]
+        hooks = self.engine._hook_state[element]
 
-        if len(hook_state) <= self._hook_state_index:
+        h_index = element._hook_state_index
+        element._hook_state_index += 1
+
+        if len(hooks) <= h_index:
             # then this is the first render
-            hook_state.append(_HookState(initial_state))
-
-        h_index = self._hook_state_index
-        self._hook_state_index += 1
+            hook = _HookState(initial_state)
+            hooks.append(hook)
+        else:
+            hook = hooks[h_index]
 
         def setter(x):
-            if x != hook_state[h_index].state:
-                hook_state[h_index].state = x
+            if x != hook.state:
+                hook.state = x
                 # FIXME: delay rerendering (all components) until the end of the render
                 app = self.engine._app
                 assert app is not None
                 app._request_rerender([element], {})
 
-        val = hook_state[h_index].state
-
-        return (val, setter)
+        return (hook.state, setter)
 
     def use_effect(
         self,
@@ -179,32 +171,32 @@ class _RenderContext(object):
     ) -> None:
         element = self.current_element
         assert element is not None
-        hook_effect = self.engine._hook_effect[element]
+        hooks = self.engine._hook_effect[element]
 
-        h_index = self._hook_effect_index
-        self._hook_effect_index += 1
+        h_index = element._hook_effect_index
+        element._hook_effect_index += 1
 
-        if len(hook_effect) <= h_index:
+        if len(hooks) <= h_index:
             # then this is the first render
-            effect = _HookEffect(None, dependencies)
-            hook_effect.append(effect)
-
+            hook = _HookEffect(None, dependencies)
+            hooks.append(hook)
             try:
                 cleanup = setup()
-                effect.cleanup = cleanup
+                hook.cleanup = cleanup
             except Exception as ex:
-                effect.cleanup = None
+                hook.cleanup = None
                 raise ex
 
-        elif dependencies != hook_effect[h_index].dependencies:
+        elif ((hook := hooks[h_index]).dependencies != dependencies):
+            # then this is not the first render and deps changed
             try:
-                cleanup_old = hook_effect[h_index].cleanup
+                cleanup_old = hook.cleanup
                 if cleanup_old is not None:
                     cleanup_old()
                 cleanup_new = setup()
-                hook_effect[h_index].cleanup = cleanup_new
+                hook.cleanup = cleanup_new
             except Exception as ex:
-                hook_effect[h_index].cleanup = None
+                hook.cleanup = None
                 raise ex
 
     def use_async(
@@ -214,47 +206,42 @@ class _RenderContext(object):
     ) -> None:
         element = self.current_element
         assert element is not None
-        hook_async = self.engine._hook_async[element]
 
-        h_index = self._hook_async_index
-        self._hook_async_index += 1
+        hooks = self.engine._hook_async[element]
+        h_index = element._hook_async_index
+        element._hook_async_index += 1
 
         def done_callback(_):
             # We might be unmounting at this time but I think that's okay.
-            hook_async[h_index].task = None
-            if len(hook_async[h_index].queue) > 0:
+            hooks[h_index].task = None
+            if len(hooks[h_index].queue) > 0:
                 # There is another async task waiting in the queue
-                task = asyncio.create_task(hook_async[h_index].queue.pop(0)())
-                hook_async[h_index].task = task
+                task = asyncio.create_task(hooks[h_index].queue.pop(0)())
+                hooks[h_index].task = task
                 task.add_done_callback(done_callback)
 
-        if len(hook_async) <= h_index:
+        if len(hooks) <= h_index:
             # then this is the first render.
-            hook_async.append(_HookAsync(
-                task=None,
+            hooks.append(_HookAsync(
+                task = asyncio.create_task(fn_coroutine()).add_done_callback(done_callback),
                 dependencies=dependencies,
                 queue=[],
             ))
-            task = asyncio.create_task(fn_coroutine()) # This can't throw right?
-            hook_async[h_index].task = task
-            task.add_done_callback(done_callback)
 
-        elif dependencies != hook_async[h_index].dependencies:
-            # then this is not the first render.
-
-            if (t := hook_async[h_index].task) is not None:
+        elif dependencies != (hook := hooks[h_index]).dependencies:
+            # then this is not the first render and deps changed
+            if hook.task is not None:
                 # There's already an old async effect in flight, so enqueue
                 # the new async effect and cancel the old async effect.
                 # We also want to cancel all of the other async effects
                 # in the queue, so the queue should have max len 1.
-                # Maybe queue should be type Optional instead of list?
-                hook_async[h_index].queue.clear()
-                hook_async[h_index].queue.append(fn_coroutine)
-                t.cancel()
+                # Maybe queue should be type Optional instead of list? That
+                # would be weird though.
+                hook.queue.clear()
+                hook.queue.append(fn_coroutine)
+                hook.task.cancel()
             else:
-                task = asyncio.create_task(fn_coroutine())
-                hook_async[h_index].task = task
-                task.add_done_callback(done_callback)
+                hook.task = asyncio.create_task(fn_coroutine()).add_done_callback(done_callback)
 
 class _WidgetTree(object):
     __slots__ = ("component", "children")
@@ -344,12 +331,13 @@ class _HookAsync:
     """
     queue: list[tp.Callable[[], Coroutine[None,None,None]]]
     """
-    The queue of waiting async effect tasks.
+    The queue of waiting async effect tasks. Max length 1.
     """
     dependencies: tp.Any
     """
     The dependencies of use_async().
     """
+
 
 class RenderEngine(object):
     """
@@ -361,13 +349,16 @@ class RenderEngine(object):
     )
     _hook_state: defaultdict[Element, list[_HookState]]
     """
-    The states of use_state().
+    The per-element hooks for use_state().
     """
     _hook_effect: defaultdict[Element, list[_HookEffect]]
     """
-    The hook state for use_effect().
+    The per-element hooks for use_effect().
     """
     _hook_async: defaultdict[Element, list[_HookAsync]]
+    """
+    The per-element hooks for use_async().
+    """
     def __init__(self, root, app=None):
         self._component_tree = {}
         """
@@ -378,8 +369,8 @@ class RenderEngine(object):
         self._root._edifice_internal_parent = None
         self._app = app
         self._hook_state = defaultdict(list)
-        self._hook_async = defaultdict(list)
         self._hook_effect = defaultdict(list)
+        self._hook_async = defaultdict(list)
 
     def _delete_component(self, component: Element, recursive: bool):
         # Delete component from render trees
@@ -629,14 +620,15 @@ class RenderEngine(object):
             return ret
 
         # Before the render, set the hooks indices to 0.
-        render_context._hook_state_index = 0
-        render_context._hook_effect_index = 0
-        render_context._hook_async_index = 0
+        component._hook_state_index = 0
+        component._hook_effect_index = 0
+        component._hook_async_index = 0
         # Call user provided render function and retrieve old results
         with Container() as container:
+            prev_element = render_context.current_element
             render_context.current_element = component
             sub_component = component.render()
-            render_context.current_element = None
+            render_context.current_element = prev_element
         # If the component.render() call evaluates to an Element
         # we use that as the sub_component the component renders as.
         if sub_component is None:
