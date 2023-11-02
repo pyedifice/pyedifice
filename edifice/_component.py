@@ -329,6 +329,12 @@ class Element:
     _edifice_internal_parent: tp.Optional["Element"] = None
     _controller: ControllerProtocol | None = None
     _edifice_internal_references: set[Reference] | None = None
+    _hook_state_index: int = 0
+    """use_state hook index for current render."""
+    _hook_effect_index: int = 0
+    """use_effect hook index for current render."""
+    _hook_async_index: int = 0
+    """use_async hook index for current render."""
 
     def __init__(self):
         super().__setattr__("_ignored_variables", set())
