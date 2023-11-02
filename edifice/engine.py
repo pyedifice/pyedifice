@@ -625,9 +625,10 @@ class RenderEngine(object):
         component._hook_async_index = 0
         # Call user provided render function and retrieve old results
         with Container() as container:
+            prev_element = render_context.current_element
             render_context.current_element = component
             sub_component = component.render()
-            render_context.current_element = None
+            render_context.current_element = prev_element
         # If the component.render() call evaluates to an Element
         # we use that as the sub_component the component renders as.
         if sub_component is None:
