@@ -1,42 +1,43 @@
 #
-# python -m edifice examples/flowview1.py FlowView1
+# python examples/flowview1.py
 #
 
+import os, sys
+# We need this sys.path line for running this example, especially in VSCode debugger.
+sys.path.insert(0, os.path.join(sys.path[0], '..'))
 import edifice as ed
 from edifice.components.flow_view import FlowView
 from edifice.components.button_view import ButtonView
 
-class FlowView1(ed.Element):
-
-    def __init__(self):
-        super().__init__()
-
-    def render(self):
-        def mkElement(j):
-            return ed.View(
+@ed.component
+def myComponent(self):
+    def mkElement(j):
+         with ed.View(
+            style={
+                "margin": 5
+            }
+        ):
+            with ButtonView(
                 style={
-                    "margin": 5
+                    "margin":5
                 }
-            )( ButtonView(
-                    style={
-                        "margin":5
-                    }
-                )(ed.Label(
+            ):
+                ed.Label(
                     text="<div style='font-size:20px'>Label " + chr(ord("🦄")+j) + "</>",
                     style={
                         "margin":5
                     }
-            )))
-        # return FlowView()(
-        #     *[mkElement(i) for i in range(100)]
-        return ed.View(
-          layout="column",
-          style={
-              "align":"center"
-              }
-        )(FlowView()(
-            *[mkElement(i) for i in range(100)]
-        ))
+                )
+    with ed.View(
+        layout="column",
+        style={
+            # We cannot align to center, it doesn't work with FlowView. TODO
+            # "align":"center"
+            }
+    ):
+        with FlowView():
+            for i in range(100):
+                mkElement(i)
 
 if __name__ == "__main__":
-    ed.App(FlowView1()).start()
+    ed.App(myComponent()).start()

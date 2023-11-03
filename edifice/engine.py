@@ -9,7 +9,7 @@ from textwrap import dedent
 from dataclasses import dataclass
 
 from ._component import (
-    BaseElement, Element, PropsDict, _CommandType, Tracker, local_state, Container,
+    BaseElement, Element, PropsDict, _CommandType, _Tracker, local_state, Container,
 )
 
 logger = logging.getLogger("Edifice")
@@ -73,11 +73,10 @@ class _RenderContext(object):
                  "engine",
                  "current_element",
                  )
-    trackers: list[Tracker]
+    trackers: list[_Tracker]
+    """Stack of _Tracker"""
     current_element: Element | None
-    """
-    The Element currently being rendered.
-    """
+    """The Element currently being rendered."""
     def __init__(
         self,
         storage_manager: _ChangeManager,
@@ -98,7 +97,6 @@ class _RenderContext(object):
         self.component_parent: Element | None = None
 
         self.trackers = []
-
 
         self.current_element = None
 
@@ -614,6 +612,7 @@ class RenderEngine(object):
         component._controller = self._app
         component._edifice_internal_parent = render_context.component_parent
         render_context.component_parent = component
+
         if isinstance(component, BaseElement):
             ret = self._render_base_component(component, render_context)
             render_context.component_parent = component._edifice_internal_parent

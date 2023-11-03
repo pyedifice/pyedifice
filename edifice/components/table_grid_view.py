@@ -1,26 +1,15 @@
+from typing_extensions import Self
+
 from ..qt import QT_VERSION
 if QT_VERSION == "PyQt6":
     from PyQt6.QtWidgets import QGridLayout, QWidget
 else:
     from PySide6.QtWidgets import QGridLayout, QWidget
 
-from .._component import Element
+from .._component import Element, BaseElement
 from ..base_components import QtWidgetElement
 
-def TableChildren(children: list[list[Element]]) -> list[Element]:
-    """
-    Convert a column list of row lists of :code:`Element` into the
-    children list for a :class:`TableGridView`.
-    """
-    children_ = []
-    for row, childrow in enumerate(children):
-        for column, child in enumerate(childrow):
-            # TODO _tablerowcolumn is terrible and we need a better solution.
-            child.__setattr__("_tablerowcolumn", (row,column))
-            children_.append(child)
-    return children_
-
-def _get_tablerowcolumn(c:Element):
+def _get_tablerowcolumn(c:Element) -> tuple[int,int]:
     """
     Sometimes it’s on the QtWidgetElement, sometimes on the Element’s _edifice_internal_parent.
 
@@ -32,7 +21,7 @@ def _get_tablerowcolumn(c:Element):
     else:
         return c._edifice_internal_parent.__getattribute__("_tablerowcolumn")
 
-def _get_key(c:Element, default:str = ""):
+def _get_key(c:Element, default:str = "") -> str:
     """
     Sometimes it’s on the QtWidgetElement, sometimes on the Element’s _edifice_internal_parent.
     """
@@ -55,6 +44,47 @@ def _childdict(children):
         d[(row,column,key)] = child.component
     return d
 
+class _TableGridViewRow(BaseElement):
+    """
+    Row Element of a :class:`TableGridView`.
+
+    This Element has no Qt instantiation.
+
+    Hooks cannot be used in this Element.
+    """
+
+    def __init__(self, tgv: "TableGridView"):
+        super().__init__()
+        self._table_grid_view: "TableGridView" = tgv
+        self._column_current: int = 0
+        """The current column in the context of the TableGridView render"""
+
+    def __enter__(self: Self) -> Self:
+        self._column_current = 0
+        return super().__enter__()
+
+    def __exit__(self, *args):
+        super().__exit__(args)
+        children = self._props.get("children", [])
+        for child in children:
+            child.__setattr__("_tablerowcolumn", (self._table_grid_view._row_current,self._column_current))
+            self._column_current += 1
+        self._table_grid_view._row_current += 1
+
+
+    def _qt_update_commands(
+        self,
+        children, # : list[_WidgetTree],
+        newprops,
+        newstate
+    ):
+        # This element has no Qt underlying so it has nothing to do except store
+        # the children of the row.
+        # The _qt_update_commands for TableGridView will render the children.
+        return []
+
+    # def render(self):
+
 class TableGridView(QtWidgetElement):
     """Table-style GridLayout widget. Displays its children as aligned rows of columns.
 
@@ -63,21 +93,33 @@ class TableGridView(QtWidgetElement):
     Each column will be the width of its widest child. Each row will be the
     height of its tallest child.
 
-    The children must be passed with the :func:`TableChildren` function as
-    a column list of row lists containing children.
+    The only type of child element allowed in a :class:`TableGridView` is
+    a pseudo-element returned by the :func:`row` method. The :func:`row`
+    psedo-element establishes a row in the table, and may have children of
+    any type.
 
     Example::
 
-        TableGridView()(*TableChildren([
-            [Label(text="row 0 column 0").set_key("k1"), Label(text="row 0 column 1").set_key("k2")],
-            [Label(text="row 1 column 0").set_key("k3"), Label(text="row 1 column 1").set_key("k4")],
-        ]))
+        with TableGridView() as tgv:
+            with tgv.row():
+                Label(text="row 0 column 0").set_key("a")
+                Label(text="row 0 column 1").set_key("b")
+            with tgv.row():
+                Label(text="row 1 column 0").set_key("c")
+                with ButtonView().set_key("d"):
+                    Label(text="row 1 column 1")
 
     Args:
-        row_stretch: See `setRowStretch <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGridLayout.html#PySide6.QtWidgets.PySide6.QtWidgets.QGridLayout.setRowStretch>`_
-        column_stretch: See `setColumnStretch <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGridLayout.html#PySide6.QtWidgets.PySide6.QtWidgets.QGridLayout.setColumnStretch>`_
-        row_minheight: See `setRowMinimumHeight <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGridLayout.html#PySide6.QtWidgets.PySide6.QtWidgets.QGridLayout.setRowMinimumHeight>`_
-        column_minwidth: See `setColumnMinimumWidth <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGridLayout.html#PySide6.QtWidgets.PySide6.QtWidgets.QGridLayout.setColumnMinimumWidth>`_
+        row_stretch: Rows stretch size in proportion to the corresponding
+            int in this list.
+            See `setRowStretch <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGridLayout.html#PySide6.QtWidgets.PySide6.QtWidgets.QGridLayout.setRowStretch>`_
+        column_stretch: Columns stretch size in proportion to the corresponding
+            int in this list.
+            See `setColumnStretch <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGridLayout.html#PySide6.QtWidgets.PySide6.QtWidgets.QGridLayout.setColumnStretch>`_
+        row_minheight: Row minimum height corresponding to the int in this list.
+            See `setRowMinimumHeight <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGridLayout.html#PySide6.QtWidgets.PySide6.QtWidgets.QGridLayout.setRowMinimumHeight>`_
+        column_minwidth: Column minimum width corresponding the int in this list.
+            See `setColumnMinimumWidth <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGridLayout.html#PySide6.QtWidgets.PySide6.QtWidgets.QGridLayout.setColumnMinimumWidth>`_
 
     """
 
@@ -98,11 +140,25 @@ class TableGridView(QtWidgetElement):
         self.register_props(kwargs)
         self.underlying = None
         self._widget_children_dict = {}
+        """Like _LinearView._widget_children"""
         self._row_stretch = row_stretch
         self._column_stretch = column_stretch
         self._row_minheight = row_minheight
         self._column_minwidth = column_minwidth
+        self._row_current: int = 0
+        """The current row in the context of the TableGridView render"""
         super().__init__(**kwargs)
+
+    def row(self):
+        return _TableGridViewRow(self)
+
+    def __enter__(self: Self) -> Self:
+        # Reset the current row to 0 for the current render.
+        self._row_current = 0
+        return super().__enter__()
+
+    def __exit__(self, *args):
+        super().__exit__(args)
 
     def _initialize(self):
         self.underlying = QWidget()
@@ -117,6 +173,7 @@ class TableGridView(QtWidgetElement):
             pass
 
     def _add_child(self, child_component, row:int, column:int):
+        # https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGridLayout.html#PySide6.QtWidgets.PySide6.QtWidgets.QGridLayout.addWidget
         self.underlying_layout.addWidget(child_component.underlying, row, column)
         if len(self._row_stretch) > row:
             self.underlying_layout.setRowStretch(row, self._row_stretch[row])
@@ -129,14 +186,30 @@ class TableGridView(QtWidgetElement):
 
     def _delete_child(self, child_component, row:int, column:int):
         layoutitem = self.underlying_layout.itemAtPosition(row, column)
-        layoutitem.widget().deleteLater()
+        assert layoutitem is not None
+        widget = layoutitem.widget()
+        assert widget is not None
+        widget.deleteLater()
         self.underlying_layout.removeItem(layoutitem)
 
-    def _qt_update_commands(self, children, newprops, newstate):
+    def _qt_update_commands(
+        self,
+        children, # : list[_WidgetTree],
+        newprops,
+        newstate
+    ):
         if self.underlying is None:
             self._initialize()
 
-        newchildren = _childdict(children)
+        # The direct children of this Element are TableGridViewRow_, but
+        # the TableGridViewRow_ doesn't have a Qt instantiation so we
+        # want to treat the TableGridViewRow_ children as the children of
+        # the TableGridView.
+        children_of_rows = list()
+        for c in children:
+            children_of_rows.extend(c.children)
+
+        newchildren = _childdict(children_of_rows)
 
         old_keys = self._widget_children_dict.keys()
         new_keys = newchildren.keys()
@@ -159,7 +232,7 @@ class TableGridView(QtWidgetElement):
         # Like this:
         # # commands.extend(super()._qt_update_commands
         # # (children, newprops, newstate, self.underlying, self.underlying_layout))
-        commands.extend(super()._qt_update_commands(children, newprops, newstate, self.underlying, None))
+        commands.extend(super()._qt_update_commands(children_of_rows, newprops, newstate, self.underlying, None))
         for prop in newprops:
             if prop == "row_stretch":
                 commands.append((self._set_row_stretch, newprops[prop]))
