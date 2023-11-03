@@ -178,8 +178,17 @@ class ControllerProtocol(tp.Protocol):
         pass
 
 
-class Tracker:
+class _Tracker:
+    """
+    During a render, track the current component and the children being
+    added to the current component.
+    """
     children: list["Element"]
+    """
+    An optional extra operation applied to each child of this element.
+    TableGridView needs this.
+    """
+
     def __init__(self, component: "Element"):
         self.component = component
         self.children = []
@@ -188,13 +197,20 @@ class Tracker:
         self.children.append(component)
 
     def collect(self) -> list["Element"]:
+        """Collect all the children for the component, except for... something?"""
         children = set()
         for child in self.children:
+            # find_components will flatten lists of elements, but according
+            # to append_child, it's impossible for child to be a list.
+            # So why do we need find_components?
             children |= find_components(child) - {child}
         return [child for child in self.children if child not in children]
 
 class RenderContextProtocol(tp.Protocol):
-    trackers: list[Tracker]
+    """
+    Protocol for _RenderContext. TODO rearrange modules so we don't need this protocol.
+    """
+    trackers: list[_Tracker]
     def use_state(self, initial_state:_T_use_state) -> tuple[_T_use_state, Callable[[_T_use_state], None]]:
         ...
     def use_effect(
@@ -353,7 +369,7 @@ class Element:
 
     def __enter__(self: Self) -> Self:
         ctx = get_render_context()
-        tracker = Tracker(self)
+        tracker = _Tracker(self)
         ctx.trackers.append(tracker)
         return self
 
@@ -701,6 +717,8 @@ def find_components(el: Element | list[Element]) -> set[Element]:
             elements = set()
             for child in el:
                 elements |= find_components(child)
+                # The type of el says that it's impossible for an element
+                # in list[Element] to be a list[Element], so why recurse?
             return elements
 
 @component
