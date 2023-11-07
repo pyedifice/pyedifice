@@ -5,10 +5,13 @@ import pathlib
 import typing as tp
 
 from ..qt import QT_VERSION
-if QT_VERSION == "PyQt6":
-    from PyQt6 import QtWidgets
-else:
+if tp.TYPE_CHECKING:
     from PySide6 import QtWidgets
+else:
+    if QT_VERSION == "PyQt6":
+        from PyQt6 import QtWidgets
+    else:
+        from PySide6 import QtWidgets
 
 from .._component import Element
 from ..state import StateManager
@@ -213,8 +216,8 @@ class Form(Element):
             # Paths are rendered as a file selection dialogue
             def choose_file(e):
                 dialog = QtWidgets.QFileDialog()
-                dialog.setFileMode(QtWidgets.QFileDialog.AnyFile)
-                fname = dialog.getOpenFileName(None, "Select File")
+                dialog.setFileMode(QtWidgets.QFileDialog.FileMode.AnyFile)
+                fname = dialog.getOpenFileName(None, "Select File") # type: ignore[reportGeneralTypeIssues]
                 fname = fname[0]
                 self._field_changed(key, value, pathlib.Path, fname)
 
@@ -225,6 +228,8 @@ class Form(Element):
         elif callable(value.value):
             # A label holding evaluation of function on current form data
             element = ed.Label(value.value(self.props.data.as_dict()))
+        else:
+            raise AssertionError("No element in Form")
 
         label_map = self.props.label_map or {}
         return ed.View(layout="row",

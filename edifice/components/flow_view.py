@@ -7,12 +7,17 @@
 """PySide6 port of the widgets/layouts/flowlayout example from Qt v6.x"""
 
 from ..qt import QT_VERSION
-if QT_VERSION == "PyQt6":
-    from PyQt6.QtCore import QMargins, QPoint, QRect, QSize, Qt
-    from PyQt6.QtWidgets import QLayout, QSizePolicy, QWidget
-else:
+import typing
+if typing.TYPE_CHECKING:
     from PySide6.QtCore import QMargins, QPoint, QRect, QSize, Qt
     from PySide6.QtWidgets import QLayout, QSizePolicy, QWidget
+else:
+    if QT_VERSION == "PyQt6":
+        from PyQt6.QtCore import QMargins, QPoint, QRect, QSize, Qt
+        from PyQt6.QtWidgets import QLayout, QSizePolicy, QWidget
+    else:
+        from PySide6.QtCore import QMargins, QPoint, QRect, QSize, Qt
+        from PySide6.QtWidgets import QLayout, QSizePolicy, QWidget
 
 from ..base_components import _LinearView
 
@@ -188,5 +193,6 @@ class FlowView(_LinearView):
 
     def _qt_stateless_commands(self, children, newprops, newstate):
         # This stateless render command is used to test rendering
+        assert self.underlying is not None
         commands = super()._qt_update_commands(children, newprops, newstate, self.underlying, self.underlying_layout)
         return commands

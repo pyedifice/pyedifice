@@ -76,15 +76,14 @@ import typing as tp
 
 from ._component import Element
 
-# https://stackoverflow.com/questions/53845024/defining-a-recursive-type-hint-in-python
-ElementSubscriptions = OrderedDict[Element, 'ElementSubscriptions']
+ElementSubscriptions = OrderedDict[Element, set[Element]]
 
 def _add_subscription(previous: ElementSubscriptions, new_comp: Element):
     # Adds a subscription in topological sort order,
     # so that ancestors will appear before descendants.
     if new_comp in previous:
         return previous
-    new_ancestors = set()
+    new_ancestors: set[Element] = set()
     node = new_comp
     while node is not None:
         new_ancestors.add(node)
@@ -188,7 +187,7 @@ class StateManager(object):
 
     """
 
-    def __init__(self, initial_values: tp.Optional[tp.Mapping[tp.Text, tp.Any]] = None):
+    def __init__(self, initial_values: tp.Optional[dict[tp.Text, tp.Any]] = None):
         self._values = initial_values or {}
         self._subscriptions_for_key = defaultdict(ElementSubscriptions)
 

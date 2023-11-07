@@ -1,7 +1,7 @@
 import typing as tp
 
 from ..qt import QT_VERSION
-if QT_VERSION == "PyQt6":
+if QT_VERSION == "PyQt6" and not tp.TYPE_CHECKING:
     import PyQt6.QtCore as QtCore
     import PyQt6.QtGui as QtGui
     import PyQt6.QtWidgets as QtWidgets
@@ -63,6 +63,7 @@ class ImageAspect(QtWidgetElement):
     def _qt_update_commands(self, children, newprops, newstate):
         if self.underlying is None:
             self._initialize()
+        assert self.underlying is not None
 
         commands = super()._qt_update_commands(children, newprops, newstate, self.underlying, None)
         for prop in newprops:
