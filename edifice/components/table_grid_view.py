@@ -1,7 +1,8 @@
+from typing import TYPE_CHECKING
 from typing_extensions import Self
 
 from ..qt import QT_VERSION
-if QT_VERSION == "PyQt6":
+if QT_VERSION == "PyQt6" and not TYPE_CHECKING:
     from PyQt6.QtWidgets import QGridLayout, QWidget
 else:
     from PySide6.QtWidgets import QGridLayout, QWidget
@@ -200,6 +201,7 @@ class TableGridView(QtWidgetElement):
     ):
         if self.underlying is None:
             self._initialize()
+        assert self.underlying is not None
 
         # The direct children of this Element are TableGridViewRow_, but
         # the TableGridViewRow_ doesn't have a Qt instantiation so we

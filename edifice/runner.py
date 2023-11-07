@@ -1,4 +1,3 @@
-from . import logger
 import argparse
 import datetime
 import importlib
@@ -6,10 +5,9 @@ import inspect
 import logging
 from pathlib import Path
 
-logger = logging.getLogger("Edifice")
-
 import os
 import sys
+from typing import TYPE_CHECKING
 
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
@@ -22,11 +20,12 @@ from ._component import Element
 from .app import App
 
 from edifice.qt import QT_VERSION
-if QT_VERSION == "PyQt6":
+if QT_VERSION == "PyQt6" and not TYPE_CHECKING:
     from PyQt6 import QtCore
 else:
     from PySide6 import QtCore
 
+logger = logging.getLogger("Edifice")
 
 MODULE_CLASS_CACHE = {}
 

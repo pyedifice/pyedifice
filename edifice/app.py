@@ -11,7 +11,7 @@ import typing as tp
 
 from .qt import QT_VERSION
 
-if QT_VERSION == "PyQt6":
+if QT_VERSION == "PyQt6" and not tp.TYPE_CHECKING:
     from PyQt6 import QtCore, QtWidgets
     os.environ["QT_API"] = "pyqt6"
 else:
@@ -20,13 +20,19 @@ else:
 
 from qasync import QEventLoop
 
-from ._component import BaseElement, Element, RootElement
+from ._component import Element
 from .base_components import Window
 from .engine import RenderEngine
 from .inspector import inspector
 
 logger = logging.getLogger("Edifice")
 logger_mod = logger
+
+BLACK, RED, GREEN, YELLOW, BLUE, MAGENTA, CYAN, WHITE = range(8)
+
+RESET_SEQ = "\033[0m"
+COLOR_SEQ = "\033[1;%dm"
+BOLD_SEQ = "\033[1m"
 
 
 class _TimingAvg(object):
@@ -117,7 +123,7 @@ class App(object):
                 else:
                     raise RuntimeError("There is already an instance of QtWidgets.QApplication")
             else:
-                self.app = QtWidgets.QApplication.instance()
+                self.app = tp.cast(QtWidgets.QApplication, QtWidgets.QApplication.instance())
         else:
             self.app : QtWidgets.QApplication = qapplication
 
@@ -154,18 +160,18 @@ class App(object):
                             def should_bold(line, frame):
                                 if frame.filename.startswith(module_path):
                                     return line
-                                return logger_mod.BOLD_SEQ + line + logger_mod.RESET_SEQ
+                                return BOLD_SEQ + line + RESET_SEQ
                             formatted_trace = [should_bold(line, frame) for line, frame in zip(formatted_trace, stack_trace)]
 
                             print("Traceback (most recent call last):")
                             for line in formatted_trace:
                                 print(line, end="")
 
-                            print((logger_mod.COLOR_SEQ % (30 + logger_mod.RED)) + "Stemming from these renders:" + logger_mod.RESET_SEQ)
+                            print((COLOR_SEQ % (30 + RED)) + "Stemming from these renders:" + RESET_SEQ)
                             for line in formatted_user_trace:
                                 print(line, end="")
                             for line in traceback.format_exception_only(etype, evalue):
-                                print((logger_mod.COLOR_SEQ % (30 + logger_mod.RED)) + line + logger_mod.RESET_SEQ, end="")
+                                print((COLOR_SEQ % (30 + RED)) + line + RESET_SEQ, end="")
 
                             continue
 

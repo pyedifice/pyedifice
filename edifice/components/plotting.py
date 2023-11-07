@@ -1,12 +1,16 @@
 import time
 import threading
+from typing import TYPE_CHECKING
 from ..base_components import CustomWidget
 
 from ..qt import QT_VERSION
-if QT_VERSION == "PyQt6":
-    from PyQt6 import QtWidgets
-else:
+if TYPE_CHECKING:
     from PySide6 import QtWidgets
+else:
+    if QT_VERSION == "PyQt6":
+        from PyQt6 import QtWidgets
+    else:
+        from PySide6 import QtWidgets
 
 try:
     MATPLOTLIB_LOADED = True
@@ -45,6 +49,8 @@ class Figure(CustomWidget):
         while self.plot_thread_should_run:
             plot_fun = self.current_plot_fun
             if plot_fun is not None and self.current_plotted_fun != plot_fun:
+                assert self.subplots is not None
+                assert self.figure_canvas is not None
                 self.subplots.clear()
                 plot_fun(self.subplots)
                 self.figure_canvas.draw()

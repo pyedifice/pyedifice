@@ -1,14 +1,19 @@
 import typing as tp
 
 from ..qt import QT_VERSION
-if QT_VERSION == "PyQt6":
-    from PyQt6.QtCore import QSize, Qt
-    from PyQt6.QtGui import QKeyEvent, QMouseEvent
-    from PyQt6.QtWidgets import QPushButton, QVBoxLayout, QHBoxLayout
-else:
+if tp.TYPE_CHECKING:
     from PySide6.QtCore import QSize, Qt
     from PySide6.QtGui import QKeyEvent, QMouseEvent
     from PySide6.QtWidgets import QPushButton, QVBoxLayout, QHBoxLayout
+else:
+    if QT_VERSION == "PyQt6":
+        from PyQt6.QtCore import QSize, Qt
+        from PyQt6.QtGui import QKeyEvent, QMouseEvent
+        from PyQt6.QtWidgets import QPushButton, QVBoxLayout, QHBoxLayout
+    else:
+        from PySide6.QtCore import QSize, Qt
+        from PySide6.QtGui import QKeyEvent, QMouseEvent
+        from PySide6.QtWidgets import QPushButton, QVBoxLayout, QHBoxLayout
 
 from ..base_components import View
 

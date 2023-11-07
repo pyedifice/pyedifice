@@ -1,7 +1,7 @@
 import typing as tp
 
 from .qt import QT_VERSION
-if QT_VERSION == "PyQt6":
+if QT_VERSION == "PyQt6" and not tp.TYPE_CHECKING:
     from PyQt6.QtCore import QTimer
     from PyQt6 import QtWidgets
 else:
@@ -88,11 +88,10 @@ def file_dialog(caption: tp.Text = "",
         Path of chosen file
     """
     dialog = QtWidgets.QFileDialog(None, caption, directory)
-    dialog.setFileMode(QtWidgets.QFileDialog.AnyFile)
-    dialog.setFileMode(QtWidgets.QFileDialog.AnyFile)
+    dialog.setFileMode(QtWidgets.QFileDialog.FileMode.AnyFile)
     if file_filter is not None:
         dialog.setNameFilters(file_filter)
-    if dialog.exec() == QtWidgets.QDialog.Accepted:
+    if dialog.exec() == QtWidgets.QDialog.DialogCode.Accepted:
         return dialog.selectedFiles()[0]
     return None
 

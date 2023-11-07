@@ -48,7 +48,7 @@ from ._component import WidgetElement, RootElement, _CommandType
 from .qt import QT_VERSION
 
 
-if QT_VERSION == "PyQt6":
+if QT_VERSION == "PyQt6" and not tp.TYPE_CHECKING:
     from PyQt6 import QtWidgets
     from PyQt6 import QtSvg, QtGui
     from PyQt6 import QtCore
@@ -333,6 +333,7 @@ class QtWidgetElement(WidgetElement):
             self._default_mouse_press_event(ev)
 
     def _mouse_release(self, ev):
+        assert self.underlying is not None
         event_pos = ev.pos()
         if self._on_mouse_up is not None:
             self._on_mouse_up(ev)
@@ -349,6 +350,7 @@ class QtWidgetElement(WidgetElement):
             self._on_click(ev)
 
     def _set_on_click(self, underlying: _UnderlyingType, on_click):
+        assert self.underlying is not None
         # FIXME: Should this not use `underlying`?
         if on_click is not None:
             self._on_click = _ensure_future(on_click)
@@ -362,6 +364,7 @@ class QtWidgetElement(WidgetElement):
         self.underlying.mouseReleaseEvent = self._mouse_release
 
     def _set_on_key_down(self, underlying: _UnderlyingType, on_key_down):
+        assert self.underlying is not None
         if self._default_on_key_down is None:
             self._default_on_key_down = self.underlying.keyPressEvent
         if on_key_down is not None:
@@ -371,6 +374,7 @@ class QtWidgetElement(WidgetElement):
         self.underlying.keyPressEvent = self._on_key_down
 
     def _set_on_key_up(self, underlying: _UnderlyingType, on_key_up):
+        assert self.underlying is not None
         if self._default_on_key_up is None:
             self._default_on_key_up = self.underlying.keyReleaseEvent
         if on_key_up is not None:
@@ -380,6 +384,7 @@ class QtWidgetElement(WidgetElement):
         self.underlying.keyReleaseEvent = self._on_key_up
 
     def _set_on_mouse_down(self, underlying: _UnderlyingType, on_mouse_down):
+        assert self.underlying is not None
         if on_mouse_down is not None:
             self._on_mouse_down = _ensure_future(on_mouse_down)
         else:
@@ -389,6 +394,7 @@ class QtWidgetElement(WidgetElement):
         self.underlying.mousePressEvent = self._mouse_press
 
     def _set_on_mouse_up(self, underlying: _UnderlyingType, on_mouse_up):
+        assert self.underlying is not None
         if on_mouse_up is not None:
             self._on_mouse_up = _ensure_future(on_mouse_up)
         else:
@@ -398,6 +404,7 @@ class QtWidgetElement(WidgetElement):
         self.underlying.mouseReleaseEvent = self._mouse_release
 
     def _set_on_mouse_enter(self, underlying: _UnderlyingType, on_mouse_enter):
+        assert self.underlying is not None
         if self._default_mouse_enter_event is None:
             self._default_mouse_enter_event = self.underlying.enterEvent
         if on_mouse_enter is not None:
@@ -408,6 +415,7 @@ class QtWidgetElement(WidgetElement):
             self.underlying.enterEvent = self._default_mouse_enter_event
 
     def _set_on_mouse_leave(self, underlying: _UnderlyingType, on_mouse_leave):
+        assert self.underlying is not None
         if self._default_mouse_leave_event is None:
             self._default_mouse_leave_event = self.underlying.leaveEvent
         if on_mouse_leave is not None:
@@ -418,6 +426,7 @@ class QtWidgetElement(WidgetElement):
             self._on_mouse_leave = None
 
     def _set_on_mouse_move(self, underlying: _UnderlyingType, on_mouse_move):
+        assert self.underlying is not None
         if self._default_mouse_move_event is None:
             self._default_mouse_move_event = self.underlying.mouseMoveEvent
         if on_mouse_move is not None:
@@ -433,7 +442,7 @@ class QtWidgetElement(WidgetElement):
 
         if underlying_layout is not None:
             set_margin = False
-            new_margin=[0, 0, 0, 0]
+            new_margin=[0.0, 0.0, 0.0, 0.0]
             if "margin" in style:
                 new_margin = [_css_to_number(style["margin"])] * 4
                 style.pop("margin")
@@ -493,8 +502,10 @@ class QtWidgetElement(WidgetElement):
                     set_align = "AlignBottom"
                 else:
                     logger.warning("Unknown alignment: %s", style["align"])
+                    set_align = None
                 style.pop("align")
-                style["qproperty-alignment"] = set_align
+                if set_align is not None:
+                    style["qproperty-alignment"] = set_align
 
 
         if "font-size" in style:
@@ -524,7 +535,7 @@ class QtWidgetElement(WidgetElement):
         #         style["min-height"] = self._get_height(children)
 
         set_move = False
-        move_coords = [0, 0]
+        move_coords = [0.0, 0.0]
         if "top" in style:
             set_move = True
             move_coords[1] = _css_to_number(style["top"])
@@ -535,6 +546,7 @@ class QtWidgetElement(WidgetElement):
             self._left = move_coords[0]
 
         if set_move:
+            assert self.underlying is not None
             commands.append((self.underlying.move, move_coords[0], move_coords[1]))
 
         css_string = _dict_to_style(style,  "QWidget#" + str(id(self)))
@@ -548,6 +560,7 @@ class QtWidgetElement(WidgetElement):
         underlying.customContextMenuRequested.connect(self._show_context_menu)
 
     def _show_context_menu(self, pos):
+        assert self.underlying is not None
         if self.props.context_menu is not None:
             menu = _create_qmenu(self.props.context_menu, self.underlying)
             pos = self.underlying.mapToGlobal(pos)
@@ -581,7 +594,7 @@ class QtWidgetElement(WidgetElement):
             elif prop == "on_click":
                 commands.append((self._set_on_click, underlying, newprops.on_click))
                 if newprops.on_click is not None and self.props.cursor is not None:
-                    commands.append((underlying.setCursor, QtCore.Qt.PointingHandCursor))
+                    commands.append((underlying.setCursor, QtCore.Qt.CursorShape.PointingHandCursor))
             elif prop == "on_key_down":
                 commands.append((self._set_on_key_down, underlying, newprops.on_key_down))
             elif prop == "on_key_up":
@@ -677,6 +690,7 @@ class Window(RootElement):
             underlying.closeEvent = lambda e: None
 
     def _attach_menubar(self, menu_bar, menus):
+        assert self._previous_rendering is not None
         menu_bar.setParent(self._previous_rendering.underlying)
         for menu_title, menu in menus.items():
             if not isinstance(menu, dict):
@@ -738,10 +752,12 @@ class GroupBox(QtWidgetElement):
     def _qt_update_commands(self, children, newprops, newstate):
         if self.underlying is None:
             self._initialize()
+        assert self.underlying is not None
         if len(children) != 1:
             raise ValueError("GroupBox expects exactly 1 child, got %s" % len(children))
         commands = super()._qt_update_commands(children, newprops, newstate, self.underlying)
-        commands.append((children[0].component.underlying.setParent, self.underlying))
+        setParent = children[0].component.underlying.setParent
+        commands.append((setParent, self.underlying))
         commands.append((self.underlying.setTitle, self.props.title))
         return commands
 
@@ -808,6 +824,7 @@ class Icon(QtWidgetElement):
         self.underlying.setObjectName(str(id(self)))
 
     def _render_image(self, icon_path, size, color, rotation):
+        assert self.underlying is not None
         pixmap = _get_svg_image(icon_path, size, color=color, rotation=rotation)
         self.underlying.setPixmap(pixmap)
 
@@ -816,6 +833,7 @@ class Icon(QtWidgetElement):
             self._initialize()
 
         self._set_size(self.props.size, self.props.size)
+        assert self.underlying is not None
         commands = super()._qt_update_commands(children, newprops, newstate, self.underlying)
         icon_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                                  "icons",
@@ -858,6 +876,7 @@ class Button(QtWidgetElement):
     def _qt_update_commands(self, children, newprops, newstate):
         if self.underlying is None:
             self._initialize()
+        assert self.underlying is not None
         size = self.underlying.font().pointSize()
         self._set_size(size * len(self.props.title), size, lambda size: (size * len(self.props.title), size))
         commands = super()._qt_update_commands(children, newprops, newstate, self.underlying)
@@ -924,12 +943,14 @@ class IconButton(Button):
                                  "icons",
                                  self.props.collection, self.props.sub_collection, self.props.name + ".svg")
 
+        assert self.underlying is not None
         size = self.underlying.font().pointSize()
         self._set_size(self.props.size + 3 + size * len(self.props.title), size,
                        lambda size: (self.props.size + 3 + size * len(self.props.title), size))
 
         def render_image(icon_path, size, color, rotation):
             pixmap = _get_svg_image(icon_path, size, color=color, rotation=rotation)
+            assert self.underlying is not None
             self.underlying.setIcon(QtGui.QIcon(pixmap))
 
         if "name" in newprops or "size" in newprops or "collection" in newprops or "sub_collection" in newprops or "color" in newprops or "rotation" in newprops:
@@ -980,6 +1001,7 @@ class Label(QtWidgetElement):
     def _qt_update_commands(self, children, newprops, newstate):
         if self.underlying is None:
             self._initialize()
+        assert self.underlying is not None
         size = self.underlying.font().pointSize()
         self._set_size(size * len(str(self.props.text)), size, lambda size: (size * len(str(self.props.text)), size))
 
@@ -1036,6 +1058,7 @@ class Image(QtWidgetElement):
     def _qt_update_commands(self, children, newprops, newstate):
         if self.underlying is None:
             self._initialize()
+        assert self.underlying is not None
 
         commands = super()._qt_update_commands(children, newprops, newstate, self.underlying, None)
         commands.append((self.underlying.setScaledContents, self.props.scale_to_fit))
@@ -1065,6 +1088,7 @@ class ImageSvg(QtWidgetElement):
     def _qt_update_commands(self, children, newprops, newstate):
         if self.underlying is None:
             self._initialize()
+        assert self.underlying is not None
 
         commands = super()._qt_update_commands(children, newprops, newstate, self.underlying, None)
         for prop in newprops:
@@ -1153,6 +1177,7 @@ class TextInput(QtWidgetElement):
         self.underlying.setObjectName(str(id(self)))
 
     def _set_on_change(self, on_change):
+        assert self.underlying is not None
         def on_change_fun(text):
             if text != self.props.text:
                 return _ensure_future(on_change)(text)
@@ -1164,6 +1189,7 @@ class TextInput(QtWidgetElement):
     def _set_on_edit_finish(self, on_edit_finish):
         def on_edit_finish_fun():
             return _ensure_future(on_edit_finish)()
+        assert self.underlying is not None
         if self._editing_finished_connected:
             self.underlying.editingFinished.disconnect()
         self.underlying.editingFinished.connect(on_edit_finish_fun)
@@ -1180,6 +1206,7 @@ class TextInput(QtWidgetElement):
     def _qt_update_commands(self, children, newprops, newstate):
         if self.underlying is None:
             self._initialize()
+        assert self.underlying is not None
 
         commands = super()._qt_update_commands(children, newprops, newstate, self.underlying)
         commands.append((self.underlying.setText, str(self.props.text)))
@@ -1259,6 +1286,7 @@ class Dropdown(QtWidgetElement):
     def _set_on_change(self, on_change):
         def on_change_fun(text):
             return _ensure_future(on_change)(text)
+        assert self.underlying is not None
         if self._on_change_connected:
             self.underlying.editTextChanged[str].disconnect()
         if on_change is not None:
@@ -1268,6 +1296,7 @@ class Dropdown(QtWidgetElement):
     def _set_on_select(self, on_select):
         def on_select_fun(text):
             return _ensure_future(on_select)(text)
+        assert self.underlying is not None
         if self._on_select_connected:
             self.underlying.textActivated[str].disconnect()
         if on_select is not None:
@@ -1277,6 +1306,7 @@ class Dropdown(QtWidgetElement):
     def _qt_update_commands(self, children, newprops, newstate):
         if self.underlying is None:
             self._initialize()
+        assert self.underlying is not None
 
         commands = super()._qt_update_commands(children, newprops, newstate, self.underlying)
         commands.append((self.underlying.setEditable, self.props.editable))
@@ -1340,6 +1370,7 @@ class RadioButton(QtWidgetElement):
         self.underlying.setObjectName(str(id(self)))
 
     def _set_on_change(self, on_change):
+        assert self.underlying is not None
         def on_change_fun(checked):
             return _ensure_future(on_change)(checked)
         if self._connected:
@@ -1350,6 +1381,7 @@ class RadioButton(QtWidgetElement):
     def _qt_update_commands(self, children, newprops, newstate):
         if self.underlying is None:
             self._initialize()
+        assert self.underlying is not None
 
         commands = super()._qt_update_commands(children, newprops, newstate, self.underlying)
         commands.append((self.underlying.setChecked, self.props.checked))
@@ -1405,6 +1437,7 @@ class CheckBox(QtWidgetElement):
         self.underlying.setObjectName(str(id(self)))
 
     def _set_on_change(self, on_change):
+        assert self.underlying is not None
         def on_change_fun(checked):
             return _ensure_future(on_change)(checked)
         if self._connected:
@@ -1415,6 +1448,7 @@ class CheckBox(QtWidgetElement):
     def _qt_update_commands(self, children, newprops, newstate):
         if self.underlying is None:
             self._initialize()
+        assert self.underlying is not None
 
         commands = super()._qt_update_commands(children, newprops, newstate, self.underlying)
         check_state = QtCore.Qt.CheckState.Checked if self.props.checked else QtCore.Qt.CheckState.Unchecked
@@ -1510,6 +1544,7 @@ class Slider(QtWidgetElement):
         self.underlying.setObjectName(str(id(self)))
 
     def _set_on_change(self, on_change):
+        assert self.underlying is not None
         def on_change_fun(value):
             if self.props.dtype == float:
                 min_value, max_value = self.props.min_value, self.props.max_value
@@ -1523,6 +1558,7 @@ class Slider(QtWidgetElement):
     def _qt_update_commands(self, children, newprops, newstate):
         if self.underlying is None:
             self._initialize()
+        assert self.underlying is not None
 
         commands = super()._qt_update_commands(children, newprops, newstate, self.underlying)
         value = self.props.value
@@ -1582,6 +1618,10 @@ class _LinearView(QtWidgetElement):
 
         self._widget_children = [child.component for child in children]
         return commands
+    def _add_child(self, i, child_component):
+        raise NotImplementedError
+    def _delete_child(self, i, old_child):
+        raise NotImplementedError
 
 
 class View(_LinearView):
@@ -1649,12 +1689,14 @@ class View(_LinearView):
     def _qt_update_commands(self, children, newprops, newstate):
         if self.underlying is None:
             self._initialize()
+        assert self.underlying is not None
         commands = self._recompute_children(children)
         commands.extend(self._qt_stateless_commands(children, newprops, newstate))
         return commands
 
     def _qt_stateless_commands(self, children, newprops, newstate):
         # This stateless render command is used to test rendering
+        assert self.underlying is not None
         commands = super()._qt_update_commands(children, newprops, newstate, self.underlying, self.underlying_layout)
         return commands
 
@@ -1716,6 +1758,7 @@ class ScrollView(_LinearView):
     def _qt_update_commands(self, children, newprops, newstate):
         if self.underlying is None:
             self._initialize()
+        assert self.underlying is not None
         commands = self._recompute_children(children)
         commands.extend(super()._qt_update_commands(children, newprops, newstate, self.underlying, self.underlying_layout))
         return commands
@@ -1835,6 +1878,7 @@ class GridView(QtWidgetElement):
     def _qt_update_commands(self, children, newprops, newstate):
         if self.underlying is None:
             self._initialize()
+        assert self.underlying is not None
         rows, columns, grid_spec = _layout_str_to_grid_spec(self.props.layout)
         if self.props.key_to_code is None:
             code_to_child = {c.component._key[0]: c.component for c in children}
@@ -1872,12 +1916,15 @@ class TabView(_LinearView):
         self.underlying = None
 
     def _delete_child(self, i, old_child):
+        assert self.underlying is not None
         self.underlying.removeTab(i)
 
     def _soft_delete_child(self, i, old_child):
+        assert self.underlying is not None
         self.underlying.removeTab(i)
 
     def _add_child(self, i, child_component):
+        assert self.underlying is not None
         self.underlying.insertTab(i, child_component, self.props.labels[i])
 
     def _initialize(self):
@@ -1889,6 +1936,7 @@ class TabView(_LinearView):
             raise ValueError(f"The number of labels should be equal to the number of children for TabView {self}")
         if self.underlying is None:
             self._initialize()
+        assert self.underlying is not None
         commands = self._recompute_children(children)
         commands.extend(super()._qt_update_commands(children, newprops, newstate, self.underlying, None))
         return commands
