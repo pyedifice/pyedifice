@@ -15,7 +15,7 @@ else:
         from PySide6.QtGui import QKeyEvent, QMouseEvent
         from PySide6.QtWidgets import QPushButton, QVBoxLayout, QHBoxLayout
 
-from ..base_components import View
+from ..base_components import View, _CommandType
 
 class _PushButton(QPushButton):
     def __init__(self):
@@ -96,6 +96,6 @@ class ButtonView(View):
         commands = super()._qt_update_commands(children, newprops, newstate)
         for prop in newprops:
             if prop == "on_trigger":
-                commands.append((self._set_on_trigger, self.underlying, newprops.on_trigger))
-            commands.append((self.underlying.setCursor, Qt.CursorShape.PointingHandCursor))
+                commands.append(_CommandType(self._set_on_trigger, self.underlying, newprops.on_trigger))
+            commands.append(_CommandType(self.underlying.setCursor, Qt.CursorShape.PointingHandCursor))
         return commands

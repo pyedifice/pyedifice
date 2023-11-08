@@ -1,6 +1,7 @@
 import unittest
 import unittest.mock
 import edifice._component as component
+from edifice._component import _CommandType
 import edifice.engine as engine
 import edifice.base_components as base_components
 
@@ -168,7 +169,7 @@ class RenderTestCase(unittest.TestCase):
 
         def V(*args):
             view = qt_tree._dereference(args)
-            return [(view.component._add_child, i, child.component.underlying)
+            return [_CommandType(view.component._add_child, i, child.component.underlying)
                     for (i, child) in enumerate(view.children)]
 
         expected_commands = C(0, 0) + C(0, 1) + V(0) + C(0) + C(1, 0) + C(1, 1) + V(1) + C(1) + C(2) + V() + C()
@@ -193,20 +194,20 @@ class RenderTestCase(unittest.TestCase):
         render_result.trees[0]
         qt_commands = render_result.commands
         # TODO: Make it so that only the label (0, 0) needs to update!
-        expected_commands = [(qt_tree._dereference([0, 0]).component.underlying.setText, "AChanged")]
+        expected_commands = [_CommandType(qt_tree._dereference([0, 0]).component.underlying.setText, "AChanged")]
         self.assertEqual(qt_commands, expected_commands)
 
         component.state_b = "BChanged"
         render_result = app._request_rerender([component])
         qt_commands = render_result.commands
-        expected_commands = [(qt_tree._dereference([1, 0]).component.underlying.setText, "BChanged")]
+        expected_commands = [_CommandType(qt_tree._dereference([1, 0]).component.underlying.setText, "BChanged")]
         self.assertEqual(qt_commands, expected_commands)
 
         component.state_c = "CChanged"
         render_result = app._request_rerender([component])
         render_result.trees[0]
         qt_commands = render_result.commands
-        expected_commands = [(qt_tree._dereference([2]).component.underlying.setText, "CChanged")]
+        expected_commands = [_CommandType(qt_tree._dereference([2]).component.underlying.setText, "CChanged")]
         self.assertEqual(qt_commands, expected_commands)
 
     def test_keyed_list_add(self):
@@ -223,14 +224,14 @@ class RenderTestCase(unittest.TestCase):
 
         def new_V(*args):
             view = _new_qt_tree._dereference(args)
-            return [(view.component._add_child, i, child.component.underlying)
+            return [_CommandType(view.component._add_child, i, child.component.underlying)
                     for (i, child) in enumerate(view.children)]
 
         self.assertEqual(_new_qt_tree._dereference([2, 0]).component.props.text, "D")
         def new_C(*args):
             return _commands_for_address(_new_qt_tree, args)
         expected_commands = (new_C(2, 0) + new_C(2, 1) + new_V(2) + new_C(2) +
-                             [(qt_tree.component._add_child, 2, _new_qt_tree.children[2].component.underlying)])
+                             [_CommandType(qt_tree.component._add_child, 2, _new_qt_tree.children[2].component.underlying)])
 
         self.assertEqual(qt_commands, expected_commands)
 
@@ -249,8 +250,8 @@ class RenderTestCase(unittest.TestCase):
         qt_commands = render_result.commands
 
         expected_commands = (
-                             [(qt_tree.component._add_child, 0, qt_tree.children[2].component.underlying)]
-                             + [(qt_tree.component._add_child, 1, qt_tree.children[1].component.underlying)])
+            [_CommandType(qt_tree.component._add_child, 0, qt_tree.children[2].component.underlying)]
+            + [_CommandType(qt_tree.component._add_child, 1, qt_tree.children[1].component.underlying)])
 
         self.assertEqual(qt_commands, expected_commands)
 
@@ -266,7 +267,10 @@ class RenderTestCase(unittest.TestCase):
         _new_qt_tree = render_result.trees[0]
         qt_commands = render_result.commands
 
-        expected_commands = [(qt_tree._dereference([0, 0]).component.underlying.setText, "C"), (qt_tree._dereference([2, 0]).component.underlying.setText, "A")]
+        expected_commands = [
+            _CommandType(qt_tree._dereference([0, 0]).component.underlying.setText, "C"),
+            _CommandType(qt_tree._dereference([2, 0]).component.underlying.setText, "A"),
+        ]
         self.assertEqual(qt_commands, expected_commands)
 
     def test_keyed_list_delete_child(self):
@@ -282,7 +286,7 @@ class RenderTestCase(unittest.TestCase):
         _new_qt_tree = render_result.trees[0]
         qt_commands = render_result.commands
 
-        expected_commands = [(qt_tree.component._delete_child, 2, old_child)]
+        expected_commands = [_CommandType(qt_tree.component._delete_child, 2, old_child)]
 
         self.assertEqual(qt_commands, expected_commands)
 
