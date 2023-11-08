@@ -246,6 +246,7 @@ Table of Contents
    base_components
    compound_components
    state
+   hooks
    utilities
    styling
    developer_tools

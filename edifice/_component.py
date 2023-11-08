@@ -220,10 +220,6 @@ class _Tracker:
     added to the current component.
     """
     children: list["Element"]
-    """
-    An optional extra operation applied to each child of this element.
-    TableGridView needs this.
-    """
 
     def __init__(self, component: "Element"):
         self.component = component

@@ -10,14 +10,14 @@ from ..qt import QT_VERSION
 import typing
 if typing.TYPE_CHECKING:
     from PySide6.QtCore import QMargins, QPoint, QRect, QSize, Qt
-    from PySide6.QtWidgets import QLayout, QSizePolicy, QWidget
+    from PySide6.QtWidgets import QLayout, QLayoutItem, QSizePolicy, QWidget
 else:
     if QT_VERSION == "PyQt6":
         from PyQt6.QtCore import QMargins, QPoint, QRect, QSize, Qt
-        from PyQt6.QtWidgets import QLayout, QSizePolicy, QWidget
+        from PyQt6.QtWidgets import QLayout, QLayoutItem, QSizePolicy, QWidget
     else:
         from PySide6.QtCore import QMargins, QPoint, QRect, QSize, Qt
-        from PySide6.QtWidgets import QLayout, QSizePolicy, QWidget
+        from PySide6.QtWidgets import QLayout, QLayoutItem, QSizePolicy, QWidget
 
 from ..base_components import _LinearView
 
@@ -29,7 +29,7 @@ class FlowLayout(QLayout):
         if parent is not None:
             self.setContentsMargins(QMargins(0, 0, 0, 0))
 
-        self._item_list = []
+        self._item_list: list[QLayoutItem] = []
 
     def __del__(self):
         item = self.takeAt(0)
