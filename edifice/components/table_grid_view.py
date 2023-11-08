@@ -7,7 +7,7 @@ if QT_VERSION == "PyQt6" and not TYPE_CHECKING:
 else:
     from PySide6.QtWidgets import QGridLayout, QWidget
 
-from .._component import Element, BaseElement
+from .._component import Element, BaseElement, _CommandType
 from ..base_components import QtWidgetElement
 
 def _get_tablerowcolumn(c:Element) -> tuple[int,int]:
@@ -219,14 +219,14 @@ class TableGridView(QtWidgetElement):
         old_deletions = old_keys - new_keys
         new_additions = new_keys - old_keys
 
-        commands = []
+        commands: list[_CommandType] = []
         for row,column,_key in old_deletions:
-            commands.append((self._delete_child, self._widget_children_dict[(row,column,_key)], row, column))
+            commands.append(_CommandType(self._delete_child, self._widget_children_dict[(row,column,_key)], row, column))
             # Is this del doing anything?
             del self._widget_children_dict[(row,column,_key)]
 
         for row,column,_key in new_additions:
-            commands.append((self._add_child, newchildren[(row,column,_key)], row, column))
+            commands.append(_CommandType(self._add_child, newchildren[(row,column,_key)], row, column))
 
         self._widget_children_dict = newchildren
 
@@ -237,13 +237,13 @@ class TableGridView(QtWidgetElement):
         commands.extend(super()._qt_update_commands(children_of_rows, newprops, newstate, self.underlying, None))
         for prop in newprops:
             if prop == "row_stretch":
-                commands.append((self._set_row_stretch, newprops[prop]))
+                commands.append(_CommandType(self._set_row_stretch, newprops[prop]))
             elif prop == "column_stretch":
-                commands.append((self._set_column_stretch, newprops[prop]))
+                commands.append(_CommandType(self._set_column_stretch, newprops[prop]))
             elif prop == "row_minheight":
-                commands.append((self._set_row_minheight, newprops[prop]))
+                commands.append(_CommandType(self._set_row_minheight, newprops[prop]))
             elif prop == "column_minwidth":
-                commands.append((self._set_column_minwidth, newprops[prop]))
+                commands.append(_CommandType(self._set_column_minwidth, newprops[prop]))
 
         return commands
 

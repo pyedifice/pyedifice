@@ -6,6 +6,7 @@ import unittest
 import unittest.mock
 import edifice.engine as engine
 import edifice.base_components as base_components
+from edifice._component import _CommandType
 
 from edifice.qt import QT_VERSION
 if QT_VERSION == "PyQt6":
@@ -62,8 +63,8 @@ class StyleTestCase(unittest.TestCase):
         self.assertTrue("margin" not in style)
         self.assertCountEqual(
             commands,
-            [(layout.setContentsMargins, 10.0, 5.0, 5.0, 5.0),
-             (comp.underlying.setStyleSheet, "QWidget#%s{}" % id(comp))]
+            [_CommandType(layout.setContentsMargins, 10.0, 5.0, 5.0, 5.0),
+             _CommandType(comp.underlying.setStyleSheet, "QWidget#%s{}" % id(comp))]
         )
 
         style = {
@@ -78,8 +79,8 @@ class StyleTestCase(unittest.TestCase):
         self.assertTrue("margin" not in style)
         self.assertCountEqual(
             commands,
-            [(layout.setContentsMargins, 10, 9.0, 8, 9.0),
-             (comp.underlying.setStyleSheet, "QWidget#%s{}" % id(comp))]
+            [_CommandType(layout.setContentsMargins, 10, 9.0, 8, 9.0),
+             _CommandType(comp.underlying.setStyleSheet, "QWidget#%s{}" % id(comp))]
         )
 
     def test_align_layout(self):
@@ -97,8 +98,8 @@ class StyleTestCase(unittest.TestCase):
             self.assertTrue("align" not in style)
             self.assertCountEqual(
                 commands,
-                [(layout.setAlignment, qt_align),
-                 (comp.underlying.setStyleSheet, "QWidget#%s{}" % id(comp))]
+                [_CommandType(layout.setAlignment, qt_align),
+                 _CommandType(comp.underlying.setStyleSheet, "QWidget#%s{}" % id(comp))]
             )
         _test_for_align("left", QtCore.Qt.AlignmentFlag.AlignLeft)
         _test_for_align("right", QtCore.Qt.AlignmentFlag.AlignRight)
@@ -140,7 +141,7 @@ class StyleTestCase(unittest.TestCase):
         }
         comp = MockElement(style=style)
         commands = comp._gen_styling_commands([], style, None, None)
-        self.assertTrue((comp.underlying.move, 24, 12) in commands)
+        self.assertTrue(_CommandType(comp.underlying.move, x=24, y=12) in commands)
 
 
 class MockRenderContext(engine._RenderContext):
@@ -167,20 +168,21 @@ class WidgetTreeTestCase(unittest.TestCase):
         qt_button.font().pointSize()
         self.assertCountEqual(
             commands,
-            [(qt_button.setText, button_str), (qt_button.setStyleSheet, "QWidget#%s{}" % id(button)),
-             (qt_button.setProperty, "css_class", []),
-             (style.unpolish, qt_button),
-             (style.polish, qt_button),
-             (button._set_on_click, qt_button, on_click),
-             (button._set_on_key_down, qt_button, None),
-             (button._set_on_key_up, qt_button, None),
-             (button._set_on_mouse_enter, qt_button, None),
-             (button._set_on_mouse_leave, qt_button, None),
-             (button._set_on_mouse_down, qt_button, None),
-             (button._set_on_mouse_up, qt_button, None),
-             (button._set_on_mouse_move, qt_button, None),
-             (qt_button.setContextMenuPolicy, QtCore.Qt.ContextMenuPolicy.DefaultContextMenu),
-             (qt_button.setCursor, QtCore.Qt.CursorShape.PointingHandCursor)
+            [_CommandType(qt_button.setText, button_str),
+             _CommandType(qt_button.setStyleSheet, "QWidget#%s{}" % id(button)),
+             _CommandType(qt_button.setProperty, "css_class", []),
+             _CommandType(style.unpolish, qt_button),
+             _CommandType(style.polish, qt_button),
+             _CommandType(button._set_on_click, qt_button, on_click),
+             _CommandType(button._set_on_key_down, qt_button, None),
+             _CommandType(button._set_on_key_up, qt_button, None),
+             _CommandType(button._set_on_mouse_enter, qt_button, None),
+             _CommandType(button._set_on_mouse_leave, qt_button, None),
+             _CommandType(button._set_on_mouse_down, qt_button, None),
+             _CommandType(button._set_on_mouse_up, qt_button, None),
+             _CommandType(button._set_on_mouse_move, qt_button, None),
+             _CommandType(qt_button.setContextMenuPolicy, QtCore.Qt.ContextMenuPolicy.DefaultContextMenu),
+             _CommandType(qt_button.setCursor, QtCore.Qt.CursorShape.PointingHandCursor)
             ])
 
     def test_view_layout(self):
@@ -210,23 +212,24 @@ class WidgetTreeTestCase(unittest.TestCase):
         assert qt_icon is not None
         style = qt_icon.style()
         assert style is not None
+        assert icon.underlying is not None
         self.assertCountEqual(
             commands,
-            [(icon._render_image, ) + render_img_args,
-             (qt_icon.setStyleSheet, "QWidget#%s{}" % id(icon)),
-             (qt_icon.setProperty, "css_class", []),
-             (style.unpolish, icon.underlying),
-             (style.polish, icon.underlying),
-             (qt_icon.setContextMenuPolicy, QtCore.Qt.ContextMenuPolicy.DefaultContextMenu),
-             (qt_icon.setCursor, QtCore.Qt.CursorShape.ArrowCursor),
-             (icon._set_on_key_down, icon.underlying, None),
-             (icon._set_on_key_up, icon.underlying, None),
-             (icon._set_on_mouse_enter, icon.underlying, None),
-             (icon._set_on_mouse_leave, icon.underlying, None),
-             (icon._set_on_mouse_down, icon.underlying, None),
-             (icon._set_on_mouse_up, icon.underlying, None),
-             (icon._set_on_mouse_move, icon.underlying, None),
-             (icon._set_on_click, icon.underlying, None),
+            [_CommandType(icon._render_image, *render_img_args),
+             _CommandType(qt_icon.setStyleSheet, "QWidget#%s{}" % id(icon)),
+             _CommandType(qt_icon.setProperty, "css_class", []),
+             _CommandType(style.unpolish, icon.underlying),
+             _CommandType(style.polish, icon.underlying),
+             _CommandType(qt_icon.setContextMenuPolicy, QtCore.Qt.ContextMenuPolicy.DefaultContextMenu),
+             _CommandType(qt_icon.setCursor, QtCore.Qt.CursorShape.ArrowCursor),
+             _CommandType(icon._set_on_key_down, icon.underlying, None),
+             _CommandType(icon._set_on_key_up, icon.underlying, None),
+             _CommandType(icon._set_on_mouse_enter, icon.underlying, None),
+             _CommandType(icon._set_on_mouse_leave, icon.underlying, None),
+             _CommandType(icon._set_on_mouse_down, icon.underlying, None),
+             _CommandType(icon._set_on_mouse_up, icon.underlying, None),
+             _CommandType(icon._set_on_mouse_move, icon.underlying, None),
+             _CommandType(icon._set_on_click, icon.underlying, None),
             ])
         icon._render_image(*render_img_args)
 
@@ -250,41 +253,41 @@ class WidgetTreeTestCase(unittest.TestCase):
         label1.underlying.font().pointSize()
 
         self.assertCountEqual(commands, label1_commands + [
-            (view.underlying.setStyleSheet, "QWidget#%s{}" % id(view)),
-            (view.underlying.setProperty, "css_class", []),
-            (view.underlying.style().unpolish, view.underlying),
-            (view.underlying.style().polish, view.underlying),
-            (view.underlying.setContextMenuPolicy, QtCore.Qt.ContextMenuPolicy.DefaultContextMenu),
-            (view.underlying.setCursor, QtCore.Qt.CursorShape.ArrowCursor),
-            (view._set_on_key_down, view.underlying, None),
-            (view._set_on_key_up, view.underlying, None),
-            (view._set_on_mouse_enter, view.underlying, None),
-            (view._set_on_mouse_leave, view.underlying, None),
-            (view._set_on_mouse_down, view.underlying, None),
-            (view._set_on_mouse_up, view.underlying, None),
-            (view._set_on_mouse_move, view.underlying, None),
-            (view._set_on_click, view.underlying, None),
-            (view._add_child, 0, label1.underlying)])
+            _CommandType(view.underlying.setStyleSheet, "QWidget#%s{}" % id(view)),
+            _CommandType(view.underlying.setProperty, "css_class", []),
+            _CommandType(view.underlying.style().unpolish, view.underlying),
+            _CommandType(view.underlying.style().polish, view.underlying),
+            _CommandType(view.underlying.setContextMenuPolicy, QtCore.Qt.ContextMenuPolicy.DefaultContextMenu),
+            _CommandType(view.underlying.setCursor, QtCore.Qt.CursorShape.ArrowCursor),
+            _CommandType(view._set_on_key_down, view.underlying, None),
+            _CommandType(view._set_on_key_up, view.underlying, None),
+            _CommandType(view._set_on_mouse_enter, view.underlying, None),
+            _CommandType(view._set_on_mouse_leave, view.underlying, None),
+            _CommandType(view._set_on_mouse_down, view.underlying, None),
+            _CommandType(view._set_on_mouse_up, view.underlying, None),
+            _CommandType(view._set_on_mouse_move, view.underlying, None),
+            _CommandType(view._set_on_click, view.underlying, None),
+            _CommandType(view._add_child, 0, label1.underlying)])
 
         view_tree = engine._WidgetTree(view, [label1_tree, label2_tree])
         with engine._storage_manager() as manager:
             commands = view_tree.gen_qt_commands(MockRenderContext(manager, eng))
         self.assertCountEqual(commands, label1_commands + label2_commands + [
-            (view.underlying.setStyleSheet, "QWidget#%s{}" % id(view)),
-            (view.underlying.setProperty, "css_class", []),
-            (view.underlying.style().unpolish, view.underlying),
-            (view.underlying.style().polish, view.underlying),
-            (view.underlying.setContextMenuPolicy, QtCore.Qt.ContextMenuPolicy.DefaultContextMenu),
-            (view.underlying.setCursor, QtCore.Qt.CursorShape.ArrowCursor),
-            (view._set_on_key_down, view.underlying, None),
-            (view._set_on_key_up, view.underlying, None),
-            (view._set_on_mouse_enter, view.underlying, None),
-            (view._set_on_mouse_leave, view.underlying, None),
-            (view._set_on_mouse_down, view.underlying, None),
-            (view._set_on_mouse_up, view.underlying, None),
-            (view._set_on_mouse_move, view.underlying, None),
-            (view._set_on_click, view.underlying, None),
-            (view._add_child, 1, label2.underlying)])
+            _CommandType(view.underlying.setStyleSheet, "QWidget#%s{}" % id(view)),
+            _CommandType(view.underlying.setProperty, "css_class", []),
+            _CommandType(view.underlying.style().unpolish, view.underlying),
+            _CommandType(view.underlying.style().polish, view.underlying),
+            _CommandType(view.underlying.setContextMenuPolicy, QtCore.Qt.ContextMenuPolicy.DefaultContextMenu),
+            _CommandType(view.underlying.setCursor, QtCore.Qt.CursorShape.ArrowCursor),
+            _CommandType(view._set_on_key_down, view.underlying, None),
+            _CommandType(view._set_on_key_up, view.underlying, None),
+            _CommandType(view._set_on_mouse_enter, view.underlying, None),
+            _CommandType(view._set_on_mouse_leave, view.underlying, None),
+            _CommandType(view._set_on_mouse_down, view.underlying, None),
+            _CommandType(view._set_on_mouse_up, view.underlying, None),
+            _CommandType(view._set_on_mouse_move, view.underlying, None),
+            _CommandType(view._set_on_click, view.underlying, None),
+            _CommandType(view._add_child, 1, label2.underlying)])
 
         inner_view = base_components.View()
         old_child = view_tree.children[0].component
@@ -295,36 +298,36 @@ class WidgetTreeTestCase(unittest.TestCase):
         self.assertCountEqual(
             commands,
             label2_commands + [
-                (view.underlying.setStyleSheet, "QWidget#%s{}" % id(view)),
-                (view.underlying.setProperty, "css_class", []),
-                (view.underlying.style().unpolish, view.underlying),
-                (view.underlying.style().polish, view.underlying),
-                (view.underlying.setContextMenuPolicy, QtCore.Qt.ContextMenuPolicy.DefaultContextMenu),
-                (view.underlying.setCursor, QtCore.Qt.CursorShape.ArrowCursor),
-                (view._set_on_key_down, view.underlying, None),
-                (view._set_on_key_up, view.underlying, None),
-                (view._set_on_mouse_enter, view.underlying, None),
-                (view._set_on_mouse_leave, view.underlying, None),
-                (view._set_on_mouse_down, view.underlying, None),
-                (view._set_on_mouse_up, view.underlying, None),
-                (view._set_on_mouse_move, view.underlying, None),
-                (view._set_on_click, view.underlying, None),
-                (inner_view.underlying.setStyleSheet, "QWidget#%s{}" % id(inner_view)),
-                (inner_view.underlying.setProperty, "css_class", []),
-                (inner_view.underlying.style().unpolish, inner_view.underlying),
-                (inner_view.underlying.style().polish, inner_view.underlying),
-                (inner_view.underlying.setContextMenuPolicy, QtCore.Qt.ContextMenuPolicy.DefaultContextMenu),
-                (inner_view.underlying.setCursor, QtCore.Qt.CursorShape.ArrowCursor),
-                (inner_view._set_on_key_down, inner_view.underlying, None),
-                (inner_view._set_on_key_up, inner_view.underlying, None),
-                (inner_view._set_on_mouse_enter, inner_view.underlying, None),
-                (inner_view._set_on_mouse_leave, inner_view.underlying, None),
-                (inner_view._set_on_mouse_down, inner_view.underlying, None),
-                (inner_view._set_on_mouse_up, inner_view.underlying, None),
-                (inner_view._set_on_mouse_move, inner_view.underlying, None),
-                (inner_view._set_on_click, inner_view.underlying, None),
-                (view._delete_child, 0, old_child),
-                (view._add_child, 1, inner_view.underlying)
+                _CommandType(view.underlying.setStyleSheet, "QWidget#%s{}" % id(view)),
+                _CommandType(view.underlying.setProperty, "css_class", []),
+                _CommandType(view.underlying.style().unpolish, view.underlying),
+                _CommandType(view.underlying.style().polish, view.underlying),
+                _CommandType(view.underlying.setContextMenuPolicy, QtCore.Qt.ContextMenuPolicy.DefaultContextMenu),
+                _CommandType(view.underlying.setCursor, QtCore.Qt.CursorShape.ArrowCursor),
+                _CommandType(view._set_on_key_down, view.underlying, None),
+                _CommandType(view._set_on_key_up, view.underlying, None),
+                _CommandType(view._set_on_mouse_enter, view.underlying, None),
+                _CommandType(view._set_on_mouse_leave, view.underlying, None),
+                _CommandType(view._set_on_mouse_down, view.underlying, None),
+                _CommandType(view._set_on_mouse_up, view.underlying, None),
+                _CommandType(view._set_on_mouse_move, view.underlying, None),
+                _CommandType(view._set_on_click, view.underlying, None),
+                _CommandType(inner_view.underlying.setStyleSheet, "QWidget#%s{}" % id(inner_view)),
+                _CommandType(inner_view.underlying.setProperty, "css_class", []),
+                _CommandType(inner_view.underlying.style().unpolish, inner_view.underlying),
+                _CommandType(inner_view.underlying.style().polish, inner_view.underlying),
+                _CommandType(inner_view.underlying.setContextMenuPolicy, QtCore.Qt.ContextMenuPolicy.DefaultContextMenu),
+                _CommandType(inner_view.underlying.setCursor, QtCore.Qt.CursorShape.ArrowCursor),
+                _CommandType(inner_view._set_on_key_down, inner_view.underlying, None),
+                _CommandType(inner_view._set_on_key_up, inner_view.underlying, None),
+                _CommandType(inner_view._set_on_mouse_enter, inner_view.underlying, None),
+                _CommandType(inner_view._set_on_mouse_leave, inner_view.underlying, None),
+                _CommandType(inner_view._set_on_mouse_down, inner_view.underlying, None),
+                _CommandType(inner_view._set_on_mouse_up, inner_view.underlying, None),
+                _CommandType(inner_view._set_on_mouse_move, inner_view.underlying, None),
+                _CommandType(inner_view._set_on_click, inner_view.underlying, None),
+                _CommandType(view._delete_child, 0, old_child),
+                _CommandType(view._add_child, 1, inner_view.underlying)
             ])
 
 

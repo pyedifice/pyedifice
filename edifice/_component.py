@@ -5,7 +5,43 @@ import typing as tp
 from typing_extensions import Self
 import threading
 
-_CommandType = tp.Tuple[Callable[..., None], ...]
+P = tp.ParamSpec("P")
+
+class _CommandType:
+    def __init__(self, fn: Callable[P, tp.Any], *args: P.args, **kwargs: P.kwargs):
+        # The return value of fn is ignored and should thus return None. However, in
+        # order to test with equality on the _CommandTypes we need to allow fn to return
+        # Any value to not allocate wrapper functions ignoring the return value.
+        self.fn = fn
+        self.args = args
+        self.kwargs = kwargs
+
+    def __str__(self):
+        return f"{self.fn}(*{self.args},**{self.kwargs})"
+
+    def __repr__(self):
+        return f"{self.fn.__repr__()}(*{self.args.__repr__()},**{self.kwargs.__repr__()})"
+
+    def __eq__(self, other):
+        if not isinstance(other, _CommandType):
+            return False
+        if self.fn != other.fn:
+            return False
+        if len(self.args) != len(other.args):
+            return False
+        if len(self.kwargs) != len(other.kwargs):
+            return False
+        for i, arg in enumerate(self.args):
+            if arg != other.args[i]:
+                return False
+        for i, arg in self.kwargs.items():
+            if arg != other.kwargs[i]:
+                return False
+        return True
+
+    def __hash__(self):
+        return (self.fn, *self.args, *self.kwargs.items()).__hash__()
+
 _T_use_state = tp.TypeVar("_T_use_state")
 
 """

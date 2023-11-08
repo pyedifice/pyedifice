@@ -10,7 +10,7 @@ else:
     import PySide6.QtGui as QtGui
     import PySide6.QtWidgets as QtWidgets
 
-from ..base_components import QtWidgetElement, _image_descriptor_to_pixmap
+from ..base_components import QtWidgetElement, _image_descriptor_to_pixmap, _CommandType
 
 class ScaledLabel(QtWidgets.QLabel):
     """
@@ -68,5 +68,5 @@ class ImageAspect(QtWidgetElement):
         commands = super()._qt_update_commands(children, newprops, newstate, self.underlying, None)
         for prop in newprops:
             if prop == "src" and self.underlying is not None:
-                commands.append((self.underlying.setPixmap, _image_descriptor_to_pixmap(self.props.src)))
+                commands.append(_CommandType(self.underlying.setPixmap, _image_descriptor_to_pixmap(self.props.src)))
         return commands
