@@ -1,6 +1,16 @@
 Release Notes
 =============
 
+Unreleased 0.2.0
+----------------
+
+:func`edifice.component` render function decorator instead of :code:`Component`
+subclass.
+
+:doc:`Hooks<hooks>` instead of :code:`StateValue` and :code:`StateManager`.
+
+New :code:`with` context manager syntax.
+
 0.1.2
 -----
 Released:

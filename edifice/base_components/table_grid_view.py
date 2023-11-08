@@ -8,7 +8,7 @@ else:
     from PySide6.QtWidgets import QGridLayout, QWidget
 
 from .._component import Element, BaseElement, _CommandType
-from ..base_components import QtWidgetElement
+from .base_components import QtWidgetElement
 
 def _get_tablerowcolumn(c:Element) -> tuple[int,int]:
     """
@@ -87,17 +87,21 @@ class _TableGridViewRow(BaseElement):
     # def render(self):
 
 class TableGridView(QtWidgetElement):
-    """Table-style GridLayout widget. Displays its children as aligned rows of columns.
+    """Table-style grid layout widget. The underlying
+    `QGridLayout <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGridLayout.html>`_
+    displays its children as aligned rows of columns.
 
     This component has similar behavior to an `HTML
     table <https://developer.mozilla.org/en-US/docs/Web/HTML/Element/table>`_.
     Each column will be the width of its widest child. Each row will be the
     height of its tallest child.
 
-    The only type of child element allowed in a :class:`TableGridView` is
-    a pseudo-element returned by the :func:`row` method. The :func:`row`
-    psedo-element establishes a row in the table, and may have children of
-    any type.
+    The only type of child :class:`Element` allowed in a :class:`TableGridView` is
+    the row Element returned by the :func:`row` method. The :func:`row`
+    Element establishes a row in the table, and may have children of
+    any type of :class:`Element`.
+
+    Every child Element must have a unique key.
 
     Example::
 

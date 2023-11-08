@@ -210,7 +210,10 @@ class Reference(object):
 T = tp.TypeVar("T")
 
 class ControllerProtocol(tp.Protocol):
+    """Protocol for App"""
     def _request_rerender(self, components: Iterable["Element"], kwargs: dict[str, tp.Any]):
+        pass
+    def _defer_rerender(self, components: list["Element"]):
         pass
 
 
@@ -220,10 +223,6 @@ class _Tracker:
     added to the current component.
     """
     children: list["Element"]
-    """
-    An optional extra operation applied to each child of this element.
-    TableGridView needs this.
-    """
 
     def __init__(self, component: "Element"):
         self.component = component

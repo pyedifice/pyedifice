@@ -14,13 +14,11 @@ First, install Edifice::
 
     Edifice supports both the PySide6 library and the PyQt6 library
     for Qt bindings (both are covered in the automated unit tests).
-    Edifice uses the PySide6 library by default and includes it as a dependency.
-    If you have no preference between PySide6 and PyQt6, you can ignore this aside.
+    Edifice prefers the PySide6 library but both are supported.
 
     If you would prefer to use the PyQt6 library and do not wish to
     install PySide6, you can run::
 
-        pip install watchdog  # A dependency required for dynamic reloads
         pip install qasync  # A dependency required for asyncio integration
         pip install --no-dependencies pyedifice
 
@@ -33,24 +31,45 @@ First, install Edifice::
 Let us create the basic skeleton of our UI.
 Copy this code into a new file, for example tutorial.py::
 
-   import edifice as ed
-   from edifice import Label, TextInput, View
+    from edifice import Label, TextInput, View
 
-   window = View(layout="row")(  # Layout children in a row
-       Label("Measurement in meters:"),
-       TextInput(""),
-       Label("Measurement in feet:"),
-   )
+    @component
+    def MyApp(self):
+        with View(layout="row"):  # Layout children in a row
+            Label("Measurement in meters:")
+            TextInput("")
+            Label("Measurement in feet:")
 
-   if __name__ == "__main__":
-       ed.App(window).start()
+    if __name__ == "__main__":
+        App(MyApp()).start()
 
-What does this code do? View is an example of a :class:`Element<edifice.Element>`, which are the building blocks of an application.
-The View component receives :code:`layout="row"` as an argument in its constructor.
-We refer to layout as a **"prop"** of the View component -- it is a property passed to the View.
-We also see this funny notation where we call the constructed View object with several arguments:
-:code:`Label`, :code:`TextInput`, etc.
-What this does is to add the Label, TextInput, etc, as the *children* of the View.
+What does this code do?
+First we define a function :code:`MyApp` which is decorated by
+:func:`edifice.component`.
+The :code:`MyApp` component is the top-level Element of our application.
+
+A component is a function which, when called, renders an Element tree.
+Some Elements may have children. The children are other Elements.
+
+The rendering for an Edifice application is done by declaring a tree of Elements
+starting with a single root Element, and then declaring its children.
+
+An Element may be either a component function, or a base
+:class:`QtWidgetElement <edifice.QtWidgetElement>`.
+
+The base QtWidgetElements, when rendered, update their underlying QtWidget.
+
+:class:`View<edifice.View>` is an example of
+a base :class:`QtWidgetElement <edifice.QtWidgetElement>`.
+The View receives :code:`layout="row"` as an argument in its constructor.
+We refer to layout as a **"prop"** of the View Element — it is a property
+passed to the View.
+
+The View can have children. To establish the View as a parent Element and
+then declare its children, we use a
+`with statement <https://docs.python.org/3/reference/compound_stmts.html#with>`_
+context. Elements inside the :code:`with` context are children.
+
 In HTML or XML, you might have written it as:
 
 .. code-block:: xml
@@ -61,43 +80,12 @@ In HTML or XML, you might have written it as:
             <Label text="Measurement in feet" />
         </View>
 
-We pass the created View (which we called :code:`window`)
+We pass the component :code:`MyApp`
 to an :class:`App<edifice.App>`,
 which is responsible for actually doing the rendering.
-
-For the simplest applications, this is all you need to make a GUI.
-When you start managing more state (e.g. currently input values in the textbox, user preferences, etc), or when you want to break complex UI
-into smaller parts, or when you want to share UI logic across multiple
-parts of your application and across many applications,
-defining your own :class:`Element<edifice.Element>` class makes life much easier with almost no conceptual or code overhead::
-
-   import edifice as ed
-   from edifice import Label, TextInput, View
-
-   # Declare your own component, MyApp. The render function describes how your custom component is to be rendered
-   class MyApp(ed.Element):
-       def render(self):
-           return View(layout="row")(
-               Label("Measurement in meters:"),
-               TextInput(""),
-               Label("Measurement in feet:"),
-           )
-
-   if __name__ == "__main__":
-       ed.App(MyApp()).start()
-
-The (admittedly-humble) Element you created can be shared across apps or composed in this single application.
-Most importantly, when you start having more Elements,
-each Element is a self-contained unit with all its business logic bundled together.
-
-The render function of a Element describes how the component is to be rendered. Note that
-what it returns is only a description --- the actual rendering does not happen here!
-In Edifice, the Edifice rendering engine, which is contained in :code:`edifice.App`,
-is responsible for actually doing the rendering.
 It takes the description of each Element, and it decides when and how to render it and its children.
 It does so by monitoring the state of each Element, and it will re-render
 when the Element state changes.
-Don't worry, we'll see an example of this in action!
 
 As you might expect, you can run this application simply with :code:`python tutorial.py`.
 However, let us take advantage of Edifice's :doc:`dynamic loading capability<developer_tools>`,
@@ -114,32 +102,31 @@ Here, what we need is to add margins between the view and window boundary,
 make the Labels shorter, and add a margin between the label and text input.
 For example::
 
-    import edifice as ed
-    from edifice import Label, TextInput, View
+    from edifice import App, Label, TextInput, View, component
 
-    class MyApp(ed.Element):
-        def render(self):
-            meters_label_style = {"width": 170}
-            feet_label_style = {"margin-left": 20, "width": 200}
-            input_style = {"padding": 2, "width": 120}
-            return ed.View(layout="row", style={"margin": 10, "width": 560})(
-                Label("Measurement in meters:", style=meters_label_style),
-                TextInput("", style=input_style),
-                Label("Measurement in feet:", style=feet_label_style),
-            )
+	@component
+    def MyApp(self):
+        meters_label_style = {"width": 170}
+        feet_label_style = {"margin-left": 20, "width": 200}
+        input_style = {"padding": 2, "width": 120}
+        with View(layout="row", style={"margin": 10, "width": 560}):
+            Label("Measurement in meters:", style=meters_label_style)
+            TextInput("", style=input_style)
+            Label("Measurement in feet:", style=feet_label_style)
 
     if __name__ == "__main__":
-       ed.App(MyApp()).start()
+       App(MyApp()).start()
 
 If you want to make adjustments to this styling, you can simply edit your source file, and all changes will automatically
 be reflected.
 
-Our application still doesn't do anything, however. Let's add an :code:`on_change` event handler to the input boxes.
-This function will be called whenever the contents in the text input changes, allowing us to ensure that the numbers in the input
+Our application still doesn't do anything, however. Let's add an :code:`on_change`
+event handler to the input boxes.
+This function will be called whenever the contents in the text input changes,
+allowing us to ensure that the numbers in the input
 box and in the label are in sync::
 
-    import edifice as ed
-    from edifice import Label, TextInput, View
+    from edifice import App, Label, TextInput, View, component, use_state
 
     METERS_TO_FEET = 3.28084
 
@@ -149,47 +136,41 @@ box and in the label are in sync::
         except ValueError:
             return 0.0
 
+	@component
+    def MyApp(self):
 
-    class MyApp(ed.Element):
+        meters, meters_set = use_state("0.0")
 
-        def __init__(self):
-            super().__init__()
-            self.meters = "0.0"
+        feet = "%.3f" % (str_to_float(meters) * METERS_TO_FEET)
 
-        def render(self):
-            meters = self.meters
-            feet = "%.3f" % (str_to_float(meters) * METERS_TO_FEET)
-
-            meters_label_style = {"width": 170}
-            feet_label_style = {"margin-left": 20, "width": 200}
-            input_style = {"padding": 2, "width": 120}
-            return ed.View(layout="row", style={"margin": 10, "width": 560})(
-                Label("Measurement in meters:", style=meters_label_style),
-                TextInput(meters, style=input_style,
-                          on_change=lambda text: self.set_state(meters=text)),
-                Label(f"Measurement in feet: {feet}", style=feet_label_style),
-            )
+        meters_label_style = {"width": 170}
+        feet_label_style = {"margin-left": 20, "width": 200}
+        input_style = {"padding": 2, "width": 120}
+        with View(layout="row", style={"margin": 10, "width": 560}):
+            Label("Measurement in meters:", style=meters_label_style)
+            TextInput(meters, style=input_style, on_change=meters_set)
+            Label(f"Measurement in feet: {feet}", style=feet_label_style)
 
     if __name__ == "__main__":
-        ed.App(MyApp()).start()
+        App(MyApp()).start()
 
-We add a constructor for this class, where we initialize the attribute :code:`meters`.
-Meters is a **state** variable;
+Meters is a **state** variable in our component :code:`MyApp`,
+so we have to use the :func:`edifice.use_state` hook.
+:func:`edifice.use_state` returns a tuple with the current value
+of :code:`meters`, and also a function which we can use to set
+a new value for :code:`meters`
 we expect all changes to meters to be reflected in the UI.
-Indeed, we can think of the render function as a map from the Element state,
-meters, to UI.
+Think of the component function as a map from the state,
+meters, to UI Elements.
 
-In the render function, we read the value of meters and convert it to feet,
+In the component function, we read the value of meters and convert it to feet,
 and we populate the text input and label with the meters and feet respectively.
 For the text input, we add an :code:`on_change` callback.
 This function is called whenever the content of the text input changes.
 
-In the on_change callback, we call the set_state function.
-The set_state function will set :code:`self.meters` to the new value of the input box,
+In the :code:`on_change`` callback, we call the :code:`meters_set` function.
+The :code:`meters_set` function will set :code:`meters` to the new value of the input box,
 and it will trigger a re-render.
-It is important to call set_state instead of setting :code:`self.meters = text`
-directly,
-so that Edifice knows about state changes and could re-render the UI to accurately reflect the current state.
 
 If you want to see the state changes in action, you can open the Element Inspector::
 
@@ -199,10 +180,9 @@ The Element Inspector allows you to see the current state and props for all comp
 was created with Edifice). Play around with the application and see how the state changes.
 
 Now suppose we want to add conversion from feet to meters. Instead of copying our code and repeating
-it for each measurement pair, we can factor out the conversion logic into its own Element::
+it for each measurement pair, we can factor out the conversion logic into its own component::
 
-    import edifice as ed
-    from edifice import Label, TextInput, View
+    from edifice import Label, TextInput, View, App, component, use_state
 
     METERS_TO_FEET = 3.28084
 
@@ -212,61 +192,29 @@ it for each measurement pair, we can factor out the conversion logic into its ow
         except ValueError:
             return 0.0
 
+    @component
+    def ConversionWidget(self, from_unit, to_unit, factor):
 
-    class ConversionWidget(ed.Element):
+        current_text, current_text_set  = use_state("0.0")
 
-        def __init__(self, from_unit, to_unit, factor):
-            self.register_props(...)
-            super().__init__()
-            self.current_text = "0.0"
+        to_text = "%.3f" % (str_to_float(current_text) * self.props.factor)
 
-        def render(self):
-            from_text = self.current_text
-            to_text = "%.3f" % (str_to_float(from_text) * self.props.factor)
+        from_label_style = {"width": 170}
+        to_label_style = {"margin-left": 60, "width": 200}
+        input_style = {"padding": 2, "width": 120}
+        with View(layout="row", style={"margin": 10, "width": 560}):
+            Label(f"Measurement in {self.props.from_unit}:", style=from_label_style)
+            TextInput(current_text, style=input_style, on_change=current_text_set)
+            Label(f"Measurement in {self.props.to_unit}: {to_text}", style=to_label_style)
 
-            from_label_style = {"width": 170}
-            to_label_style = {"margin-left": 20, "width": 200}
-            input_style = {"padding": 2, "width": 120}
-            return ed.View(layout="row", style={"margin": 10, "width": 560})(
-                Label(f"Measurement in {self.props.from_unit}:", style=from_label_style),
-                TextInput(from_text, style=input_style,
-                          on_change=lambda text: self.set_state(current_text=text)),
-                Label(f"Measurement in {self.props.to_unit}: {to_text}", style=to_label_style),
-            )
-
-    class MyApp(ed.Element):
-
-        def render(self):
-            return ed.View(layout="column")(
-                ConversionWidget("meters", "feet", METERS_TO_FEET),
-                ConversionWidget("feet", "meters", 1 / METERS_TO_FEET),
-            )
+    @component
+    def MyApp(self):
+        with View(layout="column", style={}):
+            ConversionWidget("meters", "feet", METERS_TO_FEET)
+            ConversionWidget("feet", "meters", 1 / METERS_TO_FEET)
 
     if __name__ == "__main__":
-        ed.App(MyApp()).start()
+        App(MyApp()).start()
 
-Factoring out the logic makes it trivial to add conversions between pounds and kilograms, liters and gallons, etc.
-
-Oh, by the way---you can do the exact same thing in 18 lines of code, using the Form Element
-(implemented using Edifice, similar to but more general than the ConversionWidget component above)::
-
-    import edifice as ed
-    from edifice.components.forms import Form
-
-    METERS_TO_FEET = 3.28084
-
-    form = ed.View(layout="column")(
-        Form(ed.StateManager({
-            "Measurement in meters": 0.0,
-            "Measurement in feet": lambda data: data["Measurement in meters"] * METERS_TO_FEET
-        }),
-        Form(ed.StateManager({
-            "Measurement in feet": 0.0,
-            "Measurement in meters": lambda data: data["Measurement in feet"] / METERS_TO_FEET
-        }),
-    )
-
-    if __name__ == "__main__":
-        ed.App(form).start()
-
-But where's the fun in that?
+Factoring out the logic makes it trivial to add conversions between pounds and
+kilograms, liters and gallons, etc.

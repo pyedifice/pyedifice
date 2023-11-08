@@ -15,7 +15,7 @@ else:
         from PySide6.QtGui import QKeyEvent, QMouseEvent
         from PySide6.QtWidgets import QPushButton, QVBoxLayout, QHBoxLayout
 
-from ..base_components import View, _CommandType
+from .base_components import View, _CommandType
 
 class _PushButton(QPushButton):
     def __init__(self):

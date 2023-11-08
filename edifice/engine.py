@@ -155,10 +155,9 @@ class _RenderContext(object):
         def setter(x):
             if x != hook.state:
                 hook.state = x
-                # FIXME: delay rerendering (all components) until the end of the render
                 app = self.engine._app
                 assert app is not None
-                app._request_rerender([element], {})
+                app._defer_rerender([element])
 
         return (hook.state, setter)
 

@@ -1,7 +1,6 @@
 import unittest
 
 import edifice
-from edifice.components import flow_view
 
 from edifice.qt import QT_VERSION
 if QT_VERSION == "PyQt6":
@@ -15,7 +14,7 @@ if QtWidgets.QApplication.instance() is None:
 class FormTest(unittest.TestCase):
 
     def test_FlowView_render(self):
-        fv = flow_view.FlowView()(edifice.Label(text="FlowView"))
+        fv = edifice.FlowView()(edifice.Label(text="FlowView"))
         my_app = edifice.App(fv, create_application=False)
         with my_app.start_loop() as loop:
             loop.call_later(0.1, loop.stop)

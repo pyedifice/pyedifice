@@ -7,8 +7,8 @@ import os, sys
 sys.path.insert(0, os.path.join(sys.path[0], '..'))
 import edifice as ed
 from edifice.hooks import use_state
-from edifice.components.table_grid_view import TableGridView
-from edifice.components.button_view import ButtonView
+from edifice import TableGridView
+from edifice import ButtonView
 
 @ed.component
 def myComponent(self):

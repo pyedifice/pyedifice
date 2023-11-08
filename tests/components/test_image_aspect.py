@@ -1,7 +1,6 @@
 import unittest
 
 import edifice
-from edifice.components import image_aspect
 
 from edifice.qt import QT_VERSION
 if QT_VERSION == "PyQt6":
@@ -15,7 +14,7 @@ if QtWidgets.QApplication.instance() is None:
 class FormTest(unittest.TestCase):
 
     def test_ImageAspect_render(self):
-        v = image_aspect.ImageAspect(src="../example.png")
+        v = edifice.ImageAspect(src="../example.png")
         my_app = edifice.App(v, create_application=False)
         with my_app.start_loop() as loop:
             loop.call_later(0.1, loop.stop)
