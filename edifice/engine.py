@@ -306,7 +306,7 @@ class RenderResult(object):
 
     def run(self):
         for command in self.commands:
-            command[0](*command[1:])
+            command()
         self.render_context.run_callbacks()
 
 @dataclass

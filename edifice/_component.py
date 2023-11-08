@@ -5,7 +5,7 @@ import typing as tp
 from typing_extensions import Self
 import threading
 
-_CommandType = tp.Tuple[Callable[..., None], ...]
+_CommandType = Callable[[], None]
 _T_use_state = tp.TypeVar("_T_use_state")
 
 """

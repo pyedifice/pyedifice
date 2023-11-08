@@ -63,10 +63,11 @@ class ImageAspect(QtWidgetElement):
     def _qt_update_commands(self, children, newprops, newstate):
         if self.underlying is None:
             self._initialize()
-        assert self.underlying is not None
+        widget = self.underlying
+        assert widget is not None
 
-        commands = super()._qt_update_commands(children, newprops, newstate, self.underlying, None)
+        commands = super()._qt_update_commands(children, newprops, newstate, widget, None)
         for prop in newprops:
             if prop == "src" and self.underlying is not None:
-                commands.append((self.underlying.setPixmap, _image_descriptor_to_pixmap(self.props.src)))
+                commands.append(lambda: widget.setPixmap(_image_descriptor_to_pixmap(self.props.src)))
         return commands

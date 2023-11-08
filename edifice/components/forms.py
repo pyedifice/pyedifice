@@ -5,13 +5,10 @@ import pathlib
 import typing as tp
 
 from ..qt import QT_VERSION
-if tp.TYPE_CHECKING:
-    from PySide6 import QtWidgets
+if QT_VERSION == "PyQt6" and not tp.TYPE_CHECKING:
+    from PyQt6 import QtWidgets
 else:
-    if QT_VERSION == "PyQt6":
-        from PyQt6 import QtWidgets
-    else:
-        from PySide6 import QtWidgets
+    from PySide6 import QtWidgets
 
 from .._component import Element
 from ..state import StateManager

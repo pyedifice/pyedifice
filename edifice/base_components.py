@@ -43,7 +43,7 @@ import typing as tp
 
 import numpy as np
 
-from ._component import WidgetElement, RootElement, _CommandType
+from ._component import WidgetElement, RootElement, _CommandType, Element
 
 from .qt import QT_VERSION
 
@@ -69,6 +69,8 @@ def _ensure_future(fn):
         return wrapper
     return fn
 
+def ignore_result(*args, **kwargs):
+    pass
 
 StyleType = tp.Optional[tp.Union[tp.Mapping[tp.Text, tp.Any], tp.Sequence[tp.Mapping[tp.Text, tp.Any]]]]
 RGBAType = tp.Tuple[int, int, int, int]
@@ -438,7 +440,9 @@ class QtWidgetElement(WidgetElement):
             self.underlying.mouseMoveEvent = self._default_mouse_move_event
 
     def _gen_styling_commands(self, children, style, underlying, underlying_layout=None):
-        commands = []
+        commands: list[_CommandType] = []
+        widget = self.underlying
+        assert widget is not None
 
         if underlying_layout is not None:
             set_margin = False
@@ -483,9 +487,16 @@ class QtWidgetElement(WidgetElement):
                 style.pop("align")
 
             if set_margin:
-                commands.append((underlying_layout.setContentsMargins, new_margin[0], new_margin[1], new_margin[2], new_margin[3]))
+                commands.append(
+                    lambda: underlying_layout.setContentsMargins(
+                        new_margin[0],
+                        new_margin[1],
+                        new_margin[2],
+                        new_margin[3],
+                    ),
+                )
             if set_align:
-                commands.append((underlying_layout.setAlignment, set_align))
+                commands.append(lambda: underlying_layout.setAlignment(set_align))
         else:
             if "align" in style:
                 if style["align"] == "left":
@@ -546,11 +557,10 @@ class QtWidgetElement(WidgetElement):
             self._left = move_coords[0]
 
         if set_move:
-            assert self.underlying is not None
-            commands.append((self.underlying.move, move_coords[0], move_coords[1]))
+            commands.append(lambda: widget.move(move_coords[0], move_coords[1]))
 
         css_string = _dict_to_style(style,  "QWidget#" + str(id(self)))
-        commands.append((self.underlying.setStyleSheet, css_string))
+        commands.append(lambda: widget.setStyleSheet(css_string))
         return commands
 
     def _set_context_menu(self, underlying: _UnderlyingType):
@@ -575,7 +585,7 @@ class QtWidgetElement(WidgetElement):
         underlying: _UnderlyingType,
         underlying_layout=None
     ) -> list[_CommandType]:
-        commands = []
+        commands: list[_CommandType] = []
         for prop in newprops:
             if prop == "style":
                 style = newprops[prop] or {}
@@ -590,46 +600,55 @@ class QtWidgetElement(WidgetElement):
                 commands.extend(self._gen_styling_commands(children, style, underlying, underlying_layout))
             elif prop == "size_policy":
                 if newprops.size_policy is not None:
-                    commands.append((underlying.setSizePolicy, newprops.size_policy))
+                    commands.append(lambda: underlying.setSizePolicy(newprops.size_policy))
             elif prop == "on_click":
-                commands.append((self._set_on_click, underlying, newprops.on_click))
+                commands.append(lambda: self._set_on_click(underlying, newprops.on_click))
                 if newprops.on_click is not None and self.props.cursor is not None:
-                    commands.append((underlying.setCursor, QtCore.Qt.CursorShape.PointingHandCursor))
+                    commands.append(lambda: underlying.setCursor(QtCore.Qt.CursorShape.PointingHandCursor))
             elif prop == "on_key_down":
-                commands.append((self._set_on_key_down, underlying, newprops.on_key_down))
+                commands.append(lambda: self._set_on_key_down(underlying, newprops.on_key_down))
             elif prop == "on_key_up":
-                commands.append((self._set_on_key_up, underlying, newprops.on_key_up))
+                commands.append(lambda: self._set_on_key_up(underlying, newprops.on_key_up))
             elif prop == "on_mouse_down":
-                commands.append((self._set_on_mouse_down, underlying, newprops.on_mouse_down))
+                commands.append(lambda: self._set_on_mouse_down(underlying, newprops.on_mouse_down))
             elif prop == "on_mouse_up":
-                commands.append((self._set_on_mouse_up, underlying, newprops.on_mouse_up))
+                commands.append(lambda: self._set_on_mouse_up(underlying, newprops.on_mouse_up))
             elif prop == "on_mouse_enter":
-                commands.append((self._set_on_mouse_enter, underlying, newprops.on_mouse_enter))
+                commands.append(lambda: self._set_on_mouse_enter(underlying, newprops.on_mouse_enter))
             elif prop == "on_mouse_leave":
-                commands.append((self._set_on_mouse_leave, underlying, newprops.on_mouse_leave))
+                commands.append(lambda: self._set_on_mouse_leave(underlying, newprops.on_mouse_leave))
             elif prop == "on_mouse_move":
-                commands.append((self._set_on_mouse_move, underlying, newprops.on_mouse_move))
+                commands.append(lambda: self._set_on_mouse_move(underlying, newprops.on_mouse_move))
             elif prop == "tool_tip":
                 if newprops.tool_tip is not None:
-                    commands.append((underlying.setToolTip, newprops.tool_tip))
+                    commands.append(lambda: underlying.setToolTip(newprops.tool_tip))
             elif prop == "css_class":
                 css_class = newprops.css_class
                 if css_class is None:
                     css_class = []
-                commands.append((underlying.setProperty, "css_class", css_class))
-                commands.extend([(underlying.style().unpolish, underlying),
-                                 (underlying.style().polish, underlying)])
+                commands.append(
+                    lambda: ignore_result(underlying.setProperty("css_class", css_class))
+                )
+                commands.extend([
+                    lambda: underlying.style().unpolish(underlying),
+                    lambda: underlying.style().polish(underlying),
+                ])
             elif prop == "cursor":
                 cursor = self.props.cursor or ("default" if self.props.on_click is None else "pointer")
-                commands.append((underlying.setCursor, _CURSORS[cursor]))
+                commands.append(lambda: underlying.setCursor(_CURSORS[cursor]))
             elif prop == "context_menu":
                 if self._context_menu_connected:
                     underlying.customContextMenuRequested.disconnect()
                 if self.props.context_menu is not None:
-                    commands.append((underlying.setContextMenuPolicy, QtCore.Qt.ContextMenuPolicy.CustomContextMenu))
-                    commands.append((self._set_context_menu, underlying))
+                    commands.append(
+                        lambda: underlying.setContextMenuPolicy(QtCore.Qt.ContextMenuPolicy.CustomContextMenu))
+                    commands.append(
+                        lambda: self._set_context_menu(underlying)
+                    )
                 else:
-                    commands.append((underlying.setContextMenuPolicy, QtCore.Qt.ContextMenuPolicy.DefaultContextMenu))
+                    commands.append(
+                        lambda: underlying.setContextMenuPolicy(QtCore.Qt.ContextMenuPolicy.DefaultContextMenu)
+                    )
         return commands
 
 
@@ -703,36 +722,49 @@ class Window(RootElement):
             raise ValueError("Window can only have 1 child")
 
         child = children[0].component
-        commands = []
+        commands: list[_CommandType] = []
+        widget = self.underlying
+        assert widget is not None
 
-        if self._previous_rendering:
-            old_position = self._previous_rendering.underlying.pos()
-            if child != self._previous_rendering:
-                commands.append((self._previous_rendering.underlying.close,))
+        prev: Element | None = self._previous_rendering
+        if prev is not None:
+            old_position = prev.underlying.pos()
+            if child != prev:
+                commands.append(
+                    lambda: prev.underlying.close())
                 if old_position:
-                    commands.append((child.underlying.move, old_position))
-                commands.append((child.underlying.show,))
+                    commands.append(
+                        lambda: child.underlying.move(old_position)
+                    )
+                commands.append(lambda: child.underlying.show())
                 newprops = self.props
                 self._menu_bar = None
         else:
-            commands.append((child.underlying.show,))
+            commands.append(lambda: child.underlying.show())
             newprops = self.props
             self._menu_bar = None
         self._previous_rendering = child
 
         for prop in newprops:
             if prop == "title":
-                commands.append((self._previous_rendering.underlying.setWindowTitle, newprops.title))
+                commands.append(
+                    lambda: child.underlying.setWindowTitle(newprops.title))
             elif prop == "on_close":
-                commands.append((self._set_on_close, self._previous_rendering.underlying, newprops.on_close))
+                commands.append(
+                    lambda: self._set_on_close(child.underlying, newprops.on_close)
+                )
             elif prop == "icon" and newprops.icon:
                 pixmap = _image_descriptor_to_pixmap(newprops.icon)
-                commands.append((self._previous_rendering.underlying.setWindowIcon, QtGui.QIcon(pixmap)))
+                commands.append(
+                    lambda: child.underlying.setWindowIcon(QtGui.QIcon(pixmap))
+                )
             elif prop == "menu" and newprops.menu:
                 if self._menu_bar is not None:
                     self._menu_bar.setParent(None)
                 self._menu_bar = QtWidgets.QMenuBar()
-                commands.append((self._attach_menubar, self._menu_bar, newprops.menu))
+                commands.append(
+                    lambda: self._attach_menubar(self._menu_bar, newprops.menu)
+                )
         return commands
 
 
@@ -752,13 +784,14 @@ class GroupBox(QtWidgetElement):
     def _qt_update_commands(self, children, newprops, newstate):
         if self.underlying is None:
             self._initialize()
-        assert self.underlying is not None
+        widget = self.underlying
+        assert widget is not None
         if len(children) != 1:
             raise ValueError("GroupBox expects exactly 1 child, got %s" % len(children))
-        commands = super()._qt_update_commands(children, newprops, newstate, self.underlying)
+        commands = super()._qt_update_commands(children, newprops, newstate, widget)
         setParent = children[0].component.underlying.setParent
-        commands.append((setParent, self.underlying))
-        commands.append((self.underlying.setTitle, self.props.title))
+        commands.append(lambda: setParent(widget))
+        commands.append(lambda: widget.setTitle(self.props.title))
         return commands
 
 class Icon(QtWidgetElement):
@@ -840,7 +873,7 @@ class Icon(QtWidgetElement):
                                  self.props.collection, self.props.sub_collection, self.props.name + ".svg")
 
         if "name" in newprops or "size" in newprops or "collection" in newprops or "sub_collection" in newprops or "color" in newprops or "rotation" in newprops:
-            commands.append((self._render_image, icon_path, self.props.size, self.props.color, self.props.rotation))
+            commands.append(lambda: self._render_image(icon_path, self.props.size, self.props.color, self.props.rotation))
 
         return commands
 
@@ -876,13 +909,14 @@ class Button(QtWidgetElement):
     def _qt_update_commands(self, children, newprops, newstate):
         if self.underlying is None:
             self._initialize()
-        assert self.underlying is not None
-        size = self.underlying.font().pointSize()
+        widget = self.underlying
+        assert widget is not None
+        size = widget.font().pointSize()
         self._set_size(size * len(self.props.title), size, lambda size: (size * len(self.props.title), size))
-        commands = super()._qt_update_commands(children, newprops, newstate, self.underlying)
+        commands = super()._qt_update_commands(children, newprops, newstate, widget)
         for prop in newprops:
             if prop == "title":
-                commands.append((self.underlying.setText, str(newprops.title)))
+                commands.append(lambda: widget.setText(str(newprops.title)))
 
         return commands
 
@@ -954,7 +988,7 @@ class IconButton(Button):
             self.underlying.setIcon(QtGui.QIcon(pixmap))
 
         if "name" in newprops or "size" in newprops or "collection" in newprops or "sub_collection" in newprops or "color" in newprops or "rotation" in newprops:
-            commands.append((render_image, icon_path, self.props.size, self.props.color, self.props.rotation))
+            commands.append(lambda: render_image(icon_path, self.props.size, self.props.color, self.props.rotation))
 
         return commands
 
@@ -1001,20 +1035,21 @@ class Label(QtWidgetElement):
     def _qt_update_commands(self, children, newprops, newstate):
         if self.underlying is None:
             self._initialize()
-        assert self.underlying is not None
-        size = self.underlying.font().pointSize()
+        widget = self.underlying
+        assert widget is not None
+        size = widget.font().pointSize()
         self._set_size(size * len(str(self.props.text)), size, lambda size: (size * len(str(self.props.text)), size))
 
-        commands = super()._qt_update_commands(children, newprops, newstate, self.underlying, None)
+        commands = super()._qt_update_commands(children, newprops, newstate, widget, None)
         for prop in newprops:
             if prop == "text":
-                commands.append((self.underlying.setText, str(newprops[prop])))
+                commands.append(lambda: widget.setText(str(newprops[prop])))
             elif prop == "word_wrap":
-                commands.append((self.underlying.setWordWrap, self.props.word_wrap))
+                commands.append(lambda: widget.setWordWrap(self.props.word_wrap))
             elif prop == "link_open":
-                commands.append((self.underlying.setOpenExternalLinks, self.props.link_open))
+                commands.append(lambda: widget.setOpenExternalLinks(self.props.link_open))
             elif prop == "selectable" or prop == "editable":
-                interaction_flags = 0
+                interaction_flags = QtCore.Qt.TextInteractionFlag.NoTextInteraction
                 change_cursor = False
                 if self.props.selectable:
                     change_cursor = True
@@ -1024,13 +1059,13 @@ class Label(QtWidgetElement):
                     # PyQt5 doesn't support bitwise or with ints
                     # TODO What about PyQt6?
                     if interaction_flags:
-                        interaction_flags |= QtCore.Qt.TextEditable
+                        interaction_flags |= QtCore.Qt.TextInteractionFlag.TextEditable
                     else:
-                        interaction_flags = QtCore.Qt.TextEditable
+                        interaction_flags = QtCore.Qt.TextInteractionFlag.TextEditable
                 if change_cursor and self.props.cursor is None:
-                    commands.append((self.underlying.setCursor, _CURSORS["text"]))
+                    commands.append(lambda: widget.setCursor(_CURSORS["text"]))
                 if interaction_flags:
-                    commands.append((self.underlying.setTextInteractionFlags, interaction_flags))
+                    commands.append(lambda: widget.setTextInteractionFlags(interaction_flags))
         return commands
 
 
@@ -1058,13 +1093,14 @@ class Image(QtWidgetElement):
     def _qt_update_commands(self, children, newprops, newstate):
         if self.underlying is None:
             self._initialize()
-        assert self.underlying is not None
+        widget = self.underlying
+        assert widget is not None
 
-        commands = super()._qt_update_commands(children, newprops, newstate, self.underlying, None)
-        commands.append((self.underlying.setScaledContents, self.props.scale_to_fit))
+        commands = super()._qt_update_commands(children, newprops, newstate, widget, None)
+        commands.append(lambda: widget.setScaledContents(self.props.scale_to_fit))
         for prop in newprops:
             if prop == "src":
-                commands.append((self.underlying.setPixmap, _image_descriptor_to_pixmap(self.props.src)))
+                commands.append(lambda: widget.setPixmap(_image_descriptor_to_pixmap(self.props.src)))
         return commands
 
 class ImageSvg(QtWidgetElement):
@@ -1088,12 +1124,13 @@ class ImageSvg(QtWidgetElement):
     def _qt_update_commands(self, children, newprops, newstate):
         if self.underlying is None:
             self._initialize()
-        assert self.underlying is not None
+        widget = self.underlying
+        assert widget is not None
 
-        commands = super()._qt_update_commands(children, newprops, newstate, self.underlying, None)
+        commands = super()._qt_update_commands(children, newprops, newstate, widget, None)
         for prop in newprops:
             if prop == "src":
-                commands.append((self.underlying.load, self.props.src))
+                commands.append(lambda: widget.load(self.props.src))
         return commands
 
 # TODO
@@ -1177,13 +1214,14 @@ class TextInput(QtWidgetElement):
         self.underlying.setObjectName(str(id(self)))
 
     def _set_on_change(self, on_change):
-        assert self.underlying is not None
+        widget = self.underlying
+        assert widget is not None
         def on_change_fun(text):
             if text != self.props.text:
                 return _ensure_future(on_change)(text)
         if self._on_change_connected:
-            self.underlying.textChanged[str].disconnect()
-        self.underlying.textChanged[str].connect(on_change_fun)
+            widget.textChanged.disconnect()
+        widget.textChanged.connect(on_change_fun)
         self._on_change_connected = True
 
     def _set_on_edit_finish(self, on_edit_finish):
@@ -1206,17 +1244,17 @@ class TextInput(QtWidgetElement):
     def _qt_update_commands(self, children, newprops, newstate):
         if self.underlying is None:
             self._initialize()
-        assert self.underlying is not None
+        widget = self.underlying
+        assert widget is not None
 
-        commands = super()._qt_update_commands(children, newprops, newstate, self.underlying)
-        commands.append((self.underlying.setText, str(self.props.text)))
-        commands.append((self.underlying.setCursorPosition,
-                         self.underlying.cursorPosition()))
+        commands = super()._qt_update_commands(children, newprops, newstate, widget)
+        commands.append(lambda: widget.setText(str(self.props.text)))
+        commands.append(lambda: widget.setCursorPosition(widget.cursorPosition()))
         for prop in newprops:
             if prop == "on_change":
-                commands.append((self._set_on_change, newprops[prop]))
+                commands.append(lambda: self._set_on_change(newprops[prop]))
             elif prop == "on_edit_finish":
-                commands.append((self._set_on_edit_finish, newprops[prop]))
+                commands.append(lambda: self._set_on_edit_finish(newprops[prop]))
     #         elif prop == "completer":
     #             commands.append((self._set_completer, newprops[prop]))
         return commands
@@ -1288,9 +1326,9 @@ class Dropdown(QtWidgetElement):
             return _ensure_future(on_change)(text)
         assert self.underlying is not None
         if self._on_change_connected:
-            self.underlying.editTextChanged[str].disconnect()
+            self.underlying.editTextChanged.disconnect()
         if on_change is not None:
-            self.underlying.editTextChanged[str].connect(on_change_fun)
+            self.underlying.editTextChanged.connect(on_change_fun)
             self._on_change_connected = True
 
     def _set_on_select(self, on_select):
@@ -1298,33 +1336,38 @@ class Dropdown(QtWidgetElement):
             return _ensure_future(on_select)(text)
         assert self.underlying is not None
         if self._on_select_connected:
-            self.underlying.textActivated[str].disconnect()
+            self.underlying.textActivated.disconnect()
         if on_select is not None:
-            self.underlying.textActivated[str].connect(on_select_fun)
+            self.underlying.textActivated.connect(on_select_fun)
             self._on_select_connected = True
 
     def _qt_update_commands(self, children, newprops, newstate):
         if self.underlying is None:
             self._initialize()
-        assert self.underlying is not None
 
-        commands = super()._qt_update_commands(children, newprops, newstate, self.underlying)
-        commands.append((self.underlying.setEditable, self.props.editable))
+        widget = self.underlying
+        assert widget is not None
+
+        commands = super()._qt_update_commands(children, newprops, newstate, widget)
+        commands.append(lambda: widget.setEditable(self.props.editable))
         if "options" in newprops:
-            commands.extend([(self.underlying.clear,),
-                             (self.underlying.addItems, newprops.options),
-                            ])
+            commands.extend([
+                lambda: widget.clear(),
+                lambda : widget.addItems(newprops.options),
+            ])
         for prop in newprops:
             if prop == "on_change":
-                commands.append((self._set_on_change, newprops[prop]))
+                commands.append(lambda: self._set_on_change(newprops[prop]))
             elif prop == "on_select":
-                commands.append((self._set_on_select, newprops[prop]))
+                commands.append(lambda: self._set_on_select(newprops[prop]))
             elif prop == "text":
-                commands.append((self.underlying.setEditText, newprops[prop]))
+                commands.append(lambda: widget.setEditText(newprops[prop]))
             elif prop == "selection":
-                commands.append((self.underlying.setCurrentText, newprops[prop]))
+                commands.append(lambda: widget.setCurrentText(newprops[prop]))
             elif prop == "completer":
-                commands.append((self._set_completer, newprops[prop]))
+                # TODO
+                # commands.append(lambda: self._set_completer(newprops[prop]))
+                pass
         return commands
 
 
@@ -1381,15 +1424,16 @@ class RadioButton(QtWidgetElement):
     def _qt_update_commands(self, children, newprops, newstate):
         if self.underlying is None:
             self._initialize()
-        assert self.underlying is not None
+        widget = self.underlying
+        assert widget is not None
 
-        commands = super()._qt_update_commands(children, newprops, newstate, self.underlying)
-        commands.append((self.underlying.setChecked, self.props.checked))
+        commands = super()._qt_update_commands(children, newprops, newstate, widget)
+        commands.append(lambda: widget.setChecked(self.props.checked))
         for prop in newprops:
             if prop == "on_change":
-                commands.append((self._set_on_change, newprops[prop]))
+                commands.append(lambda: self._set_on_change(newprops[prop]))
             elif prop == "text":
-                commands.append((self.underlying.setText, str(newprops[prop])))
+                commands.append(lambda: widget.setText(str(newprops[prop])))
         return commands
 
 
@@ -1441,23 +1485,24 @@ class CheckBox(QtWidgetElement):
         def on_change_fun(checked):
             return _ensure_future(on_change)(checked)
         if self._connected:
-            self.underlying.stateChanged[int].disconnect()
-        self.underlying.stateChanged[int].connect(on_change_fun)
+            self.underlying.stateChanged.disconnect()
+        self.underlying.stateChanged.connect(on_change_fun)
         self._connected = True
 
     def _qt_update_commands(self, children, newprops, newstate):
         if self.underlying is None:
             self._initialize()
-        assert self.underlying is not None
+        widget = self.underlying
+        assert widget is not None
 
-        commands = super()._qt_update_commands(children, newprops, newstate, self.underlying)
+        commands = super()._qt_update_commands(children, newprops, newstate, widget)
         check_state = QtCore.Qt.CheckState.Checked if self.props.checked else QtCore.Qt.CheckState.Unchecked
-        commands.append((self.underlying.setCheckState, check_state))
+        commands.append(lambda: widget.setCheckState(check_state))
         for prop in newprops:
             if prop == "on_change":
-                commands.append((self._set_on_change, newprops[prop]))
+                commands.append(lambda: self._set_on_change(newprops[prop]))
             elif prop == "text":
-                commands.append((self.underlying.setText, str(newprops[prop])))
+                commands.append(lambda: widget.setText(str(newprops[prop])))
         return commands
 
 
@@ -1551,33 +1596,36 @@ class Slider(QtWidgetElement):
                 value = min_value + (max_value - min_value) * (value / self._granularity)
             return _ensure_future(on_change)(value)
         if self._connected:
-            self.underlying.valueChanged[int].disconnect()
-        self.underlying.valueChanged[int].connect(on_change_fun)
+            self.underlying.valueChanged.disconnect()
+        self.underlying.valueChanged.connect(on_change_fun)
         self._connected = True
 
     def _qt_update_commands(self, children, newprops, newstate):
         if self.underlying is None:
             self._initialize()
-        assert self.underlying is not None
+        widget = self.underlying
+        assert widget is not None
 
-        commands = super()._qt_update_commands(children, newprops, newstate, self.underlying)
+        commands = super()._qt_update_commands(children, newprops, newstate, widget)
         value = self.props.value
         if self.props.dtype == float:
             min_value, max_value = self.props.min_value, self.props.max_value
             value = int((value - min_value) / (max_value - min_value) * self._granularity)
 
         if self.props.dtype == float:
-            commands.extend([(self.underlying.setMinimum, 0),
-                             (self.underlying.setMaximum, self._granularity),
-                            ])
+            commands.extend([
+                lambda: widget.setMinimum(0),
+                lambda: widget.setMaximum(self._granularity),
+            ])
         else:
-            commands.extend([(self.underlying.setMinimum, self.props.min_value),
-                             (self.underlying.setMaximum, self.props.max_value),
-                            ])
-        commands.append((self.underlying.setValue, value))
+            commands.extend([
+                lambda: widget.setMinimum(self.props.min_value),
+                lambda: widget.setMaximum(self.props.max_value),
+            ])
+        commands.append(lambda: widget.setValue(value))
         for prop in newprops:
             if prop == "on_change":
-                commands.append((self._set_on_change, newprops[prop]))
+                commands.append(lambda: self._set_on_change(newprops[prop]))
         return commands
 
 
@@ -1987,8 +2035,10 @@ class CustomWidget(QtWidgetElement):
     def _qt_update_commands(self, children, newprops, newstate):
         if self.underlying is None:
             self.underlying = self.create_widget()
+        widget = self.underlying
+        assert widget is not None
         commands = super()._qt_update_commands(children, newprops, newstate, self.underlying, None)
-        commands.append((self.paint, self.underlying, newprops))
+        commands.append(lambda: self.paint(widget, newprops))
         return commands
 
 
@@ -2033,21 +2083,21 @@ class Table(QtWidgetElement):
 
         for prop in newprops:
             if prop == "rows":
-                commands.append((self.underlying.setRowCount, newprops[prop]))
+                commands.append(lambda: self.underlying.setRowCount(newprops[prop]))
             elif prop == "columns":
-                commands.append((self.underlying.setColumnCount, newprops[prop]))
+                commands.append(lambda: self.underlying.setColumnCount(newprops[prop]))
             elif prop == "alternating_row_colors":
-                commands.append((self.underlying.setAlternatingRowColors, newprops[prop]))
+                commands.append(lambda: self.underlying.setAlternatingRowColors(newprops[prop]))
             elif prop == "row_headers":
                 if newprops[prop] is not None:
-                    commands.append((self.underlying.setVerticalHeaderLabels, list(map(str, newprops[prop]))))
+                    commands.append(lambda: self.underlying.setVerticalHeaderLabels(list(map(str, newprops[prop]))))
                 else:
-                    commands.append((self.underlying.setVerticalHeaderLabels, list(map(str, range(newprops.rows)))))
+                    commands.append(lambda: self.underlying.setVerticalHeaderLabels(list(map(str, range(newprops.rows)))))
             elif prop == "column_headers":
                 if newprops[prop] is not None:
-                    commands.append((self.underlying.setHorizontalHeaderLabels, list(map(str, newprops[prop]))))
+                    commands.append(lambda: self.underlying.setHorizontalHeaderLabels(list(map(str, newprops[prop]))))
                 else:
-                    commands.append((self.underlying.setHorizontalHeaderLabels, list(map(str, range(newprops.columns)))))
+                    commands.append(lambda: self.underlying.setHorizontalHeaderLabels(list(map(str, range(newprops.columns)))))
 
         new_children = set()
         for child in children:
@@ -2061,12 +2111,12 @@ class Table(QtWidgetElement):
             if old_child not in new_children:
                 for j, el in enumerate(old_child.children):
                     if el:
-                        commands.append((self.underlying.setCellWidget, i, j, QtWidgets.QWidget()))
+                        commands.append(lambda: self.underlying.setCellWidget(i, j, QtWidgets.QWidget()))
 
         self._widget_children = [child.component for child in children]
         for i, child in enumerate(children):
             if child.component not in self._already_rendered:
                 for j, el in enumerate(child.children):
-                    commands.append((self.underlying.setCellWidget, i, j, el.component.underlying))
+                    commands.append(lambda: self.underlying.setCellWidget(i, j, el.component.underlying))
             self._already_rendered[child.component] = True
         return commands

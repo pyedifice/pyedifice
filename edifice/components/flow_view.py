@@ -8,16 +8,12 @@
 
 from ..qt import QT_VERSION
 import typing
-if typing.TYPE_CHECKING:
+if QT_VERSION == "PyQt6" and not typing.TYPE_CHECKING:
+    from PyQt6.QtCore import QMargins, QPoint, QRect, QSize, Qt
+    from PyQt6.QtWidgets import QLayout, QSizePolicy, QWidget
+else:
     from PySide6.QtCore import QMargins, QPoint, QRect, QSize, Qt
     from PySide6.QtWidgets import QLayout, QSizePolicy, QWidget
-else:
-    if QT_VERSION == "PyQt6":
-        from PyQt6.QtCore import QMargins, QPoint, QRect, QSize, Qt
-        from PyQt6.QtWidgets import QLayout, QSizePolicy, QWidget
-    else:
-        from PySide6.QtCore import QMargins, QPoint, QRect, QSize, Qt
-        from PySide6.QtWidgets import QLayout, QSizePolicy, QWidget
 
 from ..base_components import _LinearView
 
@@ -98,7 +94,10 @@ class FlowLayout(QLayout):
         for item in self._item_list:
             size = size.expandedTo(item.minimumSize())
 
-        size += QSize(2 * self.contentsMargins().top(), 2 * self.contentsMargins().top())
+        size += QSize(
+            2 * self.contentsMargins().top(),
+            2 * self.contentsMargins().top(),
+        )
         return size
 
     def _do_layout(self, rect, test_only):
