@@ -146,55 +146,78 @@ def _create_qmenu(menu: ContextMenuType, parent, title: tp.Optional[tp.Text] = N
 class QtWidgetElement(WidgetElement):
     """Base Qt Widget.
 
-    All Qt widgets inherit from this component and its props, which add basic functionality
-    such as styling and event handlers.
+    All elements with an underlying
+    `QWidget <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html>`_
+    inherit from this element.
+
+    The props add basic functionality such as styling and event handlers.
+
 
     Args:
         style: style for the widget. Could either be a dictionary or a list of dictionaries.
 
-            See docs/style.md for a primer on styling.
+            See :doc:`<styling>` for a primer on styling.
         tool_tip:
             the tool tip displayed when hovering over the widget.
         cursor:
             the shape of the cursor when mousing over this widget. Must be one of:
-            default, arrow, pointer, grab, grabbing, text, crosshair, move, wait, ew-resize,
-            ns-resize, nesw-resize, nwse-resize, not-allowed, forbidden
+            :code:`"default"`, :code:`"arrow"`, :code:`"pointer"`, :code:`"grab"`, :code:`"grabbing"`,
+            :code:`"text"`, :code:`"crosshair"`, :code:`"move"`, :code:`"wait"`, :code:`"ew-resize"`,
+            :code:`"ns-resize"`, :code:`"nesw-resize"`, :code:`"nwse-resize"`,
+            :code:`"not-allowed"`, :code:`"forbidden"`
         context_menu:
             the context menu to display when the user right clicks on the widget.
             Expressed as a dict mapping the name of the context menu entry to either a function
             (which will be called when this entry is clicked) or to another sub context menu.
-            For example, {"Copy": copy_fun, "Share": {"Twitter": twitter_share_fun, "Facebook": facebook_share_fun}}
+            For example, :code:`{"Copy": copy_fun, "Share": {"Twitter": twitter_share_fun, "Facebook": facebook_share_fun}}`
         css_class:
-            a string or a list of strings, which will be stored in the "css_class" property of the Qt Widget.
+            a string or a list of strings, which will be stored in the :code:`css_class` property of the Qt Widget.
             This can be used in an application stylesheet, like:
 
                 QLabel[css_class="heading"] { font-size: 18px; }
 
         size_policy:
-            horizontal and vertical resizing policy, of type `QSizePolicy <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QSizePolicy.html>`_
+            Horizontal and vertical resizing policy, of type `QSizePolicy <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QSizePolicy.html>`_
         on_click:
-            callback for click events (mouse pressed and released). Takes a QMouseEvent object as argument
+            Callback for click events (mouse pressed and released). Takes a
+            `QMouseEvent <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QMouseEvent.html>`_
+            as argument.
         on_key_down:
-            callback for key down events (key pressed). Takes a QKeyEvent object as argument.
-            The key() method of QKeyEvent returns the raw key pressed (an element of the QtCore.Qt.Key enum,
-            which is conveniently exposed as edifice.Key).
-            The text() method returns the unicode of the key press, taking modifier keys (e.g. Shift)
+            Callback for key down events (key pressed). Takes a
+            `QKeyEvent <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QKeyEvent.html>`_
+            as argument.
+            The :code:`key()` method of :code:`QKeyEvent` returns the
+            `Qt.Key <https://doc.qt.io/qtforpython-6/PySide6/QtCore/Qt.html#PySide6.QtCore.PySide6.QtCore.Qt.Key>`_
+            pressed.
+            The :code:`text()` method returns the unicode of the key press, taking modifier keys (e.g. Shift)
             into account.
         on_key_up:
-            callback for key up events (key released). Takes a QKeyEvent object as argument.
+            Callback for key up events (key released). Takes a
+            `QKeyEvent <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QKeyEvent.html>`_
+            as argument.
         on_mouse_down:
-            callback for mouse down events (mouse pressed). Takes a QMouseEvent object as argument
+            Callback for mouse down events (mouse pressed). Takes a
+            `QMouseEvent <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QMouseEvent.html>`_
+            as argument.
         on_mouse_up:
-            callback for mouse up events (mouse released). Takes a QMouseEvent object as argument
+            Callback for mouse up events (mouse released). Takes a
+            `QMouseEvent <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QMouseEvent.html>`_
+            as argument.
         on_mouse_enter:
-            callback for mouse enter events (triggered once every time mouse enters widget).
-            Takes a QMouseEvent object as argument
+            Callback for mouse enter events (triggered once every time mouse enters widget).
+            Takes a
+            `QMouseEvent <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QMouseEvent.html>`_
+            as argument.
         on_mouse_leave:
-            callback for mouse leave events (triggered once every time mouse leaves widget).
-            Takes a QMouseEvent object as argument
+            Callback for mouse leave events (triggered once every time mouse leaves widget).
+            Takes a
+            `QMouseEvent <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QMouseEvent.html>`_
+            as argument.
         on_mouse_move:
-            callback for mouse move events (triggered every time mouse moves within widget).
-            Takes a QMouseEvent object as argument
+            Callback for mouse move events (triggered every time mouse moves within widget).
+            Takes a
+            `QMouseEvent <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QMouseEvent.html>`_
+            as argument.
 
     """
     underlying: _UnderlyingType | None

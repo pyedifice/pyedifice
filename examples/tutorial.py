@@ -1,8 +1,13 @@
-import edifice as ed
-from edifice import Label, TextInput
+#
+# python examples/tutorial.py
+#
+
+import os, sys
+# We need this sys.path line for running this example, especially in VSCode debugger.
+sys.path.insert(0, os.path.join(sys.path[0], '..'))
+from edifice import Label, TextInput, View, App, component, use_state
 
 METERS_TO_FEET = 3.28084
-
 
 def str_to_float(s):
     try:
@@ -10,38 +15,26 @@ def str_to_float(s):
     except ValueError:
         return 0.0
 
-class ConversionWidget(ed.Element):
+@component
+def ConversionWidget(self, from_unit, to_unit, factor):
 
-    def __init__(self, from_unit, to_unit, factor):
-        self.register_props({
-            "from_unit": from_unit,
-            "to_unit": to_unit,
-            "factor": factor,
-        })
-        super().__init__()
-        self.current_text = "0.0"
+    current_text, current_text_set  = use_state("0.0")
 
-    def render(self):
-        from_text = self.current_text
-        to_text = "%.3f" % (str_to_float(from_text) * self.props.factor)
+    to_text = "%.3f" % (str_to_float(current_text) * self.props.factor)
 
-        from_label_style = {"width": 170}
-        to_label_style = {"margin-left": 20, "width": 200}
-        input_style = {"padding": 2, "width": 120}
-        return ed.View(layout="row", style={"margin": 10, "width": 560})(
-            Label(f"Measurement in {self.props.from_unit}:", style=from_label_style),
-            TextInput(from_text, style=input_style,
-                      on_change=lambda text: self.set_state(current_text=text)),
-            Label(f"Measurement in {self.props.to_unit}: {to_text}", style=to_label_style),
-        )
+    from_label_style = {"width": 170}
+    to_label_style = {"margin-left": 60, "width": 200}
+    input_style = {"padding": 2, "width": 120}
+    with View(layout="row", style={"margin": 10, "width": 560}):
+        Label(f"Measurement in {self.props.from_unit}:", style=from_label_style)
+        TextInput(current_text, style=input_style, on_change=current_text_set)
+        Label(f"Measurement in {self.props.to_unit}: {to_text}", style=to_label_style)
 
-class MyApp(ed.Element):
-
-    def render(self):
-        return ed.View(layout="column", style={})(
-            ConversionWidget("meters", "feet", METERS_TO_FEET),
-            ConversionWidget("feet", "meters", 1 / METERS_TO_FEET),
-        )
+@component
+def MyApp(self):
+    with View(layout="column", style={}):
+        ConversionWidget("meters", "feet", METERS_TO_FEET)
+        ConversionWidget("feet", "meters", 1 / METERS_TO_FEET)
 
 if __name__ == "__main__":
-    ed.App(MyApp()).start()
+    App(MyApp()).start()
