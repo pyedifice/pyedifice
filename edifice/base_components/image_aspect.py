@@ -10,7 +10,7 @@ else:
     import PySide6.QtGui as QtGui
     import PySide6.QtWidgets as QtWidgets
 
-from ..base_components import QtWidgetElement, _image_descriptor_to_pixmap, _CommandType
+from .base_components import QtWidgetElement, _image_descriptor_to_pixmap, _CommandType
 
 class ScaledLabel(QtWidgets.QLabel):
     """

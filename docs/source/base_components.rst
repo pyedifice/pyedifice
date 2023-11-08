@@ -15,12 +15,16 @@ Base Elements
    ScrollView
    TabView
    GridView
+   TableGridView
+   FlowView
    Label
    Image
    ImageSvg
+   ImageAspect
    Icon
    IconButton
    Button
+   ButtonView
    TextInput
    CheckBox
    RadioButton

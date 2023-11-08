@@ -19,7 +19,7 @@ else:
         from PySide6.QtCore import QMargins, QPoint, QRect, QSize, Qt
         from PySide6.QtWidgets import QLayout, QLayoutItem, QSizePolicy, QWidget
 
-from ..base_components import _LinearView
+from .base_components import _LinearView
 
 
 class FlowLayout(QLayout):

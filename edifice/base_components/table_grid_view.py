@@ -8,7 +8,7 @@ else:
     from PySide6.QtWidgets import QGridLayout, QWidget
 
 from .._component import Element, BaseElement, _CommandType
-from ..base_components import QtWidgetElement
+from .base_components import QtWidgetElement
 
 def _get_tablerowcolumn(c:Element) -> tuple[int,int]:
     """
