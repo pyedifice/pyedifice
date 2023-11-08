@@ -6,8 +6,8 @@ import os, sys
 # We need this sys.path line for running this example, especially in VSCode debugger.
 sys.path.insert(0, os.path.join(sys.path[0], '..'))
 import edifice as ed
-from edifice.components.flow_view import FlowView
-from edifice.components.button_view import ButtonView
+from edifice import FlowView
+from edifice import ButtonView
 
 @ed.component
 def myComponent(self):

@@ -1,7 +1,6 @@
 import unittest
 
 import edifice
-from edifice.components import table_grid_view
 
 from edifice.qt import QT_VERSION
 if QT_VERSION == "PyQt6":
@@ -18,7 +17,7 @@ class FormTest(unittest.TestCase):
 
         @edifice.component
         def myComponent(self):
-            with table_grid_view.TableGridView() as tgv:
+            with edifice.TableGridView() as tgv:
                 with tgv.row():
                     edifice.Label(text="row 0 column 0").set_key("k1")
                     edifice.Label(text="row 0 column 1").set_key("k2")
