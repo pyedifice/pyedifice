@@ -210,7 +210,10 @@ class Reference(object):
 T = tp.TypeVar("T")
 
 class ControllerProtocol(tp.Protocol):
+    """Protocol for App"""
     def _request_rerender(self, components: Iterable["Element"], kwargs: dict[str, tp.Any]):
+        pass
+    def _defer_rerender(self, components: list["Element"]):
         pass
 
 

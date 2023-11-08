@@ -103,9 +103,11 @@ class App(object):
         qapplication: (default None)
             The `QtWidgets.QApplication <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QApplication.html>`_.
             If you do not provide one, it will be created for you.
-        mount_into_window: (default True) whether or not to mount a window-less component into a window by default.
-            If the passed in component is not part of any window, leaving this flag on will put the component in a window.
-            Set this to False if you just want the App to output a widget.
+        mount_into_window: (default True) whether or not to mount the root
+            component into a :class:`Window`.
+            Leaving this flag on will wrap the component in a :class:`Window`.
+            Set this to :code:`False` if you just want the App to output a widget, or
+            if your root component renders a :class:`Window`.
     """
 
     def __init__(self,
@@ -190,11 +192,29 @@ class App(object):
         self._inspector = inspector
         self._inspector_component = None
 
+        self._defer_rerender_elements : set[Element] = set()
+
     def __hash__(self):
         return id(self)
 
+    def _defer_rerender(self, components: list[Element]):
+        """
+        Enqueue elements for rerendering on the next event loop iteration.
+        Idempotent.
+        """
+        if len(self._defer_rerender_elements) == 0:
+            def rerender_callback():
+                els = self._defer_rerender_elements.copy()
+                self._defer_rerender_elements.clear()
+                self._request_rerender(list(els), {})
+            asyncio.get_event_loop().call_soon(rerender_callback)
+        self._defer_rerender_elements.update(components)
+
     def _request_rerender(self, components: list[Element], newstate):
-        del newstate
+        """
+        Call the RenderEngine to immediately render the widget tree.
+        """
+        del newstate #TODO?
         start_time = time.process_time()
         render_result = self._render_engine._request_rerender(components)
         render_result.run()
