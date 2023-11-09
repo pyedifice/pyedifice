@@ -1,5 +1,6 @@
 import asyncio
 import functools
+import importlib.resources
 import inspect
 import logging
 import math
@@ -13,6 +14,8 @@ from .._component import WidgetElement, RootElement, _CommandType, PropsDict
 
 from ..qt import QT_VERSION
 
+import edifice.icons
+ICONS = importlib.resources.files(edifice.icons)
 
 if QT_VERSION == "PyQt6" and not tp.TYPE_CHECKING:
     from PyQt6 import QtWidgets
@@ -831,9 +834,7 @@ class Icon(QtWidgetElement):
         self._set_size(self.props.size, self.props.size)
         assert self.underlying is not None
         commands = super()._qt_update_commands(children, newprops, newstate, self.underlying)
-        icon_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                                 "icons",
-                                 self.props.collection, self.props.sub_collection, self.props.name + ".svg")
+        icon_path = str(ICONS / self.props.collection / self.props.sub_collection / (self.props.name + ".svg"))
 
         if "name" in newprops or "size" in newprops or "collection" in newprops or "sub_collection" in newprops or "color" in newprops or "rotation" in newprops:
             commands.append(_CommandType(self._render_image, icon_path, self.props.size, self.props.color, self.props.rotation))
@@ -936,9 +937,7 @@ class IconButton(Button):
 
     def _qt_update_commands(self, children, newprops, newstate):
         commands = super()._qt_update_commands(children, newprops, newstate)
-        icon_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                                 "icons",
-                                 self.props.collection, self.props.sub_collection, self.props.name + ".svg")
+        icon_path = str(ICONS / self.props.collection / self.props.sub_collection / (self.props.name + ".svg"))
 
         assert self.underlying is not None
         size = self.underlying.font().pointSize()
@@ -1233,7 +1232,7 @@ class Dropdown(QtWidgetElement):
        Dropdown on the right.
 
     Args:
-    	selection: Current selection text of the text input.
+        selection: Current selection text of the text input.
         text: Initial text of the text input.
         options: Options to select from.
         editable: True if the text input should be editable.
@@ -1276,7 +1275,7 @@ class Dropdown(QtWidgetElement):
         self.underlying = QtWidgets.QComboBox()
         self.underlying.setObjectName(str(id(self)))
 
-	# TODO
+    # TODO
     # def _set_completer(self, completer):
     #     if completer:
     #         qt_completer = QtWidgets.QCompleter(completer.options)
