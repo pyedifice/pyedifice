@@ -124,8 +124,15 @@
           extras = [ "*" ];
           extraPackages = ps: with ps; [
             pip
+
+            # sphinx packages for make docs
             sphinx-book-theme
             sphinx-autodoc-typehints
+
+            # pandas, yfinance, matplotlib for running examples/financial_charts.py
+            pandas
+            yfinance
+            matplotlib
           ];
         })).env.overrideAttrs (oldAttrs: {
           buildInputs = [ pkgs.nodePackages.pyright ];

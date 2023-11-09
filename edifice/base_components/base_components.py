@@ -664,6 +664,7 @@ class Window(RootElement):
                  menu=None,
                  on_close: tp.Optional[tp.Callable[[QtGui.QCloseEvent], tp.Any]] = None):
         self.register_props({
+            "title": title,
             "icon": icon,
             "menu": menu,
             "on_close": on_close,
