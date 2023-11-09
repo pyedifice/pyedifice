@@ -9,7 +9,7 @@ import typing as tp
 
 import numpy as np
 
-from .._component import WidgetElement, RootElement, _CommandType
+from .._component import WidgetElement, RootElement, _CommandType, PropsDict
 
 from ..qt import QT_VERSION
 
@@ -1963,7 +1963,9 @@ class CustomWidget(QtWidgetElement):
     """Custom widgets that you can define.
 
     Not all widgets are currently supported by Edifice.
-    You can create your own base component by overriding this class::
+    You can create your own base Qt Widget element
+    by inheriting from :class:`QtWidgetElement` directly, or more simply
+    by overriding :class:`CustomWidget`::
 
         class MyWidgetElement(CustomWidget):
             def create_widget(self):
@@ -2001,7 +2003,7 @@ class CustomWidget(QtWidgetElement):
     def paint(self, widget, newprops):
         raise NotImplementedError
 
-    def _qt_update_commands(self, children, newprops, newstate):
+    def _qt_update_commands(self, children, newprops: PropsDict, newstate):
         if self.underlying is None:
             self.underlying = self.create_widget()
         commands = super()._qt_update_commands(children, newprops, newstate, self.underlying, None)
