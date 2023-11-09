@@ -104,7 +104,7 @@ For example::
 
     from edifice import App, Label, TextInput, View, component
 
-	@component
+    @component
     def MyApp(self):
         meters_label_style = {"width": 170}
         feet_label_style = {"margin-left": 20, "width": 200}
@@ -136,7 +136,7 @@ box and in the label are in sync::
         except ValueError:
             return 0.0
 
-	@component
+    @component
     def MyApp(self):
 
         meters, meters_set = use_state("0.0")

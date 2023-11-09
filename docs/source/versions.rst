@@ -11,6 +11,9 @@ subclass.
 
 New :code:`with` context manager syntax.
 
+Moved :class:`ButtonView`, :class:`FlowView`, :class:`ImageAspect`,
+:class:`TableGridView` to base Elements.
+
 0.1.2
 -----
 Released:
@@ -36,10 +39,10 @@ Released: 2023-09-14
 * Component :code:`Image` props :code:`src` can be a :code:`QtGui.QImage`.
 * Deleted :code:`setup.py`, added Poetry :code:`pyproject.toml`.
 * :code:`App` new props :code:`qapplication`.
-* New Higher-level Component: :code:`ImageAspect`.
-* New Higher-level Component: :code:`ButtonView`.
-* New Higher-level Component: :code:`FlowView`.
-* New Higher-level Component: :code:`TableGridView`.
+* New Higher-level Component: :class:`ImageAspect`.
+* New Higher-level Component: :class:`ButtonView`.
+* New Higher-level Component: :class:`FlowView`.
+* New Higher-level Component: :class:`TableGridView`.
 
 0.0.10
 ------
