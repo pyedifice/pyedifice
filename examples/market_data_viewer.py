@@ -1,7 +1,15 @@
+#
+# python examples/marker_data_viewer.py
+#
+
+import sys, os
+# We need this sys.path line for running this example, especially in VSCode debugger.
+sys.path.insert(0, os.path.join(sys.path[0], '..'))
 import edifice as ed
+import asyncio
 import random
 
-stylesheet = ed.PropsDict(dict(
+stylesheet = dict(
     price_box={
         "padding-top": 0,
         "padding": 0,
@@ -30,103 +38,83 @@ stylesheet = ed.PropsDict(dict(
         "left": 150,
         "margin-left": "5px"
     },
-))
+)
 
-class PriceLevel(ed.Element):
+@ed.component
+def PriceLevel(self, price, size, side, last=False):
 
-    def __init__(self, price, size, side, last=False):
-        self.register_props({
-            "price": price,
-            "size": size,
-            "side": side,
-            "last": last,
-        })
-        super().__init__()
+    if side == "bid":
+        color = "rgba(50, 50, 255, 1)"
+    else:
+        color = "rgba(255, 50, 50, 1)"
 
-    def render(self):
-        if self.props.side == "bid":
-            color = "rgba(50, 50, 255, 1)"
-        else:
-            color = "rgba(255, 50, 50, 1)"
+    price_box_style = stylesheet["price_box"].copy()
+    size_box_style = stylesheet["size_box"].copy()
+    size_bar_style = stylesheet["size_bar"].copy()
 
-        price_box_style = dict(stylesheet.price_box)
-        size_box_style = dict(stylesheet.size_box)
-        size_bar_style = dict(stylesheet.size_bar)
+    size_box_style["background-color"] = color
+    size_bar_style.update({
+        "background-color": color,
+        "width": "%spx" % (size / 5),
+    })
+    if last:
+        price_box_style["border-bottom"] = "1px solid black"
+        size_box_style["border-bottom"] = "1px solid black"
 
-        size_box_style["background-color"] = color
-        size_bar_style.update({
-            "background-color": color,
-            "width": "%spx" % (self.props.size / 5),
-        })
-        if self.props.last:
-            price_box_style["border-bottom"] = "1px solid black"
-            size_box_style["border-bottom"] = "1px solid black"
+    with ed.View(layout="row", style={"padding": "0px", "width": "360px", "align": "left"}):
+        ed.Label(price, style=price_box_style).set_key("price")
+        ed.Label(size, style=size_box_style).set_key("size")
+        ed.Label("", style=size_bar_style).set_key("vis_size")
 
-        return ed.View(layout="row", style={"padding": "0px", "width": "360px", "align": "left"})(
-            ed.Label(self.props.price, style=price_box_style).set_key("price"),
-            ed.Label(self.props.size, style=size_box_style).set_key("size"),
-            ed.Label("", style=size_bar_style).set_key("vis_size")
-        )
-
-class Book(ed.Element):
-
-    def __init__(self, book):
-        self.register_props({
-            "book": book,
-        })
-        pass
-
-    def render(self):
-        book = self.props.book
-        sizes = book["sizes"]
-        market_price = book["price"]
-        return ed.View(layout="column", style={"margin": "10px", "padding": "0px", "width": 360})(
-            *[PriceLevel(price=p, size=sizes[p],
-                         side="bid" if p < market_price else "ask",
-                         last=(p==1)).set_key(str(p))
-              for p in range(20, 0, -1)]
-        )
+@ed.component
+def Book(self, book):
+    sizes = book["sizes"]
+    market_price = book["price"]
+    with ed.View(layout="column", style={"margin": "10px", "padding": "0px", "width": 360}):
+        for p in range(20, 0, -1):
+            PriceLevel(price=p, size=sizes[p],
+                        side="bid" if p < market_price else "ask",
+                        last=(p==1)).set_key(str(p))
 
 
-class App(ed.Element):
+book_init = {
+    "price": 10,
+    "sizes": [random.randint(100, 300) for _ in range(21)]
+}
 
-    def __init__(self):
-        super().__init__()
-        self.book = {
+@ed.component
+def App(self):
+
+    book, book_set = ed.use_state(book_init)
+
+    playing, playing_set = ed.use_state(False)
+    play_trigger, play_trigger_set = ed.use_state(False)
+
+    def update_book():
+        book_set({
             "price": 10,
             "sizes": [random.randint(100, 300) for _ in range(21)]
-        }
-        self.playing = False
-        self.timer = ed.Timer(self.update_book)
+        })
 
-    def update_book(self):
-        with self.render_changes():
-            self.book = {
-                "price": 10,
-                "sizes": [random.randint(100, 300) for _ in range(21)]
-            }
+    async def play_tick():
+        if playing:
+            update_book()
+            await asyncio.sleep(0.05)
+            play_trigger_set(lambda p: not p)
 
-    def will_unmount(self):
-        self.timer.stop()
+    ed.use_async(play_tick, (playing, play_trigger))
 
-    def play(self, e):
-        if self.playing:
-            self.timer.stop()
-        else:
-            self.timer.start(50)
-        self.set_state(playing=not self.playing)
+    def play(e):
+        playing_set(lambda p: not p)
 
-    def render(self):
-        return ed.View(layout="column")(
-            ed.View(layout="row", style={"align": "left", "margin-left": "10px"})(
-                ed.Icon(name="chart-line", size=14).set_key("Icon"),
-                ed.Label("Market Data Viewer", style={"margin-left": "5px"} ).set_key("Label"),
-                ed.IconButton(name="pause" if self.playing else "play",
-                              style=stylesheet.play_button, size=10, on_click=self.play,
-                ).set_key("Play"),
-            ).set_key("Controls"),
-            Book(self.book).set_key("Book"),
-        )
+    with ed.View(layout="column"):
+        with ed.View(layout="row", style={"align": "left", "margin-left": "10px"}).set_key("Controls"):
+            ed.Icon(name="chart-line", size=14).set_key("Icon")
+            ed.Label("Market Data Viewer", style={"margin-left": "5px"} ).set_key("Label")
+            ed.IconButton(name="pause" if playing else "play",
+                            style=stylesheet["play_button"], size=10, on_click=play,
+            ).set_key("Play")
+        Book(book).set_key("Book")
 
 if __name__ == "__main__":
     ed.App(App(), inspector=True).start()
