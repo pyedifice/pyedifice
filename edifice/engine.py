@@ -136,8 +136,10 @@ class _RenderContext(object):
 
     def use_state(self, initial_state:_T_use_state) -> tuple[
         _T_use_state, # current value
-        tp.Callable[[_T_use_state], None] # setter
-        ]:
+        tp.Callable[ # updater
+            [_T_use_state | tp.Callable[[_T_use_state],_T_use_state]],
+            None
+        ]]:
         element = self.current_element
         assert element is not None
         hooks = self.engine._hook_state[element]
@@ -147,17 +149,16 @@ class _RenderContext(object):
 
         if len(hooks) <= h_index:
             # then this is the first render
-            hook = _HookState(initial_state)
+            hook = _HookState(initial_state, list())
             hooks.append(hook)
         else:
             hook = hooks[h_index]
 
-        def setter(x):
-            if x != hook.state:
-                hook.state = x
-                app = self.engine._app
-                assert app is not None
-                app._defer_rerender([element])
+        def setter(updater):
+            hook.updaters.append(updater)
+            app = self.engine._app
+            assert app is not None
+            app._defer_rerender([element])
 
         return (hook.state, setter)
 
@@ -311,6 +312,7 @@ class RenderResult(object):
 @dataclass
 class _HookState:
     state: tp.Any
+    updaters: list[tp.Callable[[tp.Any], tp.Any]]
 
 @dataclass
 class _HookEffect:
@@ -391,6 +393,7 @@ class RenderEngine(object):
         if component in self._hook_state:
             for hook in self._hook_state[component]:
                 del hook.state
+                del hook.updaters
                 del hook
             del self._hook_state[component]
         if component in self._hook_effect:
@@ -621,6 +624,25 @@ class RenderEngine(object):
         component._hook_state_index = 0
         component._hook_effect_index = 0
         component._hook_async_index = 0
+
+        # Before the render, reduce the _hook_state updaters.
+        # We can't do this after the render, because there may have been state
+        # updates from event handlers.
+        for hooks in self._hook_state.values():
+            for hook in hooks:
+                state0 = hook.state
+                try:
+                    for updater in hook.updaters:
+                        if callable(updater):
+                            hook.state = updater(hook.state)
+                        else:
+                            hook.state = updater
+                except:
+                    # If any of the updaters throws then the state is unchanged.
+                    hook.state = state0
+                finally:
+                    hook.updaters.clear()
+
         # Call user provided render function and retrieve old results
         with Container() as container:
             prev_element = render_context.current_element

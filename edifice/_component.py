@@ -246,7 +246,12 @@ class RenderContextProtocol(tp.Protocol):
     Protocol for _RenderContext. TODO rearrange modules so we don't need this protocol.
     """
     trackers: list[_Tracker]
-    def use_state(self, initial_state:_T_use_state) -> tuple[_T_use_state, Callable[[_T_use_state], None]]:
+    def use_state(self, initial_state:_T_use_state) -> tuple[
+        _T_use_state, # current value
+        tp.Callable[ # updater
+            [_T_use_state | tp.Callable[[_T_use_state],_T_use_state]],
+            None
+        ]]:
         ...
     def use_effect(
         self,

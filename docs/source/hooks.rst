@@ -15,5 +15,6 @@ Class overview
    :recursive:
    :template: custom-class.rst
 
-   StateValue
-   StateManager
+   use_state
+   use_effect
+   use_async
