@@ -141,7 +141,7 @@ class StyleTestCase(unittest.TestCase):
         }
         comp = MockElement(style=style)
         commands = comp._gen_styling_commands([], style, None, None)
-        self.assertTrue(_CommandType(comp.underlying.move, x=24, y=12) in commands)
+        self.assertTrue(_CommandType(comp.underlying.move, 24, 12) in commands)
 
 
 class MockRenderContext(engine._RenderContext):

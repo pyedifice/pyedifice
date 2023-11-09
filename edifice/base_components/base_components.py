@@ -538,7 +538,7 @@ class QtWidgetElement(WidgetElement):
 
         if set_move:
             assert self.underlying is not None
-            commands.append(_CommandType(self.underlying.move, x=move_coords[0], y=move_coords[1]))
+            commands.append(_CommandType(self.underlying.move, move_coords[0], move_coords[1]))
 
         assert self.underlying is not None
         css_string = _dict_to_style(style,  "QWidget#" + str(id(self)))
