@@ -277,7 +277,7 @@ def get_render_context_maybe() -> RenderContextProtocol | None:
 class Element:
     """The base class for Edifice Elements.
 
-    A :class:`Element` is a stateful container wrapping a stateless :code:`render` function.
+    A :class:`Element` is a stateful container wrapping a :code:`render` function.
     Elements have both internal and external properties.
 
     The external properties, **props**, are passed into the :class:`Element` by another
@@ -315,44 +315,42 @@ class Element:
     all changes will be unwound. This helps ensure consistency in the
     :class:`Element`’s state.
 
-    Note if you set :class:`self.mystate = 1` outside
+    Note if you set :code:`self.mystate = 1` outside
     the :code:`render_changes()` context manager,
     this change will not trigger a re-render. This might be occasionally useful
     but usually is unintended.
 
-    The main function of :class:`Element` is :code:`render`, which should return the subcomponents
-    of this component. These may be your own higher-level components as well as
+    The main function of :class:`Element` is :code:`render`, which should delare the
+    child Elements
+    of this Element. These may be your own :func:`component` as well as
     the core :class:`Element` s, such as
     :class:`Label`, :class:`Button`, and :class:`View`.
-    :class:`Element` s may be composed in a tree like fashion:
-    one special prop is children, which will always be defined (defaults to an
-    empty list).
-    To better enable the visualization of the tree-structure of a :class:`Element`
-    in the code,
-    the :code:`call` method of a :class:`Element` has been overriden to set the arguments
-    of the call as children of the component.
-    This allows you to write tree-like code remniscent of HTML::
+    :class:`Element` s may be composed in a tree like fashion.
 
-        View(layout="column")(
-            View(layout="row")(
-                Label("Username: "),
+    One special prop is children, which will always be defined (defaults to an
+    empty list).
+
+    To declare an :class:`Element` to be the parent of some other
+    :class:`Element` s in the tree, use the parent as a
+    `with statement context manager <https://docs.python.org/3/reference/datamodel.html#context-managers>`_.
+
+        with View(layout="column"):
+            with View(layout="row"):
+                Label("Username: ")
                 TextInput()
-            ),
-            View(layout="row")(
-                Label("Email: "),
+            with View(layout="row"):
+                Label("Email: ")
                 TextInput()
-            ),
-        )
 
     The :code:`render` function is called when
     :code:`self.should_update(newprops, newstate)`
     returns :code:`True`. This function is called when the props change (as set by the
-    render function of this component) or when the state changes (when
+    render function of this Element) or when the state changes (when
     using :code:`set_state` or :code:`render_changes()`). By default, all changes
     in :code:`newprops`
     and :code:`newstate` will trigger a re-render.
 
-    When the component is rendered,
+    When the Element is rendered,
     the :code:`render` function is called. This output is then compared against the output
     of the previous render (if that exists). The two renders are diffed,
     and on certain conditions, the :class:`Element` objects from the previous render
@@ -365,17 +363,16 @@ class Element:
     When comparing a list of :class:`Element` s, the :class:`Element`’s
     :code:`_key` attribute will
     be compared. :class:`Element` s with the same :code:`_key` and same class are assumed to be
-    the same. You can set the key using the :code:`set_key` method, which returns the component
+    the same. You can set the key using the :code:`set_key` method, which returns the Element
     to allow for chaining::
 
-        View(layout="row")(
-            MyElement("Hello").set_key("hello"),
-            MyElement("World").set_key("world"),
-        )
+        with View(layout="row"):
+            MyElement("Hello").set_key("hello")
+            MyElement("World").set_key("world")
 
     If the :code:`_key` is not provided, the diff algorithm will assign automatic keys
     based on index, which could result in subpar performance due to unnecessary rerenders.
-    To ensure control over the rerender process, it is recommended to :code:`set_key`
+    To ensure control over the rerender process, it is recommended to :func:`Element.set_key`
     whenever you have a list of children.
     """
 
@@ -671,51 +668,44 @@ def not_ignored(arg: tuple[str, tp.Any]) -> bool:
 
 # TODO: Should we really allow the function to return `Any`?
 def component(f: Callable[tp.Concatenate[C,P], None]) -> Callable[P,Element]:
-    """Decorator turning a render function into a :class:`Element`.
+    """Decorator turning a render function of **props** into an :class:`Element`.
 
-    Some components do not have internal state, and these components are often little more than
-    a :code:`render` function. Creating a :class:`Element` class results in a lot of boiler plate code::
+    The compoment will be re-rendered when its **props** are not :code:`__eq__`
+    to the **props** from the last time the component rendered.
 
-        class MySimpleComp(Element):
-            def __init__(self, prop1, prop2, prop3):
-                self.register_props({
-                    "prop1": prop1,
-                    "prop2": prop2,
-                    "prop3": prop3,
-                })
-                super().__init__()
-
-            def render(self):
-                # Only here is there actual logic.
-
-    To cut down on the amount of boilerplate, you can use the
-    :doc:`component <edifice.component>` decorator::
+    In the component function, declare a tree of other :class:`Element`::
 
         @component
-        def MySimpleComp(self, prop1, prop2, prop3, children):
-            # Here you put what you'd normally put in the render logic
-            # Note that you can access prop1 via the variable, or via self.props
-            return View()(Label(prop1), Label(self.prop2), Label(prop3))
+        def MySimpleComp(self, prop1, prop2, prop3):
+            with View():
+                Label(prop1)
+                Label(prop2)
+                Label(prop3)
+
+    To declare an :class:`Element` to be the parent of some other
+    :class:`Element` s in the tree, use the parent as a
+    `with statement context manager <https://docs.python.org/3/reference/datamodel.html#context-managers>`_.
 
     Of course, you could have written::
 
         # No decorator
         def MySimpleComp(prop1, prop2, prop3):
-            return View()(Label(prop1), Label(self.prop2), Label(prop3))
+            with View():
+                Label(prop1)
+                Label(prop2)
+                Label(prop3)
 
     instead. The difference is, with the decorator, an actual :class:`Element` object is created,
-    which can be viewed, for example, in the inspector. Moreover, you need a :class:`Element` to
-    be able to use hooks such as use_state, since those are bound to containing :class:`Element`.
+    which can be viewed, for example, in the inspector. Moreover, you need an :class:`Element` to
+    be able to use hooks such as :func:`use_state`, since those are bound to an :class:`Element`.
 
-    If this component uses :doc:`State Values or State Managers</state>`,
-    only this component and (possibly) its children will be re-rendered.
-    If you don't use the decorator, the returned components are directly attached to the
-    Element that called the function, and so any re-renders will have to start from that level.
+    Inside the component function, you
 
     Args:
         f: the function to wrap. Its first argument must be self.
+            Subsequent arguments are **props**.
     Returns:
-        Element class.
+        :class:`Element`.
     """
     varnames = f.__code__.co_varnames[1:]
     signature = inspect.signature(f).parameters
