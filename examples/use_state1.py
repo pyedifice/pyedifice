@@ -6,60 +6,56 @@ import asyncio as asyncio
 import sys, os
 # We need this sys.path line for running this example, especially in VSCode debugger.
 sys.path.insert(0, os.path.join(sys.path[0], '..'))
-from edifice import App, Element, View, Label, Button
-from edifice.hooks import use_state
+from edifice import App, View, Label, Button, component, use_state
 
-class UseState1(Element):
-    def __init__(self):
-        super().__init__()
+@component
+def UseState1(self):
 
-    def render(self):
-        show, set_show = use_state(False)
-        if show:
-            return View()(
-                Button(
-                    title="Hide",
-                    on_click=lambda ev: set_show(False)
-                ),
-                TestComp()
+    show, set_show = use_state(False)
+    if show:
+        with View():
+            Button(
+                title="Hide",
+                on_click=lambda ev: set_show(False)
             )
-        else:
-            return View()(
-                Button(
-                    title="Show",
-                    on_click=lambda ev: set_show(True)
-                )
+            TestComp()
+    else:
+        with View():
+            Button(
+                title="Show",
+                on_click=lambda ev: set_show(True)
             )
-class TestComp(Element):
-    def __init__(self):
-        super().__init__()
-        self.count = 0
+@component
+def TestComp(self):
+    print("TestComp instance " + str(id(self)))
+    x, x_setter = use_state(0)
 
-    async def handle_click(self, _):
-        self.set_state(count=self.count + 1)
+    async def handle_click(_):
+        x_setter(x+1)
 
-    def render(self):
-        print("TestComp instance " + str(id(self)))
-        x, x_setter = use_state(0)
-        return View(
-            style={
-                "align":"top"
-            }
-        )(
-            Button(
-                title="Count " + str(self.count),
-                on_click=self.handle_click
-            ),
-            Button(
-                title="State " + str(x),
-                on_click=lambda ev: x_setter(x+1)
-            ),
-            Button(
-                title="Exit",
-                on_click=lambda ev: asyncio.get_event_loop().call_soon(asyncio.get_event_loop().stop)
-            ),
-            *[Label(text=str(i)) for i in range(x)],
+    def click10(_):
+        for i in range(10):
+            x_setter(lambda y: y+1)
+
+    with View(
+        style={
+            "align":"top"
+        }
+    ):
+        Button(
+            title="State " + str(x) + " + 1",
+            on_click=handle_click
         )
+        Button(
+            title="State " + str(x) + " + 10",
+            on_click=click10
+        )
+        Button(
+            title="Exit",
+            on_click=lambda ev: asyncio.get_event_loop().call_soon(asyncio.get_event_loop().stop)
+        )
+        for i in range(x):
+            Label(text=str(i))
 
 if __name__ == "__main__":
     my_app = App(UseState1())

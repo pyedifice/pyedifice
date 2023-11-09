@@ -2,13 +2,25 @@ from collections.abc import Callable, Coroutine
 from edifice._component import get_render_context_maybe, _T_use_state
 from typing import Any
 
-def use_state(
-    initial_state: _T_use_state
-) -> tuple[_T_use_state, Callable[[_T_use_state], None]]:
+def use_state(initial_state:_T_use_state) -> tuple[
+    _T_use_state, # current value
+    Callable[ # updater
+        [_T_use_state | Callable[[_T_use_state],_T_use_state]],
+        None
+    ]]:
     """
-    State Hook for use inside the :func:`render` function.
+    State Hook for use inside a :func:`edifice.component` function.
 
     Behaves like `React useState <https://react.dev/reference/react/useState>`_.
+
+    When :func:`use_state` is called, it returns a **state value** and a
+    **setter function**.
+
+    The **state value** will be the value of the state at the beginning of
+    the render for this component.
+
+    The **setter function** will, when called, set the **state value** before
+    the next render.
 
     Example::
 
@@ -21,27 +33,55 @@ def use_state(
 
             return Label(text=str(x))
 
+    If an **updater function** is passed to the **setter function**, then at the end of
+    the render the state will be modified by calling all of the
+    **updater functions** in this order in which they were passed.
+    An **updater function** is a function from the previous state to the new state.
+
+    Example::
+
+        def updater(y):
+            return y + 1
+
+        @component
+        def Stateful(self):
+            x, x_setter = use_state(0)
+
+            if x < 1:
+                x_setter(updater)
+
+            return Label(text=str(x))
+
+    If any of the **updater functions** raises an exception, then all state
+    updates will be cancelled and the state value will be unchanged for the
+    next render.
+
+	.. warning::
+        You can't store a :code:`callable` value in :code:`use_state`,
+        because it will be mistaken for an **updater function**. If you
+        want to store a :code:`callable` value, like a function, then wrap
+        it in a :code:`tuple` or some other non-:code:`callable` data structure.
+
     Args:
         initial_state: The initial state value.
     Returns:
         A tuple containing
 
-            1. The current state value.
-            2. A setter function for setting the state value, which will
-               cause a rerender of the component if the new state value
-               is not :code:`__eq__`.
+        1. The current state value.
+        2. A **setter function** for setting or updating the state value.
     """
     context = get_render_context_maybe()
     if context is None:
         raise ValueError("use_state used outside component")
     return context.use_state(initial_state)
 
+
 def use_effect(
     setup: Callable[[], Callable[[], None]],
     dependencies: Any,
 ) -> None:
     """
-    Effect Hook for use inside the :func:`render` function.
+    Effect Hook for use inside a :func:`edifice.component` function.
 
     Behaves like `React useEffect <https://react.dev/reference/react/useEffect>`_.
 
@@ -81,7 +121,7 @@ def use_async(
     dependencies: Any,
 ) -> None:
     """
-    Asynchronous Effect Hook for use inside the :func:`render` function.
+    Asynchronous Effect Hook for use inside a :func:`edifice.component` function.
 
     Will create a new
     `Task <https://docs.python.org/3/library/asyncio-task.html#asyncio.Task>`_
