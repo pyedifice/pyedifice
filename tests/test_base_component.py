@@ -1,5 +1,6 @@
 import os
 
+import importlib.resources
 import numpy as np
 
 import unittest
@@ -7,6 +8,8 @@ import unittest.mock
 import edifice.engine as engine
 import edifice.base_components as base_components
 from edifice._component import _CommandType
+import edifice.icons
+ICONS = importlib.resources.files(edifice.icons)
 
 from edifice.qt import QT_VERSION
 if QT_VERSION == "PyQt6":
@@ -206,7 +209,7 @@ class WidgetTreeTestCase(unittest.TestCase):
         with engine._storage_manager() as manager:
             commands = icon_tree.gen_qt_commands(MockRenderContext(manager, eng))
 
-        render_img_args = (os.path.join(os.path.abspath(os.path.dirname(base_components.__file__)), "icons/font-awesome/solid/play.svg"),
+        render_img_args = (str(ICONS / "font-awesome" / "solid" / "play.svg"),
                            size, color, rotation)
         qt_icon = icon.underlying
         assert qt_icon is not None
