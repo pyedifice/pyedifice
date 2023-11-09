@@ -9,6 +9,7 @@ else:
     from PySide6 import QtWidgets
 
 
+# TODO Delete Timer
 class Timer(object):
     """A Timer for calling a function periodically.
 

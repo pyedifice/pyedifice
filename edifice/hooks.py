@@ -88,25 +88,25 @@ def use_effect(
     Example::
 
         @component
-        def Effective(self):
+        def Effective(self, handler):
 
             def setup_handler():
-                token = attach_event_handler(self.props.handler)
+                token = attach_event_handler(handler)
                 def cleanup_handler():
                     remove_event_handler(token)
                 return cleanup_handler
 
-            use_effect(setup_handler, self.props.handler)
+            use_effect(setup_handler, handler)
 
     Args:
-        setup: An effect function which returns a cleanup function.
+        setup: An effect **setup function** which returns a **cleanup function**.
 
-            The cleanup function will be called by Edifice exactly once for
-            each call to the setup effect function.
+            The **cleanup function** will be called by Edifice exactly once for
+            each call to the **setup function**.
 
-            If the setup function throws an Exception then the cleanup function
-            will not be called.
-        dependencies: The setup effect function will be called when the
+            If the **setup function** raises an Exception then the
+            **cleanup function** will not be called.
+        dependencies: The effect **setup function** will be called when the
             dependencies are not :code:`__eq__` to the old dependencies.
     Returns:
         None
