@@ -228,6 +228,7 @@ class _RenderContext(object):
 
         elif dependencies != (hook := hooks[h_index]).dependencies:
             # then this is not the first render and deps changed
+            hook.dependencies = dependencies
             if hook.task is not None:
                 # There's already an old async effect in flight, so enqueue
                 # the new async effect and cancel the old async effect.
