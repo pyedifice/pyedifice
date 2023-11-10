@@ -126,7 +126,7 @@ def TodoMVC(self):
                         text = input,
                         on_change = handle_change,
                         on_key_up = handle_key_up,
-                        tool_tip="What needs to be done?",
+                        placeholder_text = "What needs to be done?",
                         style={"font-size":20},
                     )
                 for key,todo in todos.items():
@@ -167,7 +167,7 @@ def TodoMVC(self):
                         with View(style={"min-width":180, "margin-left": 10, "align": "right"}):
                             if len(todos) > 0 and len(todos) > items_left:
                                 Button(
-                                    title="Clear completed",
+                                    title = "Clear completed (" + str(len(todos) - items_left) + ")",
                                     on_click=clear_completed,
                                     style={"width":150},
                                 )
