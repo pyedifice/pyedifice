@@ -187,6 +187,7 @@ class _RenderContext(object):
 
         elif ((hook := hooks[h_index]).dependencies != dependencies):
             # then this is not the first render and deps changed
+            hook.dependencies = dependencies
             try:
                 cleanup_old = hook.cleanup
                 if cleanup_old is not None:
