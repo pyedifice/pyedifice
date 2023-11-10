@@ -61,35 +61,30 @@ The code is available at `financial_charts.py <https://github.com/pyedifice/pyed
    nix run github:pyedifice/pyedifice#example-financial-charting
 
 
-Forms
------
+TodoMVC
+-------
 
+An implementation of `TodoMVC <https://todomvc.com/>`_ in Edifice.
 
-An example to show how the Form component makes creating routine UI for simple forms extremely simple.
-The Form component creates input elements for data in a type specific way: for example,
-strings would correspond to text inputs,
-enums to dropdowns,
-datetime.dates to three dropdowns (with the right number of days for each month),
-etc.
-You can also pass a function, which would generate a label whose content is the function evaluated on the inputs.
+**TodoMVC** is a simple todo list program written in many JavaScript frameworks,
+so that web developers can compare the frameworks by comparing the **TodoMVC**
+implementations.
 
-The Form component was created using the same high-level Edifice api provided to users,
-so `its source code <https://github.com/pyedifice/pyedifice/blob/master/edifice/components/forms.py>`_ is technically another example!
+For comparison, the Edifice **TodoMVC** program is available at
+`todomvc.py <https://github.com/pyedifice/pyedifice/tree/master/examples/todomvc.py>`_.
 
-The code is available at `form.py <https://github.com/pyedifice/pyedifice/tree/master/examples/form.py>`_.
-
-.. figure:: /image/example_form.png
-   :width: 300
+.. figure:: /image/example_todomvc.png
+   :width: 500
 
 .. code-block:: shell
    :caption: Run in Python environment
 
-   PYTHONPATH=. python examples/form.py
+   python examples/todomvc.py
 
 .. code-block:: shell
    :caption: Run with `Nix <https://determinate.systems/posts/nix-run>`__
 
-   nix run github:pyedifice/pyedifice#example-forms
+   nix run github:pyedifice/pyedifice#example-todomvc
 
 Harmonic Oscillator
 -------------------

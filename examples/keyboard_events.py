@@ -1,15 +1,22 @@
+#
+# python examples/keyboard_events.py
+#
+
+import sys, os
+# We need this sys.path line for running this example, especially in VSCode debugger.
+sys.path.insert(0, os.path.join(sys.path[0], '..'))
 import edifice as ed
 
-class KeyboardEvents(ed.Element):
+@ed.component
+def KeyboardEvents(self):
 
-    def __init__(self):
-        self.text = ""
+    text, text_set = ed.use_state("")
 
-    def key_down(self, e):
-        with self.render_changes():
-            self.text += chr(e.key())
+    def key_down(e):
+        text_set(chr(e.key()))
 
-    def render(self):
-        return ed.View(on_key_down=self.key_down)(
-            ed.Label(self.text)
-        )
+    with ed.View(on_key_down=key_down):
+        ed.Label(text)
+
+if __name__ == "__main__":
+    ed.App(KeyboardEvents()).start()

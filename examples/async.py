@@ -1,23 +1,30 @@
+#
+# python examples/async.py
+#
+
+import os, sys
+# We need this sys.path line for running this example, especially in VSCode debugger.
+sys.path.insert(0, os.path.join(sys.path[0], '..'))
 import asyncio
 import edifice as ed
 
 
-class Element(ed.Element):
+@ed.component
+def AsyncElement(self):
 
-    def __init__(self):
-        super().__init__()
-        self.a = 0
-        self.b = 0
+    a, set_a = ed.use_state(0.0)
+    b, set_b = ed.use_state(0)
 
-    async def _on_change(self, text):
-        self.set_state(a=text)
+    async def _on_change(text):
+        set_a(float(text))
         await asyncio.sleep(4)
-        self.set_state(a = self.a/2)
+        set_a(lambda x: x/2)
 
-    def render(self):
-        return ed.View()(
-            ed.Label(self.a),
-            ed.Label(self.b),
-            ed.Slider(self.a, min_value=0, max_value=1, on_change=self._on_change),
-            ed.Button("Update b", on_click=lambda e: self.set_state(b=self.b+1)),
-        )
+    with ed.View():
+        ed.Label(str(a))
+        ed.Label(str(b))
+        ed.Slider(a, min_value=0, max_value=1, on_change=_on_change)
+        ed.Button("Update b", on_click=lambda e: set_b(lambda x: x+1))
+
+if __name__ == "__main__":
+    ed.App(AsyncElement()).start()

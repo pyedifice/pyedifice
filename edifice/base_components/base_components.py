@@ -233,14 +233,14 @@ class QtWidgetElement(WidgetElement):
         context_menu: tp.Optional[ContextMenuType] = None,
         css_class: tp.Optional[tp.Any] = None,
         size_policy: tp.Optional[QtWidgets.QSizePolicy] = None,
-        on_click: tp.Optional[tp.Callable[[QtGui.QMouseEvent], tp.Any]] = None,
-        on_key_down: tp.Optional[tp.Callable[[QtGui.QKeyEvent], tp.Any]] = None,
-        on_key_up: tp.Optional[tp.Callable[[QtGui.QKeyEvent], tp.Any]] = None,
-        on_mouse_down: tp.Optional[tp.Callable[[QtGui.QMouseEvent], tp.Any]] = None,
-        on_mouse_up: tp.Optional[tp.Callable[[QtGui.QMouseEvent], tp.Any]] = None,
-        on_mouse_enter: tp.Optional[tp.Callable[[QtGui.QMouseEvent], tp.Any]] = None,
-        on_mouse_leave: tp.Optional[tp.Callable[[QtGui.QMouseEvent], tp.Any]] = None,
-        on_mouse_move: tp.Optional[tp.Callable[[QtGui.QMouseEvent], tp.Any]] = None,
+        on_click: tp.Optional[tp.Callable[[QtGui.QMouseEvent], None | tp.Awaitable[None]]] = None,
+        on_key_down: tp.Optional[tp.Callable[[QtGui.QKeyEvent], None | tp.Awaitable[None]]] = None,
+        on_key_up: tp.Optional[tp.Callable[[QtGui.QKeyEvent], None | tp.Awaitable[None]]] = None,
+        on_mouse_down: tp.Optional[tp.Callable[[QtGui.QMouseEvent], None | tp.Awaitable[None]]] = None,
+        on_mouse_up: tp.Optional[tp.Callable[[QtGui.QMouseEvent], None | tp.Awaitable[None]]] = None,
+        on_mouse_enter: tp.Optional[tp.Callable[[QtGui.QMouseEvent], None | tp.Awaitable[None]]] = None,
+        on_mouse_leave: tp.Optional[tp.Callable[[QtGui.QMouseEvent], None | tp.Awaitable[None]]] = None,
+        on_mouse_move: tp.Optional[tp.Callable[[QtGui.QMouseEvent], None | tp.Awaitable[None]]] = None,
     ):
         self.register_props({
             "style": style,
@@ -662,7 +662,7 @@ class Window(RootElement):
     def __init__(self, title: tp.Text = "Edifice Application",
                  icon:tp.Optional[tp.Union[tp.Text, tp.Sequence]] = None,
                  menu=None,
-                 on_close: tp.Optional[tp.Callable[[QtGui.QCloseEvent], tp.Any]] = None):
+                 on_close: tp.Optional[tp.Callable[[QtGui.QCloseEvent], None | tp.Awaitable[None]]] = None):
         self.register_props({
             "title": title,
             "icon": icon,
@@ -672,7 +672,7 @@ class Window(RootElement):
         super().__init__()
 
         self._previous_rendering = None
-        self._on_click = None
+        # self._on_click = None
         self._menu_bar = None
         self.underlying = None
 
@@ -1154,8 +1154,8 @@ class TextInput(QtWidgetElement):
 
     def __init__(self,
         text: tp.Any = "",
-        on_change: tp.Callable[[tp.Text], None] = (lambda text: None),
-        on_edit_finish: tp.Callable[[], None] = (lambda: None),
+        on_change: tp.Callable[[tp.Text], None | tp.Awaitable[None]] = (lambda text: None),
+        on_edit_finish: tp.Callable[[], None | tp.Awaitable[None]] = (lambda: None),
         # completer: tp.Optional[Completer] = None,
         **kwargs
     ):
@@ -1252,8 +1252,8 @@ class Dropdown(QtWidgetElement):
         editable: bool = False,
         # TODO
         # completer: tp.Optional[Completer] = None,
-        on_change: tp.Optional[tp.Callable[[tp.Text], None]] = None,
-        on_select: tp.Optional[tp.Callable[[tp.Text], None]] = None,
+        on_change: tp.Optional[tp.Callable[[tp.Text], None | tp.Awaitable[None]]] = None,
+        on_select: tp.Optional[tp.Callable[[tp.Text], None | tp.Awaitable[None]]] = None,
         **kwargs
     ):
         self.register_props({
@@ -1356,7 +1356,7 @@ class RadioButton(QtWidgetElement):
     def __init__(self,
         checked: bool = False,
         text: tp.Any = "",
-        on_change: tp.Callable[[bool], None] = (lambda checked: None),
+        on_change: tp.Callable[[bool], None | tp.Awaitable[None]] = (lambda checked: None),
         **kwargs,
      ):
         self.register_props({
@@ -1425,7 +1425,7 @@ class CheckBox(QtWidgetElement):
     def __init__(self,
         checked: bool = False,
         text: tp.Any = "",
-        on_change: tp.Callable[[bool], None] = (lambda checked: None),
+        on_change: tp.Callable[[bool], None | tp.Awaitable[None]] = (lambda checked: None),
         **kwargs,
     ):
         self.register_props({
@@ -1447,7 +1447,11 @@ class CheckBox(QtWidgetElement):
     def _set_on_change(self, on_change):
         assert self.underlying is not None
         widget = tp.cast(QtWidgets.QCheckBox, self.underlying)
-        def on_change_fun(checked):
+
+        # Qt passes an int instead of a QtCore.Qt.CheckState
+        # https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QCheckBox.html#PySide6.QtWidgets.PySide6.QtWidgets.QCheckBox.stateChanged
+        def on_change_fun(check_state: int):
+            checked = True if check_state == 2 else False
             return _ensure_future(on_change)(checked)
         if self._connected:
             widget.stateChanged.disconnect()
@@ -1461,13 +1465,14 @@ class CheckBox(QtWidgetElement):
         widget = tp.cast(QtWidgets.QCheckBox, self.underlying)
 
         commands = super()._qt_update_commands(children, newprops, newstate, self.underlying)
-        check_state = QtCore.Qt.CheckState.Checked if self.props.checked else QtCore.Qt.CheckState.Unchecked
-        commands.append(_CommandType(widget.setCheckState, check_state))
         for prop in newprops:
             if prop == "on_change":
                 commands.append(_CommandType(self._set_on_change, newprops[prop]))
             elif prop == "text":
                 commands.append(_CommandType(widget.setText, str(newprops[prop])))
+            elif prop == "checked":
+                check_state = QtCore.Qt.CheckState.Checked if newprops[prop] else QtCore.Qt.CheckState.Unchecked
+                commands.append(_CommandType(widget.setCheckState, check_state))
         return commands
 
 
@@ -1507,7 +1512,7 @@ class Slider(QtWidgetElement):
         max_value: NumericType = 1,
         dtype=float,
         orientation="horizontal",
-        on_change: tp.Callable[[NumericType], None] = (lambda value: None),
+        on_change: tp.Callable[[NumericType], None | tp.Awaitable[None]] = (lambda value: None),
         **kwargs,
     ):
         self.register_props({
