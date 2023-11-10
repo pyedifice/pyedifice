@@ -1140,6 +1140,9 @@ class TextInput(QtWidgetElement):
 
     Args:
         text: Initial text of the text input
+        placeholder_text: “makes the line edit display a grayed-out placeholder
+            text as long as the line edit is empty.”
+            See `placeHolderText <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QLineEdit.html#PySide6.QtWidgets.PySide6.QtWidgets.QLineEdit.placeholderText>`_
         on_change:
             Callback for when the value of the text input changes.
             The callback is passed the changed
@@ -1153,7 +1156,8 @@ class TextInput(QtWidgetElement):
     #TODO Note that you can set an optional Completer, giving the dropdown for completion.
 
     def __init__(self,
-        text: tp.Any = "",
+        text: str = "",
+        placeholder_text: str = "",
         on_change: tp.Callable[[tp.Text], None | tp.Awaitable[None]] = (lambda text: None),
         on_edit_finish: tp.Callable[[], None | tp.Awaitable[None]] = (lambda: None),
         # completer: tp.Optional[Completer] = None,
@@ -1161,6 +1165,7 @@ class TextInput(QtWidgetElement):
     ):
         self.register_props({
             "text": text,
+            "placeholder_text": placeholder_text,
             "on_change": on_change,
             "on_edit_finish": on_edit_finish,
         })
@@ -1221,6 +1226,8 @@ class TextInput(QtWidgetElement):
                 commands.append(_CommandType(self._set_on_edit_finish, newprops[prop]))
     #         elif prop == "completer":
     #             commands.append((self._set_completer, newprops[prop]))
+            elif prop == "placeholder_text":
+                commands.append(_CommandType(widget.setPlaceholderText, newprops[prop]))
         return commands
 
 
@@ -1644,17 +1651,18 @@ class _LinearView(QtWidgetElement):
 
 
 class View(_LinearView):
-    """Basic layout widget for grouping children together
+    """Basic layout widget for grouping children together.
 
-    Content that does not fit into the View layout will be clipped.
+    Content that does not fit into the `View` layout will be clipped.
     To allow scrolling in case of overflow, use :class:`ScrollView<edifice.ScrollView>`.
 
     Args:
-        layout: one of column, row, or none.
+        layout: one of :code:`"column", :code:`"row"`, or :code:`None`.
+
             A row layout will lay its children in a row and a column layout will lay its children in a column.
-            When row or column layout are set, the position of their children is not adjustable.
-            If layout is none, then all children by default will be positioend at the upper left-hand corner
-            of the View (x=0, y=0). Children can set the `top` and `left` attributes of their style
+            When :code:`layout="row"` or :code:`layout="column"` are set, the position of their children is not adjustable.
+            If layout is :code:`None`, then all children by default will be positioend at the upper left-hand corner
+            of the `View` (x=0, y=0). Children can set the `top` and `left` attributes of their style
             to position themselves relevative to their parent.
     """
 
