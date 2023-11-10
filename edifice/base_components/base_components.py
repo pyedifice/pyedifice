@@ -1176,7 +1176,7 @@ class TextInput(QtWidgetElement):
         self.underlying = None
 
     def _initialize(self):
-        self.underlying = QtWidgets.QLineEdit(str(self.props.text))
+        self.underlying = QtWidgets.QLineEdit(self.props.text)
         size = self.underlying.font().pointSize()
         self._set_size(size * len(self.props.text), size)
         self.underlying.setObjectName(str(id(self)))

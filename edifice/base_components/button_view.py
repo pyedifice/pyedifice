@@ -45,7 +45,7 @@ class ButtonView(View):
             Use either this or :code:`on_click`, not both.
     """
     def __init__(self,
-            layout: str = "row",
+            layout: tp.Literal["row", "column"] | None = "row",
             on_trigger: tp.Callable[[QKeyEvent], None] | tp.Callable[[QMouseEvent], None] | None = None,
             **kwargs):
         self.register_props({
