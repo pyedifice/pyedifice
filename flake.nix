@@ -188,27 +188,27 @@
                 runtimeInputs = [
                   (pkgs.poetry2nix.mkPoetryEnv poetryEnvAttrs)
                 ];
-                text = "cd ${inputs.self.outPath}; python -m edifice --inspect examples/calculator.py Calculator";
+                text = "cd ${inputs.self.outPath}; python examples/calculator.py";
               };
             in
             {
               type = "app";
               program = "${script}/bin/edifice-example";
             };
-          example-forms =
-            let
-              script = pkgs.writeShellApplication {
-                name = "edifice-example";
-                runtimeInputs = [
-                  (pkgs.poetry2nix.mkPoetryEnv poetryEnvAttrs)
-                ];
-                text = "cd ${inputs.self.outPath}; PYTHONPATH=. python examples/form.py";
-              };
-            in
-            {
-              type = "app";
-              program = "${script}/bin/edifice-example";
-            };
+          # example-forms =
+          #   let
+          #     script = pkgs.writeShellApplication {
+          #       name = "edifice-example";
+          #       runtimeInputs = [
+          #         (pkgs.poetry2nix.mkPoetryEnv poetryEnvAttrs)
+          #       ];
+          #       text = "cd ${inputs.self.outPath}; PYTHONPATH=. python examples/form.py";
+          #     };
+          #   in
+          #   {
+          #     type = "app";
+          #     program = "${script}/bin/edifice-example";
+          #   };
           example-financial-charting =
             let
               script = pkgs.writeShellApplication {
@@ -222,7 +222,7 @@
                     ];
                   }))
                 ];
-                text = "cd ${inputs.self.outPath}; python -m edifice --inspect examples/financial_charts.py App";
+                text = "cd ${inputs.self.outPath}; python examples/financial_charts.py";
               };
             in
             {
@@ -236,7 +236,21 @@
                 runtimeInputs = [
                   (pkgs.poetry2nix.mkPoetryEnv poetryEnvAttrs)
                 ];
-                text = "cd ${inputs.self.outPath}; python -m edifice --inspect examples/harmonic_oscillator.py Oscillator";
+                text = "cd ${inputs.self.outPath}; python examples/harmonic_oscillator.py";
+              };
+            in
+            {
+              type = "app";
+              program = "${script}/bin/edifice-example";
+            };
+          example-todomvc =
+            let
+              script = pkgs.writeShellApplication {
+                name = "edifice-example";
+                runtimeInputs = [
+                  (pkgs.poetry2nix.mkPoetryEnv poetryEnvAttrs)
+                ];
+                text = "cd ${inputs.self.outPath}; python examples/todomvc.py";
               };
             in
             {
