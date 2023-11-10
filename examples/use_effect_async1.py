@@ -6,54 +6,46 @@ import asyncio as asyncio
 import sys, os
 # We need this sys.path line for running this example, especially in VSCode debugger.
 sys.path.insert(0, os.path.join(sys.path[0], '..'))
-from edifice import App, Element, View, Label, Button
+from edifice import App, Element, View, Label, Button, component
 from edifice.hooks import use_state, use_async
 
-class MainComp(Element):
-    def __init__(self):
-        super().__init__()
-
-    def render(self):
-        show, set_show = use_state(False)
-        if show:
-            return View(
-                style={
-                    "align":"top"
-                }
-            )(
-                Button(
-                    title="Hide",
-                    on_click=lambda ev: set_show(False)
-                ),
-                TestComp()
+@component
+def MainComp(self):
+    show, set_show = use_state(False)
+    if show:
+        with View(
+            style={
+                "align":"top"
+            }
+        ):
+            Button(
+                title="Hide",
+                on_click=lambda ev: set_show(False)
             )
-        else:
-            return View(
-                style={
-                    "align":"top"
-                }
-            )(
-                Button(
-                    title="Show",
-                    on_click=lambda ev: set_show(True)
-                )
+            TestComp()
+    else:
+        with View(
+            style={
+                "align":"top"
+            }
+        ):
+            Button(
+                title="Show",
+                on_click=lambda ev: set_show(True)
             )
-class TestComp(Element):
-    def __init__(self):
-        super().__init__()
-        self.count = 0
 
+@component
+def TestComp(self):
 
-    def render(self):
+    print("TestComp instance " + str(id(self)))
 
-        print("TestComp instance " + str(id(self)))
+    x, x_setter = use_state(0)
 
-        x, x_setter = use_state(0)
+    result, result_set = use_state("")
 
-        result, result_set = use_state("")
-
-        async def fetch():
-            print("async effect")
+    async def fetch():
+        print(f"async fetch {x}")
+        try:
             # https://docs.python.org/3/library/asyncio-stream.html#get-http-headers
             reader,writer = await asyncio.open_connection("www.google.com", 443, ssl=True)
             query = (
@@ -68,27 +60,31 @@ class TestComp(Element):
             result_line = line.decode('latin-1').rstrip()
             print(result)
             result_set(result_line)
+            print (f"async fetch {x} finished")
+        except Exception as ex:
+            print (f"async fetch {x} cancelled")
+            raise ex
 
-        use_async(fetch, x)
+    print(f"use_async(fetch, {x})")
+    use_async(fetch, x)
 
-        def fetch10(event):
-            for i in range(x, x+10):
-                x_setter(i+1)
+    def fetch10(event):
+        for i in range(10):
+            asyncio.get_running_loop().call_later(0.1 * i, x_setter, (lambda y: y+1))
 
-        return View(
-            style={
-                "align":"top"
-            }
-        )(
-            Label(text=result),
-            Button(
-                title="State " + str(x),
-                on_click=lambda ev: x_setter(x+1)
-            ),
-            Button(
-                title="State + 10",
-                on_click=fetch10,
-            )
+    with View(
+        style={
+            "align":"top"
+        }
+    ):
+        Label(text=result)
+        Button(
+            title="State " + str(x),
+            on_click=lambda ev: x_setter(lambda y: y+1)
+        )
+        Button(
+            title="State + 10",
+            on_click=fetch10,
         )
 
 if __name__ == "__main__":

@@ -89,8 +89,14 @@ class App(object):
 
     Args:
         component: the root component of the application.
-            If it is not an instance of Window or RootElement, a Window
-            will be created with the passed in component as a child.
+            If it is not an instance of :class:`Window` or :class:`RootElement`,
+            a :class:`Window`
+            will be created with the passed-in component as a child.
+
+            The root component must render to the same type of Element every time.
+            For that reason, the root component should usually render to
+            a :class:`View` or some other container. (The reason for this is
+            that the :class:`Window` cannot diff its children.)
         inspector: whether or not to run an instance of the Edifice Inspector
             alongside the main app. Defaults to False
         create_application: (default True) whether or not to create an instance of QApplication.

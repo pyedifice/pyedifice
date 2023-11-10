@@ -6,60 +6,55 @@ import asyncio as asyncio
 import sys, os
 # We need this sys.path line for running this example, especially in VSCode debugger.
 sys.path.insert(0, os.path.join(sys.path[0], '..'))
-from edifice import App, Element, View, Label, Button
+from edifice import App, View, Label, Button, component
 from edifice.hooks import use_state, use_effect
 
-class MainComp(Element):
-    def __init__(self):
-        super().__init__()
+@component
+def MainComp(self):
 
-    def render(self):
-        show, set_show = use_state(False)
-        if show:
-            return View()(
-                Button(
-                    title="Hide",
-                    on_click=lambda ev: set_show(False)
-                ),
-                TestComp()
-            )
-        else:
-            return View()(
-                Button(
-                    title="Show",
-                    on_click=lambda ev: set_show(True)
-                )
-            )
-class TestComp(Element):
-    def __init__(self):
-        super().__init__()
-        self.count = 0
-
-
-    def render(self):
-
-        print("TestComp instance " + str(id(self)))
-
-        x, x_setter = use_state(0)
-
-        def setup():
-            print("effect setup")
-            def cleanup():
-                print("effect cleanup")
-                pass
-            return cleanup
-        use_effect(setup, x)
-
-        return View(
-            style={
-                "align":"top"
-            }
-        )(
-            Label(text="Label text"),
+    show, set_show = use_state(False)
+    if show:
+        with View():
             Button(
-                title="State " + str(x),
-                on_click=lambda ev: x_setter(x+1)
-            ),
+                title="Hide",
+                on_click=lambda ev: set_show(False)
+            )
+            TestComp()
+    else:
+        with View():
+            Button(
+                title="Show",
+                on_click=lambda ev: set_show(True)
+            )
+
+@component
+def TestComp(self):
+
+    print("TestComp instance " + str(id(self)))
+
+    x, x_setter = use_state(0)
+
+    def setup():
+        print("effect setup")
+        def cleanup():
+            print("effect cleanup")
+            pass
+        return cleanup
+    use_effect(setup, x)
+
+    with View(
+        style={
+            "align":"top"
+        }
+    ):
+        Label(text="Label text")
+        Button(
+            title="State " + str(x),
+            on_click=lambda ev: x_setter(x+1)
+        )
+        Button(
+            title="State Unchanged",
+            on_click = lambda ev: x_setter(lambda y: y)
         )
 
 if __name__ == "__main__":
