@@ -1,11 +1,12 @@
 import inspect
 import edifice as ed
+from edifice.state import StateManager
 
 
 SELECTION_COLOR = "#ACCEF7"
 
 
-current_selection = ed.StateManager({
+current_selection = StateManager({
 })
 
 

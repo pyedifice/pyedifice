@@ -135,41 +135,25 @@ class Reference(object):
     In these cases, you might need to issue imperative commands to the underlying widgets and components,
     and :class:`Reference` gives you a handle to the currently rendered :class:`Element`.
 
-    Consider the following code::
+    Create a :class:`Reference` with the :func:`edifice.use_ref` Hook::
 
-        class MyComp(Element):
-            def __init__(self):
-                self.ref = None
+        @component
+        def MyComp(self):
+            ref = use_ref()
 
-            def issue_command(self, e):
-                self.ref.issue_command()
+            def issue_command(e):
+                ref().command()
 
-            def render(self):
-                self.ref = AnotherElement(on_click=self.issue_command)
-                return self.ref
-
-    This code is **incorrect** since the component returned by render is not necessarily the Element rendered on Screen,
-    since the old component (with all its state) will be reused when possible.
-    The right way of solving the problem is via references::
-
-        class MyComp(Element):
-            def __init__(self):
-                self.ref = Reference()
-
-            def issue_command(self, e):
-                self.ref().issue_command()
-
-            def render(self):
-                return AnotherElement(on_click=self.issue_command).register_ref(self.ref)
+            AnotherElement(on_click=issue_command).register_ref(ref)
 
     Under the hood, :code:`register_ref` registers the :class:`Reference` object
-    to the component returned by the :code:`render` function.
+    to the :class:`Element` returned by the :code:`render` function.
     While rendering, Edifice will examine all requested references and attaches
     them to the correct :class:`Element`.
 
     Initially, a :class:`Reference` object will point to :code:`None`.
-    After the first render, they will point to the rendered :class:`Element`.
-    When the rendered component dismounts, the reference will once again
+    After the first render, it will point to the rendered :class:`Element`.
+    When the rendered :class:`Element` dismounts, the reference will once again
     point to :code:`None`.
     You may assume that :class:`Reference` is valid whenever it is
     not :code:`None`.
@@ -180,19 +164,21 @@ class Reference(object):
         if ref:
             ref().do_something()
 
-    If you want to access the Qt widget underlying a base component,
-    you can use the :code:`underlying` attribute of the component::
+    If you want to access the QWidget underlying a Base Element,
+    you can use the :code:`underlying` attribute of the Element::
 
-        class MyComp(Element):
-            def __init__(self):
-                self.ref = Reference()
+        @component
+        def MyComp(self):
+            ref = use_ref()
 
-            def did_render(self):
-                if self.ref:
-                    self.ref().underlying.setText("Hi")
+            def did_render():
+                if ref:
+                    ref().underlying.setText("Hi")
+                return lambda:None
 
-            def render(self):
-                return Label("Hi").register_ref(self.ref)
+            use_effect(did_render)
+
+            Label("Hi").register_ref(ref)
     """
 
     def __init__(self):
@@ -332,7 +318,7 @@ class Element:
 
     To declare an :class:`Element` to be the parent of some other
     :class:`Element` s in the tree, use the parent as a
-    `with statement context manager <https://docs.python.org/3/reference/datamodel.html#context-managers>`_.
+    `with statement context manager <https://docs.python.org/3/reference/datamodel.html#context-managers>`_::
 
         with View(layout="column"):
             with View(layout="row"):
@@ -539,15 +525,15 @@ class Element:
         super().__setattr__(k, v)
 
     def set_state(self, **kwargs):
-        """Set state and render changes.
+        # """Set state and render changes.
 
-        The keywords are the names of the state attributes of the class, e.g.
-        for the state :code:`self.mystate`, you call :code:`set_state(mystate=2)`.
+        # The keywords are the names of the state attributes of the class, e.g.
+        # for the state :code:`self.mystate`, you call :code:`set_state(mystate=2)`.
 
-        At the end of this call, all changes will be rendered.
-        All changes are guaranteed to appear atomically: upon exception,
-        no changes to state will occur.
-        """
+        # At the end of this call, all changes will be rendered.
+        # All changes are guaranteed to appear atomically: upon exception,
+        # no changes to state will occur.
+        # """
         should_update = self.should_update(PropsDict({}), kwargs)
         old_vals = {}
         try:
@@ -566,53 +552,57 @@ class Element:
             raise e
 
     def should_update(self, newprops: PropsDict, newstate: tp.Mapping[tp.Text, tp.Any]) -> bool:
-        """Determines if the component should rerender upon receiving new props and state.
+        # """Determines if the component should rerender upon receiving new props and state.
 
-        The arguments, :code:`newprops` and :code:`newstate`, reflect the
-        props and state that change: they
-        may be a subset of the props and the state. When this function is called,
-        all props and state of this Element are the old values, so you can compare
-        :code:`self.props` to :code:`newprops` and :code`self` to :code:`newstate`
-        to determine changes.
+        # The arguments, :code:`newprops` and :code:`newstate`, reflect the
+        # props and state that change: they
+        # may be a subset of the props and the state. When this function is called,
+        # all props and state of this Element are the old values, so you can compare
+        # :code:`self.props` to :code:`newprops` and :code`self` to :code:`newstate`
+        # to determine changes.
 
-        By default, this function returns :code:`True`, even if props and state are unchanged.
+        # By default, this function returns :code:`True`, even if props and state are unchanged.
 
-        Args:
-            newprops: the new set of props
-            newstate: the new set of state
-        Returns:
-            Whether or not the Element should be rerendered.
-        """
+        # Args:
+        #     newprops: the new set of props
+        #     newstate: the new set of state
+        # Returns:
+        #     Whether or not the Element should be rerendered.
+        # """
         del newprops, newstate
         return True
 
     def did_mount(self):
-        """Callback function that is called when the component mounts for the first time.
+        """"""
+        # """Callback function that is called when the component mounts for the first time.
 
-        Override if you need to do something after the component mounts
-        (e.g. start a timer).
-        """
+        # Override if you need to do something after the component mounts
+        # (e.g. start a timer).
+        # """
 
     def did_update(self):
-        """Callback function that is called whenever the component updates.
+        """"""
+        # """Callback function that is called whenever the component updates.
 
-        *This is not called after the first render.*
-        Override if you need to do something after every render except the first.
-        """
+        # *This is not called after the first render.*
+        # Override if you need to do something after every render except the first.
+        # """
 
     def did_render(self):
-        """Callback function that is called whenever the component renders.
+        """"""
+        # """Callback function that is called whenever the component renders.
 
-        It will be called on both renders and updates.
-        Override if you need to do something after every render.
-        """
+        # It will be called on both renders and updates.
+        # Override if you need to do something after every render.
+        # """
 
     def will_unmount(self):
-        """Callback function that is called when the component will unmount.
+        """"""
+        # """Callback function that is called when the component will unmount.
 
-        Override if you need to clean up some state, e.g. stop a timer,
-        close a file.
-        """
+        # Override if you need to clean up some state, e.g. stop a timer,
+        # close a file.
+        # """
 
     def __call__(self, *args):
         children = []
@@ -666,7 +656,6 @@ C = tp.TypeVar("C", bound=Element)
 def not_ignored(arg: tuple[str, tp.Any]) -> bool:
     return arg[0][0] != "_"
 
-# TODO: Should we really allow the function to return `Any`?
 def component(f: Callable[tp.Concatenate[C,P], None]) -> Callable[P,Element]:
     """Decorator turning a render function of **props** into an :class:`Element`.
 
@@ -686,7 +675,36 @@ def component(f: Callable[tp.Concatenate[C,P], None]) -> Callable[P,Element]:
     :class:`Element` s in the tree, use the parent as a
     `with statement context manager <https://docs.python.org/3/reference/datamodel.html#context-managers>`_.
 
-    Of course, you could have written::
+    Each :class:`Element` is actually implemented as the constructor function
+    for a Python class. The :class:`Element` constructor function also has
+    the side-effect of inserting itself to the rendered :class:`Element` tree,
+    as a child of the :code:`with` context layout Element.
+
+    For that reason, you have to be careful about binding Elements to variables
+    and passing them around. They will insert themselves at the time they are
+    created. This code will **NOT** declare the intended Element tree, same as the code above::
+
+        @component
+        def MySimpleComp(self, prop1, prop2, prop3):
+            label3 = Label(prop3)
+            with View():
+                Label(prop1)
+                Label(prop2)
+                label3
+
+    To solve this, defer the construction of the Element with a lambda function.
+    This code will declare the same intended Element tree as the code above::
+
+        @component
+        def MySimpleComp(self, prop1, prop2, prop3):
+            label3 = lambda: Label(prop3)
+            with View():
+                Label(prop1)
+                Label(prop2)
+                label3()
+
+    If these component Elements are render functions, then why couldn’t we just write
+    a normal render function with no decorator::
 
         # No decorator
         def MySimpleComp(prop1, prop2, prop3):
@@ -699,13 +717,9 @@ def component(f: Callable[tp.Concatenate[C,P], None]) -> Callable[P,Element]:
     which can be viewed, for example, in the inspector. Moreover, you need an :class:`Element` to
     be able to use hooks such as :func:`use_state`, since those are bound to an :class:`Element`.
 
-    Inside the component function, you
-
     Args:
         f: the function to wrap. Its first argument must be self.
             Subsequent arguments are **props**.
-    Returns:
-        :class:`Element`.
     """
     varnames = f.__code__.co_varnames[1:]
     signature = inspect.signature(f).parameters

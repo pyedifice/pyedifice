@@ -167,6 +167,10 @@ class _RenderContext(object):
         setup: tp.Callable[[], tp.Callable[[], None]],
         dependencies: tp.Any,
     ) -> None:
+    	# https://legacy.reactjs.org/docs/hooks-effect.html#example-using-hooks
+        # effects happen “after render”.
+        # React guarantees the DOM has been updated by the time it runs the effects.
+
         element = self.current_element
         assert element is not None
         hooks = self.engine._hook_effect[element]
@@ -176,27 +180,13 @@ class _RenderContext(object):
 
         if len(hooks) <= h_index:
             # then this is the first render
-            hook = _HookEffect(None, dependencies)
+            hook = _HookEffect(setup, None, dependencies)
             hooks.append(hook)
-            try:
-                cleanup = setup()
-                hook.cleanup = cleanup
-            except Exception as ex:
-                hook.cleanup = None
-                raise ex
 
         elif ((hook := hooks[h_index]).dependencies != dependencies):
             # then this is not the first render and deps changed
             hook.dependencies = dependencies
-            try:
-                cleanup_old = hook.cleanup
-                if cleanup_old is not None:
-                    cleanup_old()
-                cleanup_new = setup()
-                hook.cleanup = cleanup_new
-            except Exception as ex:
-                hook.cleanup = None
-                raise ex
+            hook.setup = setup
 
     def use_async(
         self,
@@ -318,6 +308,7 @@ class _HookState:
 
 @dataclass
 class _HookEffect:
+    setup: tp.Callable[[], tp.Callable[[], None]] | None
     cleanup: tp.Callable[[], None] | None
     """
     Cleanup function called on unmount and overwrite
@@ -401,7 +392,12 @@ class RenderEngine(object):
         if component in self._hook_effect:
             for hook in self._hook_effect[component]:
                 if hook.cleanup is not None: # None indicates that the setup effect failed.
-                    hook.cleanup()
+                    try:
+                        hook.cleanup()
+                    except:
+                        pass
+                del hook.setup
+                del hook.cleanup
                 del hook.dependencies
                 del hook
             del self._hook_effect[component]
@@ -627,24 +623,6 @@ class RenderEngine(object):
         component._hook_effect_index = 0
         component._hook_async_index = 0
 
-        # Before the render, reduce the _hook_state updaters.
-        # We can't do this after the render, because there may have been state
-        # updates from event handlers.
-        for hooks in self._hook_state.values():
-            for hook in hooks:
-                state0 = hook.state
-                try:
-                    for updater in hook.updaters:
-                        if callable(updater):
-                            hook.state = updater(hook.state)
-                        else:
-                            hook.state = updater
-                except:
-                    # If any of the updaters throws then the state is unchanged.
-                    hook.state = state0
-                finally:
-                    hook.updaters.clear()
-
         # Call user provided render function and retrieve old results
         with Container() as container:
             prev_element = render_context.current_element
@@ -704,6 +682,25 @@ class RenderEngine(object):
         return widget_trees
 
     def _request_rerender(self, components: list[Element]) -> RenderResult:
+
+        # Before the render, reduce the _hook_state updaters.
+        # We can't do this after the render, because there may have been state
+        # updates from event handlers.
+        for hooks in self._hook_state.values():
+            for hook in hooks:
+                state0 = hook.state
+                try:
+                    for updater in hook.updaters:
+                        if callable(updater):
+                            hook.state = updater(hook.state)
+                        else:
+                            hook.state = updater
+                except:
+                    # If any of the updaters throws then the state is unchanged.
+                    hook.state = state0
+                finally:
+                    hook.updaters.clear()
+
         # Generate the widget trees
         with _storage_manager() as storage_manager:
             render_context = _RenderContext(storage_manager, self)
@@ -716,6 +713,26 @@ class RenderEngine(object):
         # Update the stored component trees and widget trees
         self._component_tree.update(render_context.component_tree)
         self._widget_tree.update(render_context.widget_tree)
+
+        # after render, call the use_effect setup functions.
+        # we want to guarantee that elements are fully rendered when
+        # effects are performed.
+        for hooks in self._hook_effect.values():
+            for hook in hooks:
+                if hook.setup is not None:
+                    if hook.cleanup is not None:
+                        try:
+                            hook.cleanup()
+                        except:
+                            pass
+                        finally:
+                            hook.cleanup = None
+                    try:
+                        hook.cleanup = hook.setup()
+                    except:
+                        hook.cleanup = None
+                    finally:
+                        hook.setup = None
 
         # Delete components that should be deleted (and call the respective unmounts)
         for component in render_context.enqueued_deletions:

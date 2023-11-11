@@ -5,6 +5,7 @@ import enum
 
 import edifice
 from edifice.components import forms
+from edifice.state import StateManager
 
 from edifice.qt import QT_VERSION
 if QT_VERSION == "PyQt6":
@@ -21,7 +22,7 @@ class FormTest(unittest.TestCase):
         class Color(enum.Enum):
             RED = 1,
             BLUE = 2,
-        data = edifice.StateManager({
+        data = StateManager({
             "a": 1,
             "b": "b",
             "c": 1.0,
@@ -53,7 +54,7 @@ class FormTest(unittest.TestCase):
         class Color(enum.Enum):
             RED = 1,
             BLUE = 2,
-        data = edifice.StateManager({
+        data = StateManager({
             "a": 1,
             "b": "b",
             "c": 1.0,
@@ -87,7 +88,7 @@ class FormTest(unittest.TestCase):
         self.assertEqual(data["d"], (3, [1, 2, 3, 4]))
 
     def test_reset(self):
-        data = edifice.StateManager({
+        data = StateManager({
             "a": 1,
             "b": 2,
             "c": 3,

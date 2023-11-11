@@ -1,5 +1,5 @@
 from collections.abc import Callable, Coroutine
-from edifice._component import get_render_context_maybe, _T_use_state
+from edifice._component import get_render_context_maybe, _T_use_state, Reference
 from typing import Any
 
 def use_state(initial_state:_T_use_state) -> tuple[
@@ -56,7 +56,7 @@ def use_state(initial_state:_T_use_state) -> tuple[
     updates will be cancelled and the state value will be unchanged for the
     next render.
 
-	.. warning::
+    .. warning::
         You can't store a :code:`callable` value in :code:`use_state`,
         because it will be mistaken for an **updater function**. If you
         want to store a :code:`callable` value, like a function, then wrap
@@ -85,6 +85,22 @@ def use_effect(
 
     Behaves like `React useEffect <https://react.dev/reference/react/useEffect>`_.
 
+    The **setup function** will be called after render and after the underlying
+    Qt Widgets are updated.
+
+    The **cleanup function** will be called by Edifice exactly once for
+    each call to the **setup function**.
+    The **cleanup function**
+    is called after render and before the component is deleted.
+
+    If the dependencies change, then the old **cleanup function** is called and
+    then the new **setup function** is called.
+
+    If the **setup function** raises an Exception then the
+    **cleanup function** will not be called.
+    Exceptions raised from the **setup function** and **cleanup function**
+    will be suppressed.
+
     Example::
 
         @component
@@ -100,12 +116,6 @@ def use_effect(
 
     Args:
         setup: An effect **setup function** which returns a **cleanup function**.
-
-            The **cleanup function** will be called by Edifice exactly once for
-            each call to the **setup function**.
-
-            If the **setup function** raises an Exception then the
-            **cleanup function** will not be called.
         dependencies: The effect **setup function** will be called when the
             dependencies are not :code:`__eq__` to the old dependencies.
     Returns:
@@ -171,3 +181,10 @@ def use_async(
     if context is None:
         raise ValueError("use_async used outside component")
     return context.use_async(fn_coroutine, dependencies)
+
+def use_ref() -> Reference:
+    """
+    Hook for creating a :class:`Reference` in a :func:`edifice.component` function.
+    """
+    r,_ = use_state(Reference())
+    return r
