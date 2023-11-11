@@ -1,6 +1,6 @@
 import unittest
 import unittest.mock
-import edifice._component as component
+from edifice import Element, Reference, component, use_ref
 from edifice._component import _CommandType
 import edifice.engine as engine
 import edifice.base_components as base_components
@@ -18,12 +18,12 @@ if QtWidgets.QApplication.instance() is None:
 class TestReference(unittest.TestCase):
 
     def test_reference(self):
-        class TestComp(component.Element):
+        class TestComp(Element):
             def __init__(self):
                 super().__init__()
                 self.render_count = 0
-                self.ref1 = component.Reference()
-                self.ref2 = component.Reference()
+                self.ref1 = Reference()
+                self.ref2 = Reference()
 
             def render(self):
                 self.render_count += 1
@@ -32,7 +32,7 @@ class TestReference(unittest.TestCase):
                 else:
                     return base_components.Label("Test").register_ref(self.ref2)
 
-        class TestCompWrapper(component.Element):
+        class TestCompWrapper(Element):
 
             def __init__(self):
                 super().__init__()
@@ -70,8 +70,69 @@ class TestReference(unittest.TestCase):
         self.assertEqual(sub_comp.ref1(), None)
         self.assertEqual(sub_comp.ref2(), None)
 
+    def test_reference2(self):
+        """test_reference ported to with-hooks style"""
 
-class _TestElementInner(component.Element):
+        sub_comp_ref = []
+
+        @component
+        def TestComp(self):
+            if hasattr(self, "render_count"):
+                self.render_count += 1
+            else:
+                self.render_count = 1
+
+            ref0 = use_ref()
+            ref1 = use_ref()
+            sub_comp_ref.append(ref0)
+            sub_comp_ref.append(ref1)
+
+            if self.render_count == 1:
+                base_components.Label("Test").register_ref(ref0)
+            else:
+                base_components.Label("Test").register_ref(ref1)
+            return
+
+        @component
+        def TestCompWrapper(self):
+
+            if hasattr(self, "render_count"):
+                self.render_count += 1
+            else:
+                self.render_count = 1
+
+            if self.render_count == 3:
+                # We do this to force the dismount of TestComp
+                base_components.Label("Test")
+            else:
+                TestComp()
+
+        root = TestCompWrapper()
+        render_engine = engine.RenderEngine(root)
+        render_engine._request_rerender([root])
+        sub_comp = render_engine._component_tree[root]
+        label_comp = render_engine._component_tree[sub_comp]
+        self.assertEqual(sub_comp_ref[0](), label_comp)
+        self.assertEqual(sub_comp_ref[1](), None)
+
+        # Rerender so that ref1 should also point to label
+        render_engine._request_rerender([root])
+        new_sub_comp = render_engine._component_tree[root]
+        new_label = render_engine._component_tree[new_sub_comp]
+        self.assertEqual(new_sub_comp, sub_comp)
+        self.assertEqual(new_label, label_comp)
+        self.assertEqual(sub_comp_ref[0](), label_comp)
+        self.assertEqual(sub_comp_ref[1](), label_comp)
+
+        # Rerender to test dismount behavior
+        render_engine._request_rerender([root])
+        new_sub_comp = render_engine._component_tree[root]
+        assert sub_comp not in render_engine._component_tree
+        self.assertEqual(sub_comp_ref[0](), None)
+        self.assertEqual(sub_comp_ref[1](), None)
+
+
+class _TestElementInner(Element):
 
     def __init__(self, prop_a):
         self.register_props({
@@ -86,7 +147,7 @@ class _TestElementInner(component.Element):
             base_components.Label(self.state_a),
         )
 
-class _TestElementOuter(component.Element):
+class _TestElementOuter(Element):
     """
     The rendered tree should be (with index address):
         View(               # []
@@ -113,7 +174,7 @@ class _TestElementOuter(component.Element):
             base_components.Label(self.state_c),
         )
 
-class _TestElementOuterList(component.Element):
+class _TestElementOuterList(Element):
     """
     The rendered tree should be (with index address):
         View(               # []
@@ -291,7 +352,7 @@ class RenderTestCase(unittest.TestCase):
         self.assertEqual(qt_commands, expected_commands)
 
     def test_one_child_rerender(self):
-        class TestCompInner(component.Element):
+        class TestCompInner(Element):
 
             def __init__(self, val):
                 self.register_props({
@@ -304,7 +365,7 @@ class RenderTestCase(unittest.TestCase):
                 self.count += 1
                 return base_components.Label(self.props.val)
 
-        class TestCompOuter(component.Element):
+        class TestCompOuter(Element):
             def render(self):
                 return base_components.View()(TestCompInner(self.value))
 
@@ -323,7 +384,7 @@ class RenderTestCase(unittest.TestCase):
         self.assertEqual(inner_comp.props.val, 4)
 
     def test_render_exception(self):
-        class TestCompInner1(component.Element):
+        class TestCompInner1(Element):
 
             def __init__(self, val):
                 self.register_props({
@@ -338,7 +399,7 @@ class RenderTestCase(unittest.TestCase):
                 self.success_count += 1
                 return base_components.Label(self.props.val)
 
-        class TestCompInner2(component.Element):
+        class TestCompInner2(Element):
 
             def __init__(self, val):
                 self.register_props({
@@ -354,7 +415,7 @@ class RenderTestCase(unittest.TestCase):
                 self.success_count += 1
                 return base_components.Label(self.props.val)
 
-        class TestCompOuter(component.Element):
+        class TestCompOuter(Element):
             def render(self):
                 return base_components.View()(
                     TestCompInner1(self.value * 2),
@@ -386,7 +447,7 @@ class RenderTestCase(unittest.TestCase):
 class RefreshClassTestCase(unittest.TestCase):
 
     def test_refresh_child(self):
-        class OldInnerClass(component.Element):
+        class OldInnerClass(Element):
 
             def __init__(self, val):
                 self.register_props({
@@ -400,7 +461,7 @@ class RefreshClassTestCase(unittest.TestCase):
                 self.count += 1
                 return base_components.Label(self.props.val)
 
-        class NewInnerClass(component.Element):
+        class NewInnerClass(Element):
 
             def __init__(self, val):
                 self.register_props({
@@ -413,7 +474,7 @@ class RefreshClassTestCase(unittest.TestCase):
                 self.count += 1
                 return base_components.Label(self.props.val * 2)
 
-        class OuterClass(component.Element):
+        class OuterClass(Element):
 
             def __init__(self):
                 super().__init__()
@@ -438,7 +499,7 @@ class RefreshClassTestCase(unittest.TestCase):
         self.assertEqual(inner_comp.props.val, 5)
 
     def test_refresh_child_error(self):
-        class OldInnerClass(component.Element):
+        class OldInnerClass(Element):
 
             def __init__(self, val):
                 self.register_props({
@@ -452,7 +513,7 @@ class RefreshClassTestCase(unittest.TestCase):
                 self.count += 1
                 return base_components.Label(self.props.val)
 
-        class NewInnerClass(component.Element):
+        class NewInnerClass(Element):
 
             def __init__(self, val):
                 self.register_props({
@@ -466,7 +527,7 @@ class RefreshClassTestCase(unittest.TestCase):
                 assert False
                 return base_components.Label(self.props.val * 2)
 
-        class OuterClass(component.Element):
+        class OuterClass(Element):
 
             def __init__(self):
                 super().__init__()

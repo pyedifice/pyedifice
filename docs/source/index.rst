@@ -245,7 +245,6 @@ Table of Contents
    edifice
    base_components
    compound_components
-   state
    hooks
    utilities
    styling

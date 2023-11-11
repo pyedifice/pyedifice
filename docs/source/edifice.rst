@@ -15,9 +15,6 @@ Class overview
    :template: custom-class.rst
 
    Element
-   PropsDict
-   register_props
    component
    Reference
    App
-   Timer

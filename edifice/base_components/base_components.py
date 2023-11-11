@@ -159,7 +159,7 @@ class QtWidgetElement(WidgetElement):
     Args:
         style: style for the widget. Could either be a dictionary or a list of dictionaries.
 
-            See :doc:`<styling>` for a primer on styling.
+            See :doc:`../../styling` for a primer on styling.
         tool_tip:
             the tool tip displayed when hovering over the widget.
         cursor:
@@ -223,7 +223,11 @@ class QtWidgetElement(WidgetElement):
             as argument.
 
     """
+
     underlying: _UnderlyingType | None
+    """
+    The underlying QWidget, which may not exist if this Element has not rendered.
+    """
 
     def __init__(
         self,

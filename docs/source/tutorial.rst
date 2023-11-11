@@ -48,17 +48,6 @@ First we define a function :code:`MyApp` which is decorated by
 :func:`edifice.component`.
 The :code:`MyApp` component is the top-level Element of our application.
 
-A component is a function which, when called, renders an Element tree.
-Some Elements may have children. The children are other Elements.
-
-The rendering for an Edifice application is done by declaring a tree of Elements
-starting with a single root Element, and then declaring its children.
-
-An Element may be either a component function, or a base
-:class:`QtWidgetElement <edifice.QtWidgetElement>`.
-
-The base QtWidgetElements, when rendered, update their underlying QtWidget.
-
 :class:`View<edifice.View>` is an example of
 a base :class:`QtWidgetElement <edifice.QtWidgetElement>`.
 The View receives :code:`layout="row"` as an argument in its constructor.

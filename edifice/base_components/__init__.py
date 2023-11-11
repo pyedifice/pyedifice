@@ -1,19 +1,25 @@
 """
-Base Elements are the building blocks for your Edifice application.
-These components may all be imported from the edifice namespace::
+Base Elements are the building blocks for an Edifice application.
 
-    import edifice
-    from edifice import View, Label
+Each
+Base Element manages an underlying
+`QWidget <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html>`_.
 
-    # you can now access edifice.Button, View, etc.
+If the Base Element is a layout, then it also manages an underlying
+`QLayout <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QLayout.html>`_,
+and it can have children.
 
-All components in this module inherit from :class:`QtWidgetElement<edifice.QtWidgetElement>`
+When the base Element renders, it adjusts the properties of the
+underlying QWidget and QLayout.
+
+All Elements in this module inherit from :class:`QtWidgetElement<edifice.QtWidgetElement>`
 and its props, such as :code:`style` and :code:`on_click`.
-This means that all widgets could potentially respond to clicks and are stylable using css-like stylesheets.
+This means that all Elements can respond to clicks and are stylable using
+:code:`style` prop and `Qt Style Sheets <https://doc.qt.io/qtforpython-6/overviews/stylesheet-reference.html>`_.
 
-The components here can roughly be divided into layout components and content components.
+Base Element can roughly be divided into layout Elements and leaf Elements.
 
-Layout components take a list of children and function as a container for its children;
+Layout Elements take a list of children and function as a container for its children;
 it is most analogous to the :code:`<div>` html tag.
 The two basic layout components are :class:`View<edifice.View>` and :class:`ScrollView<edifice.ScrollView>`.
 They take a layout prop, which controls whether children are laid out in a row,
