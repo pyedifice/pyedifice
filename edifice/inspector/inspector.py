@@ -217,7 +217,7 @@ class Inspector(InspectorElement):
             self.must_refresh = True
             self.component_tree, self.root_component = self.props.refresh()
 
-    def did_render(self):
+    def _did_render(self):
         self.must_refresh = False
 
     def select_component(self, comp):

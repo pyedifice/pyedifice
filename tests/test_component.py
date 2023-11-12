@@ -36,7 +36,7 @@ class MockElement(component.Element):
         super().__init__()
         self.will_unmount = unittest.mock.MagicMock()
         self._did_mount = unittest.mock.MagicMock()
-        self.did_render = unittest.mock.MagicMock()
+        self._did_render = unittest.mock.MagicMock()
 
     def render(self):
         if self.props.recursion_level == 1:
@@ -54,7 +54,7 @@ class ElementLifeCycleTestCase(unittest.TestCase):
         render_results = app._request_rerender([component])
         render_results.run()
         component._did_mount.assert_called_once()
-        component.did_render.assert_called_once()
+        component._did_render.assert_called_once()
 
 
 class OtherMockElement(component.Element):
