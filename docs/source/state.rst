@@ -7,7 +7,7 @@ State Values and State Managers
 Class overview
 --------------
 
-.. currentmodule:: edifice
+.. currentmodule:: edifice.state
 
 .. autosummary::
    :toctree: stubs
