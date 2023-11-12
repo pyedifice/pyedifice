@@ -141,12 +141,12 @@ class Form(Element):
             if isinstance(value.value, tuple):
                 val = (val, value.value[1])
             value.set(val)
-            with self.render_changes():
+            with self._render_changes():
                 if key in self.error_msgs:
                     self.error_msgs = self.error_msgs.copy()
                     del self.error_msgs[key]
         except ValueError:
-            with self.render_changes():
+            with self._render_changes():
                 self.error_msgs = self.error_msgs.copy()
                 self.error_msgs[key] = f"{key} must be {dtype.__name__}"
 
