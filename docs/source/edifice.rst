@@ -17,4 +17,7 @@ Class overview
    component
    App
    Reference
-   Element
+
+.. autosummary::
+   :toctree: stubs
+
