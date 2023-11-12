@@ -664,7 +664,7 @@ class RenderEngine(object):
             render_context.schedule_callback(component._did_mount)
             render_context.component_tree[component] = sub_component
             render_context.widget_tree[component] = self._render(sub_component, render_context)
-        render_context.schedule_callback(component.did_render)
+        render_context.schedule_callback(component._did_render)
 
         render_context.component_parent = component._edifice_internal_parent
         return render_context.widget_tree[component]

@@ -509,7 +509,7 @@ class Element:
         # Override if you need to do something after every render except the first.
         # """
 
-    def did_render(self):
+    def _did_render(self):
         pass
         # """Callback function that is called whenever the component renders.
 
