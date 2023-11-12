@@ -493,7 +493,7 @@ class Element:
 
         return False
 
-    def did_mount(self):
+    def _did_mount(self):
         pass
         # """Callback function that is called when the component mounts for the first time.
 

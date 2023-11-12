@@ -37,7 +37,7 @@ class Figure(CustomWidget):
         self.plot_thread_should_run = True
         self.plot_thread = threading.Thread(target=self.plot)
 
-    def did_mount(self):
+    def _did_mount(self):
         self.plot_thread.start()
 
     def will_unmount(self):

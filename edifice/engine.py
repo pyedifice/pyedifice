@@ -565,7 +565,7 @@ class RenderEngine(object):
             rendered_children = [self._render(child, render_context) for child in component.children]
             render_context.widget_tree[component] = _WidgetTree(component, rendered_children)
             render_context.mark_qt_rerender(component, True)
-            render_context.schedule_callback(component.did_mount)
+            render_context.schedule_callback(component._did_mount)
             return render_context.widget_tree[component]
 
         # Figure out which children are pre-existing
@@ -661,7 +661,7 @@ class RenderEngine(object):
             if old_rendering is not None:
                 render_context.enqueued_deletions.append(old_rendering)
 
-            render_context.schedule_callback(component.did_mount)
+            render_context.schedule_callback(component._did_mount)
             render_context.component_tree[component] = sub_component
             render_context.widget_tree[component] = self._render(sub_component, render_context)
         render_context.schedule_callback(component.did_render)
