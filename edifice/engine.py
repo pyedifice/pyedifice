@@ -656,7 +656,7 @@ class RenderEngine(object):
             assert old_rendering is not None
             render_context.widget_tree[component] = self._update_old_component(
                 old_rendering, sub_component, render_context)
-            render_context.schedule_callback(component.did_update)
+            render_context.schedule_callback(component._did_update)
         else:
             if old_rendering is not None:
                 render_context.enqueued_deletions.append(old_rendering)
