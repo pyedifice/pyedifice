@@ -13,14 +13,15 @@ def MyComp(self):
     ref = use_ref()
 
     def did_render():
-        if ref:
-            ref().underlying.setText("Hi")
+        element = ref()
+        assert isinstance(element, Label)
+        element.underlying.setText("After")
         return lambda:None
 
     use_effect(did_render, ref)
 
     with View():
-        Label("Hi").register_ref(ref)
+        Label("Before").register_ref(ref)
 
 if __name__ == "__main__":
     my_app = App(MyComp())
