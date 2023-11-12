@@ -19,8 +19,9 @@ class TestReference(unittest.TestCase):
 
     def test_reference(self):
         class TestComp(Element):
-            def __init__(self):
+            def __init__(self, parent_render_count):
                 super().__init__()
+                super()._register_props({"parent_render_count": parent_render_count})
                 self.render_count = 0
                 self.ref1 = Reference()
                 self.ref2 = Reference()
@@ -44,7 +45,7 @@ class TestReference(unittest.TestCase):
                     # We do this to force the dismount of TestComp
                     return base_components.Label("Test")
                 else:
-                    return TestComp()
+                    return TestComp(self.render_count)
 
         root = TestCompWrapper()
         render_engine = engine.RenderEngine(root)
@@ -76,7 +77,7 @@ class TestReference(unittest.TestCase):
         sub_comp_ref = []
 
         @component
-        def TestComp(self):
+        def TestComp(self, parent_render_count):
             if hasattr(self, "render_count"):
                 self.render_count += 1
             else:
@@ -105,7 +106,7 @@ class TestReference(unittest.TestCase):
                 # We do this to force the dismount of TestComp
                 base_components.Label("Test")
             else:
-                TestComp()
+                TestComp(self.render_count)
 
         root = TestCompWrapper()
         render_engine = engine.RenderEngine(root)
