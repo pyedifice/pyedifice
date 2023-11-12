@@ -135,7 +135,7 @@ class Reference(object):
     In these cases, you might need to issue imperative commands to the underlying widgets and components,
     and :class:`Reference` gives you a handle to the currently rendered :class:`Element`.
 
-    Create a :class:`Reference` with the :func:`edifice.use_ref` Hook::
+    Create a :class:`Reference` with the :func:`use_ref` Hook::
 
         @component
         def MyComp(self):
@@ -146,7 +146,7 @@ class Reference(object):
 
             AnotherElement(on_click=issue_command).register_ref(ref)
 
-    Under the hood, :code:`register_ref` registers the :class:`Reference` object
+    Under the hood, :func:`Element.register_ref` registers the :class:`Reference` object
     to the :class:`Element` returned by the :code:`render` function.
     While rendering, Edifice will examine all requested references and attaches
     them to the correct :class:`Element`.
@@ -263,7 +263,10 @@ def get_render_context_maybe() -> RenderContextProtocol | None:
 class Element:
     """The base class for Edifice Elements.
 
-    A :class:`Element` is a stateful container wrapping a :code:`render` function.
+    In user code you should almost never use :class:`Element` directly. Instead
+    use :doc:`Base Elements <../base_components>` and :func:`component` Elements.
+
+    A :class:`Element` is a stateful container wrapping a :func:`Element.render` function.
     Elements have both internal and external properties.
 
     The external properties, **props**, are passed into the :class:`Element` by another
@@ -675,6 +678,8 @@ def component(f: Callable[tp.Concatenate[C,P], None]) -> Callable[P,Element]:
     :class:`Element` s in the tree, use the parent as a
     `with statement context manager <https://docs.python.org/3/reference/datamodel.html#context-managers>`_.
 
+    To introduce **state** into a component, use :doc:`Hooks <../hooks>`.
+
     Each :class:`Element` is actually implemented as the constructor function
     for a Python class. The :class:`Element` constructor function also has
     the side-effect of inserting itself to the rendered :class:`Element` tree,
@@ -729,7 +734,7 @@ def component(f: Callable[tp.Concatenate[C,P], None]) -> Callable[P,Element]:
         if v.default is not inspect.Parameter.empty and k[0] != "_"
     }
 
-    class MyElement(Element):
+    class ComponentElement(Element):
 
         def __init__(self, *args: P.args, **kwargs: P.kwargs):
             name_to_val = defaults.copy()
@@ -750,8 +755,8 @@ def component(f: Callable[tp.Concatenate[C,P], None]) -> Callable[P,Element]:
 
         def __repr__(self):
             return f.__name__
-    MyElement.__name__ = f.__name__
-    return MyElement
+    ComponentElement.__name__ = f.__name__
+    return ComponentElement
 
 def find_components(el: Element | list[Element]) -> set[Element]:
     match el:

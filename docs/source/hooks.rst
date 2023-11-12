@@ -18,3 +18,4 @@ Class overview
    use_state
    use_effect
    use_async
+   use_ref

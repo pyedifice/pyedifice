@@ -63,11 +63,11 @@ In HTML or XML, you might have written it as:
 
 .. code-block:: xml
 
-        <View layout="row">
-            <Label text="Measurement in meters" />
-            <TextInput text="" />
-            <Label text="Measurement in feet" />
-        </View>
+    <View layout="row">
+        <Label text="Measurement in meters" />
+        <TextInput text="" />
+        <Label text="Measurement in feet" />
+    </View>
 
 We pass the component :code:`MyApp`
 to an :class:`App<edifice.App>`,
