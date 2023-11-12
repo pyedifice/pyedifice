@@ -34,7 +34,7 @@ class MainElement(ed.Element):
         super().__init__()
         self.t = 5
 
-    def did_mount(self):
+    def _did_mount(self):
         print("Mount")
         print("HI")
         self.timer = ed.utilities.Timer(self.increment_time)
@@ -46,7 +46,7 @@ class MainElement(ed.Element):
         self.timer.stop()
 
     def increment_time(self):
-        self._set_state(t=self.t + 0.016)
+        self.set_state(t=self.t + 0.016)
 
     def render(self):
         return RecurseTree(level=7, t=self.t)

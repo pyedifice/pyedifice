@@ -11,7 +11,7 @@ class RecurseTree(ed.Element):
         })
         super().__init__()
 
-    def did_mount(self):
+    def _did_mount(self):
         if self.props.level == 0:
             self.props.t.subscribe(self)
 
@@ -40,7 +40,7 @@ class MainElement(ed.Element):
         super().__init__()
         self.t = StateValue(5)
 
-    def did_mount(self):
+    def _did_mount(self):
         self.timer = ed.utilities.Timer(self.increment_time)
         self.timer.start(16)
 

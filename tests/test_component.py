@@ -35,7 +35,7 @@ class MockElement(component.Element):
         })
         super().__init__()
         self.will_unmount = unittest.mock.MagicMock()
-        self.did_mount = unittest.mock.MagicMock()
+        self._did_mount = unittest.mock.MagicMock()
         self.did_render = unittest.mock.MagicMock()
 
     def render(self):
@@ -53,7 +53,7 @@ class ElementLifeCycleTestCase(unittest.TestCase):
         app = engine.RenderEngine(component)
         render_results = app._request_rerender([component])
         render_results.run()
-        component.did_mount.assert_called_once()
+        component._did_mount.assert_called_once()
         component.did_render.assert_called_once()
 
 

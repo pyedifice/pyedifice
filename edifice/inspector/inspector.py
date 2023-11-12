@@ -83,7 +83,7 @@ class TreeView(InspectorElement):
         self.cached_children = []
         self.cached_children_loaded = False
 
-    def did_mount(self):
+    def _did_mount(self):
         if not self.props.initial_collapsed:
             with self._render_changes():
                 self.cached_children = self.props.load_fun()
