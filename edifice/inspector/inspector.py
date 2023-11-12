@@ -23,7 +23,7 @@ class ElementLabel(InspectorElement):
         })
         super().__init__()
 
-    def should_update(self, newprops, newstate):
+    def _should_update(self, newprops, newstate):
         return self.props.root is not newprops.root
 
     def render(self):
@@ -48,7 +48,7 @@ class Collapsible(InspectorElement):
         })
         super().__init__()
 
-    def should_update(self, newprops, newstate):
+    def _should_update(self, newprops, newstate):
         return newprops._get("root", self.props.root) != self.props.root or newprops._get("collapsed", self.props.collapsed) != self.props.collapsed
 
     def render(self):
@@ -98,7 +98,7 @@ class TreeView(InspectorElement):
         else:
             self._set_state(collapsed=not self.collapsed)
 
-    def should_update(self, newprops, newstate):
+    def _should_update(self, newprops, newstate):
         if newstate:
             return True
         if self.props.must_refresh():
