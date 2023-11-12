@@ -635,32 +635,25 @@ class QtWidgetElement(WidgetElement):
 
 
 class Window(RootElement):
-    """Element that displays its child as a window.
+    """Displays its child as an operating system window.
 
-    Window will mount its child as a window.
-    It can be created as a child of any standard container.
-    This is useful if a window is logically associated with ::
+	The root element of an :class:`App` must be a Window. (The :class:`App`
+    will implicitly wrap your root element in a Window if your root element
+    is not a Window.)
 
-        class MyApp(Element):
-
-            def render(self):
-                return View()(
-                    Window(Label("Hello"), title="Hello"),
-                )
-
-        if __name__ == "__main__":
-            App(MyApp()).start()
+    The Window must have exactly one child, and the child must not change.
+    Usually the one child of a Window will be a :class:`View`.
 
     Args:
         title:
-            the window title
+            The window title.
         icon:
-            the window icon
+            The window icon.
         menu:
-            the window's menu bar. In some GUI settings, for example Mac OS,
+            The window's menu bar. In some GUI settings, for example Mac OS,
             this menu will appear seperately from the window.
         on_close:
-            event handler for when this window is closed.
+            Event handler for when this window is closed.
     """
 
     def __init__(self, title: tp.Text = "Edifice Application",
@@ -899,7 +892,7 @@ class IconButton(Button):
        Icon button on the very right.
 
     Icons are fairly central to modern-looking UI design;
-    this component allows you to put an icon in a button.
+    this Element allows you to put an icon in a button.
     Edifice comes with the Font Awesome (https://fontawesome.com) regular and solid
     icon sets, to save you time from looking up your own icon set.
     You can specify an icon simplify using its name (and optionally the sub_collection).
@@ -1354,7 +1347,7 @@ class RadioButton(QtWidgetElement):
        Three mutually exclusive radio buttons.
 
     Radio buttons are used to specify a single choice out of many.
-    Radio buttons belonging to the same parent component are exclusive:
+    Radio buttons belonging to the same parent Element are exclusive:
     only one may be selected at a time.
 
     Args:
@@ -1661,12 +1654,12 @@ class View(_LinearView):
     To allow scrolling in case of overflow, use :class:`ScrollView<edifice.ScrollView>`.
 
     Args:
-        layout: one of :code:`"column", :code:`"row"`, or :code:`None`.
+        layout: one of :code:`"column"`, :code:`"row"`, or :code:`None`.
 
             A row layout will lay its children in a row and a column layout will lay its children in a column.
             When :code:`layout="row"` or :code:`layout="column"` are set, the position of their children is not adjustable.
             If layout is :code:`None`, then all children by default will be positioend at the upper left-hand corner
-            of the `View` (x=0, y=0). Children can set the `top` and `left` attributes of their style
+            of the `View` (x=0, y=0). Children can set the :code:`top` and :code:`left` attributes of their style
             to position themselves relevative to their parent.
     """
 

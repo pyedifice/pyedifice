@@ -132,7 +132,7 @@ class Reference(object):
     imperative commands to widgets,
     this is not always possible, either due to limitations with the underlying backened,
     or because some feature implemented by the backend is not yet supported by the declarative layer.
-    In these cases, you might need to issue imperative commands to the underlying widgets and components,
+    In these cases, you might need to issue imperative commands to the underlying Widgets and Elements,
     and :class:`Reference` gives you a handle to the currently rendered :class:`Element`.
 
     Create a :class:`Reference` with the :func:`use_ref` Hook::
@@ -165,20 +165,23 @@ class Reference(object):
             ref().do_something()
 
     If you want to access the QWidget underlying a Base Element,
-    you can use the :code:`underlying` attribute of the Element::
+    you can use the :code:`underlying` attribute of the Element.
+    :func:`use_effect` Hooks always run after the Elements are fully rendered::
 
         @component
         def MyComp(self):
             ref = use_ref()
 
             def did_render():
-                if ref:
-                    ref().underlying.setText("Hi")
+                element = ref()
+                assert isinstance(element, Label)
+                element.underlying.setText("After")
                 return lambda:None
 
             use_effect(did_render, ref)
 
-            Label("Hi").register_ref(ref)
+            with View():
+                Label("Before").register_ref(ref)
     """
 
     def __init__(self):
@@ -205,8 +208,8 @@ class ControllerProtocol(tp.Protocol):
 
 class _Tracker:
     """
-    During a render, track the current component and the children being
-    added to the current component.
+    During a render, track the current element and the children being
+    added to the current element.
     """
     children: list["Element"]
 
@@ -328,11 +331,11 @@ class Element:
         self._props.update(props)
 
     def set_key(self: Self, key: tp.Text) -> Self:
-        """Sets the key of the component.
+        """Sets the key of the Element.
 
-        The key is used by the re-rendering logic to match a new list of components
-        with an existing list of components.
-        The algorithm will assume that components with the same key are logically the same.
+        The key is used by the re-rendering logic to match a new list of Elements
+        with an existing list of Elements.
+        The algorithm will assume that Elements with the same key are logically the same.
         If the key is not provided, the list index will be used as the key;
         however, providing the key may provide more accurate results, leading to efficiency gains.
 
@@ -347,24 +350,24 @@ class Element:
                 edifice.Label("Hola").set_key("es")
 
         Args:
-            key: the key to label the component with
+            key: The key to label the Element with.
         Returns:
-            The component itself.
+            The Element itself.
         """
         self._key = key
         return self
 
     def register_ref(self: Self, reference: Reference) -> Self:
-        """Registers provided reference to this component.
+        """Registers provided :class:`Reference` to this Element.
 
-        During render, the provided reference will be set to point to the currently rendered instance of this component
+        During render, the provided reference will be set to point to the currently rendered instance of this Element
         (i.e. if another instance of the Element is rendered and the RenderEngine decides to reconcile the existing
         and current instances, the reference will eventually point to that previously existing Element.
 
         Args:
             reference: the Reference to register
         Returns:
-            The component itself.
+            The Element self.
         """
         assert self._edifice_internal_references is not None
         self._edifice_internal_references.add(reference)
@@ -372,12 +375,12 @@ class Element:
 
     @property
     def children(self) -> list["Element"]:
-        """The children of this component."""
+        """The children of this Element."""
         return self._props["children"]
 
     @property
     def props(self) -> PropsDict:
-        """The props of this component."""
+        """The props of this Element."""
         return PropsDict(self._props)
 
     @contextlib.contextmanager
@@ -462,7 +465,7 @@ class Element:
             raise e
 
     def _should_update(self, newprops: PropsDict, newstate: tp.Mapping[tp.Text, tp.Any]) -> bool:
-        # """Determines if the component should rerender upon receiving new props and state.
+        # """Determines if the Element should rerender upon receiving new props and state.
 
         # The arguments, :code:`newprops` and :code:`newstate`, reflect the
         # props and state that change: they
@@ -495,15 +498,15 @@ class Element:
 
     def _did_mount(self):
         pass
-        # """Callback function that is called when the component mounts for the first time.
+        # """Callback function that is called when the Element mounts for the first time.
 
-        # Override if you need to do something after the component mounts
+        # Override if you need to do something after the Element mounts
         # (e.g. start a timer).
         # """
 
     def _did_update(self):
         pass
-        # """Callback function that is called whenever the component updates.
+        # """Callback function that is called whenever the Element updates.
 
         # *This is not called after the first render.*
         # Override if you need to do something after every render except the first.
@@ -511,7 +514,7 @@ class Element:
 
     def _did_render(self):
         pass
-        # """Callback function that is called whenever the component renders.
+        # """Callback function that is called whenever the Element renders.
 
         # It will be called on both renders and updates.
         # Override if you need to do something after every render.
@@ -519,7 +522,7 @@ class Element:
 
     def _will_unmount(self):
         pass
-        # """Callback function that is called when the component will unmount.
+        # """Callback function that is called when the Element will unmount.
 
         # Override if you need to clean up some state, e.g. stop a timer,
         # close a file.
@@ -557,7 +560,7 @@ class Element:
     def _render_element(self) -> tp.Optional["Element"]:
         """Logic for rendering, must be overridden.
 
-        The render logic for this component, not implemented for this abstract class.
+        The render logic for this Element, not implemented for this abstract class.
         The render function itself should be purely stateless, because the application
         state should not depend on whether or not the render function is called.
 
@@ -704,7 +707,7 @@ class LayoutElement(BaseElement):
 
 class RootElement(BaseElement):
     """
-    The root component of a component tree must be an instance of RootComponent.
+    The root Element of an Element tree must be an instance of RootElement.
     """
     def _qt_update_commands(self, children, newprops, newstate) -> list[_CommandType]:
         del children, newprops, newstate
