@@ -22,7 +22,7 @@ class IntegrationTestCase(unittest.TestCase):
             def __init__(self):
                 super().__init__()
 
-            def render(self):
+            def _render_element(self):
                 show, set_show = use_state(False)
                 if show:
                     return View()(
@@ -47,7 +47,7 @@ class IntegrationTestCase(unittest.TestCase):
             async def handle_click(self, _):
                 self._set_state(count=self.count + 1)
 
-            def render(self):
+            def _render_element(self):
                 print("TestComp instance " + str(id(self)))
                 x, x_setter = use_state(0)
                 return View(

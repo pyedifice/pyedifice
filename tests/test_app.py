@@ -46,7 +46,7 @@ class IntegrationTestCase(unittest.TestCase):
                 super().__init__()
                 self.text = ""
 
-            def render(self):
+            def _render_element(self):
                 return base_components.List()(
                     base_components.Label(f"Hello World: {self.text}"),
                     base_components.TextInput(self.text, on_change=lambda text: self._set_state(text=text))
@@ -83,7 +83,7 @@ class IntegrationTestCase(unittest.TestCase):
                     "state_value": state_value,
                 })
                 super().__init__()
-            def render(self):
+            def _render_element(self):
                 v = self.props.state_value.subscribe(self)
                 if v == 1:
                     return CompChild1(self.props.state_value)
@@ -98,7 +98,7 @@ class IntegrationTestCase(unittest.TestCase):
                     "state_value": state_value,
                 })
                 super().__init__()
-            def render(self):
+            def _render_element(self):
                 v = self.props.state_value.subscribe(self)
                 observations_CompChild1.append(v)
                 return base_components.Label(text="child1")
@@ -113,7 +113,7 @@ class IntegrationTestCase(unittest.TestCase):
                     "state_value": state_value,
                 })
                 super().__init__()
-            def render(self):
+            def _render_element(self):
                 self.props.state_value.subscribe(self)
                 return base_components.Label(text="child2")
             def _did_render(self):

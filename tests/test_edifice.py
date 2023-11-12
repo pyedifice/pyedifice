@@ -26,7 +26,7 @@ class TestReference(unittest.TestCase):
                 self.ref1 = Reference()
                 self.ref2 = Reference()
 
-            def render(self):
+            def _render_element(self):
                 self.render_count += 1
                 if self.render_count == 1:
                     return base_components.Label("Test").register_ref(self.ref1)
@@ -39,7 +39,7 @@ class TestReference(unittest.TestCase):
                 super().__init__()
                 self.render_count = 0
 
-            def render(self):
+            def _render_element(self):
                 self.render_count += 1
                 if self.render_count == 3:
                     # We do this to force the dismount of TestComp
@@ -142,7 +142,7 @@ class _TestElementInner(Element):
         self.state_a = "A"
         super().__init__()
 
-    def render(self):
+    def _render_element(self):
         return base_components.View()(
             base_components.Label(self.props.prop_a),
             base_components.Label(self.state_a),
@@ -168,7 +168,7 @@ class _TestElementOuter(Element):
         self.state_c = "C"
         super().__init__()
 
-    def render(self):
+    def _render_element(self):
         return base_components.View()(
             _TestElementInner(self.state_a),
             _TestElementInner(self.state_b),
@@ -195,7 +195,7 @@ class _TestElementOuterList(Element):
         self.use_state_as_key = use_state_as_key
         self.state = ["A", "B", "C"]
 
-    def render(self):
+    def _render_element(self):
         if self.use_keys:
             if self.use_state_as_key:
                 return base_components.View()(
@@ -362,12 +362,12 @@ class RenderTestCase(unittest.TestCase):
                 self.count = 0
                 super().__init__()
 
-            def render(self):
+            def _render_element(self):
                 self.count += 1
                 return base_components.Label(self.props.val)
 
         class TestCompOuter(Element):
-            def render(self):
+            def _render_element(self):
                 return base_components.View()(TestCompInner(self.value))
 
         test_comp = TestCompOuter()
@@ -395,7 +395,7 @@ class RenderTestCase(unittest.TestCase):
                 self.count = 0
                 self.success_count = 0
 
-            def render(self):
+            def _render_element(self):
                 self.count += 1
                 self.success_count += 1
                 return base_components.Label(self.props.val)
@@ -410,14 +410,14 @@ class RenderTestCase(unittest.TestCase):
                 self.count = 0
                 self.success_count = 0
 
-            def render(self):
+            def _render_element(self):
                 self.count += 1
                 assert self.props.val == 8
                 self.success_count += 1
                 return base_components.Label(self.props.val)
 
         class TestCompOuter(Element):
-            def render(self):
+            def _render_element(self):
                 return base_components.View()(
                     TestCompInner1(self.value * 2),
                     TestCompInner2(self.value * 4),
@@ -458,7 +458,7 @@ class RefreshClassTestCase(unittest.TestCase):
                 self.count = 0
                 self._will_unmount = unittest.mock.MagicMock()
 
-            def render(self):
+            def _render_element(self):
                 self.count += 1
                 return base_components.Label(self.props.val)
 
@@ -471,7 +471,7 @@ class RefreshClassTestCase(unittest.TestCase):
                 super().__init__()
                 self.count = 0
 
-            def render(self):
+            def _render_element(self):
                 self.count += 1
                 return base_components.Label(self.props.val * 2)
 
@@ -481,7 +481,7 @@ class RefreshClassTestCase(unittest.TestCase):
                 super().__init__()
                 self.count = 0
 
-            def render(self):
+            def _render_element(self):
                 self.count += 1
                 return base_components.View()(
                     OldInnerClass(5)
@@ -510,7 +510,7 @@ class RefreshClassTestCase(unittest.TestCase):
                 self.count = 0
                 self._will_unmount = unittest.mock.MagicMock()
 
-            def render(self):
+            def _render_element(self):
                 self.count += 1
                 return base_components.Label(self.props.val)
 
@@ -523,7 +523,7 @@ class RefreshClassTestCase(unittest.TestCase):
                 super().__init__()
                 self.count = 0
 
-            def render(self):
+            def _render_element(self):
                 self.count += 1
                 assert False
                 return base_components.Label(self.props.val * 2)
@@ -534,7 +534,7 @@ class RefreshClassTestCase(unittest.TestCase):
                 super().__init__()
                 self.count = 0
 
-            def render(self):
+            def _render_element(self):
                 self.count += 1
                 return base_components.View()(
                     OldInnerClass(5)

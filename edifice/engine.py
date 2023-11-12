@@ -627,7 +627,7 @@ class RenderEngine(object):
         with Container() as container:
             prev_element = render_context.current_element
             render_context.current_element = component
-            sub_component = component.render()
+            sub_component = component._render_element()
             render_context.current_element = prev_element
         # If the component.render() call evaluates to an Element
         # we use that as the sub_component the component renders as.

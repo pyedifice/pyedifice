@@ -554,7 +554,7 @@ class Element:
         tags = self._tags()
         return tags[2]
 
-    def render(self) -> tp.Optional["Element"]:
+    def _render_element(self) -> tp.Optional["Element"]:
         """Logic for rendering, must be overridden.
 
         The render logic for this component, not implemented for this abstract class.
@@ -662,7 +662,7 @@ def component(f: Callable[tp.Concatenate[C,P], None]) -> Callable[P,Element]:
             self._register_props(name_to_val)
             super().__init__()
 
-        def render(self):
+        def _render_element(self):
             props: dict[str, tp.Any] = self.props._d
             params = props.copy()
             if "children" not in varnames:

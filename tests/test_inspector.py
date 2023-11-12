@@ -15,12 +15,12 @@ class ElementB(edifice.Element):
         super().__init__()
         self.state = 0
 
-    def render(self):
+    def _render_element(self):
         return edifice.Label("Test")
 
 class ElementA(edifice.Element):
 
-    def render(self):
+    def _render_element(self):
         return ElementB(a=1, b=2, c=3)
 
 
@@ -37,15 +37,15 @@ class InspectorTestCase(unittest.TestCase):
         inspector_component = inspector.Inspector(
             component_tree, root, (lambda: component_tree, root))
         inspector_component.selected = comp_b
-        inspector_component.render()
-        inspector.ElementView(comp_b).render()
-        inspector.StateView(comp_b).render()
+        inspector_component._render_element()
+        inspector.ElementView(comp_b)._render_element()
+        inspector.StateView(comp_b)._render_element()
         inspector.TreeView(root, root.__class__.__name__,
-                           lambda e: None, lambda: [], lambda: True,).render()
+                           lambda e: None, lambda: [], lambda: True,)._render_element()
         inspector.ElementLabel(
             root,
-            on_click = lambda e: None).render()
+            on_click = lambda e: None)._render_element()
         inspector.Collapsible(
             collapsed=True, on_click=lambda e: None,
             root=object(),
-            toggle=lambda e: None).render()
+            toggle=lambda e: None)._render_element()
