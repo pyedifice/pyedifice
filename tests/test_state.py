@@ -99,7 +99,7 @@ class StateValueTestCase(unittest.TestCase):
         class InnerComp(component.Element):
 
             def __init__(self, val):
-                self.register_props({
+                self._register_props({
                     "val": val,
                 })
                 super().__init__()

@@ -7,7 +7,7 @@ from edifice.inspector import inspector
 class ElementB(edifice.Element):
 
     def __init__(self, a, b, c):
-        self.register_props({
+        self._register_props({
             "a": a,
             "b": b,
             "c": c,

@@ -246,7 +246,7 @@ class QtWidgetElement(WidgetElement):
         on_mouse_leave: tp.Optional[tp.Callable[[QtGui.QMouseEvent], None | tp.Awaitable[None]]] = None,
         on_mouse_move: tp.Optional[tp.Callable[[QtGui.QMouseEvent], None | tp.Awaitable[None]]] = None,
     ):
-        self.register_props({
+        self._register_props({
             "style": style,
             "tool_tip": tool_tip,
             "cursor": cursor,
@@ -667,7 +667,7 @@ class Window(RootElement):
                  icon:tp.Optional[tp.Union[tp.Text, tp.Sequence]] = None,
                  menu=None,
                  on_close: tp.Optional[tp.Callable[[QtGui.QCloseEvent], None | tp.Awaitable[None]]] = None):
-        self.register_props({
+        self._register_props({
             "title": title,
             "icon": icon,
             "menu": menu,
@@ -741,7 +741,7 @@ class Window(RootElement):
 class GroupBox(QtWidgetElement):
 
     def __init__(self, title):
-        self.register_props({
+        self._register_props({
             "title": title,
         })
         super().__init__()
@@ -810,7 +810,7 @@ class Icon(QtWidgetElement):
         rotation: float = 0,
         **kwargs,
     ):
-        self.register_props({
+        self._register_props({
             "name": name,
             "size": size,
             "collection": collection,
@@ -818,7 +818,7 @@ class Icon(QtWidgetElement):
             "color": color,
             "rotation": rotation,
         })
-        self.register_props(kwargs)
+        self._register_props(kwargs)
         super().__init__(**kwargs)
         self.underlying = None
 
@@ -865,8 +865,8 @@ class Button(QtWidgetElement):
     """
 
     def __init__(self, title: tp.Any = "", **kwargs):
-        self.register_props({"title": title})
-        self.register_props(kwargs)
+        self._register_props({"title": title})
+        self._register_props(kwargs)
         super().__init__(**kwargs)
         self._connected = False
         self.underlying = None
@@ -929,7 +929,7 @@ class IconButton(Button):
         color=(0, 0, 0, 255),
         rotation=0,
         **kwargs):
-        self.register_props({
+        self._register_props({
             "name": name,
             "size": size,
             "collection": collection,
@@ -937,7 +937,7 @@ class IconButton(Button):
             "color": color,
             "rotation": rotation,
         })
-        self.register_props(kwargs)
+        self._register_props(kwargs)
         super().__init__(**kwargs)
 
     def _qt_update_commands(self, children, newprops, newstate):
@@ -985,14 +985,14 @@ class Label(QtWidgetElement):
         link_open: bool = False,
         **kwargs,
     ):
-        self.register_props({
+        self._register_props({
             "text": text,
             "selectable": selectable,
             "editable": editable,
             "word_wrap": word_wrap,
             "link_open": link_open,
         })
-        self.register_props(kwargs)
+        self._register_props(kwargs)
         super().__init__(**kwargs)
         self.underlying = None
 
@@ -1046,11 +1046,11 @@ class Image(QtWidgetElement):
     """
 
     def __init__(self, src: tp.Any = "", scale_to_fit: bool = True, **kwargs):
-        self.register_props({
+        self._register_props({
             "src": src,
             "scale_to_fit": scale_to_fit,
         })
-        self.register_props(kwargs)
+        self._register_props(kwargs)
         super().__init__(**kwargs)
         self.underlying = None
 
@@ -1078,10 +1078,10 @@ class ImageSvg(QtWidgetElement):
         src: the path to the SVG image.
     """
     def __init__(self, src: str, **kwargs):
-        self.register_props({
+        self._register_props({
             "src": src,
         })
-        self.register_props(kwargs)
+        self._register_props(kwargs)
         super().__init__(**kwargs)
         self.underlying = None
 
@@ -1167,13 +1167,13 @@ class TextInput(QtWidgetElement):
         # completer: tp.Optional[Completer] = None,
         **kwargs
     ):
-        self.register_props({
+        self._register_props({
             "text": text,
             "placeholder_text": placeholder_text,
             "on_change": on_change,
             "on_edit_finish": on_edit_finish,
         })
-        self.register_props(kwargs)
+        self._register_props(kwargs)
         super().__init__(**kwargs)
         self._on_change_connected = False
         self._editing_finished_connected = False
@@ -1267,7 +1267,7 @@ class Dropdown(QtWidgetElement):
         on_select: tp.Optional[tp.Callable[[tp.Text], None | tp.Awaitable[None]]] = None,
         **kwargs
     ):
-        self.register_props({
+        self._register_props({
             "selection": selection,
             "text": text,
             "options": options,
@@ -1275,7 +1275,7 @@ class Dropdown(QtWidgetElement):
             "on_change": on_change,
             "on_select": on_select,
         })
-        self.register_props(kwargs)
+        self._register_props(kwargs)
         super().__init__(**kwargs)
         self._on_change_connected = False
         self._on_select_connected = False
@@ -1370,12 +1370,12 @@ class RadioButton(QtWidgetElement):
         on_change: tp.Callable[[bool], None | tp.Awaitable[None]] = (lambda checked: None),
         **kwargs,
      ):
-        self.register_props({
+        self._register_props({
             "checked": checked,
             "text": text,
             "on_change": on_change,
         })
-        self.register_props(kwargs)
+        self._register_props(kwargs)
         super().__init__(**kwargs)
         self._connected = False
         self.underlying = None
@@ -1439,12 +1439,12 @@ class CheckBox(QtWidgetElement):
         on_change: tp.Callable[[bool], None | tp.Awaitable[None]] = (lambda checked: None),
         **kwargs,
     ):
-        self.register_props({
+        self._register_props({
             "checked": checked,
             "text": text,
             "on_change": on_change,
         })
-        self.register_props(kwargs)
+        self._register_props(kwargs)
         super().__init__(**kwargs)
         self._connected = False
         self.underlying = None
@@ -1526,7 +1526,7 @@ class Slider(QtWidgetElement):
         on_change: tp.Callable[[NumericType], None | tp.Awaitable[None]] = (lambda value: None),
         **kwargs,
     ):
-        self.register_props({
+        self._register_props({
             "value": value,
             "min_value": min_value,
             "max_value": max_value,
@@ -1534,7 +1534,7 @@ class Slider(QtWidgetElement):
             "orientation": orientation,
             "on_change": on_change,
         })
-        self.register_props(kwargs)
+        self._register_props(kwargs)
         super().__init__(**kwargs)
         # A QSlider only accepts integers. We represent floats as
         # an integer between 0 and 1024.
@@ -1671,8 +1671,8 @@ class View(_LinearView):
     """
 
     def __init__(self, layout: tp.Text = "column", **kwargs):
-        self.register_props({"layout": layout})
-        self.register_props(kwargs)
+        self._register_props({"layout": layout})
+        self._register_props(kwargs)
         self.underlying = None
         super().__init__(**kwargs)
 
@@ -1751,10 +1751,10 @@ class ScrollView(_LinearView):
     """
 
     def __init__(self, layout="column", **kwargs):
-        self.register_props({
+        self._register_props({
             "layout": layout,
         })
-        self.register_props(kwargs)
+        self._register_props(kwargs)
         super().__init__(**kwargs)
 
         self.underlying = None
@@ -1885,11 +1885,11 @@ class GridView(QtWidgetElement):
     """
 
     def __init__(self, layout="", key_to_code=None, **kwargs):
-        self.register_props({
+        self._register_props({
             "layout": layout,
             "key_to_code": key_to_code,
         })
-        self.register_props(kwargs)
+        self._register_props(kwargs)
         super().__init__(**kwargs)
         self.underlying = None
         self._previously_rendered = None
@@ -1939,10 +1939,10 @@ class TabView(_LinearView):
     """
 
     def __init__(self, labels=None, **kwargs):
-        self.register_props({
+        self._register_props({
             "labels": labels,
         })
-        self.register_props(kwargs)
+        self._register_props(kwargs)
         super().__init__(**kwargs)
         self.underlying = None
 
@@ -2050,7 +2050,7 @@ class Table(QtWidgetElement):
         column_headers: tp.Sequence[tp.Any] | None = None,
         alternating_row_colors: bool = True,
     ):
-        self.register_props({
+        self._register_props({
             "rows": rows,
             "columns": columns,
             "row_headers": row_headers,

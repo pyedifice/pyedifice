@@ -11,7 +11,7 @@ else:
 
 # TODO Delete Timer
 class Timer(object):
-    """A Timer for calling a function periodically.
+    """DEPRECATED use use_async instead. A Timer for calling a function periodically.
 
     The function passed in the constructor will be called
     every :code:`time_in_ms` milliseconds after the Timer is started,

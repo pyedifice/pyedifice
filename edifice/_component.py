@@ -395,12 +395,8 @@ class Element:
             prop.append(child)
         self._props["children"] = prop
 
-    def register_props(self, props: tp.Mapping[tp.Text, tp.Any]) -> None:
+    def _register_props(self, props: tp.Mapping[tp.Text, tp.Any]) -> None:
         # """Register props.
-
-        # Call this function if you do not use the
-        # :func:`register_props <edifice.register_props>` decorator and you have
-        # props to register.
 
         # Args:
         #     props: a dictionary representing the props to register.
@@ -730,7 +726,7 @@ def component(f: Callable[tp.Concatenate[C,P], None]) -> Callable[P,Element]:
             name_to_val.update(filter(not_ignored, zip(varnames, args, strict=False)))
             name_to_val.update(((k, v) for (k, v) in kwargs.items() if k[0] != "_"))
             name_to_val["children"] = name_to_val.get("children") or []
-            self.register_props(name_to_val)
+            self._register_props(name_to_val)
             super().__init__()
 
         def render(self):

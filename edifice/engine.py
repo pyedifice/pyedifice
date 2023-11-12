@@ -703,6 +703,7 @@ class RenderEngine(object):
                 except:
                     # If any of the updaters throws then the state is unchanged.
                     hook.state = state0
+                    # TODO Should we re-raise this exception somehow?
                 finally:
                     hook.updaters.clear()
 

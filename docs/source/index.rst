@@ -55,118 +55,6 @@ The easiest way to get started is via the :doc:`tutorial`.
 To understand the core conception behind Edifice,
 see :doc:`edifice`.
 
-Here are a few simple examples to get you started:
-
-Simple Forms
-############
-
-The Form component in the Edifice library make it really easy to create a simple Form.
-Data in a dictionary are mapped to form elements according to the data type:
-strings to TextInput, bools to Checkbox, etc.
-The example below shows how you can collect information from the user in a Dialog.
-
-.. code-block:: python
-    :caption: Form Dialog
-
-    import datetime
-    import edifice
-    from edifice.components.forms import FormDialog
-
-    # StateManagers are key-value stores that UI components can bind to reactively:
-    # a change in the StateManager will refresh all subscribed UI components
-    fields = edifice.StateManager({
-        "Name": "", # text input
-        "Age": 20,  # text input with validation
-        "Date": datetime.date(2021, 2, 1), # 3 dropdowns
-        "Country": ("USA", ["USA", "UK", "France", "Japan"]), # dropdown
-        "agreed": True, # checkbox
-    })
-
-    edifice.App(FormDialog(fields)).start()
-
-    print(fields["Name"])
-
-A Stateful Element
-####################
-
-A component can maintain internal state, stored as attributes of the component.
-When this state is changed using the :code:`set_state` method,
-the component will be re-rendered using the provided :code:`render` function.
-
-.. code-block:: python
-    :caption: Timer component
-
-    import edifice
-
-    class Timer(edifice.Element):
-        def __init__(self):
-            super().__init__()
-            self.seconds = 0
-            self.timer = edifice.Timer(lambda: self.set_state(seconds=self.seconds+1))
-
-        def did_mount(self):
-            self.timer.start(1000)
-
-        def render(self):
-            return edifice.Label(self.seconds, style={"width": 80, "height": 30, "font-size": 20})
-
-    edifice.App(Timer()).start()
-
-An Application
-##############
-
-Elements can be composed to create composite components.
-By making components modular, you can reuse them in your application and across applications.
-
-
-.. code-block:: python
-    :caption: Todo App
-
-    import datetime
-    import edifice
-    from edifice import Button, Label, TextInput, ScrollView, View
-
-    class TodoApp(edifice.Element):
-        def __init__(self):
-            super().__init__()
-            self.items = []
-            self.text = ""
-
-        def render(self):
-            return View(style={"margin": 10})(
-                Label("TODO"),
-                TodoList(items=self.items),
-                View(layout="row")(
-                    Label("What needs to be done?"),
-                    TextInput(self.text,
-                              on_change=lambda text:self.set_state(text=text)),
-                    Button(f"Add #{len(self.items)+1}",
-                           on_click=self.add_item)
-                )
-            )
-
-        def add_item(self, e):
-            if not self.text:
-                return
-            new_item = dict(text=self.text, id=datetime.datetime.now())
-            self.set_state(items=self.items + [new_item])
-
-    class TodoList(edifice.Element):
-        def __init__(self, items):
-            self.register_props({
-                "items": items,
-            })
-
-        def render(self):
-            return ScrollView()(
-                *[Label(f"* {item['text']}").set_key(item['id'])
-                  for item in self.props.items]
-            )
-
-    edifice.App(TodoApp()).start()
-
-
-
 Why Edifice?
 ------------
 
@@ -189,25 +77,22 @@ For example, you can write:
 
 .. code-block:: python
 
-    View(layout="row")(
-        Button("Add 5", on_click=lambda:self.set_state(data=self.number + 5)),
-        Label(self.number)
-    )
+	number, set_number = use_state(0)
+
+    with View():
+        Button("Add 5", on_click=set_number(number + 5)
+        Label(str(number))
 
 and get the expected result: the GUI always displays
-a button and a label displaying the current value of self.number.
+a button and a label displaying the current value of :code:`number`.
 Clicking the button adds 5 to the number,
 and Edifice will handle updating the GUI.
 
 Edifice is designed to make GUI applications easier for humans to reason about.
 Thus, the displayed GUI always reflect the internal state,
-even if an exception occurs part way through rendering ---
+even if an exception occurs part way through rendering —
 in that case, the state changes are unwound,
-the display is unchanged,
-and the exception is re-raised for the application to handle.
-You can specify a batch of state changes in a transaction,
-so that either all changes happen or none of them happens.
-There is no in-between state for you to worry about.
+the display is unchanged.
 
 Declarative UIs are also easier for developer tools to work with.
 Edifice provides two key features to make development easier:

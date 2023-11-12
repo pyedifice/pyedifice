@@ -1,10 +1,11 @@
 import edifice as ed
+from edifice.state import StateValue
 
 
 class RecurseTree(ed.Element):
 
     def __init__(self, level, t):
-        self.register_props({
+        self._register_props({
             "level": level,
             "t": t,
         })
@@ -33,14 +34,14 @@ class RecurseTree(ed.Element):
 class MainElement(ed.Element):
 
     def __init__(self, level=2):
-        self.register_props({
+        self._register_props({
             "level": level,
         })
         super().__init__()
-        self.t = ed.StateValue(5)
+        self.t = StateValue(5)
 
     def did_mount(self):
-        self.timer = ed.Timer(self.increment_time)
+        self.timer = ed.utilities.Timer(self.increment_time)
         self.timer.start(16)
 
     def will_unmount(self):

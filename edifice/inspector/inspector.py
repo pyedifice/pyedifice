@@ -17,7 +17,7 @@ class InspectorElement(ed.Element):
 class ElementLabel(InspectorElement):
 
     def __init__(self, root, on_click):
-        self.register_props({
+        self._register_props({
             "root": root,
             "on_click": on_click,
         })
@@ -40,7 +40,7 @@ class ElementLabel(InspectorElement):
 class Collapsible(InspectorElement):
 
     def __init__(self, collapsed, on_click, root, toggle):
-        self.register_props({
+        self._register_props({
             "collapsed": collapsed,
             "on_click": on_click,
             "root": root,
@@ -70,7 +70,7 @@ class Collapsible(InspectorElement):
 class TreeView(InspectorElement):
 
     def __init__(self, root, on_click, load_fun, must_refresh, initial_collapsed=False):
-        self.register_props({
+        self._register_props({
             "root": root,
             "on_click": on_click,
             "load_fun": load_fun,
@@ -131,7 +131,7 @@ class TreeView(InspectorElement):
 class StateView(InspectorElement):
 
     def __init__(self, component):
-        self.register_props({
+        self._register_props({
             "component": component,
         })
         super().__init__()
@@ -148,7 +148,7 @@ class StateView(InspectorElement):
 class PropsView(InspectorElement):
 
     def __init__(self, props):
-        self.register_props({
+        self._register_props({
             "props": props,
         })
         super().__init__()
@@ -167,7 +167,7 @@ class PropsView(InspectorElement):
 class ElementView(InspectorElement):
 
     def __init__(self, component):
-        self.register_props({
+        self._register_props({
             "component": component,
         })
         super().__init__()
@@ -200,7 +200,7 @@ class ElementView(InspectorElement):
 class Inspector(InspectorElement):
 
     def __init__(self, component_tree, root_component, refresh):
-        self.register_props({
+        self._register_props({
             "component_tree": component_tree,
             "root_component": root_component,
             "refresh": refresh,

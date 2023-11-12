@@ -48,11 +48,11 @@ class ButtonView(View):
             layout: tp.Literal["row", "column"] | None = "row",
             on_trigger: tp.Callable[[QKeyEvent], None] | tp.Callable[[QMouseEvent], None] | None = None,
             **kwargs):
-        self.register_props({
+        self._register_props({
             "layout": layout,
             "on_trigger": on_trigger,
         })
-        self.register_props(kwargs)
+        self._register_props(kwargs)
         super().__init__(layout, **kwargs)
 
     def _initialize(self):

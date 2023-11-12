@@ -49,10 +49,10 @@ class ImageAspect(QtWidgetElement):
     """
 
     def __init__(self, src: tp.Any = "", **kwargs):
-        self.register_props({
+        self._register_props({
             "src": src,
         })
-        self.register_props(kwargs)
+        self._register_props(kwargs)
         super().__init__(**kwargs)
         self.underlying : ScaledLabel | None = None
 
