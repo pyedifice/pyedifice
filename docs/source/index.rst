@@ -129,7 +129,6 @@ Table of Contents
    examples
    edifice
    base_components
-   compound_components
    hooks
    utilities
    styling
