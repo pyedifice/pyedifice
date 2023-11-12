@@ -9,7 +9,7 @@ def use_state(initial_state:_T_use_state) -> tuple[
         None
     ]]:
     """
-    State Hook for use inside a :func:`edifice.component` function.
+    Persistent mutable state Hook inside a :func:`edifice.component` function.
 
     Behaves like `React useState <https://react.dev/reference/react/useState>`_.
 
@@ -31,7 +31,7 @@ def use_state(initial_state:_T_use_state) -> tuple[
             if x < 1:
                 x_setter(1)
 
-            return Label(text=str(x))
+            Label(text=str(x))
 
     If an **updater function** is passed to the **setter function**, then at the end of
     the render the state will be modified by calling all of the
@@ -50,7 +50,7 @@ def use_state(initial_state:_T_use_state) -> tuple[
             if x < 1:
                 x_setter(updater)
 
-            return Label(text=str(x))
+            Label(text=str(x))
 
     If any of the **updater functions** raises an exception, then all state
     updates will be cancelled and the state value will be unchanged for the
@@ -81,7 +81,7 @@ def use_effect(
     dependencies: Any,
 ) -> None:
     """
-    Effect Hook for use inside a :func:`edifice.component` function.
+    Side-effect Hook inside a :func:`edifice.component` function.
 
     Behaves like `React useEffect <https://react.dev/reference/react/useEffect>`_.
 
@@ -131,7 +131,7 @@ def use_async(
     dependencies: Any,
 ) -> None:
     """
-    Asynchronous Effect Hook for use inside a :func:`edifice.component` function.
+    Asynchronous side-effect Hook inside a :func:`edifice.component` function.
 
     Will create a new
     `Task <https://docs.python.org/3/library/asyncio-task.html#asyncio.Task>`_
@@ -168,7 +168,7 @@ def use_async(
                 myword_set(x)
 
             use_async(fetcher, 0)
-            return Label(text=myword)
+            Label(text=myword)
 
     Args:
         fn_coroutine: Async Coroutine function to be run as a Task.
@@ -184,7 +184,8 @@ def use_async(
 
 def use_ref() -> Reference:
     """
-    Hook for creating a :class:`Reference` in a :func:`edifice.component` function.
+    Hook for creating a :class:`Reference` inside a :func:`edifice.component`
+    function.
     """
     r,_ = use_state(Reference())
     return r

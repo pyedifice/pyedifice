@@ -176,7 +176,7 @@ class Reference(object):
                     ref().underlying.setText("Hi")
                 return lambda:None
 
-            use_effect(did_render)
+            use_effect(did_render, ref)
 
             Label("Hi").register_ref(ref)
     """
@@ -319,18 +319,6 @@ class Element:
     One special prop is children, which will always be defined (defaults to an
     empty list).
 
-    To declare an :class:`Element` to be the parent of some other
-    :class:`Element` s in the tree, use the parent as a
-    `with statement context manager <https://docs.python.org/3/reference/datamodel.html#context-managers>`_::
-
-        with View(layout="column"):
-            with View(layout="row"):
-                Label("Username: ")
-                TextInput()
-            with View(layout="row"):
-                Label("Email: ")
-                TextInput()
-
     The :code:`render` function is called when
     :code:`self.should_update(newprops, newstate)`
     returns :code:`True`. This function is called when the props change (as set by the
@@ -352,8 +340,7 @@ class Element:
     When comparing a list of :class:`Element` s, the :class:`Element`’s
     :code:`_key` attribute will
     be compared. :class:`Element` s with the same :code:`_key` and same class are assumed to be
-    the same. You can set the key using the :code:`set_key` method, which returns the Element
-    to allow for chaining::
+    the same. You can set the key using the :code:`set_key` method::
 
         with View(layout="row"):
             MyElement("Hello").set_key("hello")
@@ -409,15 +396,15 @@ class Element:
         self._props["children"] = prop
 
     def register_props(self, props: tp.Mapping[tp.Text, tp.Any]) -> None:
-        """Register props.
+        # """Register props.
 
-        Call this function if you do not use the
-        :func:`register_props <edifice.register_props>` decorator and you have
-        props to register.
+        # Call this function if you do not use the
+        # :func:`register_props <edifice.register_props>` decorator and you have
+        # props to register.
 
-        Args:
-            props: a dictionary representing the props to register.
-        """
+        # Args:
+        #     props: a dictionary representing the props to register.
+        # """
         if not hasattr(self, "_props"):
             self._props = {"children": []}
         self._props.update(props)
@@ -430,6 +417,8 @@ class Element:
         The algorithm will assume that components with the same key are logically the same.
         If the key is not provided, the list index will be used as the key;
         however, providing the key may provide more accurate results, leading to efficiency gains.
+
+        Returns the Element to allow for chaining.
 
         Example::
 
@@ -576,7 +565,7 @@ class Element:
         return True
 
     def did_mount(self):
-        """"""
+        pass
         # """Callback function that is called when the component mounts for the first time.
 
         # Override if you need to do something after the component mounts
@@ -584,7 +573,7 @@ class Element:
         # """
 
     def did_update(self):
-        """"""
+        pass
         # """Callback function that is called whenever the component updates.
 
         # *This is not called after the first render.*
@@ -592,7 +581,7 @@ class Element:
         # """
 
     def did_render(self):
-        """"""
+        pass
         # """Callback function that is called whenever the component renders.
 
         # It will be called on both renders and updates.
@@ -600,7 +589,7 @@ class Element:
         # """
 
     def will_unmount(self):
-        """"""
+        pass
         # """Callback function that is called when the component will unmount.
 
         # Override if you need to clean up some state, e.g. stop a timer,

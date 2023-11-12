@@ -1,4 +1,8 @@
 """
+
+Declaring Element Trees
+-----------------------
+
 An edifice application is created by rendering a :class:`Element` with an
 :class:`App`.
 Let's examine what these objects are to understand what this statement means.
@@ -29,7 +33,10 @@ In a :func:`component` Element, the internal state is managed by :doc:`hooks`.
 Changes in **state** or **props** will automatically trigger a re-render.
 
 Declaring an Element tree in a :func:`component` Element render function looks
-like this::
+like this.
+To declare an Element to be the parent of some other
+child Elements in the tree, use the parent as a
+`with statement context manager <https://docs.python.org/3/reference/datamodel.html#context-managers>`_::
 
     @component
     def MyApp(self):
@@ -62,6 +69,9 @@ updating it as necessary given user interactions and events.
 Because state is self-contained, you can compose Elements arbitarily,
 including across projects.
 
+Model-View-Update
+-----------------
+
 Edifice, like React, uses the `Elm Architecture <https://guide.elm-lang.org/architecture/>`_,
 also known as Model-View-Update.
 This means that there is a one-way information flow from Model to View to
@@ -75,6 +85,9 @@ Update Event handlers which change the **state**.
 
 It is the one-way information flow of Model-View-Update which makes
 this style of GUI programming scale up well to complicated user interfaces.
+
+Rendering
+---------
 
 An :class:`App` encapsulates the rendering engine that's responsible
 for issuing the commands necessary to render the each of the declared Elements.
@@ -95,9 +108,22 @@ Two Elements belonging to different classes will always be re-rendered,
 and Elements belonging to the same class are assumed to be the same
 and thus maintained (preserving the old state).
 
-For lists of Elements, a more complex procedure (the same as in ReactJS)
-will determine which Elements to maintain and which to replace;
-see documentation of :class:`Element` class for details.
+When parent Element has many child Elements of the same class,
+a more complex procedure (the same as in ReactJS)
+will determine which Elements to maintain and which to replace.
+When comparing the child Elements, the Element’s
+:code:`_key` attribute will
+be compared. Elements with the same :code:`_key` and same class are assumed to be
+the same. You can set the key using the :func:`Element.set_key` method::
+
+    with View(layout="row"):
+        MyElement("Hello").set_key("hello")
+        MyElement("World").set_key("world")
+
+If the :code:`_key` is not provided, the diff algorithm will assign automatic keys
+based on index, which could result in subpar performance due to unnecessary rerenders.
+To ensure control over the rerender process, it is recommended to :func:`Element.set_key`
+whenever you have many children of the same class.
 """
 
 
