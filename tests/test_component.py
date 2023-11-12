@@ -105,7 +105,7 @@ class ElementTestCase(unittest.TestCase):
         a = OtherMockElement()
         a.foo = 1
         a.bar = 2
-        with a.render_changes():
+        with a._render_changes():
             a.foo = 3
             self.assertEqual(a.foo, 3)
             a.bar = 0
@@ -114,7 +114,7 @@ class ElementTestCase(unittest.TestCase):
         a._controller._request_rerender.assert_called_once()
         a._controller._request_rerender.reset_mock()
         try:
-            with a.render_changes():
+            with a._render_changes():
                 a.bar = 1
                 self.assertEqual(a.bar, 1)
                 a.foo = 1 / 0
@@ -131,7 +131,7 @@ class ElementTestCase(unittest.TestCase):
 
         exception_thrown = False
         try:
-            with a.render_changes():
+            with a._render_changes():
                 a.foo = 3
                 self.assertEqual(a.foo, 3)
                 a.bar = 0
@@ -236,7 +236,7 @@ class MakeElementTestCase(unittest.TestCase):
         app = App(component, create_application=False)
         def update():
             try:
-                with component.render_changes():
+                with component._render_changes():
                     component.flag = True
             except ValueError as e:
                 self.assertEqual(e.__str__(), "This should error")

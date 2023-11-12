@@ -266,90 +266,12 @@ class Element:
     In user code you should almost never use :class:`Element` directly. Instead
     use :doc:`Base Elements <../base_components>` and :func:`component` Elements.
 
-    A :class:`Element` is a stateful container wrapping a :func:`Element.render` function.
+    A :class:`Element` is a stateful container wrapping a render function.
     Elements have both internal and external properties.
 
     The external properties, **props**, are passed into the :class:`Element` by another
     :class:`Element`’s render function through the constructor. These values are owned
     by the external caller and should not be modified by this :class:`Element`.
-    They may be accessed via the field props :code:`self.props`, which is a :class:`PropsDict`.
-    A :class:`PropsDict` allows iteration, get item ( :code:`self.props["value"]` ), and get attribute
-    ( :code:`self.props.value` ), but not set item or set attribute. This limitation
-    is set to protect the user from accidentally modifying props, which may cause
-    bugs. (Note though that a mutable prop, e.g. a list, can still be modified;
-    be careful not to do so)
-
-    The internal properties, the **state**, belong to this Element, and may be
-    used to keep track of internal state. You may set the state as
-    attributes of the :class:`Element` object, for instance :code:`self.my_state`.
-    You can initialize the state as usual in the constructor
-    (e.g. :code:`self.my_state = {"a": 1}` ),
-    and the state persists so long as the :class:`Element` is still mounted.
-
-    In most cases, changes in state would ideally trigger a rerender.
-    There are two ways to ensure this.
-    First, you may use the set_state function to set the state::
-
-        self.set_state(mystate=1, myotherstate=2)
-
-    You may also use the self.render_changes() context manager::
-
-        with self.render_changes():
-            self.mystate = 1
-            self.myotherstate = 2
-
-    When the context manager exits, a state change will be triggered.
-    The :code:`render_changes()` context manager also ensures that all state changes
-    happen atomically: if an exception occurs inside the context manager,
-    all changes will be unwound. This helps ensure consistency in the
-    :class:`Element`’s state.
-
-    Note if you set :code:`self.mystate = 1` outside
-    the :code:`render_changes()` context manager,
-    this change will not trigger a re-render. This might be occasionally useful
-    but usually is unintended.
-
-    The main function of :class:`Element` is :code:`render`, which should delare the
-    child Elements
-    of this Element. These may be your own :func:`component` as well as
-    the core :class:`Element` s, such as
-    :class:`Label`, :class:`Button`, and :class:`View`.
-    :class:`Element` s may be composed in a tree like fashion.
-
-    One special prop is children, which will always be defined (defaults to an
-    empty list).
-
-    The :code:`render` function is called when
-    :code:`self.should_update(newprops, newstate)`
-    returns :code:`True`. This function is called when the props change (as set by the
-    render function of this Element) or when the state changes (when
-    using :code:`set_state` or :code:`render_changes()`). By default, all changes
-    in :code:`newprops`
-    and :code:`newstate` will trigger a re-render.
-
-    When the Element is rendered,
-    the :code:`render` function is called. This output is then compared against the output
-    of the previous render (if that exists). The two renders are diffed,
-    and on certain conditions, the :class:`Element` objects from the previous render
-    are maintained and updated with new props.
-
-    Two :class:`Element` s belonging to different classes will always be re-rendered,
-    and :class:`Element` s belonging to the same class are assumed to be the same
-    and thus maintained (preserving the old state).
-
-    When comparing a list of :class:`Element` s, the :class:`Element`’s
-    :code:`_key` attribute will
-    be compared. :class:`Element` s with the same :code:`_key` and same class are assumed to be
-    the same. You can set the key using the :code:`set_key` method::
-
-        with View(layout="row"):
-            MyElement("Hello").set_key("hello")
-            MyElement("World").set_key("world")
-
-    If the :code:`_key` is not provided, the diff algorithm will assign automatic keys
-    based on index, which could result in subpar performance due to unnecessary rerenders.
-    To ensure control over the rerender process, it is recommended to :func:`Element.set_key`
-    whenever you have a list of children.
     """
 
     _render_changes_context: dict | None = None
@@ -459,7 +381,7 @@ class Element:
         return PropsDict(self._props)
 
     @contextlib.contextmanager
-    def render_changes(self, ignored_variables: tp.Optional[tp.Sequence[tp.Text]] = None) -> Iterator[None]:
+    def _render_changes(self, ignored_variables: tp.Optional[tp.Sequence[tp.Text]] = None) -> Iterator[None]:
         """Context manager for managing changes to state.
 
         This context manager does two things:
