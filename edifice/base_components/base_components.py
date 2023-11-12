@@ -680,7 +680,7 @@ class Window(RootElement):
         self._menu_bar = None
         self.underlying = None
 
-    def will_unmount(self):
+    def _will_unmount(self):
         if self._previous_rendering:
             self._previous_rendering.underlying.close()
 

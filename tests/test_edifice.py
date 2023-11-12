@@ -456,7 +456,7 @@ class RefreshClassTestCase(unittest.TestCase):
                 })
                 super().__init__()
                 self.count = 0
-                self.will_unmount = unittest.mock.MagicMock()
+                self._will_unmount = unittest.mock.MagicMock()
 
             def render(self):
                 self.count += 1
@@ -495,7 +495,7 @@ class RefreshClassTestCase(unittest.TestCase):
 
         app._refresh_by_class([(OldInnerClass, NewInnerClass)])
         inner_comp = app._component_tree[app._component_tree[outer_comp]][0]
-        old_inner_comp.will_unmount.assert_called_once()
+        old_inner_comp._will_unmount.assert_called_once()
         assert isinstance(inner_comp, NewInnerClass)
         self.assertEqual(inner_comp.props.val, 5)
 
@@ -508,7 +508,7 @@ class RefreshClassTestCase(unittest.TestCase):
                 })
                 super().__init__()
                 self.count = 0
-                self.will_unmount = unittest.mock.MagicMock()
+                self._will_unmount = unittest.mock.MagicMock()
 
             def render(self):
                 self.count += 1
@@ -551,7 +551,7 @@ class RefreshClassTestCase(unittest.TestCase):
         except AssertionError:
             pass
         inner_comp = app._component_tree[app._component_tree[outer_comp]][0]
-        old_inner_comp.will_unmount.assert_not_called()
+        old_inner_comp._will_unmount.assert_not_called()
         assert isinstance(inner_comp, OldInnerClass)
         self.assertEqual(inner_comp.props.val, 5)
 

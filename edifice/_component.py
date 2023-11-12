@@ -517,7 +517,7 @@ class Element:
         # Override if you need to do something after every render.
         # """
 
-    def will_unmount(self):
+    def _will_unmount(self):
         pass
         # """Callback function that is called when the component will unmount.
 
