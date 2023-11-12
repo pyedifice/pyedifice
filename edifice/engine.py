@@ -378,7 +378,7 @@ class RenderEngine(object):
         assert component._edifice_internal_references is not None
         for ref in component._edifice_internal_references:
             ref._value = None
-        component.will_unmount()
+        component._will_unmount()
         del self._component_tree[component]
         del self._widget_tree[component]
 

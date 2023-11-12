@@ -44,7 +44,7 @@ class MainElement(ed.Element):
         self.timer = ed.utilities.Timer(self.increment_time)
         self.timer.start(16)
 
-    def will_unmount(self):
+    def _will_unmount(self):
         self.timer.stop()
 
     def increment_time(self):

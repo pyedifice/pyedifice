@@ -41,12 +41,12 @@ class MainElement(ed.Element):
         print(id(self))
         self.timer.start(16)
 
-    def will_unmount(self):
+    def _will_unmount(self):
         print("Unmount")
         self.timer.stop()
 
     def increment_time(self):
-        self.set_state(t=self.t + 0.016)
+        self._set_state(t=self.t + 0.016)
 
     def render(self):
         return RecurseTree(level=7, t=self.t)

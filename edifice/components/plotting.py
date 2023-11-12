@@ -40,7 +40,7 @@ class Figure(CustomWidget):
     def _did_mount(self):
         self.plot_thread.start()
 
-    def will_unmount(self):
+    def _will_unmount(self):
         self.plot_thread_should_run = False
         self.plot_thread.join()
 
