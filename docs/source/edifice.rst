@@ -14,7 +14,7 @@ Class overview
    :recursive:
    :template: custom-class.rst
 
-   Element
    component
-   Reference
    App
+   Reference
+   Element
