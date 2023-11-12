@@ -479,8 +479,19 @@ class Element:
         # Returns:
         #     Whether or not the Element should be rerendered.
         # """
-        del newprops, newstate
-        return True
+
+        for k,v in newprops._items:
+            v2 = self.props._get(k, None)
+            if v2 is None or v2 != v:
+                return True
+
+        # for backward compatibility, we have to check for changes to state.
+        for k,v in newstate.items():
+            v2 = getattr(self, k, None)
+            if v2 is None or v2 != v:
+                return True
+
+        return False
 
     def did_mount(self):
         pass
