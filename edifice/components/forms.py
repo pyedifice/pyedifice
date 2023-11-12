@@ -118,7 +118,7 @@ class Form(Element):
         submit_text: tp.Text = "Submit",
         layout: tp.Any = None,
     ):
-        self.register_props({
+        self._register_props({
             "data": data,
             "config": config,
             "label_map": label_map,
@@ -298,7 +298,7 @@ class FormDialog(Element):
         layout: tp.Any = None,
     ):
         self.is_open = True
-        self.register_props({
+        self._register_props({
             "data": data,
             "title": title,
             "config": config,

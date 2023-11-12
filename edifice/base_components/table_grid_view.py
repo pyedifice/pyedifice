@@ -136,13 +136,13 @@ class TableGridView(QtWidgetElement):
             column_minwidth : list[int] = [], # noqa: B006
             **kwargs,
         ):
-        self.register_props({
+        self._register_props({
             "row_stretch": row_stretch,
             "column_stretch": column_stretch,
             "row_minheight": row_minheight,
             "column_minwidth": column_minwidth,
         })
-        self.register_props(kwargs)
+        self._register_props(kwargs)
         self.underlying = None
         self._widget_children_dict = {}
         """Like _LinearView._widget_children"""

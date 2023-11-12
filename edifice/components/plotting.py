@@ -25,7 +25,7 @@ class Figure(CustomWidget):
     def __init__(self, plot_fun):
         if not MATPLOTLIB_LOADED:
             raise ValueError("To use the Figure component, you must install matplotlib, e.g. by `pip install matplotlib`")
-        self.register_props({
+        self._register_props({
             "plot_fun": plot_fun,
         })
         super().__init__()

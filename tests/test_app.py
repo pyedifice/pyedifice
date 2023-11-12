@@ -79,7 +79,7 @@ class IntegrationTestCase(unittest.TestCase):
 
         class TestComp(component.Element):
             def __init__(self, state_value):
-                self.register_props({
+                self._register_props({
                     "state_value": state_value,
                 })
                 super().__init__()
@@ -94,7 +94,7 @@ class IntegrationTestCase(unittest.TestCase):
 
         class CompChild1(component.Element):
             def __init__(self, state_value):
-                self.register_props({
+                self._register_props({
                     "state_value": state_value,
                 })
                 super().__init__()
@@ -109,7 +109,7 @@ class IntegrationTestCase(unittest.TestCase):
 
         class CompChild2(component.Element):
             def __init__(self, state_value):
-                self.register_props({
+                self._register_props({
                     "state_value": state_value,
                 })
                 super().__init__()

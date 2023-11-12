@@ -4,7 +4,7 @@ import edifice as ed
 class RecurseTree(ed.Element):
 
     def __init__(self, level, t):
-        self.register_props({
+        self._register_props({
             "level": level,
             "t": t,
         })
@@ -28,7 +28,7 @@ class RecurseTree(ed.Element):
 class MainElement(ed.Element):
 
     def __init__(self, level=2):
-        self.register_props({
+        self._register_props({
             "level": level,
         })
         super().__init__()
@@ -37,7 +37,7 @@ class MainElement(ed.Element):
     def did_mount(self):
         print("Mount")
         print("HI")
-        self.timer = ed.Timer(self.increment_time)
+        self.timer = ed.utilities.Timer(self.increment_time)
         print(id(self))
         self.timer.start(16)
 

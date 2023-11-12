@@ -30,7 +30,7 @@ def Bad(self, flag):
 class MockElement(component.Element):
 
     def __init__(self, recursion_level):
-        self.register_props({
+        self._register_props({
             "recursion_level": recursion_level,
         })
         super().__init__()

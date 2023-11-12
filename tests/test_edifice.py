@@ -135,7 +135,7 @@ class TestReference(unittest.TestCase):
 class _TestElementInner(Element):
 
     def __init__(self, prop_a):
-        self.register_props({
+        self._register_props({
             "prop_a": prop_a,
         })
         self.state_a = "A"
@@ -355,7 +355,7 @@ class RenderTestCase(unittest.TestCase):
         class TestCompInner(Element):
 
             def __init__(self, val):
-                self.register_props({
+                self._register_props({
                     "val": val,
                 })
                 self.count = 0
@@ -387,7 +387,7 @@ class RenderTestCase(unittest.TestCase):
         class TestCompInner1(Element):
 
             def __init__(self, val):
-                self.register_props({
+                self._register_props({
                     "val": val,
                 })
                 super().__init__()
@@ -402,7 +402,7 @@ class RenderTestCase(unittest.TestCase):
         class TestCompInner2(Element):
 
             def __init__(self, val):
-                self.register_props({
+                self._register_props({
                     "val": val,
                 })
                 super().__init__()
@@ -450,7 +450,7 @@ class RefreshClassTestCase(unittest.TestCase):
         class OldInnerClass(Element):
 
             def __init__(self, val):
-                self.register_props({
+                self._register_props({
                     "val": val,
                 })
                 super().__init__()
@@ -464,7 +464,7 @@ class RefreshClassTestCase(unittest.TestCase):
         class NewInnerClass(Element):
 
             def __init__(self, val):
-                self.register_props({
+                self._register_props({
                     "val": val,
                 })
                 super().__init__()
@@ -502,7 +502,7 @@ class RefreshClassTestCase(unittest.TestCase):
         class OldInnerClass(Element):
 
             def __init__(self, val):
-                self.register_props({
+                self._register_props({
                     "val": val,
                 })
                 super().__init__()
@@ -516,7 +516,7 @@ class RefreshClassTestCase(unittest.TestCase):
         class NewInnerClass(Element):
 
             def __init__(self, val):
-                self.register_props({
+                self._register_props({
                     "val": val,
                 })
                 super().__init__()

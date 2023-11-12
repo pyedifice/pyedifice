@@ -147,7 +147,7 @@ class FlowView(_LinearView):
     """
 
     def __init__(self, **kwargs):
-        self.register_props(kwargs)
+        self._register_props(kwargs)
         super().__init__(**kwargs)
         self.underlying = None
 
