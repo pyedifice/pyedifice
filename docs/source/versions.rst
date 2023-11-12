@@ -1,18 +1,27 @@
+
+.. currentmodule:: edifice
+
 Release Notes
 =============
 
 Unreleased 0.2.0
 ----------------
 
-:func`edifice.component` render function decorator instead of :code:`Component`
-subclass.
+:func:`component` render function decorator instead of :code:`Component`
+subclass. Renamed old :code:`Component` to :class:`Element`.
+Deprecated the API for users to inherit from :code:`Element`.
+Privatized most of the :code:`Element` API.
 
-:doc:`Hooks<hooks>` instead of :code:`StateValue` and :code:`StateManager`.
+:doc:`Hooks<hooks>` instead of :code:`StateValue` and :code:`StateManager`,
+which are deprecated.
 
-New :code:`with` context manager syntax.
+New :code:`with` context manager syntax for declaring children instead of the
+Element :code:`__call__` syntax for delcaring children.
 
 Moved :class:`ButtonView`, :class:`FlowView`, :class:`ImageAspect`,
-:class:`TableGridView` to base Elements.
+:class:`TableGridView` to Base Elements.
+
+Deprecated all Higher-level Components.
 
 0.1.2
 -----

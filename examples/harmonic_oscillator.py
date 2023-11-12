@@ -47,7 +47,7 @@ def Oscillator(self):
         complex_phase = (damping - np.sqrt(sqrt_expr)) / 2
         return np.real(np.exp(complex_phase * t))
 
-    # # Animation timer. It simply adds dt to simulation_time each tick
+    # Animation timer. It simply adds dt to simulation_time each tick
     async def play_tick():
         if is_playing:
             simulation_time_set(lambda t: t + dt)

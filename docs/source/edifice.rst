@@ -1,5 +1,5 @@
-Edifice Core Concepts
-=====================
+Edifice Core
+============
 
 .. automodule:: edifice
 .. automodule:: edifice._component

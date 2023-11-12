@@ -34,10 +34,15 @@ Base Elements
 Events
 ------
 
-For every base component, user interactions generate events, and you can specify how to handle the event by passing a callback function (which is either a function or an asyncio coroutine).
-These callbacks can be passed into the base component as props, for example the :code:`on_click` callback that can be passed to every widget,
-or the :code:`on_change` callback for checkboxes, radio buttons, sliders, and text input.
-The callback function is passed an argument describing the event, for example a click object holding click information (location of cursor, etc)
+For every base Element, user interactions generate events, and you can specify
+how to handle the event by passing a callback function (which is either a
+function or an asyncio coroutine).
+These callbacks can be passed into the base Element as props, for example
+the :code:`on_click` callback that can be passed to every widget,
+or the :code:`on_change` callback for checkboxes, radio buttons, sliders,
+and text input.
+The callback function is passed an argument describing the event, for example
+a click object holding click information (location of cursor, etc)
 or the new value of the input.
 
 These callbacks run in the same thread as the main application.
@@ -78,9 +83,9 @@ the :code:`on_click` handler as a coroutine::
         counter, set_counter = use_state(0)
         loading, set_loading = use_state(False)
 
-        def on_click(self, e):
+        async def on_click(self, e):
         	set_loading(True)
-            r = await asyncio.to_thread(fetch_from_network)
+            r = await fetch_from_network()
             set_results(r)
         	set_loading(False)
 
@@ -104,13 +109,8 @@ Custom Widgets
 --------------
 
 Not all widgets are currently supported by Edifice.
-Edifice provides :code:`CustomWidget` to allow you to bind arbitrary
-QtWidgets to an Edifice component.
-The two methods to override are :code:`create_widget`,
-which should return the Qt widget,
-and :code:`paint`,
-which takes the current widget and new props,
-and should update the widget according to the new props.
+Edifice provides :class:`CustomWidget` to allow you to bind arbitrary
+QtWidgets to an Edifice Element.
 
 .. currentmodule:: edifice
 .. autosummary::

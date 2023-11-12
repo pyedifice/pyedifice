@@ -170,6 +170,26 @@ def use_async(
             use_async(fetcher, 0)
             Label(text=myword)
 
+    The :code:`use_async` Hook is also useful for timers and animation.
+
+    Here is an example which shows how to run a timer in a component. The
+    Harmonic Oscillator in :doc:`../examples` uses this technique::
+
+        is_playing, is_playing_set = use_state(False)
+        play_trigger, play_trigger_set = use_state(False)
+
+        async def play_tick():
+            if is_playing:
+                await asyncio.sleep(0.05)
+                play_trigger_set(lambda p: not p)
+
+        use_async(play_tick, (is_playing, play_trigger))
+
+        Button(
+            text="pause" if is_playing else "play",
+            on_click=lambda e: is_playing_set(lambda p: not p),
+        )
+
     Args:
         fn_coroutine: Async Coroutine function to be run as a Task.
         dependencies: The :code:`fn_coroutine` Task will be started when the
