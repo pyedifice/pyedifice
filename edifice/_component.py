@@ -444,7 +444,7 @@ class Element:
         # All changes are guaranteed to appear atomically: upon exception,
         # no changes to state will occur.
         # """
-        should_update = self.should_update(PropsDict({}), kwargs)
+        should_update = self._should_update(PropsDict({}), kwargs)
         old_vals = {}
         try:
             for s in kwargs:
@@ -461,7 +461,7 @@ class Element:
                 super().__setattr__(s, old_vals[s])
             raise e
 
-    def should_update(self, newprops: PropsDict, newstate: tp.Mapping[tp.Text, tp.Any]) -> bool:
+    def _should_update(self, newprops: PropsDict, newstate: tp.Mapping[tp.Text, tp.Any]) -> bool:
         # """Determines if the component should rerender upon receiving new props and state.
 
         # The arguments, :code:`newprops` and :code:`newstate`, reflect the

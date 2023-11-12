@@ -500,7 +500,7 @@ class RenderEngine(object):
         newprops = new_component.props
         render_context.set(component, "_edifice_internal_references",
                            component._edifice_internal_references | new_component._edifice_internal_references)
-        if component.should_update(newprops, {}):
+        if component._should_update(newprops, {}):
             render_context.mark_props_change(component, newprops)
             rerendered_obj = self._render(component, render_context)
             render_context.mark_qt_rerender(rerendered_obj.component, True)
