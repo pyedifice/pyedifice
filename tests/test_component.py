@@ -145,7 +145,7 @@ class ElementTestCase(unittest.TestCase):
 
         exception_thrown = False
         try:
-            a.set_state(foo=3, bar=0)
+            a._set_state(foo=3, bar=0)
         except ValueError as e:
             if str(e) == "I am broken":
                 exception_thrown = True

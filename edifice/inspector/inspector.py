@@ -96,7 +96,7 @@ class TreeView(InspectorElement):
                 self.cached_children = self.props.load_fun()
                 self.cached_children_loaded = True
         else:
-            self.set_state(collapsed=not self.collapsed)
+            self._set_state(collapsed=not self.collapsed)
 
     def should_update(self, newprops, newstate):
         if newstate:
@@ -222,7 +222,7 @@ class Inspector(InspectorElement):
 
     def select_component(self, comp):
         old_selection = self.selected
-        self.set_state(selected=comp)
+        self._set_state(selected=comp)
         current_selection.update({
             id(comp): True,
             id(old_selection): False

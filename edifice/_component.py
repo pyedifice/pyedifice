@@ -421,7 +421,7 @@ class Element:
                 for k, v in unwind_context.items():
                     super().__setattr__(k, v)
                 if not exception_raised:
-                    self.set_state(**changes_context)
+                    self._set_state(**changes_context)
 
     def __setattr__(self, k, v) -> None:
         changes_context = self._render_changes_context
@@ -434,7 +434,7 @@ class Element:
             changes_context[k] = v
         super().__setattr__(k, v)
 
-    def set_state(self, **kwargs):
+    def _set_state(self, **kwargs):
         # """Set state and render changes.
 
         # The keywords are the names of the state attributes of the class, e.g.
