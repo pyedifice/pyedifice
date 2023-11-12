@@ -184,6 +184,7 @@ class App(object):
                             continue
 
                         render_result.run()
+
                         self._class_rerender_queue.task_done()
                         self._class_rerender_response_queue.put_nowait(True)
                         logger.info("Rerendering Elements in %s due to source change", file_name)
@@ -222,6 +223,26 @@ class App(object):
         """
         del newstate #TODO?
         start_time = time.process_time()
+
+        # Before the render, reduce the _hook_state updaters.
+        # We can't do this after the render, because there may have been state
+        # updates from event handlers.
+        for hooks in self._render_engine._hook_state.values():
+            for hook in hooks:
+                state0 = hook.state
+                try:
+                    for updater in hook.updaters:
+                        if callable(updater):
+                            hook.state = updater(hook.state)
+                        else:
+                            hook.state = updater
+                except:
+                    # If any of the updaters throws then the state is unchanged.
+                    hook.state = state0
+                    # TODO Should we re-raise this exception somehow?
+                finally:
+                    hook.updaters.clear()
+
         render_result = self._render_engine._request_rerender(components)
         render_result.run()
         end_time = time.process_time()
@@ -232,6 +253,27 @@ class App(object):
             self._logger.info("Rendered %d times, with average render time of %.2f ms and worst render time of %.2f ms",
                          render_timing.count(), 1000 * render_timing.mean(), 1000 * render_timing.max())
         self._first_render = False
+
+        # after render, call the use_effect setup functions.
+        # we want to guarantee that elements are fully rendered when
+        # effects are performed.
+        for hooks in self._render_engine._hook_effect.values():
+            for hook in hooks:
+                if hook.setup is not None:
+                    if hook.cleanup is not None:
+                        try:
+                            hook.cleanup()
+                        except:
+                            pass
+                        finally:
+                            hook.cleanup = None
+                    try:
+                        hook.cleanup = hook.setup()
+                    except:
+                        hook.cleanup = None
+                    finally:
+                        hook.setup = None
+
         if self._inspector_component is not None and not all(isinstance(comp, inspector.InspectorElement) for comp in components):
             self._inspector_component._refresh()
 

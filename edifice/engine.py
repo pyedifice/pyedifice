@@ -684,28 +684,6 @@ class RenderEngine(object):
         return widget_trees
 
     def _request_rerender(self, components: list[Element]) -> RenderResult:
-        """
-        This is “the render function.” One call to this function is one “render.”
-        """
-
-        # Before the render, reduce the _hook_state updaters.
-        # We can't do this after the render, because there may have been state
-        # updates from event handlers.
-        for hooks in self._hook_state.values():
-            for hook in hooks:
-                state0 = hook.state
-                try:
-                    for updater in hook.updaters:
-                        if callable(updater):
-                            hook.state = updater(hook.state)
-                        else:
-                            hook.state = updater
-                except:
-                    # If any of the updaters throws then the state is unchanged.
-                    hook.state = state0
-                    # TODO Should we re-raise this exception somehow?
-                finally:
-                    hook.updaters.clear()
 
         # Generate the widget trees
         with _storage_manager() as storage_manager:
@@ -719,26 +697,6 @@ class RenderEngine(object):
         # Update the stored component trees and widget trees
         self._component_tree.update(render_context.component_tree)
         self._widget_tree.update(render_context.widget_tree)
-
-        # after render, call the use_effect setup functions.
-        # we want to guarantee that elements are fully rendered when
-        # effects are performed.
-        for hooks in self._hook_effect.values():
-            for hook in hooks:
-                if hook.setup is not None:
-                    if hook.cleanup is not None:
-                        try:
-                            hook.cleanup()
-                        except:
-                            pass
-                        finally:
-                            hook.cleanup = None
-                    try:
-                        hook.cleanup = hook.setup()
-                    except:
-                        hook.cleanup = None
-                    finally:
-                        hook.setup = None
 
         # Delete components that should be deleted (and call the respective unmounts)
         for component in render_context.enqueued_deletions:
