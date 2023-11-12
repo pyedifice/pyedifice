@@ -501,7 +501,7 @@ class Element:
         # (e.g. start a timer).
         # """
 
-    def did_update(self):
+    def _did_update(self):
         pass
         # """Callback function that is called whenever the component updates.
 
