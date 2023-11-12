@@ -22,10 +22,7 @@ as a backend. So Edifice is like
 Python instead of JavaScript, and [Qt Widgets](https://doc.qt.io/qt-6/qtwidgets-index.html) instead of the HTML DOM.
 
 If you have React experience, you'll find Edifice to be very easy to pick up.
-For example, for the React `setState` function, Edifice has `set_state`, and for React's `this.props`,
-Edifice has `self.props`.
-All function names use underscores instead of camel case to conform to Python standards,
-and "Element" is removed from functions like `shouldComponentUpdate` (renamed to `should_update`).
+Edifice has function props and Hooks just like React.
 
 <img src="https://raw.githubusercontent.com/pyedifice/pyedifice/master/examples/example_calculator.png" width=200/><img src="https://raw.githubusercontent.com/pyedifice/pyedifice/master/examples/example_harmonic_oscillator.gif" width=200/>
 
@@ -55,14 +52,16 @@ User interactions update the state, and state changes update the GUI.
 Edifice makes it possible to write code like:
 
 ```python
-View(layout="row")(
-    Button("Add 5", on_click=lambda:self.set_state(data=self.data + 5)),
-    *[Label(i) for i in self.data]
-)
+number, set_number = use_state(0)
+
+with View():
+    Button("Add 5", on_click=set_number(number + 5)
+    for i in range(number):
+        Label(str(i))
 ```
 
-and get the expected result: the values in `self.data` will be displayed, and clicking the button will
-add *5* to the array, and this state change will automatically be reflected in the GUI.
+and get the expected result: clicking the button will
+add *5* to the *number*, and this state change will automatically be reflected in the GUI.
 You only need to specify what is to be displayed given the current state,
 and Edifice will work to ensure that
 the displayed widgets always correspond to the internal state.
@@ -71,11 +70,7 @@ Edifice is designed to make GUI applications easier for humans to reason about.
 Thus, the displayed GUI always reflect the internal state,
 even if an exception occurs part way through rendering —
 in that case, the state changes are unwound,
-the display is unchanged,
-and the exception is re-raised for the application to handle.
-You can specify a batch of state changes in a transaction,
-so that either all changes happen or none of them happens.
-There is no in-between state for you to worry about.
+and the display is unchanged.
 
 Declarative UIs are also easier for developer tools to work with.
 Edifice provides two key features to make development easier:

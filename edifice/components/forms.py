@@ -313,7 +313,7 @@ class FormDialog(Element):
     def on_submit(self, data):
         if self.props.on_submit is not None:
             self.props.on_submit(data)
-        self.set_state(is_open=False)
+        self._set_state(is_open=False)
 
     def render(self):
         return ed.List()(self.is_open and ed.Window(title=self.props.title)(

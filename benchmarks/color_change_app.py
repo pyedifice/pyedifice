@@ -46,7 +46,7 @@ class MainElement(ed.Element):
         self.timer.stop()
 
     def increment_time(self):
-        self.set_state(t=self.t + 0.016)
+        self._set_state(t=self.t + 0.016)
 
     def render(self):
         return RecurseTree(level=7, t=self.t)

@@ -9,7 +9,7 @@ class App(edifice.Element):
     def render(self):
         return View(layout="column")(
             Label("Hello world: " + self.text),
-            TextInput(self.text, on_change=lambda text: self.set_state(text=text)),
+            TextInput(self.text, on_change=lambda text: self._set_state(text=text)),
             View(layout="row")(
                 Label("Bonjour")
             )

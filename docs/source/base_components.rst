@@ -48,24 +48,21 @@ For such cases, you can use an asyncio `coroutine <https://docs.python.org/3/lib
 
 Consider this code::
 
-    class Element(edifice.Element):
+	@component
+    def MyComponent(self):
 
-        def __init__(self):
-            super().__init__()
-            self.results = ""
-            self.counter = 0
+        results, set_results = use_state("")
+        counter, set_counter = use_state(0)
 
         def on_click(self, e):
-            results = fetch_from_network()
-            self.set_state(results=results)
+            r = fetch_from_network()
+            set_results(r)
 
-        def render(self):
-            return edifice.View()(
-                edifice.Label(self.results),
-                edifice.Label(self.counter),
-                edifice.Button("Fetch", on_click=self.on_click),
-                edifice.Button("Increment", on_click=lambda e: self.set_state(counter=self.counter + 1))
-            )
+        with edifice.View():
+            edifice.Label(self.results)
+            edifice.Label(self.counter)
+            edifice.Button("Fetch", on_click=self.on_click)
+            edifice.Button("Increment", on_click=lambda e: set_counter(counter + 1)
 
 When the Fetch button is clicked, the event handler will call a lengthy :code:`fetch_from_network` function,
 blocking the application from further progress.
@@ -74,27 +71,26 @@ In the mean time, if the user clicks the increment button, nothing will happen u
 To allow the rest of the application to run while the fetch is happening, you can define
 the :code:`on_click` handler as a coroutine::
 
-    class Element(edifice.Element):
+	@component
+    def MyComponent(self):
 
-        def __init__(self):
-            super().__init__()
-            self.results = ""
-            self.counter = 0
-            self.loading = False
+        results, set_results = use_state("")
+        counter, set_counter = use_state(0)
+        loading, set_loading = use_state(False)
 
-        async def on_click(self, e):
-            self.set_state(loading=True)
-            results = await asyncio.to_thread(fetch_from_network)
-            self.set_state(loading=False, results=results)
+        def on_click(self, e):
+        	set_loading(True)
+            r = await asyncio.to_thread(fetch_from_network)
+            set_results(r)
+        	set_loading(False)
 
-        def render(self):
-            return edifice.View()(
-                edifice.Label(self.results),
-                self.loading and edifice.Label("Loading"),
-                edifice.Label(self.counter),
-                edifice.Button("Fetch", on_click=self.on_click),
-                edifice.Button("Increment", on_click=lambda e: self.set_state(counter=self.counter + 1))
-            )
+        with edifice.View():
+            edifice.Label(self.results)
+            if loading:
+                edifice.Label("Loading")
+            edifice.Label(self.counter)
+            edifice.Button("Fetch", on_click=self.on_click)
+            edifice.Button("Increment", on_click=lambda e: set_counter(counter + 1)
 
 While the :code:`fetch_from_network` function is running, control is returned to the event loop,
 allowing the application to continue handling button clicks.

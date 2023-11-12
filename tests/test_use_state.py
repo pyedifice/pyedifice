@@ -45,7 +45,7 @@ class IntegrationTestCase(unittest.TestCase):
                 self.count = 0
 
             async def handle_click(self, _):
-                self.set_state(count=self.count + 1)
+                self._set_state(count=self.count + 1)
 
             def render(self):
                 print("TestComp instance " + str(id(self)))

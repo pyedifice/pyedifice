@@ -10,11 +10,11 @@ class MouseEvents(ed.Element):
     def render(self):
         return ed.View()(
             ed.View(style={"height": 200, "width": 200, "background-color": "red"},
-                    on_mouse_enter=lambda e: self.set_state(entered=True),
-                    on_mouse_leave=lambda e: self.set_state(entered=False),
-                    on_mouse_down=lambda e: self.set_state(pressed=True),
-                    on_mouse_up=lambda e: self.set_state(pressed=False),
-                    on_mouse_move=lambda e: self.set_state(pos=(e.x(), e.y()))
+                    on_mouse_enter=lambda e: self._set_state(entered=True),
+                    on_mouse_leave=lambda e: self._set_state(entered=False),
+                    on_mouse_down=lambda e: self._set_state(pressed=True),
+                    on_mouse_up=lambda e: self._set_state(pressed=False),
+                    on_mouse_move=lambda e: self._set_state(pos=(e.x(), e.y()))
                    )(
                        ed.Label("TESTING"),
            ),

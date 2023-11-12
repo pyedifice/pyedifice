@@ -49,7 +49,7 @@ class IntegrationTestCase(unittest.TestCase):
             def render(self):
                 return base_components.List()(
                     base_components.Label(f"Hello World: {self.text}"),
-                    base_components.TextInput(self.text, on_change=lambda text: self.set_state(text=text))
+                    base_components.TextInput(self.text, on_change=lambda text: self._set_state(text=text))
                 )
 
         my_app = app.App(TestComp(), create_application=False, mount_into_window=False)
