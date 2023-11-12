@@ -6,7 +6,7 @@ class App(edifice.Element):
         super(App, self).__init__()
         self.text = ""
 
-    def render(self):
+    def _render_element(self):
         return View(layout="column")(
             Label("Hello world: " + self.text),
             TextInput(self.text, on_change=lambda text: self._set_state(text=text)),

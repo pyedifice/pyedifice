@@ -10,7 +10,7 @@ class RecurseTree(ed.Element):
         })
         super().__init__()
 
-    def render(self):
+    def _render_element(self):
         if self.props.level > 0:
             layout = "row" if self.props.level % 2 == 0 else "column"
             return ed.View(layout=layout)(
@@ -48,7 +48,7 @@ class MainElement(ed.Element):
     def increment_time(self):
         self._set_state(t=self.t + 0.016)
 
-    def render(self):
+    def _render_element(self):
         return RecurseTree(level=7, t=self.t)
 
 if __name__ == "__main__":

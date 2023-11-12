@@ -75,7 +75,7 @@ class StateValueTestCase(unittest.TestCase):
     def test_subscribe(self):
         state_value = state.StateValue(2)
         class TestComp(component.Element):
-            def render(self):
+            def _render_element(self):
                 if not hasattr(self, "render_called_count"):
                     self.render_called_count = 0
                 self.value = state_value.subscribe(self)
@@ -104,7 +104,7 @@ class StateValueTestCase(unittest.TestCase):
                 })
                 super().__init__()
 
-            def render(self):
+            def _render_element(self):
                 assert self.props.val == 2
                 return base_components.Label(self.props.val)
 
@@ -113,7 +113,7 @@ class StateValueTestCase(unittest.TestCase):
             def __init___(self):
                 super().__init__()
 
-            def render(self):
+            def _render_element(self):
                 if not hasattr(self, "render_called_count"):
                     self.render_called_count = 0
                 self.value = state_value.subscribe(self)
@@ -152,7 +152,7 @@ class StateManagerTestCase(unittest.TestCase):
                 self.state_value = state_manager.subscribe(self, "key2")
                 self.state_value.set(5)
 
-            def render(self):
+            def _render_element(self):
                 if not hasattr(self, "render_called_count"):
                     self.render_called_count = 0
                 self.value = state_manager.subscribe(self, "key1").value
@@ -160,7 +160,7 @@ class StateManagerTestCase(unittest.TestCase):
                 return base_components.Label(self.value)
 
         class TestComp2(component.Element):
-            def render(self):
+            def _render_element(self):
                 if not hasattr(self, "render_called_count"):
                     self.render_called_count = 0
                 self.value = state_manager.subscribe(self, "key2").value
@@ -168,7 +168,7 @@ class StateManagerTestCase(unittest.TestCase):
                 return base_components.Label(self.value)
 
         class TestComp(component.Element):
-            def render(self):
+            def _render_element(self):
                 if not hasattr(self, "render_called_count"):
                     self.render_called_count = 0
                 self.render_called_count += 1
@@ -234,7 +234,7 @@ class StateManagerTestCase(unittest.TestCase):
         })
 
         class TestComp1(component.Element):
-            def render(self):
+            def _render_element(self):
                 if not hasattr(self, "render_called_count"):
                     self.render_called_count = 0
                 self.value = state_manager.subscribe(self, "key1").value
@@ -242,7 +242,7 @@ class StateManagerTestCase(unittest.TestCase):
                 return base_components.Label(self.value)
 
         class TestComp2(component.Element):
-            def render(self):
+            def _render_element(self):
                 if not hasattr(self, "render_called_count"):
                     self.render_called_count = 0
                 self.value = state_manager.subscribe(self, "key2").value
@@ -251,7 +251,7 @@ class StateManagerTestCase(unittest.TestCase):
                 return base_components.Label(self.value)
 
         class TestComp(component.Element):
-            def render(self):
+            def _render_element(self):
                 if not hasattr(self, "render_called_count"):
                     self.render_called_count = 0
                 self.render_called_count += 1

@@ -242,7 +242,7 @@ class Form(Element):
         self.internal_data.update(self.props.defaults)
         self.props.data.update(self.props.defaults)
 
-    def render(self):
+    def _render_element(self):
         column_style = {"margin": 10}
 
         props = self.props
@@ -315,7 +315,7 @@ class FormDialog(Element):
             self.props.on_submit(data)
         self._set_state(is_open=False)
 
-    def render(self):
+    def _render_element(self):
         return ed.List()(self.is_open and ed.Window(title=self.props.title)(
             Form(data=self.props.data, config=self.props.config, label_map=self.props.label_map,
                  defaults=self.props.defaults, on_submit=self.on_submit,

@@ -26,7 +26,7 @@ class ElementLabel(InspectorElement):
     def _should_update(self, newprops, newstate):
         return self.props.root is not newprops.root
 
-    def render(self):
+    def _render_element(self):
         root = self.props.root
         on_click = self.props.on_click
         try:
@@ -51,7 +51,7 @@ class Collapsible(InspectorElement):
     def _should_update(self, newprops, newstate):
         return newprops._get("root", self.props.root) != self.props.root or newprops._get("collapsed", self.props.collapsed) != self.props.collapsed
 
-    def render(self):
+    def _render_element(self):
         try:
             selected = current_selection.subscribe(self, id(self.props.root)).value
         except KeyError:
@@ -116,7 +116,7 @@ class TreeView(InspectorElement):
             return False
 
 
-    def render(self):
+    def _render_element(self):
         child_style = {"align": "top", "margin-left": 20}
         if self.collapsed:
             child_style["height"] = 0
@@ -136,7 +136,7 @@ class StateView(InspectorElement):
         })
         super().__init__()
 
-    def render(self):
+    def _render_element(self):
         state = dict((k, v) for (k, v) in vars(self.props.component).items() if k[0] != "_")
         return ed.ScrollView(layout="column", style={"align": "top", "margin-left": 15})(
             *[ed.View(layout="row", style={"align": "left"})(
@@ -153,7 +153,7 @@ class PropsView(InspectorElement):
         })
         super().__init__()
 
-    def render(self):
+    def _render_element(self):
         props = self.props.props
         return ed.ScrollView(layout="column", style={"align": "top", "margin-left": 15})(
             *[ed.View(layout="row", style={"align": "left"})(
@@ -172,7 +172,7 @@ class ElementView(InspectorElement):
         })
         super().__init__()
 
-    def render(self):
+    def _render_element(self):
         component = self.props.component
         module = inspect.getmodule(component.__class__)
         lineno = None
@@ -242,7 +242,7 @@ class Inspector(InspectorElement):
 
         return ElementLabel(root, on_click=lambda e: self.select_component(root))
 
-    def render(self):
+    def _render_element(self):
         if self.must_refresh or self._cached_tree is None:
             self._cached_tree = self._build_tree(self.root_component)
         return ed.View(layout="row")(
