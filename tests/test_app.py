@@ -2,6 +2,7 @@ import asyncio as asyncio
 import unittest
 
 import edifice.app as app
+from edifice import Window
 import edifice.base_components as base_components
 import edifice.state as state
 import edifice._component as component
@@ -52,20 +53,20 @@ class IntegrationTestCase(unittest.TestCase):
                     base_components.TextInput(self.text, on_change=lambda text: self._set_state(text=text))
                 )
 
-        my_app = app.App(TestComp(), create_application=False, mount_into_window=False)
+        my_app = app.App(TestComp(), create_application=False)
         widgets = my_app.export_widgets()
         self.assertEqual(len(widgets), 2)
         self.assertEqual(widgets[0].__class__, QtWidgets.QLabel)
         self.assertEqual(widgets[1].__class__, QtWidgets.QLineEdit)
 
     def test_integration(self):
-        my_app = app.App(base_components.Label("Hello World!"), create_application=False)
+        my_app = app.App(Window()(base_components.Label("Hello World!")), create_application=False)
         with my_app.start_loop() as loop:
             loop.call_later(0.1, loop.stop)
             loop.run_forever()
 
     def test_integration_with_inspector(self):
-        my_app = app.App(base_components.Label("Hello World!"), inspector=True, create_application=False)
+        my_app = app.App(Window()(base_components.Label("Hello World!")), inspector=True, create_application=False)
         with my_app.start_loop() as loop:
             loop.call_later(0.1, loop.stop)
             loop.run_forever()
@@ -121,7 +122,7 @@ class IntegrationTestCase(unittest.TestCase):
                 loop.call_soon(loop.stop)
 
         state_value = state.StateValue(1)
-        my_app = app.App(TestComp(state_value), create_application=False)
+        my_app = app.App(Window()(TestComp(state_value)), create_application=False)
         with my_app.start_loop() as loop:
             loop.run_forever()
 
@@ -143,7 +144,7 @@ class IntegrationTestCase(unittest.TestCase):
 
     def test_start_loop(self):
         my_app = app.App(
-            base_components.Label(text="start_loop"),
+            Window()(base_components.Label(text="start_loop")),
             create_application=False
         )
         with my_app.start_loop() as loop:

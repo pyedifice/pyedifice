@@ -643,6 +643,8 @@ class Window(RootElement):
 
     The Window must have exactly one child, and the child must not change.
     Usually the one child of a Window will be a :class:`View`.
+    (The reason for this is
+    that the Window cannot diff its children.)
 
     Args:
         title:

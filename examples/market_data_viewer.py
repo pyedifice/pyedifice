@@ -107,14 +107,15 @@ def App(self):
     def play(e):
         playing_set(lambda p: not p)
 
-    with ed.View(layout="column"):
-        with ed.View(layout="row", style={"align": "left", "margin-left": "10px"}).set_key("Controls"):
-            ed.Icon(name="chart-line", size=14).set_key("Icon")
-            ed.Label("Market Data Viewer", style={"margin-left": "5px"} ).set_key("Label")
-            ed.IconButton(name="pause" if playing else "play",
-                            style=stylesheet["play_button"], size=10, on_click=play,
-            ).set_key("Play")
-        Book(book).set_key("Book")
+    with ed.Window():
+        with ed.View(layout="column"):
+            with ed.View(layout="row", style={"align": "left", "margin-left": "10px"}).set_key("Controls"):
+                ed.Icon(name="chart-line", size=14).set_key("Icon")
+                ed.Label("Market Data Viewer", style={"margin-left": "5px"} ).set_key("Label")
+                ed.IconButton(name="pause" if playing else "play",
+                                style=stylesheet["play_button"], size=10, on_click=play,
+                ).set_key("Play")
+            Book(book).set_key("Book")
 
 if __name__ == "__main__":
-    ed.App(App(), inspector=True).start()
+    ed.App(App()).start()

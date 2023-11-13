@@ -9,7 +9,7 @@
 			"type": "python",
 			"request": "launch",
 			"module": "edifice",
-			"justMyCode": false,
+			"justMyCode": true,
 			"args": ["examples/tutorial_old.py", "MyApp"]
 		},
 		{
@@ -17,8 +17,16 @@
 			"type": "python",
 			"request": "launch",
 			"module": "edifice",
-			"justMyCode": false,
+			"justMyCode": true,
 			"args": ["examples/tutorial.py", "MyApp"]
+		},
+		{
+			"name": "Runner calculator.py",
+			"type": "python",
+			"request": "launch",
+			"module": "edifice",
+			"justMyCode": true,
+			"args": ["examples/calculator.py", "Calculator"]
 		}
 	]
 }

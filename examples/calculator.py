@@ -131,4 +131,4 @@ def Calculator(self):
                 binary_button("=").set_key("=")
 
 if __name__ == "__main__":
-    ed.App(Calculator(), mount_into_window=False).start()
+    ed.App(Calculator()).start()

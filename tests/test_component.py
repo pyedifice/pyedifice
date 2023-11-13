@@ -1,7 +1,7 @@
 import unittest
 import unittest.mock
 import edifice._component as component
-from edifice.app import App
+from edifice.app import App, Window
 import edifice.engine as engine
 import edifice.base_components as base_components
 
@@ -25,7 +25,8 @@ def Bad(self, flag):
         self.flag = flag
     if self.flag:
         raise ValueError("This should error")
-    base_components.View()
+    with Window():
+        base_components.View()
 
 class MockElement(component.Element):
 

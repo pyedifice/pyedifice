@@ -78,6 +78,10 @@ class App(object):
 
         App(MyRootElement()).start()
 
+    If you want application to be a normal application in an operating
+    system window, then the top Element rendered by :code:`MyRootElement`
+    must be a :class:`Window`.
+
     If you just want to create a widget (that you'll integrate with an existing codebase),
     call the :func:`App.export_widgets` method::
 
@@ -88,15 +92,9 @@ class App(object):
     without any intervention.
 
     Args:
-        component: the root component of the application.
-            If it is not an instance of :class:`Window` or :class:`RootElement`,
-            a :class:`Window`
-            will be created with the passed-in component as a child.
-
-            The root component must render to the same type of Element every time.
-            For that reason, the root component should usually render to
-            a :class:`View` or some other container. (The reason for this is
-            that the :class:`Window` cannot diff its children.)
+        root_element: the root Element of the application.
+            It must render to an instance of :class:`Window` or
+            some other :class:`RootElement`
         inspector: whether or not to run an instance of the Edifice Inspector
             alongside the main app. Defaults to False
         create_application: (default True) whether or not to create an instance of QApplication.
@@ -109,20 +107,14 @@ class App(object):
         qapplication: (default None)
             The `QtWidgets.QApplication <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QApplication.html>`_.
             If you do not provide one, it will be created for you.
-        mount_into_window: (default True) whether or not to mount the root
-            component into a :class:`Window`.
-            Leaving this flag on will wrap the component in a :class:`Window`.
-            Set this to :code:`False` if you just want the App to output a widget, or
-            if your root component renders a :class:`Window`.
     """
 
     def __init__(self,
-            component: Element,
+            root_element: Element,
             inspector: bool = False,
             create_application: bool = True,
             application_name: str | None = None,
             qapplication: QtWidgets.QApplication | None = None,
-            mount_into_window: bool = True
     ):
         if qapplication is None:
             if create_application:
@@ -135,10 +127,7 @@ class App(object):
         else:
             self.app : QtWidgets.QApplication = qapplication
 
-        if mount_into_window:
-            self._root = Window()(component)
-        else:
-            self._root = component
+        self._root = root_element
         self._render_engine = RenderEngine(self._root, self)
         self._logger = _RateLimitedLogger(1)
         self._render_timing = _TimingAvg()

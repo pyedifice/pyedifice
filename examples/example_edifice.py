@@ -16,4 +16,4 @@ class App(edifice.Element):
         )
 
 if __name__ == "__main__":
-    edifice.App(App()).start()
+    edifice.App(edifice.Window(App())).start()

@@ -64,28 +64,29 @@ def Oscillator(self):
         damping_set(value)
         simulation_time_set(0)
 
-    with ed.View(layout="row"):
-        with ed.View(layout="column", style={"width": 720, "margin": 10}):
-            with ed.View(layout="row"):
-                ed.IconButton("pause" if is_playing else "play",
-                                on_click=lambda e: is_playing_set(lambda p: not p))
-                ed.Button("Reset", on_click=lambda e: simulation_time_set(0))
-            plotting.Figure(lambda figure: plot(figure))
-            with ed.View(layout="row", style={"margin": 10}):
-                ed.Label("Angular Frequency")
-                ed.Slider(value=angular_frequency, min_value=1, max_value=10,
-                            on_change=freq_slider_change)
-                ed.Label("Damping Factor")
-                ed.Slider(value=damping, min_value=-3, max_value=0,
-                            on_change=damp_slider_change)
+    with ed.Window("Harmonic Oscillator"):
+        with ed.View(layout="row"):
+            with ed.View(layout="column", style={"width": 720, "margin": 10}):
+                with ed.View(layout="row"):
+                    ed.IconButton("pause" if is_playing else "play",
+                                    on_click=lambda e: is_playing_set(lambda p: not p))
+                    ed.Button("Reset", on_click=lambda e: simulation_time_set(0))
+                plotting.Figure(lambda figure: plot(figure))
+                with ed.View(layout="row", style={"margin": 10}):
+                    ed.Label("Angular Frequency")
+                    ed.Slider(value=angular_frequency, min_value=1, max_value=10,
+                                on_change=freq_slider_change)
+                    ed.Label("Damping Factor")
+                    ed.Slider(value=damping, min_value=-3, max_value=0,
+                                on_change=damp_slider_change)
 
-            # We position the ball and the centroid using absolute positioning.
-            # The label and ball offsets are different since we have to take into
-            # account the size of the ball
-            with ed.View(layout="none", style={"width": 720, "height": 10, "margin-top": 40}):
-                ed.Icon("bowling-ball", size=20, color=(255, 0, 0, 255),
-                        style={"left": 350 +  200 * calculate_harmonic_motion(simulation_time)})
-                ed.Label("|", style={"left": 356, "font-size": 20, "color": "blue"})
+                # We position the ball and the centroid using absolute positioning.
+                # The label and ball offsets are different since we have to take into
+                # account the size of the ball
+                with ed.View(layout="none", style={"width": 720, "height": 10, "margin-top": 40}):
+                    ed.Icon("bowling-ball", size=20, color=(255, 0, 0, 255),
+                            style={"left": 350 +  200 * calculate_harmonic_motion(simulation_time)})
+                    ed.Label("|", style={"left": 356, "font-size": 20, "color": "blue"})
 
 if __name__ == "__main__":
-    ed.App(Oscillator(), inspector=True).start()
+    ed.App(Oscillator()).start()

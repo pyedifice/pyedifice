@@ -27,25 +27,26 @@ def myComponent(self):
         new_rows.remove(i)
         set_rows(new_rows)
 
-    with ed.View(style = {"align": "top"}):
+    with ed.Window():
+        with ed.View(style = {"align": "top"}):
 
-        with ed.View(style={"margin":10}):
-            with ButtonView(
-                on_click=lambda ev: add_key(),
-                style={"width": 100, "height": 30, "margin": 10},
-            ):
-                ed.Label(text="Add Row")
+            with ed.View(style={"margin":10}):
+                with ButtonView(
+                    on_click=lambda ev: add_key(),
+                    style={"width": 100, "height": 30, "margin": 10},
+                ):
+                    ed.Label(text="Add Row")
 
-        with TableGridView(
-        ) as tgv:
-            for rkey in rows:
-                with tgv.row():
-                    ed.Label(text="Key " + str(rkey) + " Column 0").set_key(str(rkey) + "_0")
-                    ed.Label(text="Key " + str(rkey) + " Column 1").set_key(str(rkey) + "_1")
-                    with ButtonView(
-                        on_click=lambda ev, rkey=rkey: del_key(rkey)
-                    ).set_key(str(rkey) + "_2"):
-                        ed.Label(text="Delete Key " + str(rkey))
+            with TableGridView(
+            ) as tgv:
+                for rkey in rows:
+                    with tgv.row():
+                        ed.Label(text="Key " + str(rkey) + " Column 0").set_key(str(rkey) + "_0")
+                        ed.Label(text="Key " + str(rkey) + " Column 1").set_key(str(rkey) + "_1")
+                        with ButtonView(
+                            on_click=lambda ev, rkey=rkey: del_key(rkey)
+                        ).set_key(str(rkey) + "_2"):
+                            ed.Label(text="Delete Key " + str(rkey))
 
 if __name__ == "__main__":
     ed.App(myComponent()).start()

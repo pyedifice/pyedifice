@@ -40,13 +40,14 @@ child Elements in the tree, use the parent as a
 
     @component
     def MyApp(self):
-        with View(layout="column"):
-            with View(layout="row"):
-                Label("Username: ")
-                TextInput()
-            with View(layout="row"):
-                Label("Email: ")
-                TextInput()
+        with Window():
+            with View(layout="column"):
+                with View(layout="row"):
+                    Label("Username: ")
+                    TextInput()
+                with View(layout="row"):
+                    Label("Email: ")
+                    TextInput()
 
 In HTML/XML, this would be written as:
 

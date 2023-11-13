@@ -28,16 +28,17 @@ def myComponent(self):
                         "margin":5
                     }
                 )
-    with ed.View(
-        layout="column",
-        style={
-            # We cannot align to center, it doesn't work with FlowView. TODO
-            # "align":"center"
-            }
-    ):
-        with FlowView():
-            for i in range(100):
-                mkElement(i)
+    with ed.Window():
+        with ed.View(
+            layout="column",
+            style={
+                # We cannot align to center, it doesn't work with FlowView. TODO
+                # "align":"center"
+                }
+        ):
+            with FlowView():
+                for i in range(100):
+                    mkElement(i)
 
 if __name__ == "__main__":
     ed.App(myComponent()).start()
