@@ -40,12 +40,12 @@ def use_state(initial_state:_T_use_state) -> tuple[
 
     Example::
 
-        def updater(y):
-            return y + 1
-
         @component
         def Stateful(self):
             x, x_setter = use_state(0)
+
+            def updater(y):
+                return y + 1
 
             if x < 1:
                 x_setter(updater)
@@ -55,6 +55,28 @@ def use_state(initial_state:_T_use_state) -> tuple[
     If any of the **updater functions** raises an exception, then all state
     updates will be cancelled and the state value will be unchanged for the
     next render.
+
+    Do not mutate the state variable. The old state variable must be left
+    unmodified so that it can be compared to the new state variable during
+    the next render. If your state variable is a collection, then create
+    a shallow copy of it to pass to the **setter function**::
+
+        def Stateful(self):
+            x, x_setter = use_state([])
+
+            def add_one():
+                x_new = x.copy()
+                x_new.append("Label Text")
+                x_setter(x_new)
+
+            with View():
+                Button(
+                    title="Add One",
+                    on_click: lambda _event: add_one
+                )
+                for i = range(x):
+                    Label(text=i)
+
 
     .. warning::
         You can't store a :code:`callable` value in :code:`use_state`,
