@@ -55,8 +55,11 @@ Edifice makes it possible to write code like:
 ```python
 number, set_number = use_state(0)
 
+def handle_click(event):
+    set_number(number + 5)
+
 with View():
-    Button("Add 5", on_click=set_number(number + 5)
+    Button("Add 5", on_click=handle_click(number + 5))
     for i in range(number):
         Label(str(i))
 ```

@@ -26,7 +26,7 @@ Declarative GUI framework for Python and Qt
     import edifice
     from edifice import App, Label
 
-    App(Label("Hello World!")).start()
+    App(Window()(Label("Hello World!"))).start()
 
 Edifice is a Python library for building declarative application user interfaces.
 
@@ -77,7 +77,7 @@ For example, you can write:
 
 .. code-block:: python
 
-	number, set_number = use_state(0)
+    number, set_number = use_state(0)
 
     with View():
         Button("Add 5", on_click=set_number(number + 5)
