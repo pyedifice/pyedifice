@@ -4,28 +4,52 @@
 Release Notes
 =============
 
-Unreleased 0.2.0
+0.2.0
 ----------------
+Released: 2023-11-13
 
-:func:`component` render function decorator instead of :code:`Component`
-subclass. Renamed old :code:`Component` to :class:`Element`.
-Deprecated the API for users to inherit from :code:`Element`.
-Privatized most of the :code:`Element` API.
+This version has a lot of breaking changes.
 
-:doc:`Hooks<hooks>` instead of :code:`StateValue` and :code:`StateManager`,
-which are deprecated.
+* :func:`component` render function decorator instead of :code:`Component`
+  subclass. Renamed old :code:`Component` to :class:`Element`.
+  Deprecated the API for users to inherit from :code:`Element`.
+  Privatized most of the :code:`Element` API.
 
-New :code:`with` context manager syntax for declaring children instead of the
-Element :code:`__call__` syntax for delcaring children.
+* :doc:`Hooks<hooks>` instead of :code:`StateValue` and :code:`StateManager`,
+  which are deprecated.
 
-Moved :class:`ButtonView`, :class:`FlowView`, :class:`ImageAspect`,
-:class:`TableGridView` to Base Elements.
+* New :code:`with` context manager syntax for declaring children instead of the
+  Element :code:`__call__` syntax for declaring children.
 
-Deprecated all Higher-level Components.
+* Moved :class:`ButtonView`, :class:`FlowView`, :class:`ImageAspect`,
+  :class:`TableGridView` to Base Elements.
+
+* Deprecated all Higher-level Components.
+
+* Other miscellaneous improvements.
+
+The old API for writing Elements
+by inheriting from the :code:`Component` class, overriding the :code:`render()`
+function, and calling :code:`self.set_state()` has has been deprecated.
+
+A new API
+for writing Elements with the :func:`component` decorator and :doc:`hooks` has replaced the
+old API. Most of the old API machinery still exists, but has been hidden
+from the public API.  If you want to upgrade
+old code to this version but don’t want to completely re-write for the new
+API, then you can make a few changes and run your old code.
+
+1. :code:`Component` has been renamed to :class:`Element`.
+2. The :class:`Element` :code:`render()` function has been renamed to
+   :code:`_render_element()`. Most other methods of :class:`Element` have
+   also been renamed with a prefix underscore. The method :code:`set_state()`
+   is now :code:`_set_state()`.
+3. The :code:`StateValue` and :code:`StateManager` can be imported from module
+   :code:`edifice.state`.
 
 0.1.2
 -----
-Released:
+Released: 2023-10-06
 
 * :code:`PropsDict` type annotations.
 * Documentation and metadata improvements.

@@ -137,6 +137,8 @@ def use_async(
     `Task <https://docs.python.org/3/library/asyncio-task.html#asyncio.Task>`_
     with the :code:`fn_coroutine` coroutine.
 
+    The :code:`fn_coroutine` will be called every time the :code:`dependencies` change.
+
     If the Component is unmounted before the :code:`fn_coroutine` Task completes, then
     the :code:`fn_coroutine` Task will be cancelled by calling
     `cancel() <https://docs.python.org/3/library/asyncio-task.html#asyncio.Task.cancel>`_
@@ -144,7 +146,7 @@ def use_async(
     See also
     `Task Cancellation <https://docs.python.org/3/library/asyncio-task.html#task-cancellation>`_.
 
-    If the dependencies change before the :code:`fn_coroutine` Task completes, then
+    If the :code:`dependencies` change before the :code:`fn_coroutine` Task completes, then
     the :code:`fn_coroutine` Task will be cancelled and then the new
     :code:`fn_coroutine` Task will
     be started after the old :code:`fn_coroutine` Task completes.
@@ -170,6 +172,9 @@ def use_async(
             use_async(fetcher, 0)
             Label(text=myword)
 
+    Timers
+    ======
+
     The :code:`use_async` Hook is also useful for timers and animation.
 
     Here is an example which shows how to run a timer in a component. The
@@ -180,6 +185,10 @@ def use_async(
 
         async def play_tick():
             if is_playing:
+                # Do the timer effect here
+                # (timer effect code)
+
+                # Then wait for 0.05 seconds and trigger another play_tick.
                 await asyncio.sleep(0.05)
                 play_trigger_set(lambda p: not p)
 
@@ -193,7 +202,7 @@ def use_async(
     Args:
         fn_coroutine: Async Coroutine function to be run as a Task.
         dependencies: The :code:`fn_coroutine` Task will be started when the
-            dependencies are not :code:`__eq__` to the old dependencies.
+            :code:`dependencies` are not :code:`__eq__` to the old :code:`dependencies`.
     Returns:
         None
     """
