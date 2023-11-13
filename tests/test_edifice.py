@@ -499,6 +499,43 @@ class RefreshClassTestCase(unittest.TestCase):
         assert isinstance(inner_comp, NewInnerClass)
         self.assertEqual(inner_comp.props.val, 5)
 
+    def test_refresh_child_component(self):
+        """
+        @component version of test_refresh_child
+        """
+
+        old_inner_render_count = [0]
+        new_inner_render_count = [0]
+        outer_render_count = [0]
+
+        @component
+        def OldInnerClass(self, val):
+            old_inner_render_count[0] += 1
+            base_components.Label(val)
+
+        @component
+        def NewInnerClass(self, val):
+            new_inner_render_count[0] += 1
+            base_components.Label(val * 2)
+
+        @component
+        def OuterClass(self):
+            outer_render_count[0] += 1
+            with base_components.View():
+                OldInnerClass(5)
+
+        outer_comp = OuterClass()
+        app = engine.RenderEngine(outer_comp)
+        app._request_rerender([outer_comp])
+        old_inner_comp = app._component_tree[app._component_tree[outer_comp]][0]
+        assert type(old_inner_comp).__name__ == "OldInnerClass"
+
+        app._refresh_by_class([(OldInnerClass, NewInnerClass)])
+        inner_comp = app._component_tree[app._component_tree[outer_comp]][0]
+        assert old_inner_render_count[0] == 1
+        assert type(inner_comp).__name__ == "NewInnerClass"
+        self.assertEqual(inner_comp.props.val, 5)
+
     def test_refresh_child_error(self):
         class OldInnerClass(Element):
 
