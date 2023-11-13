@@ -72,7 +72,7 @@ def use_state(initial_state:_T_use_state) -> tuple[
             with View():
                 Button(
                     title="Add One",
-                    on_click: lambda _event: add_one
+                    on_click = lambda _event: add_one
                 )
                 for i = range(x):
                     Label(text=i)
