@@ -53,7 +53,7 @@ For such cases, you can use an asyncio `coroutine <https://docs.python.org/3/lib
 
 Consider this code::
 
-	@component
+    @component
     def MyComponent(self):
 
         results, set_results = use_state("")
@@ -76,7 +76,7 @@ In the mean time, if the user clicks the increment button, nothing will happen u
 To allow the rest of the application to run while the fetch is happening, you can define
 the :code:`on_click` handler as a coroutine::
 
-	@component
+    @component
     def MyComponent(self):
 
         results, set_results = use_state("")
@@ -84,10 +84,10 @@ the :code:`on_click` handler as a coroutine::
         loading, set_loading = use_state(False)
 
         async def on_click(self, e):
-        	set_loading(True)
+            set_loading(True)
             r = await fetch_from_network()
             set_results(r)
-        	set_loading(False)
+            set_loading(False)
 
         with edifice.View():
             edifice.Label(self.results)
