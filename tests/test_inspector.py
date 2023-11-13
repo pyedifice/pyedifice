@@ -40,8 +40,7 @@ class InspectorTestCase(unittest.TestCase):
         inspector_component._render_element()
         inspector.ElementView(comp_b)._render_element()
         inspector.StateView(comp_b)._render_element()
-        inspector.TreeView(root, root.__class__.__name__,
-                           lambda e: None, lambda: [], lambda: True,)._render_element()
+        inspector.TreeView(root, root.__class__.__name__, lambda e: None, lambda: [], True)._render_element()
         inspector.ElementLabel(
             root,
             on_click = lambda e: None)._render_element()

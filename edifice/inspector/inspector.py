@@ -1,4 +1,5 @@
 import inspect
+from typing import Any
 import edifice as ed
 from edifice.state import StateManager
 
@@ -30,7 +31,7 @@ class ElementLabel(InspectorElement):
         root = self.props.root
         on_click = self.props.on_click
         try:
-            selected = current_selection.subscribe(self, id(root)).value
+            selected = current_selection.subscribe(self, str(id(root))).value
         except KeyError:
             selected = False
         return ed.Label(root.__class__.__name__,
@@ -53,10 +54,10 @@ class Collapsible(InspectorElement):
 
     def _render_element(self):
         try:
-            selected = current_selection.subscribe(self, id(self.props.root)).value
+            selected = current_selection.subscribe(self, str(id(self.props.root))).value
         except KeyError:
             selected = False
-        root_style = {"margin-left": 5}
+        root_style: dict[str, Any] = {"margin-left": 5}
         if selected:
             root_style["background-color"] = SELECTION_COLOR
         return ed.View(layout="row", style={"align": "left"})(
@@ -178,7 +179,7 @@ class ElementView(InspectorElement):
         lineno = None
         try:
             lineno = inspect.getsourcelines(component.__class__)[1]
-        except:
+        except Exception:
             pass
         heading_style = {"font-size": "16px", "margin": 10, "margin-bottom": 0}
 
@@ -206,7 +207,7 @@ class Inspector(InspectorElement):
             "refresh": refresh,
         })
         super().__init__()
-        self.selected = None
+        self.selected: ed.Element | None = None
         self.component_tree = component_tree
         self.root_component = root_component
         self.must_refresh = False
@@ -224,8 +225,8 @@ class Inspector(InspectorElement):
         old_selection = self.selected
         self._set_state(selected=comp)
         current_selection.update({
-            id(comp): True,
-            id(old_selection): False
+            str(id(comp)): True,
+            str(id(old_selection)): False
         })
 
     def _build_tree(self, root, recurse_level=0):

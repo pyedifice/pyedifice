@@ -679,7 +679,8 @@ def component(f: Callable[tp.Concatenate[C,P], None]) -> Callable[P,Element]:
         def __repr__(self):
             return f.__name__
     ComponentElement.__name__ = f.__name__
-    return ComponentElement
+    comp = tp.cast(Callable[P, Element], ComponentElement)
+    return comp
 
 def find_components(el: Element | list[Element]) -> set[Element]:
     match el:
