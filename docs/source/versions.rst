@@ -8,7 +8,9 @@ Release Notes
 ----------------
 Released: 2023-11-13
 
-This version has a lot of breaking changes.
+This version has a lot of breaking changes. We have done essentially the same
+upgrade that React.js did when they upgraded to function components and Hooks
+in version 16.8.
 
 * :func:`component` render function decorator instead of :code:`Component`
   subclass. Renamed old :code:`Component` to :class:`Element`.
@@ -35,7 +37,7 @@ function, and calling :code:`self.set_state()` has has been deprecated.
 A new API
 for writing Elements with the :func:`component` decorator and :doc:`hooks` has replaced the
 old API. Most of the old API machinery still exists, but has been hidden
-from the public API.  If you want to upgrade
+from the public API. If you want to upgrade
 old code to this version but don’t want to completely re-write for the new
 API, then you can make a few changes and run your old code.
 

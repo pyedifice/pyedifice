@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pyedifice"
-version = "0.1.2"
+version = "0.2.0"
 description = "Declarative GUI framework for Python and Qt"
 authors = ["David Ding", "James Dawson Brock"]
 license = "MIT"
