@@ -27,6 +27,6 @@ numpy==1.24.4 ; python_version >= "3.8" and python_version < "3.12" \
     --hash=sha256:ed094d4f0c177b1b8e7aa9cba7d6ceed51c0e569a5318ac0ca9a090680a6a1b1 \
     --hash=sha256:f136bab9c2cfd8da131132c2cf6cc27331dd6fae65f95f69dcd4ae3c3639c810 \
     --hash=sha256:f3a86ed21e4f87050382c7bc96571755193c4c1392490744ac73d660e8f564a9
-qasync==0.24.0 ; python_version >= "3.8" and python_version < "3.12" \
-    --hash=sha256:a2baba622bed24c90179faae8f902dd0d2a9b01c82342f40b1149723182e0160 \
-    --hash=sha256:e583d1c3ae20fd12e908dee358c527709b480e78d57fb72ee57a94097307d959
+qasync==0.26.0 ; python_version >= "3.8" and python_version < "3.12" \
+    --hash=sha256:0d51daf21ad6ee84e306d19ba856e7e1ca4836e3504e7b22c9493dbd4c85b3a3 \
+    --hash=sha256:c2f73c39171981884699689fa6867a33aa1882220417d4f3949cd8499397f830
