@@ -188,4 +188,4 @@ def TodoMVC(self):
                 )
 
 if __name__ == "__main__":
-    App(TodoMVC(), application_name="TodoMVC", mount_into_window=False).start()
+    App(TodoMVC(), application_name="TodoMVC").start()

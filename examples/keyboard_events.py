@@ -15,8 +15,9 @@ def KeyboardEvents(self):
     def key_down(e):
         text_set(chr(e.key()))
 
-    with ed.View(on_key_down=key_down):
-        ed.Label(text)
+    with Window():
+        with ed.View(on_key_down=key_down):
+            ed.Label(text)
 
 if __name__ == "__main__":
     ed.App(KeyboardEvents()).start()

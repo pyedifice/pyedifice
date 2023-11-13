@@ -35,10 +35,11 @@ Copy this code into a new file, for example tutorial.py::
 
     @component
     def MyApp(self):
-        with View(layout="row"):  # Layout children in a row
-            Label("Measurement in meters:")
-            TextInput("")
-            Label("Measurement in feet:")
+        with Window(): # Top of every App must be a Window
+            with View(layout="row"): # Top Window must have one static child
+                Label("Measurement in meters:")
+                TextInput("")
+                Label("Measurement in feet:")
 
     if __name__ == "__main__":
         App(MyApp()).start()
@@ -98,10 +99,11 @@ For example::
         meters_label_style = {"width": 170}
         feet_label_style = {"margin-left": 20, "width": 200}
         input_style = {"padding": 2, "width": 120}
-        with View(layout="row", style={"margin": 10, "width": 560}):
-            Label("Measurement in meters:", style=meters_label_style)
-            TextInput("", style=input_style)
-            Label("Measurement in feet:", style=feet_label_style)
+        with Window():
+            with View(layout="row", style={"margin": 10, "width": 560}):
+                Label("Measurement in meters:", style=meters_label_style)
+                TextInput("", style=input_style)
+                Label("Measurement in feet:", style=feet_label_style)
 
     if __name__ == "__main__":
        App(MyApp()).start()
@@ -135,10 +137,12 @@ box and in the label are in sync::
         meters_label_style = {"width": 170}
         feet_label_style = {"margin-left": 20, "width": 200}
         input_style = {"padding": 2, "width": 120}
-        with View(layout="row", style={"margin": 10, "width": 560}):
-            Label("Measurement in meters:", style=meters_label_style)
-            TextInput(meters, style=input_style, on_change=meters_set)
-            Label(f"Measurement in feet: {feet}", style=feet_label_style)
+
+        with Window():
+            with View(layout="row", style={"margin": 10, "width": 560}):
+                Label("Measurement in meters:", style=meters_label_style)
+                TextInput(meters, style=input_style, on_change=meters_set)
+                Label(f"Measurement in feet: {feet}", style=feet_label_style)
 
     if __name__ == "__main__":
         App(MyApp()).start()
@@ -191,6 +195,7 @@ it for each measurement pair, we can factor out the conversion logic into its ow
         from_label_style = {"width": 170}
         to_label_style = {"margin-left": 60, "width": 200}
         input_style = {"padding": 2, "width": 120}
+
         with View(layout="row", style={"margin": 10, "width": 560}):
             Label(f"Measurement in {self.props.from_unit}:", style=from_label_style)
             TextInput(current_text, style=input_style, on_change=current_text_set)
@@ -198,9 +203,10 @@ it for each measurement pair, we can factor out the conversion logic into its ow
 
     @component
     def MyApp(self):
-        with View(layout="column", style={}):
-            ConversionWidget("meters", "feet", METERS_TO_FEET)
-            ConversionWidget("feet", "meters", 1 / METERS_TO_FEET)
+        with Window():
+            with View(layout="column", style={}):
+                ConversionWidget("meters", "feet", METERS_TO_FEET)
+                ConversionWidget("feet", "meters", 1 / METERS_TO_FEET)
 
     if __name__ == "__main__":
         App(MyApp()).start()

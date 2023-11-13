@@ -8,7 +8,7 @@ class MouseEvents(ed.Element):
         self.pressed = False
 
     def _render_element(self):
-        return ed.View()(
+        return ed.Window()(ed.View()(
             ed.View(style={"height": 200, "width": 200, "background-color": "red"},
                     on_mouse_enter=lambda e: self._set_state(entered=True),
                     on_mouse_leave=lambda e: self._set_state(entered=False),
@@ -21,4 +21,4 @@ class MouseEvents(ed.Element):
             ed.Label("Entered" if self.entered else ""),
             ed.Label("Pressed" if self.pressed else ""),
             ed.Label(self.pos),
-        )
+        ))

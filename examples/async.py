@@ -27,4 +27,4 @@ def AsyncElement(self):
         ed.Button("Update b", on_click=lambda e: set_b(lambda x: x+1))
 
 if __name__ == "__main__":
-    ed.App(AsyncElement()).start()
+    ed.App(ed.Window()(AsyncElement())).start()

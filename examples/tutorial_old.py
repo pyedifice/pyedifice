@@ -41,10 +41,10 @@ class ConversionWidget(ed.Element):
 class MyApp(ed.Element):
 
     def _render_element(self):
-        return ed.View(layout="column", style={})(
+        return ed.Window()(ed.View(layout="column", style={})(
             ConversionWidget("meters", "feet", METERS_TO_FEET),
             ConversionWidget("feet", "meters", 1 / METERS_TO_FEET),
-        )
+        ))
 
 if __name__ == "__main__":
     ed.App(MyApp()).start()

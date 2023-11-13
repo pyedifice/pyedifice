@@ -22,5 +22,5 @@ form_data = ed.StateManager({
 })
 
 
-ed.App(FormDialog(form_data)).start()
+ed.App(ed.Window()(FormDialog(form_data))).start()
 print(form_data.as_dict())
