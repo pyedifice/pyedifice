@@ -4,6 +4,7 @@ import inspect
 import typing as tp
 from typing_extensions import Self
 import threading
+from functools import wraps
 
 P = tp.ParamSpec("P")
 
@@ -657,6 +658,7 @@ def component(f: Callable[tp.Concatenate[C,P], None]) -> Callable[P,Element]:
 
     class ComponentElement(Element):
 
+        @wraps(f)
         def __init__(self, *args: P.args, **kwargs: P.kwargs):
             name_to_val = defaults.copy()
             name_to_val.update(filter(not_ignored, zip(varnames, args, strict=False)))
