@@ -413,6 +413,10 @@ class RenderEngine(object):
             del self._hook_async[component]
 
     def _refresh_by_class(self, classes) -> RenderResult:
+        # This refresh is done only for a hot reload. It refreshes all
+        # elements which were defined in a module which was changed
+        # on the filesystem.
+
         # Algorithm:
         # 1) Find all old components that's not a child of another component
 
