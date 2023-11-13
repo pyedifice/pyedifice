@@ -26,8 +26,8 @@ class _PushButton(QPushButton):
         return self.layout().sizeHint()
     def hasHeightForWidth(self) -> bool:
         return self.layout().hasHeightForWidth()
-    def heightForWidth(self) -> int:
-        return self.layout().heightForWidth()
+    def heightForWidth(self, width: int) -> int:
+        return self.layout().heightForWidth(width)
     def minimumSizeHint(self) -> QSize:
         return self.layout().totalMinimumSize()
 
@@ -45,7 +45,7 @@ class ButtonView(View):
             Use either this or :code:`on_click`, not both.
     """
     def __init__(self,
-            layout: tp.Literal["row", "column"] | None = "row",
+            layout: tp.Literal["row", "column", "none"] | None = "row",
             on_trigger: tp.Callable[[QKeyEvent], None] | tp.Callable[[QMouseEvent], None] | None = None,
             **kwargs):
         self._register_props({
@@ -53,6 +53,8 @@ class ButtonView(View):
             "on_trigger": on_trigger,
         })
         self._register_props(kwargs)
+        if layout is None:
+            layout = "none"
         super().__init__(layout, **kwargs)
 
     def _initialize(self):
@@ -93,6 +95,7 @@ class ButtonView(View):
     def _qt_update_commands(self, children, newprops, newstate):
         if self.underlying is None:
             self._initialize()
+        assert self.underlying is not None
         commands = super()._qt_update_commands(children, newprops, newstate)
         for prop in newprops:
             if prop == "on_trigger":
