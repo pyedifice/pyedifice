@@ -11,7 +11,7 @@ else:
 
 try:
     MATPLOTLIB_LOADED = True
-    from matplotlib.backends.backend_qtagg import FigureCanvasQT as FigureCanvas
+    from matplotlib.backends.backend_qtagg import FigureCanvas
     from matplotlib.figure import Figure as MatplotlibFigure
 except ImportError:
     MATPLOTLIB_LOADED = False
