@@ -20,8 +20,8 @@ else:
 
 from qasync import QEventLoop
 
-from ._component import Element
-from .base_components import Window
+from ._component import Element, RootElement
+from .base_components import Window, QtWidgetElement, ExportList
 from .engine import RenderEngine
 from .inspector import inspector
 
@@ -110,7 +110,7 @@ class App(object):
     """
 
     def __init__(self,
-            root_element: Element,
+            root_element: RootElement,
             inspector: bool = False,
             create_application: bool = True,
             application_name: str | None = None,
@@ -127,7 +127,7 @@ class App(object):
         else:
             self.app : QtWidgets.QApplication = qapplication
 
-        self._root = root_element
+        self._root : RootElement = root_element
         self._render_engine = RenderEngine(self._root, self)
         self._logger = _RateLimitedLogger(1)
         self._render_timing = _TimingAvg()
@@ -277,42 +277,40 @@ class App(object):
         self.app.setStyleSheet(stylesheet)
         return self
 
-    def export_widgets(self):
-        """Exports the Qt widgets underlying the Edifice Element.
+    def export_widgets(self) -> list[QtWidgets.QWidget]:
+        """Exports the underlying Qt :code:`QWidgets` s from the components
+        in the :class:`ExportList`.
 
-        Depending on how the root component is defined, either one or multiple
-        widgets are returned
-        (for example, if your root component returns a list of Views,
-        export_widgets will return a list of widgets).
-        These widgets are still managed by Edifice:
+        Returns a list of `QtWidgets.QWidget <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html>`_.
+
+        These :code:`QWidget` s are still managed by Edifice,
         they will still benefit from full reactivity and state consistency.
-        You can mount these widgets to your pre-existing Qt Application this way::
+        You can mount these widgets to your pre-existing Qt application this way::
 
             # Suppose parent_widget is defined in Qt code.
-            app = edifice.App(MyAwesomeElement())
-            widget = app.export_widgets()
-            widget.setParent(parent_widget)
+
+            @component
+            def export_components(self):
+                with ExportList():
+                    MyAwesomeComponent()
+
+            widgets = edifice.App(export_components).export_widgets()
+            widget[0].setParent(parent_widget)
 
         Args:
             None
-        Returns:
-            One or multiple QtWidgets.QWidget objects.
+
         """
         self._request_rerender([self._root], {})
-        def _make_widget_helper(comp):
-            try:
-                underlying = comp.underlying
-            except AttributeError:
-                underlying = None
-            if underlying is None:
-                comps = self._render_engine._widget_tree[comp].children
-                if len(comps) > 1:
-                    return [_make_widget_helper(c.component) for c in comps]
-                return _make_widget_helper(comps[0].component)
-
-            return underlying
-
-        return _make_widget_helper(self._root)
+        exportlist = self._render_engine._widget_tree[self._root]
+        if isinstance(exportlist.component, ExportList):
+            widgets = []
+            for e in exportlist.children:
+                if isinstance(e.component, QtWidgetElement):
+                    widgets.append(e.component.underlying)
+            return widgets
+        else:
+            raise RuntimeError("The root element of the App for export_widgets() must be an ExportList")
 
     def start(self) -> tp.Any:
         """

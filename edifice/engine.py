@@ -9,7 +9,7 @@ from textwrap import dedent
 from dataclasses import dataclass
 
 from ._component import (
-    BaseElement, Element, PropsDict, _CommandType, _Tracker, local_state, Container,
+    BaseElement, RootElement, Element, PropsDict, _CommandType, _Tracker, local_state, Container,
 )
 
 logger = logging.getLogger("Edifice")
@@ -351,7 +351,7 @@ class RenderEngine(object):
     """
     The per-element hooks for use_async().
     """
-    def __init__(self, root, app=None):
+    def __init__(self, root:RootElement, app=None):
         self._component_tree = {}
         """
         The _component_tree maps a component to the root component(s) it renders

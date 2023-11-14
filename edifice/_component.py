@@ -322,11 +322,11 @@ class Element:
         self._props["children"] = prop
 
     def _register_props(self, props: tp.Mapping[tp.Text, tp.Any]) -> None:
-        # """Register props.
+        """Register props.
 
-        # Args:
-        #     props: a dictionary representing the props to register.
-        # """
+        Args:
+            props: a dictionary representing the props to register.
+        """
         if not hasattr(self, "_props"):
             self._props = {"children": []}
         self._props.update(props)
@@ -439,15 +439,15 @@ class Element:
         super().__setattr__(k, v)
 
     def _set_state(self, **kwargs):
-        # """Set state and render changes.
+        """Set state and render changes.
 
-        # The keywords are the names of the state attributes of the class, e.g.
-        # for the state :code:`self.mystate`, you call :code:`set_state(mystate=2)`.
+        The keywords are the names of the state attributes of the class, e.g.
+        for the state :code:`self.mystate`, you call :code:`set_state(mystate=2)`.
 
-        # At the end of this call, all changes will be rendered.
-        # All changes are guaranteed to appear atomically: upon exception,
-        # no changes to state will occur.
-        # """
+        At the end of this call, all changes will be rendered.
+        All changes are guaranteed to appear atomically: upon exception,
+        no changes to state will occur.
+        """
         should_update = self._should_update(PropsDict({}), kwargs)
         old_vals = {}
         try:
@@ -466,23 +466,23 @@ class Element:
             raise e
 
     def _should_update(self, newprops: PropsDict, newstate: tp.Mapping[tp.Text, tp.Any]) -> bool:
-        # """Determines if the Element should rerender upon receiving new props and state.
+        """Determines if the Element should rerender upon receiving new props and state.
 
-        # The arguments, :code:`newprops` and :code:`newstate`, reflect the
-        # props and state that change: they
-        # may be a subset of the props and the state. When this function is called,
-        # all props and state of this Element are the old values, so you can compare
-        # :code:`self.props` to :code:`newprops` and :code`self` to :code:`newstate`
-        # to determine changes.
+        The arguments, :code:`newprops` and :code:`newstate`, reflect the
+        props and state that change: they
+        may be a subset of the props and the state. When this function is called,
+        all props and state of this Element are the old values, so you can compare
+        :code:`self.props` to :code:`newprops` and :code`self` to :code:`newstate`
+        to determine changes.
 
-        # By default, this function returns :code:`True`, even if props and state are unchanged.
+        By default, this function returns :code:`True`, even if props and state are unchanged.
 
-        # Args:
-        #     newprops: the new set of props
-        #     newstate: the new set of state
-        # Returns:
-        #     Whether or not the Element should be rerendered.
-        # """
+        Args:
+            newprops: the new set of props
+            newstate: the new set of state
+        Returns:
+            Whether or not the Element should be rerendered.
+        """
 
         for k,v in newprops._items:
             v2 = self.props._get(k, None)
@@ -499,35 +499,35 @@ class Element:
 
     def _did_mount(self):
         pass
-        # """Callback function that is called when the Element mounts for the first time.
+        """Callback function that is called when the Element mounts for the first time.
 
-        # Override if you need to do something after the Element mounts
-        # (e.g. start a timer).
-        # """
+        Override if you need to do something after the Element mounts
+        (e.g. start a timer).
+        """
 
     def _did_update(self):
         pass
-        # """Callback function that is called whenever the Element updates.
+        """Callback function that is called whenever the Element updates.
 
-        # *This is not called after the first render.*
-        # Override if you need to do something after every render except the first.
-        # """
+        *This is not called after the first render.*
+        Override if you need to do something after every render except the first.
+        """
 
     def _did_render(self):
         pass
-        # """Callback function that is called whenever the Element renders.
+        """Callback function that is called whenever the Element renders.
 
-        # It will be called on both renders and updates.
-        # Override if you need to do something after every render.
-        # """
+        It will be called on both renders and updates.
+        Override if you need to do something after every render.
+        """
 
     def _will_unmount(self):
         pass
-        # """Callback function that is called when the Element will unmount.
+        """Callback function that is called when the Element will unmount.
 
-        # Override if you need to clean up some state, e.g. stop a timer,
-        # close a file.
-        # """
+        Override if you need to clean up some state, e.g. stop a timer,
+        close a file.
+        """
 
     def __call__(self, *args):
         children = []

@@ -54,7 +54,8 @@ class StyleTestCase(unittest.TestCase):
 
     def test_margin_layout(self):
         class Layout(object):
-            setContentsMargins = "setContentsMargins"
+            def setContentsMargins(self,a,b,c,d):
+                pass
             setAlignment = "setAlignment"
         style = {
             "margin-left": "10px",
@@ -66,7 +67,7 @@ class StyleTestCase(unittest.TestCase):
         self.assertTrue("margin" not in style)
         self.assertCountEqual(
             commands,
-            [_CommandType(layout.setContentsMargins, 10.0, 5.0, 5.0, 5.0),
+            [_CommandType(layout.setContentsMargins, 10, 5, 5, 5),
              _CommandType(comp.underlying.setStyleSheet, "QWidget#%s{}" % id(comp))]
         )
 
@@ -82,13 +83,14 @@ class StyleTestCase(unittest.TestCase):
         self.assertTrue("margin" not in style)
         self.assertCountEqual(
             commands,
-            [_CommandType(layout.setContentsMargins, 10, 9.0, 8, 9.0),
+            [_CommandType(layout.setContentsMargins, 10, 9, 8, 9),
              _CommandType(comp.underlying.setStyleSheet, "QWidget#%s{}" % id(comp))]
         )
 
     def test_align_layout(self):
         class Layout(object):
-            setContentsMargins = "setContentsMargins"
+            def setContentsMargins(self,a,b,c,d):
+                pass
             setAlignment = "setAlignment"
 
         def _test_for_align(align, qt_align):
@@ -381,6 +383,6 @@ class BaseElementsTest(unittest.TestCase):
         self._test_comp(base_components.Slider(value=1, min_value=0, max_value=3, on_change=lambda value: None))
         self._test_comp(base_components.ScrollView(layout="row"))
         self._test_comp(base_components.GridView(layout=""))
-        self._test_comp(base_components.List())
+        self._test_comp(base_components.ExportList())
         self._test_comp(base_components.GroupBox(title="Group")(base_components.View()))
         self._test_comp(base_components.TabView(labels=["Tab 1", "Tab 2"])(base_components.Label(), base_components.Label()))
