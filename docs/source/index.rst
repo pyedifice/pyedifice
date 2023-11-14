@@ -23,10 +23,14 @@ Declarative GUI framework for Python and Qt
 .. code-block:: python
     :caption: *Hello World* in Edifice
 
-    import edifice
-    from edifice import App, Label
+    from edifice import App, Window, Label, component
 
-    App(Window()(Label("Hello World!"))).start()
+    @component
+    def HelloWorld(self):
+        with Window():
+            Label("Hello World!")
+
+    App(HelloWorld()).start()
 
 Edifice is a Python library for building declarative application user interfaces.
 

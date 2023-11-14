@@ -207,4 +207,4 @@ def App(self):
 # Finally to start the the app, we pass the Element to the edifice.App object
 # and call the start function to start the event loop.
 if __name__ == "__main__":
-    ed.App(App(), inspector=False).start()
+    ed.App(App()).start()

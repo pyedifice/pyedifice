@@ -87,9 +87,10 @@ class _TableGridViewRow(BaseElement):
     # def render(self):
 
 class TableGridView(QtWidgetElement):
-    """Table-style grid layout widget. The underlying
-    `QGridLayout <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGridLayout.html>`_
-    displays its children as aligned rows of columns.
+    """Table-style grid layout displays its children as aligned rows of columns.
+
+    * Underlying Qt Layout
+      `QGridLayout <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGridLayout.html>`_
 
     This component has similar behavior to an `HTML
     table <https://developer.mozilla.org/en-US/docs/Web/HTML/Element/table>`_.

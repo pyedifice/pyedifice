@@ -1,9 +1,12 @@
+import sys, os
+# We need this sys.path line for running this example, especially in VSCode debugger.
+sys.path.insert(0, os.path.join(sys.path[0], '..'))
 import edifice
 from edifice import View, Label, TextInput
 
-class App(edifice.Element):
+class MyApp(edifice.Element):
     def __init__(self):
-        super(App, self).__init__()
+        super(MyApp, self).__init__()
         self.text = ""
 
     def _render_element(self):
@@ -16,4 +19,4 @@ class App(edifice.Element):
         )
 
 if __name__ == "__main__":
-    edifice.App(edifice.Window(App())).start()
+    edifice.App(edifice.Window()(MyApp())).start()
