@@ -636,7 +636,7 @@ class QtWidgetElement(WidgetElement):
 
 class Window(RootElement):
     """
-	The root element of an :class:`App` which runs in an operating system
+    The root element of an :class:`App` which runs in an operating system
     window.
 
     The Window must have exactly one child, and the child must not change.
