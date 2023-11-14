@@ -18,16 +18,11 @@ import edifice.icons
 ICONS = importlib.resources.files(edifice.icons)
 
 if QT_VERSION == "PyQt6" and not tp.TYPE_CHECKING:
-    from PyQt6 import QtWidgets
-    from PyQt6 import QtSvg, QtGui
-    from PyQt6 import QtCore
+    from PyQt6 import QtCore, QtWidgets, QtSvg, QtGui, QtSvgWidgets
 else:
     from PySide6 import QtCore, QtWidgets, QtSvg, QtGui, QtSvgWidgets
 
 logger = logging.getLogger("Edifice")
-
-Key = QtCore.Qt.Key
-_UnderlyingType = QtWidgets.QWidget
 
 def _ensure_future(fn):
     # Ensures future if fn is a coroutine, otherwise don't modify fn
@@ -47,7 +42,6 @@ def _dict_to_style(d, prefix="QWidget"):
     d = d or {}
     stylesheet = prefix + "{%s}" % (";".join("%s: %s" % (k, v) for (k, v) in d.items()))
     return stylesheet
-
 
 def _array_to_pixmap(arr):
     try:
@@ -224,7 +218,7 @@ class QtWidgetElement(WidgetElement):
 
     """
 
-    underlying: _UnderlyingType | None
+    underlying: QtWidgets.QWidget | None
     """
     The underlying QWidget, which may not exist if this Element has not rendered.
     """
@@ -347,7 +341,7 @@ class QtWidgetElement(WidgetElement):
         if self._on_click:
             self._on_click(ev)
 
-    def _set_on_click(self, underlying: _UnderlyingType, on_click):
+    def _set_on_click(self, underlying: QtWidgets.QWidget, on_click):
         assert self.underlying is not None
         # FIXME: Should this not use `underlying`?
         if on_click is not None:
@@ -361,7 +355,7 @@ class QtWidgetElement(WidgetElement):
             self._default_mouse_release_event = self.underlying.mouseReleaseEvent
         self.underlying.mouseReleaseEvent = self._mouse_release
 
-    def _set_on_key_down(self, underlying: _UnderlyingType, on_key_down):
+    def _set_on_key_down(self, underlying: QtWidgets.QWidget, on_key_down):
         assert self.underlying is not None
         if self._default_on_key_down is None:
             self._default_on_key_down = self.underlying.keyPressEvent
@@ -371,7 +365,7 @@ class QtWidgetElement(WidgetElement):
             self._on_key_down = self._default_on_key_down
         self.underlying.keyPressEvent = self._on_key_down
 
-    def _set_on_key_up(self, underlying: _UnderlyingType, on_key_up):
+    def _set_on_key_up(self, underlying: QtWidgets.QWidget, on_key_up):
         assert self.underlying is not None
         if self._default_on_key_up is None:
             self._default_on_key_up = self.underlying.keyReleaseEvent
@@ -381,7 +375,7 @@ class QtWidgetElement(WidgetElement):
             self._on_key_up = self._default_on_key_up
         self.underlying.keyReleaseEvent = self._on_key_up
 
-    def _set_on_mouse_down(self, underlying: _UnderlyingType, on_mouse_down):
+    def _set_on_mouse_down(self, underlying: QtWidgets.QWidget, on_mouse_down):
         assert self.underlying is not None
         if on_mouse_down is not None:
             self._on_mouse_down = _ensure_future(on_mouse_down)
@@ -391,7 +385,7 @@ class QtWidgetElement(WidgetElement):
             self._default_mouse_press_event = self.underlying.mousePressEvent
         self.underlying.mousePressEvent = self._mouse_press
 
-    def _set_on_mouse_up(self, underlying: _UnderlyingType, on_mouse_up):
+    def _set_on_mouse_up(self, underlying: QtWidgets.QWidget, on_mouse_up):
         assert self.underlying is not None
         if on_mouse_up is not None:
             self._on_mouse_up = _ensure_future(on_mouse_up)
@@ -401,7 +395,7 @@ class QtWidgetElement(WidgetElement):
             self._default_mouse_release_event = self.underlying.mouseReleaseEvent
         self.underlying.mouseReleaseEvent = self._mouse_release
 
-    def _set_on_mouse_enter(self, underlying: _UnderlyingType, on_mouse_enter):
+    def _set_on_mouse_enter(self, underlying: QtWidgets.QWidget, on_mouse_enter):
         assert self.underlying is not None
         if self._default_mouse_enter_event is None:
             self._default_mouse_enter_event = self.underlying.enterEvent
@@ -412,7 +406,7 @@ class QtWidgetElement(WidgetElement):
             self._on_mouse_enter = None
             self.underlying.enterEvent = self._default_mouse_enter_event
 
-    def _set_on_mouse_leave(self, underlying: _UnderlyingType, on_mouse_leave):
+    def _set_on_mouse_leave(self, underlying: QtWidgets.QWidget, on_mouse_leave):
         assert self.underlying is not None
         if self._default_mouse_leave_event is None:
             self._default_mouse_leave_event = self.underlying.leaveEvent
@@ -423,7 +417,7 @@ class QtWidgetElement(WidgetElement):
             self.underlying.leaveEvent = self._default_mouse_leave_event
             self._on_mouse_leave = None
 
-    def _set_on_mouse_move(self, underlying: _UnderlyingType, on_mouse_move):
+    def _set_on_mouse_move(self, underlying: QtWidgets.QWidget, on_mouse_move):
         assert self.underlying is not None
         if self._default_mouse_move_event is None:
             self._default_mouse_move_event = self.underlying.mouseMoveEvent
@@ -435,7 +429,13 @@ class QtWidgetElement(WidgetElement):
             self._on_mouse_move = None
             self.underlying.mouseMoveEvent = self._default_mouse_move_event
 
-    def _gen_styling_commands(self, children, style, underlying, underlying_layout=None):
+    def _gen_styling_commands(
+        self,
+        children,
+        style,
+        underlying: QtWidgets.QWidget,
+        underlying_layout: QtWidgets.QLayout | None = None,
+    ):
         commands: list[_CommandType] = []
 
         if underlying_layout is not None:
@@ -552,7 +552,7 @@ class QtWidgetElement(WidgetElement):
         commands.append(_CommandType(self.underlying.setStyleSheet, css_string))
         return commands
 
-    def _set_context_menu(self, underlying: _UnderlyingType):
+    def _set_context_menu(self, underlying: QtWidgets.QWidget):
         if self._context_menu_connected:
             underlying.customContextMenuRequested.disconnect()
         self._context_menu_connected = True
@@ -571,8 +571,8 @@ class QtWidgetElement(WidgetElement):
         children,
         newprops,
         newstate,
-        underlying: _UnderlyingType,
-        underlying_layout=None
+        underlying: QtWidgets.QWidget,
+        underlying_layout: QtWidgets.QLayout | None = None
     ) -> list[_CommandType]:
         commands: list[_CommandType] = []
         for prop in newprops:
