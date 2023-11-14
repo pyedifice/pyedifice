@@ -33,11 +33,11 @@ Edifice is a Python library for building declarative application user interfaces
 - Modern **declarative** UI paradigm from web development.
 - **100% Python** application development, no language inter-op.
 - A **native** desktop app instead of a bundled web browser.
-- Fast iteration via **hot reloading**.
+- Fast iteration via **hot-reloading**.
 
 This modern declarative UI paradigm is also known as
-“`Model-View-Update <https://thomasbandt.com/model-view-update>`_,”
-or “`The Elm Architecture <https://guide.elm-lang.org/architecture/>`_.”
+“`The Elm Architecture <https://guide.elm-lang.org/architecture/>`_,”
+or “`Model-View-Update <https://thomasbandt.com/model-view-update>`_.”
 
 Edifice uses `PySide6 <https://doc.qt.io/qtforpython-6/>`_
 or `PyQt6 <https://www.riverbankcomputing.com/static/Docs/PyQt6/introduction.html>`_
@@ -58,60 +58,66 @@ see :doc:`edifice`.
 Why Edifice?
 ------------
 
+**Declarative**
+
 The premise of Edifice is that
 GUI designers should only need to worry about *what* is rendered on the screen,
 not *how* the content is rendered.
+
 Most existing GUI libraries in Python, such as Tkinter and Qt, operate imperatively.
 To create a dynamic application using these libraries,
-you must not only think about what to display to the user given state changes,
-but also how to issue the commands to achieve the desired effect.
+you must not only think about *what* to display to the user given state changes,
+but also *how* to issue the commands to achieve the desired display.
 
-Edifice allows you to describe what should be rendered given the current state,
-leaving the how to the library.
+Edifice allows you to declare *what* should be rendered given the current state,
+leaving the *how* to the library.
+
 User interactions update the state, and state changes update the GUI.
 You only need to specify what is to be displayed given the current state and how
 user interactions modify this state.
-Edifice will ensure that
-the displayed widgets always correspond to the internal state.
-For example, you can write:
+
+With Edifice you write code like:
 
 .. code-block:: python
 
     number, set_number = use_state(0)
 
     with View():
-        Button("Add 5", on_click=set_number(number + 5)
+        Button("Add 5", on_click=lambda event: set_number(number+5))
         Label(str(number))
 
 and get the expected result: the GUI always displays
 a button and a label displaying the current value of :code:`number`.
-Clicking the button adds 5 to the number,
+Clicking the button adds 5 to the :code:`number`,
 and Edifice will handle updating the GUI.
 
-Edifice is designed to make GUI applications easier for humans to reason about.
-Thus, the displayed GUI always reflect the internal state,
-even if an exception occurs part way through rendering —
-in that case, the state changes are unwound,
-the display is unchanged.
+**Developer Tools**
 
 Declarative UIs are also easier for developer tools to work with.
 Edifice provides two key features to make development easier:
 
-- Dynamic reloading of changed source code. This is especially useful for tweaking the looks of your application, allowing you to test if the margin should be 10px or 15px instantly without closing the app, reopening it, and waiting for everything to load.
-- Element inspector. Similar to the Inspect Elements tool of a browser, the component inspector will show you all Elements in your application along with the props and state, allowing you to examine the internal state of your complex component without writing a million print statements.
-  Since the UI is specified as a (pure) function of state, the state you see completely describes your application,
-  and you can even do things like rewinding to a previous state.
+- Dynamic hot-reloading of changed source code.
+- Element inspector.
 
-QML is another declarative GUI framework for Qt. Edifice differs from QML in these aspects:
+See :doc:`developer_tools` for more details.
 
-- Edifice interfaces are created purely in Python, whereas QML is written using a custom markup language.
-- Because Edifice interfaces are built in Python code, binding Python code to the declared UI is much more straightforward.
-- Edifice makes it easy to create dynamic applications. It's easy to create, shuffle, and destroy widgets because the interface is written in Python code. QML assumes a much more static interface.
+**Edifice vs. QML**
+
+`QML <https://doc.qt.io/qtforpython-6/overviews/qmlapplications.html>`_ is Qt’s declarative GUI framework for Qt.
+Edifice differs from QML in these aspects:
+
+- Edifice programs are written purely in Python, whereas QML programs are written
+  in Python + a special QML language + JavaScript.
+- Because Edifice interfaces are built in Python code, binding the code to the declared UI is much more straightforward.
+- Edifice makes it easy to create dynamic applications. It's easy to create, shuffle, and destroy widgets
+  because the interface is written in Python code. QML assumes a much more static interface.
 
 An analogy is, QML is like HTML + JavaScript, whereas Edifice is like React.js.
 While QML and HTML are both declarative UI frameworks,
 they require imperative logic to add dynamism.
 Edifice and React allow fully dynamic applications to be specified declaratively.
+
+**Extendable**
 
 Edifice is still currently under development, and some Qt widgets/functionality are not supported.
 However, it is easy to interface with Qt, either :ref:`incorporating a Qt Widget<custom_widget>` into an Edifice component,

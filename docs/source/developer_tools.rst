@@ -3,12 +3,8 @@ Developer Tools
 
 The declarative nature of Edifice makes it easy for development tools
 to introspect application code.
-Edifice comes with two tools to aid in development:
 
-- Dynamic reloading: changes in source file will automatically be reloaded by the App. This is especially for adjusting styling and testing out layouts.
-- Element inspector: say goodbye to (most but not all) print statements. You can look at the state and props of every component to diagnose what went wrong.
-
-Dynamic reloading
+Dynamic hot-reload
 -----------------
 
 .. figure:: /image/edifice-workflow.gif
@@ -51,13 +47,13 @@ saving you the time of navigating through your app to get to the changed widget.
 Running your app through Edifice is extremely simple.
 On the command line::
 
-    python -m edifice path/to/your/app.py RootElement
+    python -m edifice path/to/your/app.py MyRootElement
 
-This will run app.py, mounting the specified Element as the root,
+This will run :code:`app.py`, mounting the :code:`MyRootElement` as the root,
 listening to changes to all Python files contained in
 path/to/your (and recursively in all sub directories)
 and dynamically reloading all changes.
-If you want to explicitly specify another path to listen to, use the --dir flag::
+If you want to explicitly specify another path to listen to, use the :code:`--dir` flag::
 
     python -m edifice --dir directory/to/watch path/to/your/app.py RootElement
 
