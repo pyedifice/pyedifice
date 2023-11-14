@@ -4,7 +4,7 @@ import os
 import signal
 # We need this sys.path line for running this example, especially in VSCode debugger.
 sys.path.insert(0, os.path.join(sys.path[0], '..'))
-from edifice import App, Window, Button, View, Label, component
+from edifice import App, Window, Button, ButtonView, View, Label, Icon, component
 from edifice.hooks import use_state, use_effect
 
 
@@ -22,6 +22,14 @@ def Main(self):
 
     with Window():
         with View():
+            with View(style={"margin":30}):
+                with ButtonView(
+                    layout="row",
+                    on_click=lambda event: None,
+                    style={"margin": 10},
+                ):
+                    Icon(name="share", style={"margin": 10})
+                    Label(text="<i>Share the Content<i>")
             Button(
                 title="asd + 1",
                 on_click=lambda ev: x_set(x+1),
@@ -29,6 +37,7 @@ def Main(self):
             Label("asd " + str(x))
             for i in range(x):
                 Label(text=str(i))
+
 
 if __name__ == "__main__":
     my_app = App(Main())

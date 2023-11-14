@@ -36,7 +36,19 @@ class ButtonView(View):
     """
     A Button where the label is the Button’s children rendered in a :class:`edifice.View`.
 
-    Inherits all the props from :class:`edifice.QtWidgetElement`.
+    * Underlying Qt Widget
+      `QPushButton <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QPushButton.html>`_
+
+    Example::
+
+        with ButtonView(
+            layout="row",
+            on_click=handle_click,
+        ):
+            Icon(name="share")
+            Label(text="<i>Share the Content<i>")
+
+    .. figure:: /image/button_view.png
 
     Args:
         on_trigger:

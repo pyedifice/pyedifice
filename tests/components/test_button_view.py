@@ -1,6 +1,6 @@
 import unittest
 
-import edifice
+from edifice import Window, Label, ButtonView, App, component, Icon
 
 from edifice.qt import QT_VERSION
 if QT_VERSION == "PyQt6":
@@ -14,8 +14,16 @@ if QtWidgets.QApplication.instance() is None:
 class FormTest(unittest.TestCase):
 
     def test_ButtonView_render(self):
-        v = edifice.ButtonView()(edifice.Label(text="FlowView"))
-        my_app = edifice.App(v, create_application=False)
+        @component
+        def v(self):
+            with ButtonView(
+                layout="row",
+                on_click=lambda event: None,
+            ):
+                Icon(name="share")
+                Label(text="<i>Share the Content<i>")
+
+        my_app = App(v(), create_application=False)
         with my_app.start_loop() as loop:
             loop.call_later(0.1, loop.stop)
             loop.run_forever()

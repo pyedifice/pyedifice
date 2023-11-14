@@ -351,7 +351,7 @@ class RenderEngine(object):
     """
     The per-element hooks for use_async().
     """
-    def __init__(self, root:RootElement, app=None):
+    def __init__(self, root:Element, app=None):
         self._component_tree = {}
         """
         The _component_tree maps a component to the root component(s) it renders

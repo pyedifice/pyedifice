@@ -107,7 +107,7 @@ class App(object):
     """
 
     def __init__(self,
-            root_element: RootElement,
+            root_element: Element,
             inspector: bool = False,
             create_application: bool = True,
             application_name: str | None = None,
@@ -124,7 +124,7 @@ class App(object):
         else:
             self.app : QtWidgets.QApplication = qapplication
 
-        self._root : RootElement = root_element
+        self._root : Element = root_element
         self._render_engine = RenderEngine(self._root, self)
         self._logger = _RateLimitedLogger(1)
         self._render_timing = _TimingAvg()

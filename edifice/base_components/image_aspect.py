@@ -44,6 +44,9 @@ class ImageAspect(QtWidgetElement):
     """An image widget which scales the image to fit inside the widget,
     while keeping the image aspect ratio fixed.
 
+    * Underlying Qt Layout
+      `QLabel <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QLabel.html>`_
+
     Args:
         src: either the path to the image, or an np array. The np array must be 3 dimensional (height, width, channels)
     """

@@ -668,6 +668,11 @@ class Window(RootElement):
         })
         super().__init__()
 
+        # Window.underlying is always None. Instead it uses the
+        # _previous_rendering.underlying, which is the first child of
+        # Whatever element it rendered to?
+        # Why do we even need Window?
+
         self._previous_rendering = None
         # self._on_click = None
         self._menu_bar = None
@@ -732,6 +737,10 @@ class Window(RootElement):
 
 
 class GroupBox(QtWidgetElement):
+    """
+    Underlying
+    `QGroupBox <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGroupBox.html>`_
+    """
 
     def __init__(self, title):
         self._register_props({
@@ -758,7 +767,10 @@ class GroupBox(QtWidgetElement):
         return commands
 
 class Icon(QtWidgetElement):
-    """Display an Icon
+    """Display an Icon.
+
+    * Underlying Qt Widget
+      `QLabel <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QLabel.html>`_
 
     .. figure:: /image/icons.png
        :width: 300
@@ -843,6 +855,9 @@ class Icon(QtWidgetElement):
 class Button(QtWidgetElement):
     """Basic button widget.
 
+    * Underlying Qt Widget
+      `QPushButton <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QPushButton.html>`_
+
     .. figure:: /image/textinput_button.png
        :width: 300
 
@@ -885,6 +900,9 @@ class Button(QtWidgetElement):
 
 class IconButton(Button):
     """Display an Icon Button.
+
+    * Underlying Qt Widget
+      `QPushButton <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QPushButton.html>`_
 
     .. figure:: /image/icons.png
        :width: 300
@@ -957,10 +975,14 @@ class IconButton(Button):
 class Label(QtWidgetElement):
     """Basic widget for displaying text.
 
+    * Underlying Qt Widget
+      `QLabel <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QLabel.html>`_
+
     .. figure:: /image/label.png
        :width: 500
 
-       Three different label objects. You can embed HTML in labels to get rich text formatting.
+    You can render rich text with the
+    `Qt supported HTML subset <https://doc.qt.io/qtforpython-6/overviews/richtext-html-subset.html>`_.
 
     Args:
         text: the text to display. Can be any Python type; the text prop is converted to a string using str before being displayed
@@ -1033,6 +1055,9 @@ class Label(QtWidgetElement):
 class Image(QtWidgetElement):
     """An image container.
 
+    * Underlying Qt Widget
+      `QLabel <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QLabel.html>`_
+
     Args:
         src: either the path to the image, or an RGB np array, or a QtGui.QImage. The np array must be 3 dimensional (height, width, channels)
         scale_to_fit: if True, the image will be scaled to fit inside the container.
@@ -1066,6 +1091,9 @@ class Image(QtWidgetElement):
 
 class ImageSvg(QtWidgetElement):
     """An SVG Image container.
+
+    * Underlying Qt Widget
+      `QSvgWidget <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QSvgWidget.html>`_
 
     Args:
         src: the path to the SVG image.
@@ -1129,6 +1157,9 @@ class Completer(object):
 
 class TextInput(QtWidgetElement):
     """Basic widget for a one line text input.
+
+    * Underlying Qt Widget
+      `QLineEdit <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QLineEdit.html>`_
 
     .. figure:: /image/textinput_button.png
        :width: 300
@@ -1230,6 +1261,9 @@ class TextInput(QtWidgetElement):
 
 class Dropdown(QtWidgetElement):
     """Basic widget for a dropdown menu.
+
+    * Underlying Qt Widget
+      `QComboBox <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QComboBox.html>`_
 
     .. figure:: /image/checkbox_dropdown.png
        :width: 300
@@ -1341,6 +1375,9 @@ class Dropdown(QtWidgetElement):
 class RadioButton(QtWidgetElement):
     """Radio buttons.
 
+    * Underlying Qt Widget
+      `QRadioButton <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QRadioButton.html>`_
+
     .. figure:: /image/radio_button.png
        :width: 300
 
@@ -1407,6 +1444,9 @@ class RadioButton(QtWidgetElement):
 
 class CheckBox(QtWidgetElement):
     """Checkbox widget.
+
+    * Underlying Qt Widget
+      `QCheckBox <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QCheckBox.html>`_
 
     .. figure:: /image/checkbox_dropdown.png
        :width: 300
@@ -1484,6 +1524,9 @@ NumericType = tp.Union[float, int]
 
 class Slider(QtWidgetElement):
     """Slider bar widget.
+
+    * Underlying Qt Widget
+      `QSlider <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QSlider.html>`_
 
     .. figure:: /image/slider.png
        :width: 300
@@ -1650,7 +1693,13 @@ class _LinearView(QtWidgetElement):
 class View(_LinearView):
     """Basic layout widget for grouping children together.
 
-    Content that does not fit into the `View` layout will be clipped.
+    * Underlying Qt Layout
+      `QVBoxLayout <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QVBoxLayout.html>`_
+      or
+      `QHBoxLayout <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QHBoxLayout.html>`_
+      or :code:`None`
+
+    Content that does not fit into the View layout will be clipped.
     To allow scrolling in case of overflow, use :class:`ScrollView<edifice.ScrollView>`.
 
     Args:
@@ -1658,8 +1707,8 @@ class View(_LinearView):
 
             A row layout will lay its children in a row and a column layout will lay its children in a column.
             When :code:`layout="row"` or :code:`layout="column"` are set, the position of their children is not adjustable.
-            If layout is :code:`None`, then all children by default will be positioend at the upper left-hand corner
-            of the `View` (x=0, y=0). Children can set the :code:`top` and :code:`left` attributes of their style
+            If layout is :code:`None`, then all children by default will be positioned at the upper left-hand corner
+            of the View at *(x=0, y=0)*. Children can set the :code:`top` and :code:`left` attributes of their style
             to position themselves relevative to their parent.
     """
 
@@ -1727,6 +1776,9 @@ class View(_LinearView):
 
 class ScrollView(_LinearView):
     """Scrollable layout widget for grouping children together.
+
+    * Underlying Qt Widget
+      `QScrollArea <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QScrollArea.html>`_
 
     .. figure:: /image/scroll_view.png
        :width: 500
@@ -1830,6 +1882,9 @@ def _layout_str_to_grid_spec(layout):
 class GridView(QtWidgetElement):
     """Grid layout widget for rendering children on a 2D rectangular grid.
 
+    * Underlying Qt Layout
+      `QGridLayout <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGridLayout.html>`_
+
     Grid views allow you to precisely control 2D positioning of widgets.
     While you can also layout widgets using nested :class:`View<edifice.View>`,
     specifying the exact location of children relative to each other (with proper alignment)
@@ -1921,6 +1976,9 @@ class GridView(QtWidgetElement):
 
 class TabView(_LinearView):
     """Widget with multiple tabs.
+
+    * Underlying Qt Widget
+      `QTabWidget <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QTabWidget.html>`_
 
     .. figure:: /image/tab_view.png
        :width: 300
