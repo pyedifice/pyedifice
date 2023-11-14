@@ -4,6 +4,12 @@
 Release Notes
 =============
 
+0.2.1
+-----
+Released: 2023-11-14
+
+* :class:`ExportList` for :func:`App.export_widgets`.
+
 0.2.0
 ----------------
 Released: 2023-11-13
