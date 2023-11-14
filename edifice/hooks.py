@@ -59,13 +59,15 @@ def use_state(initial_state:_T_use_state) -> tuple[
     Do not mutate the state variable. The old state variable must be left
     unmodified so that it can be compared to the new state variable during
     the next render. If your state variable is a collection, then create
-    a shallow copy of it to pass to the **setter function**::
+    a shallow
+    `copy <https://docs.python.org/3/library/copy.html>`_
+    of it to pass to the **setter function**::
 
         def Stateful(self):
             x, x_setter = use_state([])
 
             def add_one():
-                x_new = x.copy()
+                x_new = x[:]
                 x_new.append("Label Text")
                 x_setter(x_new)
 
@@ -77,6 +79,14 @@ def use_state(initial_state:_T_use_state) -> tuple[
                 for i = range(x):
                     Label(text=i)
 
+    A good technique for declaring immutable state datastructures is to use
+    `frozen dataclasses <https://docs.python.org/3/library/dataclasses.html#frozen-instances>`_.
+    Use the
+    `replace() <https://docs.python.org/3/library/dataclasses.html#dataclasses.replace>`_
+    function to update the dataclass.
+    To shallow-copy a :code:`list`,
+    `slice the entire list <https://docs.python.org/3/library/copy.html>`_
+    like :code:`list_new = list_old[:]`.
 
     .. warning::
         You can't store a :code:`callable` value in :code:`use_state`,
