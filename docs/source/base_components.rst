@@ -11,6 +11,7 @@ Base Elements
 
    QtWidgetElement
    Window
+   ExportList
    View
    ScrollView
    TabView

@@ -40,7 +40,7 @@ class TimingAvgTestCase(unittest.TestCase):
 
 class IntegrationTestCase(unittest.TestCase):
 
-    def test_widget_creation(self):
+    def test_export_widgets(self):
         class TestComp(component.Element):
 
             def __init__(self):
@@ -48,7 +48,7 @@ class IntegrationTestCase(unittest.TestCase):
                 self.text = ""
 
             def _render_element(self):
-                return base_components.List()(
+                return base_components.ExportList()(
                     base_components.Label(f"Hello World: {self.text}"),
                     base_components.TextInput(self.text, on_change=lambda text: self._set_state(text=text))
                 )

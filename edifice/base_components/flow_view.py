@@ -26,9 +26,6 @@ class FlowLayout(QLayout):
     def __init__(self, parent=None):
         super().__init__(parent)
 
-        if parent is not None:
-            self.setContentsMargins(QMargins(0, 0, 0, 0))
-
         self._item_list: list[QLayoutItem] = []
 
     def __del__(self):
@@ -53,7 +50,6 @@ class FlowLayout(QLayout):
             return self._item_list.pop(index)
 
         return None
-
 
     # We need insertWidget like the one in QBoxLayout to support Edifice.
     # https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QBoxLayout.html#PySide6.QtWidgets.PySide6.QtWidgets.QBoxLayout.insertWidget

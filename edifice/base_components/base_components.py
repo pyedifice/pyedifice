@@ -440,25 +440,25 @@ class QtWidgetElement(WidgetElement):
 
         if underlying_layout is not None:
             set_margin = False
-            new_margin=[0.0, 0.0, 0.0, 0.0]
+            new_margin=[0, 0, 0, 0]
             if "margin" in style:
-                new_margin = [_css_to_number(style["margin"])] * 4
+                new_margin = [int(_css_to_number(style["margin"]))] * 4
                 style.pop("margin")
                 set_margin = True
             if "margin-left" in style:
-                new_margin[0] = _css_to_number(style["margin-left"])
+                new_margin[0] = int(_css_to_number(style["margin-left"]))
                 style.pop("margin-left")
                 set_margin = True
             if "margin-right" in style:
-                new_margin[2] = _css_to_number(style["margin-right"])
+                new_margin[2] = int(_css_to_number(style["margin-right"]))
                 style.pop("margin-right")
                 set_margin = True
             if "margin-top" in style:
-                new_margin[1] = _css_to_number(style["margin-top"])
+                new_margin[1] = int(_css_to_number(style["margin-top"]))
                 style.pop("margin-top")
                 set_margin = True
             if "margin-bottom" in style:
-                new_margin[3] = _css_to_number(style["margin-bottom"])
+                new_margin[3] = int(_css_to_number(style["margin-bottom"]))
                 style.pop("margin-bottom")
                 set_margin = True
 
@@ -635,11 +635,9 @@ class QtWidgetElement(WidgetElement):
 
 
 class Window(RootElement):
-    """Displays its child as an operating system window.
-
-	The root element of an :class:`App` must be a Window. (The :class:`App`
-    will implicitly wrap your root element in a Window if your root element
-    is not a Window.)
+    """
+	The root element of an :class:`App` which runs in an operating system
+    window.
 
     The Window must have exactly one child, and the child must not change.
     Usually the one child of a Window will be a :class:`View`.
@@ -2023,7 +2021,10 @@ class CustomWidget(QtWidgetElement):
         return commands
 
 
-class List(RootElement):
+class ExportList(RootElement):
+    """
+    The root element for an App which does :func:`App.export_widgets`.
+    """
 
     def __init__(self):
         super().__init__()
