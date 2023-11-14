@@ -78,15 +78,12 @@ class App(object):
 
         App(MyRootElement()).start()
 
-    If you want application to be a normal application in an operating
+    If the application is normal application in an operating
     system window, then the top Element rendered by :code:`MyRootElement`
     must be a :class:`Window`.
 
-    If you just want to create a widget (that you'll integrate with an existing codebase),
-    call the :func:`App.export_widgets` method::
-
-        widget = App(MyRootElement()).export_widgets()
-
+    If you just want to create a widget that you'll integrate with an existing
+    Qt application, use the :func:`App.export_widgets` method.
     This widget can then be plugged into the rest of your application, and there's no need
     to manage the rendering of the widget -- state changes will trigger automatic re-render
     without any intervention.

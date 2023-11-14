@@ -53,15 +53,17 @@ In HTML/XML, this would be written as:
 
 .. code-block:: xml
 
-    <View layout="column">
-        <View layout="row">
-            <Label text="Username: " />
-            <TextInput />
+    <Window>
+        <View layout="column">
+            <View layout="row">
+                <Label text="Username: " />
+                <TextInput />
+            </View>
+            <View layout="row">
+                <Label text="Email: " />
+                <TextInput />
         </View>
-        <View layout="row">
-            <Label text="Email: " />
-            <TextInput />
-    </View>
+    </Window>
 
 You can thus describe your entire application as a single root Element,
 which is composed of various sub-Elements representing different parts of your application.
