@@ -86,9 +86,9 @@ def AxisDescriptor(self, name, key, plot, plots_set): #TODO does plots_set chang
             Label("Transform:", style={"width": 70})
             Dropdown(selection=transform_type, options=["None", "EMA"],
                      on_select=handle_transform_type)
-            if transform == "EMA":
+            if transform_type == "EMA":
                 Label(f"Half Life ({param} days)", style={"width": 120})
-            if transform == "EMA":
+            if transform_type == "EMA":
                 Slider(
                     value=param, min_value=1, max_value=90, dtype=int,
                     on_change=handle_param
