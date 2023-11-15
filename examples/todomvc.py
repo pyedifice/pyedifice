@@ -21,12 +21,18 @@ class Todo:
 todos_init : OrderedDict[int, Todo] = OrderedDict([])
 
 @component
-def TodoItem(self, key:int, todo:Todo, table_grid_view, set_complete, delete_todo, set_editing, set_text):
-
+def TodoItem(
+    self,
+    key:int,
+    todo:Todo,
+    table_grid_view,
+    set_complete,
+    delete_todo,
+    set_editing,
+    set_text
+):
     with table_grid_view.row():
-        with View(
-            style={"margin-right": 10,},
-        ).set_key(str(key) + "comp"):
+        with View(style={"margin-right": 10,}).set_key(str(key) + "comp"):
             CheckBox(
                 checked=todo.completed,
                 on_click=lambda _ev: set_complete(key, not todo.completed)
@@ -131,7 +137,15 @@ def TodoMVC(self):
                     )
                 for key,todo in todos.items():
                     if filter == "All" or (filter == "Completed") == todo.completed:
-                        TodoItem(key, todo, tgv, set_complete, delete_todo, set_editing, set_text)
+                        TodoItem(
+                            key,
+                            todo,
+                            tgv,
+                            set_complete,
+                            delete_todo,
+                            set_editing,
+                            set_text
+                        )
             with View(layout="column", style={"margin-top":10}):
                 if len(todos) > 0:
                     with View(
@@ -165,7 +179,7 @@ def TodoMVC(self):
                                 on_click=lambda _ev: filter_set("Completed"),
                             )
                         with View(style={"min-width":180, "margin-left": 10, "align": "right"}):
-                            if len(todos) > 0 and len(todos) > items_left:
+                            if len(todos) > items_left:
                                 Button(
                                     title = "Clear completed (" + str(len(todos) - items_left) + ")",
                                     on_click=clear_completed,
