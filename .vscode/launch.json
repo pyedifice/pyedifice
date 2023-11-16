@@ -26,7 +26,15 @@
 			"request": "launch",
 			"module": "edifice",
 			"justMyCode": true,
-			"args": ["examples/calculator.py", "Calculator"]
+			"args": ["examples/calculator_hotreload.py", "Main"]
+		},
+		{
+			"name": "Runner financial_charts.py",
+			"type": "python",
+			"request": "launch",
+			"module": "edifice",
+			"justMyCode": true,
+			"args": ["examples/financial_charts_hotreload.py", "Main"]
 		}
 	]
 }
