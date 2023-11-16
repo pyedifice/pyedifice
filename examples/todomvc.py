@@ -120,86 +120,90 @@ def TodoMVC(self):
         if not todo.completed:
             items_left += 1
 
-    with Window(title="todos"):
-        with View(style={"align":"top", "margin":10}):
-            with TableGridView() as tgv:
-                with tgv.row():
-                    with View(style={"margin-right":10, "width":30},
-                    ):
-                        if len(todos) > 0:
-                            CheckBox(on_change=set_complete_all)
-                    TextInput(
-                        text = input,
-                        on_change = handle_change,
-                        on_key_up = handle_key_up,
-                        placeholder_text = "What needs to be done?",
-                        style={"font-size":20},
-                    )
-                for key,todo in todos.items():
-                    if filter == "All" or (filter == "Completed") == todo.completed:
-                        TodoItem(
-                            key,
-                            todo,
-                            tgv,
-                            set_complete,
-                            delete_todo,
-                            set_editing,
-                            set_text
-                        )
-            with View(layout="column", style={"margin-top":10}):
-                if len(todos) > 0:
-                    with View(
-                        layout="row",
-                        style={
-                            "border-top-width": "2px",
-                            "border-top-style": "solid",
-                            "border-top-color": "rgba(0,0,0,50)",
-                            "margin-top": 10,
-                        },
-                    ):
-                        Label(
-                            text = str(items_left) + (" item left" if items_left == 1 else " items left"),
-                            word_wrap=False,
-                            style={"margin-right":10},
-                        )
-                        with View(layout="row", style={"margin-left": 10}):
-                            RadioButton(
-                                checked = filter=="All",
-                                text="All",
-                                on_click=lambda _ev: filter_set("All"),
-                            )
-                            RadioButton(
-                                checked = filter=="Active",
-                                text="Active",
-                                on_click=lambda _ev: filter_set("Active"),
-                            )
-                            RadioButton(
-                                checked = filter=="Completed",
-                                text="Completed",
-                                on_click=lambda _ev: filter_set("Completed"),
-                            )
-                        with View(style={"min-width":180, "margin-left": 10, "align": "right"}):
-                            if len(todos) > items_left:
-                                Button(
-                                    title = "Clear completed (" + str(len(todos) - items_left) + ")",
-                                    on_click=clear_completed,
-                                    style={"width":150},
-                                )
-                    Label(
-                        text="Click to edit a todo",
-                        style={"color":"grey"},
-                    )
-                Label(
-                    link_open=True,
-                    text="""<div>
-                    <a href='https://todomvc.com/'>TodoMVC</a>
-                    <span style='color:grey'>demo for</span>
-                    <a href='https://pyedifice.github.io'>Edifice</a>
-                    </div>
-                    """,
-                    style={"align":"center", "margin-top": 10},
-                    word_wrap=False,
+    with View(style={"align":"top", "margin":10}):
+        with TableGridView() as tgv:
+            with tgv.row():
+                with View(style={"margin-right":10, "width":30},
+                ):
+                    if len(todos) > 0:
+                        CheckBox(on_change=set_complete_all)
+                TextInput(
+                    text = input,
+                    on_change = handle_change,
+                    on_key_up = handle_key_up,
+                    placeholder_text = "What needs to be done?",
+                    style={"font-size":20},
                 )
+            for key,todo in todos.items():
+                if filter == "All" or (filter == "Completed") == todo.completed:
+                    TodoItem(
+                        key,
+                        todo,
+                        tgv,
+                        set_complete,
+                        delete_todo,
+                        set_editing,
+                        set_text
+                    )
+        with View(layout="column", style={"margin-top":10}):
+            if len(todos) > 0:
+                with View(
+                    layout="row",
+                    style={
+                        "border-top-width": "2px",
+                        "border-top-style": "solid",
+                        "border-top-color": "rgba(0,0,0,50)",
+                        "margin-top": 10,
+                    },
+                ):
+                    Label(
+                        text = str(items_left) + (" item left" if items_left == 1 else " items left"),
+                        word_wrap=False,
+                        style={"margin-right":10},
+                    )
+                    with View(layout="row", style={"margin-left": 10}):
+                        RadioButton(
+                            checked = filter=="All",
+                            text="All",
+                            on_click=lambda _ev: filter_set("All"),
+                        )
+                        RadioButton(
+                            checked = filter=="Active",
+                            text="Active",
+                            on_click=lambda _ev: filter_set("Active"),
+                        )
+                        RadioButton(
+                            checked = filter=="Completed",
+                            text="Completed",
+                            on_click=lambda _ev: filter_set("Completed"),
+                        )
+                    with View(style={"min-width":180, "margin-left": 10, "align": "right"}):
+                        if len(todos) > items_left:
+                            Button(
+                                title = "Clear completed (" + str(len(todos) - items_left) + ")",
+                                on_click=clear_completed,
+                                style={"width":150},
+                            )
+                Label(
+                    text="Click to edit a todo",
+                    style={"color":"grey"},
+                )
+            Label(
+                link_open=True,
+                text="""<div>
+                <a href='https://todomvc.com/'>TodoMVC</a>
+                <span style='color:grey'>demo for</span>
+                <a href='https://pyedifice.github.io'>Edifice</a>
+                </div>
+                """,
+                style={"align":"center", "margin-top": 10},
+                word_wrap=False,
+            )
+
+@component
+def Main(self):
+    with Window(title="todos"):
+        TodoMVC()
 
 if __name__ == "__main__":
-    App(TodoMVC(), application_name="TodoMVC").start()
+    App(Main(), application_name="TodoMVC").start()

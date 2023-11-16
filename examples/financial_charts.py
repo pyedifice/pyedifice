@@ -8,7 +8,7 @@ Everything is reactive -- changes will automatically be reflected in the entire 
 #
 # pip install pandas yfinance matplotlib
 #
-# python examples/harmonic_oscillator.py
+# python examples/financial_charts.py
 #
 
 import sys, os
@@ -19,7 +19,7 @@ from collections import OrderedDict
 import typing as tp
 import edifice as ed
 from edifice import Dropdown, IconButton, Label, ScrollView, Slider, TextInput, View
-from edifice.components import plotting
+from edifice.components.matplotlib_figure import MatplotlibFigure
 
 import matplotlib.colors
 import pandas as pd
@@ -73,7 +73,7 @@ def AxisDescriptor(self, name, key, plot, plots_set): #TODO does plots_set chang
 
     with View(layout="column"):
         with View(layout="row", style=row_style):
-            Label(name, style={"width": 40})
+            Label(name, style={"width": 100})
             Dropdown(selection=data_type, options=["Date", "Close", "Volume"],
                      on_select=handle_data_type
             )
@@ -83,7 +83,7 @@ def AxisDescriptor(self, name, key, plot, plots_set): #TODO does plots_set chang
                 )
 
         with View(layout="row", style=row_style):
-            Label("Transform:", style={"width": 70})
+            Label("Transform:", style={"width": 100})
             Dropdown(selection=transform_type, options=["None", "EMA"],
                      on_select=handle_transform_type)
             if transform_type == "EMA":
@@ -98,7 +98,7 @@ def AxisDescriptor(self, name, key, plot, plots_set): #TODO does plots_set chang
 # We create a shorthand for creating a component with a label
 def labeled_elem(label, comp):
     with View(layout="row", style={"align": "left"}):
-        Label(label, style={"width": 80})
+        Label(label, style={"width": 100})
         comp()
 
 def add_divider(comp):
@@ -122,8 +122,8 @@ def PlotDescriptor(self, plot, plots_set):
         plot["color"] = color_text
         plots_set(lambda x: x)
 
-    with View(layout="row", style={"margin": 5}):
-        with View(layout="column", style={"align": "top"}):
+    with View(layout="row", style={"margin": 5, "align":"left"}):
+        with View(layout="column", style={"align": "top", "width":400}):
             AxisDescriptor("x-axis", "xaxis", plot, plots_set)
             AxisDescriptor("y-axis", "yaxis", plot, plots_set)
         with View(layout="column", style={"align": "top", "margin-left": 10}):
@@ -160,7 +160,7 @@ def App(self):
         next_i_set(lambda j: j+1)
         plots_set(plots) # sets to the same mutable OrderedDict
 
-    # The Plotting function called by the plotting.Figure component.
+    # The Plotting function called by the MatplotlibFigure component.
     # The plotting function is passed a Matplotlib axis object.
     def plot_figure(ax):
 
@@ -191,20 +191,25 @@ def App(self):
             elif plot_type == "scatter":
                 ax.scatter(df.xdata, df.ydata, color=color)
 
-    with ed.Window(title="Financial Charts"):
-        with View(layout="column", style={"margin": 10}):
-            with ScrollView(layout="column"):
-                for plot in plots.values():
-                    add_divider(lambda: PlotDescriptor(plot, plots_set))
-
+    with View(layout="column", style={"margin": 10, "align":"top"}):
+        with View(layout="column"):
+            for plot in plots.values():
+                add_divider(lambda: PlotDescriptor(plot, plots_set))
             # Edifice comes with Font-Awesome icons for your convenience
             IconButton(name="plus", title="Add Plot", on_click=add_plot)
-            # We create a lambda fuction so that the method doesn't compare equal to itself.
-            # This forces re-renders everytime this entire component renders.
-            plotting.Figure(lambda ax: plot_figure(ax))
+
+        # We create a lambda fuction so that the method doesn't compare equal to itself.
+        # This forces re-renders everytime this entire component renders.
+        with View(style={"height":500, "margin-top":10}):
+            MatplotlibFigure(lambda ax: plot_figure(ax))
+
+@ed.component
+def Main(self):
+    with ed.Window(title="Financial Charts"):
+        App()
 
 
 # Finally to start the the app, we pass the Element to the edifice.App object
 # and call the start function to start the event loop.
 if __name__ == "__main__":
-    ed.App(App()).start()
+    ed.App(Main()).start()
