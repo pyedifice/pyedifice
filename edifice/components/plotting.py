@@ -11,7 +11,7 @@ else:
 
 try:
     MATPLOTLIB_LOADED = True
-    from matplotlib.backends.backend_qtagg import FigureCanvas
+    from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg
     from matplotlib.figure import Figure as MatplotlibFigure
 except ImportError:
     MATPLOTLIB_LOADED = False
@@ -66,7 +66,7 @@ class Figure(CustomWidget):
             if self.figure_added:
                 self.current_plot_fun = self.props.plot_fun
             else:
-                self.figure_canvas = FigureCanvas(MatplotlibFigure(figsize=(5, 3)))
+                self.figure_canvas = FigureCanvasQTAgg(MatplotlibFigure(figsize=(5, 3)))
                 self.subplots = self.figure_canvas.figure.subplots()
                 self.current_plot_fun = self.props.plot_fun
                 widget.layout().addWidget(self.figure_canvas)
