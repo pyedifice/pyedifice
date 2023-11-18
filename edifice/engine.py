@@ -446,7 +446,11 @@ class RenderEngine(object):
 
             try:
                 kwargs = {k: old_comp.props[k] for k, v in parameters[1:]
-                          if v.default is inspect.Parameter.empty and k[0] != "_"}
+                          if v.default is inspect.Parameter.empty and k[0] != "_"
+                          and k != "kwargs"}
+                          # We don't actually need all the kwargs, just enough
+                          # to construct new_comp_class.
+                          # The other kwargs will be set with _props.update.
             except KeyError:
                 k = None
                 for k, _ in parameters[1:]:
