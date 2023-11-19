@@ -136,7 +136,8 @@ def PlotDescriptor(self, plot, plots_set):
                 "Color",
                 lambda: Dropdown(
                     selection=color,
-                    options=list(matplotlib.colors.CSS4_COLORS.keys()),
+                    # https://matplotlib.org/stable/api/colors_api.html#exported-colors
+                    options=list(matplotlib.colors.CSS4_COLORS.keys()), # type: ignore
                     on_select=handle_color
                 )
             )
