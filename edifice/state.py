@@ -1,3 +1,8 @@
+# DEPRECATED StateManager, StateValue. They never worked properly because
+# 1. Elements could not properly unsubscribe on unmount.
+# 2. They required should_update() to always return True by default.
+# They are replaced by the use_state Hook.
+
 """
 Often in an application, certain state is shared across multiple
 :class:`Element <edifice.Element>` s, and changes

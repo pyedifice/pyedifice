@@ -7,7 +7,7 @@ after all, it's important to dogfood your own library!
 These components are *not* imported into the :code:`edifice` namespace.
 To use them, you have to import the module from :code:`edifice.components`::
 
-    from edifice.components import plotting
+    from edifice.components.matplotlib_figure import MatplotlibFigure
 
 User contributions are of course welcome!
 
@@ -17,6 +17,4 @@ User contributions are of course welcome!
    :recursive:
    :template: custom-class.rst
 
-   ~plotting.Figure
-   ~forms.Form
-   ~forms.FormDialog
+   ~matplotlib_figure.MatplotlibFigure

@@ -34,24 +34,6 @@ This enables a wide spectrum of analyses, from cluster plots of two different st
 This application would be fairly complex to program in raw QT but takes fewer than 200 well documented lines of code (and ample whitespace) with Edifice. Most importantly, the logic is straightforward. The application state is the full list of descriptions of each plot. Each gui element displays part of the state (e.g. the x-axis of plot 0, the actual graph, etc.), and some GUI elements allow the user to change a part of the state.
 
 
-## Forms
-
-![form](example_form.png)
-
-File: `form.py`
-
-An example to show how the Form component makes creating routine UI for simple forms extremely simple.
-The Form component creates input elements for data in a type specific way: for example,
-strings would correspond to text inputs,
-enums to dropdowns,
-datetime.dates to three dropdowns (with the right number of days for each month),
-etc.
-You can also pass a function, which would generate a label whose content is the function evaluated on the inputs.
-
-The Form component was created using the same high-level Edifice api provided to users,
-so [its source code](https://github.com/pyedifice/pyedifice/blob/master/edifice/components/forms.py) is technically another example!
-
-
 ## Harmonic Oscillator
 
 ![harmonic-oscillator](example_harmonic_oscillator.gif)

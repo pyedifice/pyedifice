@@ -195,20 +195,6 @@
               type = "app";
               program = "${script}/bin/edifice-example";
             };
-          # example-forms =
-          #   let
-          #     script = pkgs.writeShellApplication {
-          #       name = "edifice-example";
-          #       runtimeInputs = [
-          #         (pkgs.poetry2nix.mkPoetryEnv poetryEnvAttrs)
-          #       ];
-          #       text = "cd ${inputs.self.outPath}; PYTHONPATH=. python examples/form.py";
-          #     };
-          #   in
-          #   {
-          #     type = "app";
-          #     program = "${script}/bin/edifice-example";
-          #   };
           example-financial-charting =
             let
               script = pkgs.writeShellApplication {
