@@ -4,7 +4,6 @@ import importlib.resources
 import inspect
 import logging
 import math
-import os
 import re
 import typing as tp
 
