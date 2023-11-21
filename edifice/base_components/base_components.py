@@ -218,11 +218,6 @@ class QtWidgetElement(WidgetElement):
 
     """
 
-    underlying: QtWidgets.QWidget | None
-    """
-    The underlying QWidget, which may not exist if this Element has not rendered.
-    """
-
     def __init__(
         self,
         style: StyleType = None,
@@ -284,6 +279,11 @@ class QtWidgetElement(WidgetElement):
         if cursor is not None:
             if cursor not in _CURSORS:
                 raise ValueError("Unrecognized cursor %s. Cursor must be one of %s" % (cursor, list(_CURSORS.keys())))
+
+        self.underlying: QtWidgets.QWidget | None = None
+        """
+        The underlying QWidget, which may not exist if this Element has not rendered.
+        """
 
     def _destroy_widgets(self):
         self.underlying = None # No guarantee that self.underlying exists
@@ -747,7 +747,6 @@ class GroupBox(QtWidgetElement):
             "title": title,
         })
         super().__init__()
-        self.underlying = None
 
     def _initialize(self):
         self.underlying = QtWidgets.QGroupBox(self.props.title)
@@ -825,7 +824,6 @@ class Icon(QtWidgetElement):
         })
         self._register_props(kwargs)
         super().__init__(**kwargs)
-        self.underlying = None
 
     def _initialize(self):
         self.underlying = QtWidgets.QLabel("")
@@ -877,7 +875,6 @@ class Button(QtWidgetElement):
         self._register_props(kwargs)
         super().__init__(**kwargs)
         self._connected = False
-        self.underlying = None
 
     def _initialize(self):
         self.underlying =  QtWidgets.QPushButton(str(self.props.title))
@@ -1009,7 +1006,6 @@ class Label(QtWidgetElement):
         })
         self._register_props(kwargs)
         super().__init__(**kwargs)
-        self.underlying = None
 
     def _initialize(self):
         self.underlying = QtWidgets.QLabel(str(self.props.text))
@@ -1070,7 +1066,6 @@ class Image(QtWidgetElement):
         })
         self._register_props(kwargs)
         super().__init__(**kwargs)
-        self.underlying = None
 
     def _initialize(self):
         self.underlying = QtWidgets.QLabel()
@@ -1104,7 +1099,6 @@ class ImageSvg(QtWidgetElement):
         })
         self._register_props(kwargs)
         super().__init__(**kwargs)
-        self.underlying = None
 
     def _initialize(self):
         self.underlying = QtSvgWidgets.QSvgWidget()
@@ -1201,7 +1195,6 @@ class TextInput(QtWidgetElement):
         super().__init__(**kwargs)
         self._on_change_connected = False
         self._editing_finished_connected = False
-        self.underlying = None
 
     def _initialize(self):
         self.underlying = QtWidgets.QLineEdit(self.props.text)
@@ -1306,7 +1299,6 @@ class Dropdown(QtWidgetElement):
         super().__init__(**kwargs)
         self._on_change_connected = False
         self._on_select_connected = False
-        self.underlying = None
         if not editable and on_change is not None and on_select is None:
             raise ValueError("Uneditable dropdowns do not emit change events. Use the on_select event handler.")
 
@@ -1408,7 +1400,6 @@ class RadioButton(QtWidgetElement):
         self._register_props(kwargs)
         super().__init__(**kwargs)
         self._connected = False
-        self.underlying = None
 
     def _initialize(self):
         self.underlying = QtWidgets.QRadioButton(str(self.props.text))
@@ -1480,7 +1471,6 @@ class CheckBox(QtWidgetElement):
         self._register_props(kwargs)
         super().__init__(**kwargs)
         self._connected = False
-        self.underlying = None
 
     def _initialize(self):
         self.underlying = QtWidgets.QCheckBox(str(self.props.text))
@@ -1575,7 +1565,6 @@ class Slider(QtWidgetElement):
         # A QSlider only accepts integers. We represent floats as
         # an integer between 0 and 1024.
         self._connected = False
-        self.underlying = None
         # TODO: let user choose?
         self._granularity = 512
         if math.isnan(value):
@@ -1651,7 +1640,6 @@ class _LinearView(QtWidgetElement):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-
         self._widget_children = []
 
     def __del__(self):
@@ -1715,7 +1703,6 @@ class View(_LinearView):
     def __init__(self, layout: tp.Text = "column", **kwargs):
         self._register_props({"layout": layout})
         self._register_props(kwargs)
-        self.underlying = None
         super().__init__(**kwargs)
 
     def _delete_child(self, i, old_child):
@@ -1801,8 +1788,6 @@ class ScrollView(_LinearView):
         })
         self._register_props(kwargs)
         super().__init__(**kwargs)
-
-        self.underlying = None
 
     def _delete_child(self, i, old_child):
         child_node = self.underlying_layout.takeAt(i)
@@ -1939,7 +1924,6 @@ class GridView(QtWidgetElement):
         })
         self._register_props(kwargs)
         super().__init__(**kwargs)
-        self.underlying = None
         self._previously_rendered = None
 
     def _initialize(self):
@@ -1995,7 +1979,6 @@ class TabView(_LinearView):
         })
         self._register_props(kwargs)
         super().__init__(**kwargs)
-        self.underlying = None
 
     def _delete_child(self, i, old_child):
         assert self.underlying is not None
@@ -2056,14 +2039,10 @@ class CustomWidget(QtWidgetElement):
     and should update the widget according to the new props.
     The created widget inherits all the properties of Qt widgets,
     allowing the user to, for example, set the style.
-
-    See the :doc:`plotting.Figure <edifice.components.plotting.Figure>` widget
-    for an example of how to use this class.
     """
 
     def __init__(self):
         super().__init__()
-        self.underlying = None
 
     def create_widget(self):
         raise NotImplementedError

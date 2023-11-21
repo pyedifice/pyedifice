@@ -21,13 +21,15 @@ if QtWidgets.QApplication.instance() is None:
     app = QtWidgets.QApplication(["-platform", "offscreen"])
 
 
+class MockUnderlying(object):
+    setStyleSheet = "setStyleSheet"
+    move = "move"
+
 class MockElement(base_components.QtWidgetElement):
 
-    class MockUnderlying(object):
-        setStyleSheet = "setStyleSheet"
-        move = "move"
-
-    underlying = MockUnderlying()
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.underlying = MockUnderlying()
 
 
 class GridLayoutTestCase(unittest.TestCase):
@@ -354,7 +356,7 @@ class BaseElementsTest(unittest.TestCase):
             }
         }
 
-		# TODO
+        # TODO
         # completer1 = base_components.Completer(["option1", "option2"])
         # completer2 = base_components.Completer(["option1", "option2"], "inline")
         self._test_comp(base_components.Window(
