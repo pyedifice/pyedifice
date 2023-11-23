@@ -849,6 +849,20 @@ files = [
 ]
 
 [[package]]
+name = "pyqtgraph"
+version = "0.13.3"
+description = "Scientific Graphics and GUI Library for Python"
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "pyqtgraph-0.13.3-py3-none-any.whl", hash = "sha256:fdcc04ac4b32a7bedf1bf3cf74cbb93ab3ba5687791712bbfa8d0712377d2f2b"},
+    {file = "pyqtgraph-0.13.3.tar.gz", hash = "sha256:58108d8411c7054e0841d8b791ee85e101fc296b9b359c0e01dde38a98ff2ace"},
+]
+
+[package.dependencies]
+numpy = ">=1.20.0"
+
+[[package]]
 name = "pyside6"
 version = "6.6.0"
 description = "Python bindings for the Qt cross-platform application and UI framework"
@@ -1202,4 +1216,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 [metadata]
 lock-version = "2.0"
 python-versions = ">= 3.8,<3.12"
-content-hash = "843c3642140598318871d00b46248da2567944feed2f30024399b18850784d89"
+content-hash = "312553959fad6c3acd49f87dd426a7b0adb00da8a684d61850efaa301ee085f2"
