@@ -20,7 +20,7 @@ else:
 
 from qasync import QEventLoop
 
-from ._component import Element, RootElement
+from ._component import Element
 from .base_components import Window, QtWidgetElement, ExportList
 from .engine import RenderEngine
 from .inspector import inspector
