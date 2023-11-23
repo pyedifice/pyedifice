@@ -60,14 +60,14 @@ Consider this code::
         results, set_results = use_state("")
         counter, set_counter = use_state(0)
 
-        def on_click(self, e):
+        def on_click(event:QMouseEvent):
             r = fetch_from_network()
             set_results(r)
 
         with edifice.View():
-            edifice.Label(self.results)
-            edifice.Label(self.counter)
-            edifice.Button("Fetch", on_click=self.on_click)
+            edifice.Label(results)
+            edifice.Label(counter)
+            edifice.Button("Fetch", on_click=on_click)
             edifice.Button("Increment", on_click=lambda e: set_counter(counter + 1)
 
 When the Fetch button is clicked, the event handler will call a lengthy :code:`fetch_from_network` function,
@@ -84,18 +84,18 @@ the :code:`on_click` handler as a coroutine::
         counter, set_counter = use_state(0)
         loading, set_loading = use_state(False)
 
-        async def on_click(self, e):
+        async def on_click(event:QMouseEvent):
             set_loading(True)
             r = await fetch_from_network()
             set_results(r)
             set_loading(False)
 
         with edifice.View():
-            edifice.Label(self.results)
+            edifice.Label(results)
             if loading:
                 edifice.Label("Loading")
-            edifice.Label(self.counter)
-            edifice.Button("Fetch", on_click=self.on_click)
+            edifice.Label(counter)
+            edifice.Button("Fetch", on_click=on_click)
             edifice.Button("Increment", on_click=lambda e: set_counter(counter + 1)
 
 While the :code:`fetch_from_network` function is running, control is returned to the event loop,

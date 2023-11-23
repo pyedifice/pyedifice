@@ -163,7 +163,7 @@ and we populate the text input and label with the meters and feet respectively.
 For the text input, we add an :code:`on_change` callback.
 This function is called whenever the content of the text input changes.
 
-In the :code:`on_change`` callback, we call the :code:`meters_set` function.
+In the :code:`on_change` callback, we call the :code:`meters_set` function.
 The :code:`meters_set` function will set :code:`meters` to the new value of the input box,
 and it will trigger a re-render.
 
