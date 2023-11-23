@@ -174,6 +174,11 @@ class QtWidgetElement(WidgetElement):
 
         size_policy:
             Horizontal and vertical resizing policy, of type `QSizePolicy <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QSizePolicy.html>`_
+        focus_policy:
+            The various policies a widget can have with respect to acquiring keyboard focus, of type
+            `FocusPolicy <https://doc.qt.io/qtforpython-6/PySide6/QtCore/Qt.html#PySide6.QtCore.PySide6.QtCore.Qt.FocusPolicy>`_.
+
+            See also `QWidget.focusPolicy <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.PySide6.QtWidgets.QWidget.focusPolicy>`_.
         on_click:
             Callback for click events (mouse pressed and released). Takes a
             `QMouseEvent <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QMouseEvent.html>`_
@@ -225,6 +230,7 @@ class QtWidgetElement(WidgetElement):
         context_menu: tp.Optional[ContextMenuType] = None,
         css_class: tp.Optional[tp.Any] = None,
         size_policy: tp.Optional[QtWidgets.QSizePolicy] = None,
+        focus_policy: tp.Optional[QtCore.Qt.FocusPolicy] = None,
         on_click: tp.Optional[tp.Callable[[QtGui.QMouseEvent], None | tp.Awaitable[None]]] = None,
         on_key_down: tp.Optional[tp.Callable[[QtGui.QKeyEvent], None | tp.Awaitable[None]]] = None,
         on_key_up: tp.Optional[tp.Callable[[QtGui.QKeyEvent], None | tp.Awaitable[None]]] = None,
@@ -241,6 +247,7 @@ class QtWidgetElement(WidgetElement):
             "context_menu": context_menu,
             "css_class": css_class,
             "size_policy": size_policy,
+            "focus_policy": focus_policy,
             "on_click": on_click,
             "on_key_down": on_key_down,
             "on_key_up": on_key_up,
@@ -589,6 +596,9 @@ class QtWidgetElement(WidgetElement):
             elif prop == "size_policy":
                 if newprops.size_policy is not None:
                     commands.append(_CommandType(underlying.setSizePolicy, newprops.size_policy))
+            elif prop == "focus_policy":
+                if newprops.focus_policy is not None:
+                    commands.append(_CommandType(underlying.setFocusPolicy, newprops.focus_policy))
             elif prop == "on_click":
                 commands.append(_CommandType(self._set_on_click, underlying, newprops.on_click))
                 if newprops.on_click is not None and self.props.cursor is not None:
