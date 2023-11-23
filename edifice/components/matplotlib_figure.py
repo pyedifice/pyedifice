@@ -54,20 +54,25 @@ class MatplotlibFigure(QtWidgetElement):
             self.subplots = self.underlying.figure.subplots()
         assert self.underlying is not None
         assert self.subplots is not None
-        commands: list[_CommandType] = []
+
+        commands = super()._qt_update_commands(children, newprops, newstate, self.underlying, None)
+
         if "plot_fun" in newprops:
-            self.current_plot_fun = tp.cast(tp.Callable[[Axes], None], self.props.plot_fun)
-            self.subplots.clear()
-            self.current_plot_fun(self.subplots)
-            self.underlying.draw()
-            # alternately we could do draw_idle() here, but I don't think it's
-            # any better and it messes up the mouse events.
+            def _command_plot_fun(self):
+                self.current_plot_fun = tp.cast(tp.Callable[[Axes], None], self.props.plot_fun)
+                self.subplots.clear()
+                self.current_plot_fun(self.subplots)
+                self.underlying.draw()
+                # alternately we could do draw_idle() here, but I don't think it's
+                # any better and it messes up the mouse events.
+            commands.append(_CommandType(_command_plot_fun, self))
         if "on_figure_mouse_move" in newprops:
-            if self.on_mouse_move_connect_id is not None:
-                self.underlying.mpl_disconnect(self.on_mouse_move_connect_id)
-            if newprops['on_figure_mouse_move'] is not None:
-                self.on_mouse_move_connect_id = self.underlying.mpl_connect('motion_notify_event', newprops['on_figure_mouse_move'])
-            else:
-                self.on_mouse_move_connect_id = None
-        commands.extend(super()._qt_update_commands(children, newprops, newstate, self.underlying, None))
+            def _command_mouse_move(self):
+                if self.on_mouse_move_connect_id is not None:
+                    self.underlying.mpl_disconnect(self.on_mouse_move_connect_id)
+                if newprops['on_figure_mouse_move'] is not None:
+                    self.on_mouse_move_connect_id = self.underlying.mpl_connect('motion_notify_event', newprops['on_figure_mouse_move'])
+                else:
+                    self.on_mouse_move_connect_id = None
+            commands.append(_CommandType(_command_mouse_move, self))
         return commands

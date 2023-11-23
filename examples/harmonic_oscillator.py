@@ -46,15 +46,9 @@ def Oscillator(self):
     simulation_time, simulation_time_set = ed.use_state(0.0)
     dt = 0.03
 
-    mouse_hover, mouse_hover_set = ed.use_state(tp.cast(tuple[float, float] | None, None))
-
     def plot(ax:Axes):
         # Plotting function, called by the Matplotlib component. This is standard matplotlib code.
         ax.plot(time_range, calculate_harmonic_motion(time_range))
-        if mouse_hover is not None:
-            # plot a dot on the plotting function at mouse-x
-            x = min([max([mouse_hover[0], time_range[0]]), time_range[-1]])
-            ax.plot(x, calculate_harmonic_motion(x), 'ob')
 
     plot_fun, plot_fun_set = ed.use_state((lambda figure: plot(figure),))
 
@@ -84,13 +78,6 @@ def Oscillator(self):
         simulation_time_set(0)
         plot_fun_set((lambda figure: plot(figure),))
 
-    def handle_house_move(ev:MouseEvent):
-        if ev.xdata is not None and ev.ydata is not None:
-            mouse_hover_set((ev.xdata,ev.ydata))
-        else:
-            mouse_hover_set(None)
-        plot_fun_set((lambda figure: plot(figure),))
-
     with ed.View(layout="row"):
         with ed.View(layout="column", style={"margin": 10}):
             with ed.View(layout="row"):
@@ -98,7 +85,7 @@ def Oscillator(self):
                                 on_click=lambda e: is_playing_set(lambda p: not p))
                 ed.Button("Reset", on_click=lambda e: simulation_time_set(0))
             with ed.View():
-                MatplotlibFigure(plot_fun[0], on_figure_mouse_move=handle_house_move)
+                MatplotlibFigure(plot_fun[0])
             with ed.View(layout="row", style={"margin": 10}):
                 ed.Label("Angular Frequency")
                 ed.Slider(value=angular_frequency, min_value=1, max_value=10,

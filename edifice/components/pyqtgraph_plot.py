@@ -22,6 +22,23 @@ class Plot(QtWidgetElement):
     `detects the same PyQt6 or PySide6 <https://pyqtgraph.readthedocs.io/en/latest/getting_started/how_to_use.html#pyqt-and-pyside>`_
     package used by **edifice**.
 
+    Example::
+
+            from edifice import View, component
+            from edifice.components.pyqtgraph_plot import Plot
+            import pyqtgraph as pg
+
+            @component
+            def Component(self):
+
+                def plot_fun(plot_item: pg.PlotItem):
+                    xs = np.linspace(-10, 10, 100)
+                    ys = np.sin(xs)
+                    plot_item.plot(x=xs, y=ys)
+
+                with View():
+                    Plot(plot_fun=plot_fun)
+
     Args:
         plot_fun:
             Function which takes a **PyQtGraph**
