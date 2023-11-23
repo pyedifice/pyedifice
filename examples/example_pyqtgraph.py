@@ -17,16 +17,24 @@ import pyqtgraph as pg
 @ed.component
 def Component(self):
 
-    def plot_fn(plotwidget:pg.PlotWidget):
-        xs = np.linspace(-10, 10, 100)
+    x_min, x_min_set = ed.use_state(-10.0)
+
+    def plot_fn(plot_item:pg.PlotItem):
+        xs = np.linspace(x_min, x_min + 20.0, 100)
         ys = np.sin(xs)
-        pi = tp.cast(pg.PlotItem, plotwidget.plotItem)
-        pi.plot(x=xs, y=ys, clear=True)
+        plot_item.plot(x=xs, y=ys)
 
     with ed.View():
-        ed.Label("pyqtgraph example")
+        with ed.ButtonView(
+            on_trigger=lambda _: x_min_set(x_min + 1.0),
+            style={
+                "width": "200px",
+                "height": "50px",
+                "margin": "10px",
+            },
+        ):
+            ed.Label("Increment x_min")
         Plot(plot_fun=plot_fn)
-
 
 @ed.component
 def Main(self):

@@ -12,37 +12,51 @@ import pyqtgraph as pg
 
 class Plot(QtWidgetElement):
     """
-    A
+    A **PyQtGraph**
     `PlotWidget <https://pyqtgraph.readthedocs.io/en/latest/api_reference/widgets/plotwidget.html>`_.
 
     Requires
     `PyQtGraph <https://pyqtgraph.readthedocs.io/en/latest/>`_.
 
+    It’s important to import **edifice** before importing **pyqtgraph**, so that **pyqtgraph**
+    `detects the same PyQt6 or PySide6 <https://pyqtgraph.readthedocs.io/en/latest/getting_started/how_to_use.html#pyqt-and-pyside>`_
+    package used by **edifice**.
+
     Args:
         plot_fun:
-            Function which takes **PyQtGraph**
-            `PlotWidget <https://pyqtgraph.readthedocs.io/en/latest/api_reference/widgets/plotwidget.html>`_.
+            Function which takes a **PyQtGraph**
+            `PlotItem <https://pyqtgraph.readthedocs.io/en/latest/api_reference/graphicsItems/plotitem.html>`_
             and calls
             `plot() <https://pyqtgraph.readthedocs.io/en/latest/api_reference/graphicsItems/plotitem.html#pyqtgraph.PlotItem.plot>`_.
+
+            Edifice will call
+            `clear() <https://pyqtgraph.readthedocs.io/en/latest/api_reference/graphicsItems/plotitem.html#pyqtgraph.PlotItem.clear>`_
+            before calling :code:`plot_fun`.
     """
 
     def __init__(
         self,
-        plot_fun: tp.Callable[[pg.PlotWidget], None],
+        plot_fun: tp.Callable[[pg.PlotItem], None],
         **kwargs
     ):
         self._register_props({
             "plot_fun": plot_fun,
         })
         super().__init__(**kwargs)
-        self.current_plot_fun : tp.Callable[[pg.PlotWidget], None] | None = None
 
     def _qt_update_commands(self, children, newprops, newstate):
         if self.underlying is None:
             self.underlying = pg.PlotWidget()
-        commands: list[_CommandType] = []
+
+        commands = super()._qt_update_commands(children, newprops, newstate, self.underlying)
+
         if "plot_fun" in newprops:
-            self.current_plot_fun = tp.cast(tp.Callable[[pg.PlotWidget], None], self.props.plot_fun)
-            self.current_plot_fun(self.underlying)
-        commands.extend(super()._qt_update_commands(children, newprops, newstate, self.underlying, None))
+            plot_fun = tp.cast(tp.Callable[[pg.PlotItem], None], self.props.plot_fun)
+            plot_widget = tp.cast(pg.PlotWidget, self.underlying)
+            plot_item = tp.cast(pg.PlotItem, plot_widget.getPlotItem())
+            def _update_plot():
+                plot_item.clear()
+                plot_fun(plot_item)
+            commands.append(_CommandType(_update_plot))
+
         return commands
