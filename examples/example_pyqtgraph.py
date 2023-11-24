@@ -17,7 +17,7 @@ else:
     from PySide6 import QtGui
 
 import edifice as ed
-from edifice.components.pyqtgraph_plot import Plot
+from edifice.extra.pyqtgraph_plot import Plot
 import pyqtgraph as pg
 
 pg.setConfigOption("antialias", True)

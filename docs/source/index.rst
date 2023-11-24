@@ -140,8 +140,9 @@ Table of Contents
    edifice
    base_components
    hooks
-   utilities
    styling
+   extra
+   utilities
    developer_tools
    versions
    future

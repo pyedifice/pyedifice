@@ -19,7 +19,7 @@ from collections import OrderedDict
 import typing as tp
 import edifice as ed
 from edifice import Dropdown, IconButton, Label, ScrollView, Slider, TextInput, View
-from edifice.components.matplotlib_figure import MatplotlibFigure
+from edifice.extra.matplotlib_figure import MatplotlibFigure
 
 import matplotlib.colors
 import pandas as pd
