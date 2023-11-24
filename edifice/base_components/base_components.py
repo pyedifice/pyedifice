@@ -223,6 +223,50 @@ class QtWidgetElement(WidgetElement):
             Takes a
             `QMouseEvent <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QMouseEvent.html>`_
             as argument.
+        on_drop:
+        	Handle drop events.
+
+            See `Dropping <https://doc.qt.io/qtforpython-6/overviews/dnd.html#dropping>`_.
+
+            The handler function will be passed one of
+
+            * `QDragEnterEvent <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QDragEnterEvent.html>`_
+              when the proposed drop enters the widget.
+            * `QDragMoveEvent <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QDragMoveEvent.html>`_
+              when the proposed drop moves over the widget.
+            * `QDragLeaveEvent <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QDragLeaveEvent.html>`_
+              when the proposed drop leaves the widget.
+            * `QDropEvent <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QDropEvent.html>`_
+              when the drop happens.
+
+            The handler function should handle all cases. Example::
+
+                dropped_files, dropped_files_set = use_state(cast(list[str], []))
+                proposed_files, proposed_files_set = use_state(cast(list[str], []))
+
+                def handle_on_drop(event: QDragEnterEvent | QDragMoveEvent | QDragLeaveEvent | QDropEvent):
+                    event.accept()
+                    match event:
+                        case QDragEnterEvent():
+                            # Handle proposed drop enter
+                            if event.mimeData().hasUrls():
+                                event.acceptProposedAction()
+                                proposed_files_set([url.path() for url in event.mimeData().urls()])
+                        case QDragMoveEvent():
+                            # Handle proposed drop move
+                            if event.mimeData().hasUrls():
+                                event.acceptProposedAction()
+                                proposed_files_set([url.path() for url in event.mimeData().urls()])
+                        case QDragLeaveEvent():
+                            # Handle proposed drop leave
+                            proposed_files_set([])
+                        case QDropEvent():
+                            # Handle finalized drop
+                            if event.mimeData().hasUrls():
+                                proposed_files_set([])
+                                dropped_files_set([url.path() for url in event.mimeData().urls()])
+
+            Note that the handler function cannot not be a coroutine.
 
     """
 
@@ -244,6 +288,7 @@ class QtWidgetElement(WidgetElement):
         on_mouse_enter: tp.Optional[tp.Callable[[QtGui.QMouseEvent], None | tp.Awaitable[None]]] = None,
         on_mouse_leave: tp.Optional[tp.Callable[[QtGui.QMouseEvent], None | tp.Awaitable[None]]] = None,
         on_mouse_move: tp.Optional[tp.Callable[[QtGui.QMouseEvent], None | tp.Awaitable[None]]] = None,
+        on_drop: tp.Optional[tp.Callable[[QtGui.QDragEnterEvent | QtGui.QDragMoveEvent | QtGui.QDragLeaveEvent | QtGui.QDropEvent], None]] = None,
     ):
         self._register_props({
             "style": style,
@@ -262,6 +307,7 @@ class QtWidgetElement(WidgetElement):
             "on_mouse_enter": on_mouse_enter,
             "on_mouse_leave": on_mouse_leave,
             "on_mouse_move": on_mouse_move,
+            "on_drop": on_drop,
         })
         super().__init__()
         self._height = 0
@@ -279,12 +325,17 @@ class QtWidgetElement(WidgetElement):
         self._on_mouse_down = None
         self._on_mouse_up = None
         self._on_mouse_move = None
+        self._on_drop: tp.Optional[tp.Callable[[QtGui.QDragEnterEvent | QtGui.QDragMoveEvent | QtGui.QDragLeaveEvent | QtGui.QDropEvent], None]] = None
         self._widget_children = []
         self._default_mouse_press_event = None
         self._default_mouse_release_event = None
         self._default_mouse_move_event = None
         self._default_mouse_enter_event = None
         self._default_mouse_leave_event = None
+        self._default_drag_enter_event = None
+        self._default_drag_move_event = None
+        self._default_drag_leave_event = None
+        self._default_drop_event = None
 
         self._context_menu = None
         self._context_menu_connected = False
@@ -440,6 +491,33 @@ class QtWidgetElement(WidgetElement):
         else:
             self._on_mouse_move = None
             self.underlying.mouseMoveEvent = self._default_mouse_move_event
+
+    def _set_on_drop(self, underlying: QtWidgets.QWidget,
+        on_drop: tp.Optional[tp.Callable[[QtGui.QDragEnterEvent | QtGui.QDragMoveEvent | QtGui.QDragLeaveEvent | QtGui.QDropEvent], None]]
+    ):
+
+        assert self.underlying is not None
+
+        # Store the QWidget's default virtual event handler methods
+        if self._default_drag_enter_event is None:
+            self._default_drag_enter_event = self.underlying.dragEnterEvent
+        if self._default_drag_move_event is None:
+            self._default_drag_move_event = self.underlying.dragMoveEvent
+        if self._default_drag_leave_event is None:
+            self._default_drag_leave_event = self.underlying.dragLeaveEvent
+        if self._default_drop_event is None:
+            self._default_drop_event = self.underlying.dropEvent
+
+        if on_drop is not None:
+            self._on_drop = on_drop
+            self.underlying.setAcceptDrops(True)
+            self.underlying.dragEnterEvent = self._on_drop # type: ignore
+            self.underlying.dragMoveEvent = self._on_drop # type: ignore
+            self.underlying.dragLeaveEvent = self._on_drop # type: ignore
+            self.underlying.dropEvent = self._on_drop # type: ignore
+        else:
+            self._on_drop = None
+            self.underlying.setAcceptDrops(False)
 
     def _gen_styling_commands(
         self,
@@ -626,6 +704,8 @@ class QtWidgetElement(WidgetElement):
                 commands.append(_CommandType(self._set_on_mouse_leave, underlying, newprops.on_mouse_leave))
             elif prop == "on_mouse_move":
                 commands.append(_CommandType(self._set_on_mouse_move, underlying, newprops.on_mouse_move))
+            elif prop == "on_drop":
+                commands.append(_CommandType(self._set_on_drop, underlying, newprops.on_drop))
             elif prop == "tool_tip":
                 if newprops.tool_tip is not None:
                     commands.append(_CommandType(underlying.setToolTip, newprops.tool_tip))
