@@ -9,17 +9,10 @@ import typing as tp
 import asyncio
 import edifice as ed
 
-from edifice.components.matplotlib_figure import MatplotlibFigure
+from edifice.components.pyqtgraph_plot import Plot
 import numpy as np
 
-from edifice.qt import QT_VERSION
-if QT_VERSION == "PyQt6":
-    from PyQt6 import QtWidgets
-else:
-    from PySide6 import QtWidgets
-
-from matplotlib.backend_bases import MouseEvent
-from matplotlib.axes import Axes
+import pyqtgraph as pg
 
 # We create time range once so we don't have to recreate it each plot
 time_range = np.linspace(0, 10, num=120)
@@ -46,9 +39,8 @@ def Oscillator(self):
     simulation_time, simulation_time_set = ed.use_state(0.0)
     dt = 0.03
 
-    def plot(ax:Axes):
-        # Plotting function, called by the Matplotlib component. This is standard matplotlib code.
-        ax.plot(time_range, calculate_harmonic_motion(time_range))
+    def plot(plot_item:pg.PlotItem):
+        plot_item.plot(time_range, calculate_harmonic_motion(time_range))
 
     plot_fun, plot_fun_set = ed.use_state((lambda figure: plot(figure),))
 
@@ -85,7 +77,7 @@ def Oscillator(self):
                                 on_click=lambda e: is_playing_set(lambda p: not p))
                 ed.Button("Reset", on_click=lambda e: simulation_time_set(0))
             with ed.View():
-                MatplotlibFigure(plot_fun[0])
+                Plot(plot_fun=plot_fun[0])
             with ed.View(layout="row", style={"margin": 10}):
                 ed.Label("Angular Frequency")
                 ed.Slider(value=angular_frequency, min_value=1, max_value=10,
