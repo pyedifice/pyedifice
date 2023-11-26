@@ -6,8 +6,6 @@ import os
 import sys
 import typing as tp
 
-import numpy as np
-
 # We need this sys.path line for running this example, especially in VSCode debugger.
 sys.path.insert(0, os.path.join(sys.path[0], '..'))
 
