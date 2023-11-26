@@ -14,15 +14,18 @@ In this environment the tests should pass.
 ## Nix Build System
 
 There is a [Nix Flake](https://nixos.wiki/wiki/Flakes) with
-three development environments:
+two development environments:
 
-1. `nix develop .#default`
+1. `nix develop`
 
-   Nixpkgs `pythonWithPackages` environment.
+   poetry2nix [`mkPoetryEnv`](https://github.com/nix-community/poetry2nix#mkpoetryenv)
+   environment with editable `edifice/` source files.
 
    In this environment the tests should pass.
 
        ./run_tests.sh
+
+   In this environment building the [Docs](docs) should work.
 
 2. `nix develop .#poetry`
 
@@ -37,17 +40,6 @@ three development environments:
    In this environment
    [publishing to PyPI](https://python-poetry.org/docs/libraries/#publishing-to-pypi)
    should work.
-
-3. `nix develop .#poetry2nix`
-
-   poetry2nix [`mkPoetryEnv`](https://github.com/nix-community/poetry2nix#mkpoetryenv)
-   environment with editable `edifice/` source files.
-
-   In this environment the tests should pass.
-
-       ./run_tests.sh
-
-   In this environment building the [Docs](docs) should work.
 
 There are also Nix Flake `apps` for running the tests and the examples, see
 [Examples](https://pyedifice.github.io/examples.html) or
