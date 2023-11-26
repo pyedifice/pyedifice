@@ -4,6 +4,16 @@
 Release Notes
 =============
 
+0.2.2
+-----
+Released:
+
+* :class:`QtWidgetElement` :code:`on_drop` event handler.
+* **Extra Elements**
+    - :class:`extra.matplotlib_figure.MatplotlibFigure`
+    - :class:`extra.pyqtgraph_plot.Plot`
+* Hot-reload bugfixes.
+
 0.2.1
 -----
 Released: 2023-11-14
