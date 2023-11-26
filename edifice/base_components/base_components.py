@@ -224,7 +224,7 @@ class QtWidgetElement(WidgetElement):
             `QMouseEvent <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QMouseEvent.html>`_
             as argument.
         on_drop:
-        	Handle drop events.
+            Handle drop events.
 
             See `Dropping <https://doc.qt.io/qtforpython-6/overviews/dnd.html#dropping>`_.
 
