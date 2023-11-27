@@ -1783,17 +1783,17 @@ class View(_LinearView):
       `QVBoxLayout <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QVBoxLayout.html>`_
       or
       `QHBoxLayout <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QHBoxLayout.html>`_
-      or :code:`None`
+      or :code:`"none"`
 
     Content that does not fit into the View layout will be clipped.
     To allow scrolling in case of overflow, use :class:`ScrollView<edifice.ScrollView>`.
 
     Args:
-        layout: one of :code:`"column"`, :code:`"row"`, or :code:`None`.
+        layout: one of :code:`"column"`, :code:`"row"`, or :code:`"none"`.
 
             A row layout will lay its children in a row and a column layout will lay its children in a column.
             When :code:`layout="row"` or :code:`layout="column"` are set, the position of their children is not adjustable.
-            If layout is :code:`None`, then all children by default will be positioned at the upper left-hand corner
+            If layout is :code:`"none"`, then all children by default will be positioned at the upper left-hand corner
             of the View at *(x=0, y=0)*. Children can set the :code:`top` and :code:`left` attributes of their style
             to position themselves relevative to their parent.
     """
