@@ -99,8 +99,10 @@ class ButtonView(View):
             def on_click(ev:QMouseEvent):
                 on_trigger(ev)
             def on_key(ev:QKeyEvent):
-                if ev.text() == " " or ev.text() == "\r":
+                if ev.key() == Qt.Key.Key_Enter or ev.key() == Qt.Key.Key_Return or ev.key() == Qt.Key.Key_Space:
                     on_trigger(ev)
+                else:
+                    ev.ignore()
             self._set_on_click(underlying, on_click)
             self._set_on_key_up(underlying, on_key)
 
