@@ -188,13 +188,13 @@ class Reference(object):
     def __init__(self):
         self._value = None
 
-    def __bool__(self):
+    def __bool__(self) -> bool:
         return self._value is not None
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return id(self)
 
-    def __call__(self):
+    def __call__(self) -> tp.Optional["Element"]:
         return self._value
 
 T = tp.TypeVar("T")
