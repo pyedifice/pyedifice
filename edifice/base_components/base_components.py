@@ -1259,8 +1259,10 @@ class TextInput(QtWidgetElement):
        TextInput on the left.
 
     Args:
-        text: Initial text of the text input
-        placeholder_text: “makes the line edit display a grayed-out placeholder
+        text:
+            Initial text of the text input.
+        placeholder_text:
+            “makes the line edit display a grayed-out placeholder
             text as long as the line edit is empty.”
             See `placeHolderText <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QLineEdit.html#PySide6.QtWidgets.PySide6.QtWidgets.QLineEdit.placeholderText>`_
         on_change:
@@ -1277,9 +1279,10 @@ class TextInput(QtWidgetElement):
 
     def __init__(self,
         text: str = "",
-        placeholder_text: str = "",
-        on_change: tp.Callable[[tp.Text], None | tp.Awaitable[None]] = (lambda text: None),
-        on_edit_finish: tp.Callable[[], None | tp.Awaitable[None]] = (lambda: None),
+        placeholder_text: str | None = None,
+        on_change: tp.Optional[tp.Callable[[tp.Text], None | tp.Awaitable[None]]] = None,
+        # on_edited: tp.Optional[tp.Callable[[tp.Text], None | tp.Awaitable[None]]] = None,
+        on_edit_finish: tp.Optional[tp.Callable[[], None | tp.Awaitable[None]]] = None,
         # completer: tp.Optional[Completer] = None,
         **kwargs
     ):
@@ -1295,7 +1298,7 @@ class TextInput(QtWidgetElement):
         self._editing_finished_connected = False
 
     def _initialize(self):
-        self.underlying = QtWidgets.QLineEdit(self.props.text)
+        self.underlying = QtWidgets.QLineEdit()
         size = self.underlying.font().pointSize()
         self._set_size(size * len(self.props.text), size)
         self.underlying.setObjectName(str(id(self)))
@@ -1303,23 +1306,25 @@ class TextInput(QtWidgetElement):
     def _set_on_change(self, on_change):
         assert self.underlying is not None
         widget = tp.cast(QtWidgets.QLineEdit, self.underlying)
-        def on_change_fun(text):
-            if text != self.props.text:
-                return _ensure_future(on_change)(text)
         if self._on_change_connected:
             widget.textChanged.disconnect()
-        widget.textChanged.connect(on_change_fun)
-        self._on_change_connected = True
+        if on_change is not None:
+            def on_change_fun(text):
+                if text != self.props.text:
+                    return _ensure_future(on_change)(text)
+            widget.textChanged.connect(on_change_fun)
+            self._on_change_connected = True
 
     def _set_on_edit_finish(self, on_edit_finish):
-        def on_edit_finish_fun():
-            return _ensure_future(on_edit_finish)()
         assert self.underlying is not None
         widget = tp.cast(QtWidgets.QLineEdit, self.underlying)
         if self._editing_finished_connected:
             widget.editingFinished.disconnect()
-        widget.editingFinished.connect(on_edit_finish_fun)
-        self._editing_finished_connected = True
+        if on_edit_finish is not None:
+            def on_edit_finish_fun():
+                return _ensure_future(on_edit_finish)()
+            widget.editingFinished.connect(on_edit_finish_fun)
+            self._editing_finished_connected = True
 
     # def _set_completer(self, completer):
     #     if completer:
@@ -1337,7 +1342,7 @@ class TextInput(QtWidgetElement):
 
         commands = super()._qt_update_commands(children, newprops, newstate, self.underlying)
         commands.append(_CommandType(widget.setText, str(self.props.text)))
-        commands.append(_CommandType(widget.setCursorPosition, widget.cursorPosition()))
+        # commands.append(_CommandType(widget.setCursorPosition, widget.cursorPosition()))
         for prop in newprops:
             if prop == "on_change":
                 commands.append(_CommandType(self._set_on_change, newprops[prop]))
@@ -1414,24 +1419,24 @@ class Dropdown(QtWidgetElement):
     #         self.underlying.setCompleter(None)
 
     def _set_on_change(self, on_change):
-        def on_change_fun(text):
-            return _ensure_future(on_change)(text)
         assert self.underlying is not None
         widget = tp.cast(QtWidgets.QComboBox, self.underlying)
         if self._on_change_connected:
             widget.editTextChanged.disconnect()
         if on_change is not None:
+            def on_change_fun(text):
+                return _ensure_future(on_change)(text)
             widget.editTextChanged.connect(on_change_fun)
             self._on_change_connected = True
 
     def _set_on_select(self, on_select):
-        def on_select_fun(text):
-            return _ensure_future(on_select)(text)
         assert self.underlying is not None
         widget = tp.cast(QtWidgets.QComboBox, self.underlying)
         if self._on_select_connected:
             widget.textActivated.disconnect()
         if on_select is not None:
+            def on_select_fun(text):
+                return _ensure_future(on_select)(text)
             widget.textActivated.connect(on_select_fun)
             self._on_select_connected = True
 
