@@ -475,8 +475,6 @@ class Element:
         :code:`self.props` to :code:`newprops` and :code`self` to :code:`newstate`
         to determine changes.
 
-        By default, this function returns :code:`True`, even if props and state are unchanged.
-
         Args:
             newprops: the new set of props
             newstate: the new set of state
@@ -485,9 +483,19 @@ class Element:
         """
 
         for k,v in newprops._items:
-            v2 = self.props._get(k, None)
-            if v2 is None or v2 != v:
+            if k == "children":
+            # We always rerender if the element has children.
+                if len(v) > 0 or len(self.children) > 0:
+                    return True
+            elif k in self.props:
+            # If the prop is in the old props, then we check if it's changed.
+                v2 = self.props._get(k)
+                if v2 != v:
+                    return True
+            else:
+            # If the prop is not in the old props, then we rerender.
                 return True
+
 
         # for backward compatibility, we have to check for changes to state.
         for k,v in newstate.items():

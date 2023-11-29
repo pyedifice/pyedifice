@@ -167,7 +167,7 @@ class _RenderContext(object):
         setup: tp.Callable[[], tp.Callable[[], None]],
         dependencies: tp.Any,
     ) -> None:
-    	# https://legacy.reactjs.org/docs/hooks-effect.html#example-using-hooks
+        # https://legacy.reactjs.org/docs/hooks-effect.html#example-using-hooks
         # effects happen “after render”.
         # React guarantees the DOM has been updated by the time it runs the effects.
 
@@ -508,7 +508,17 @@ class RenderEngine(object):
         newprops = new_component.props
         render_context.set(component, "_edifice_internal_references",
                            component._edifice_internal_references | new_component._edifice_internal_references)
-        if component._should_update(newprops, {}):
+        # component needs re-rendering if
+        #  1) props changed
+        #  2) state changed
+        #  3) it has any children
+        #  4) it has any pending _hook_state updates
+        #  5) it has any references
+        pending_hook_state_updates = False
+        for h in self._hook_state[component]:
+            if len(h.updaters) > 0:
+                pending_hook_state_updates = True
+        if component._should_update(newprops, {}) or len(component._edifice_internal_references) > 0 or pending_hook_state_updates:
             render_context.mark_props_change(component, newprops)
             rerendered_obj = self._render(component, render_context)
             render_context.mark_qt_rerender(rerendered_obj.component, True)
@@ -657,7 +667,7 @@ class RenderEngine(object):
                 raise ValueError(message)
         old_rendering: Element | list[Element] | None = self._component_tree.get(component, None)
 
-		# TODO: Compare the sub_component.__name__ as well as the class, so that
+        # TODO: Compare the sub_component.__name__ as well as the class, so that
         # different @component Elements are distinguished
         if sub_component.__class__ == old_rendering.__class__ and isinstance(old_rendering, Element):
             # TODO: Call will _receive_props hook
