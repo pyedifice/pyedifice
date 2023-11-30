@@ -667,9 +667,9 @@ class RenderEngine(object):
                 raise ValueError(message)
         old_rendering: Element | list[Element] | None = self._component_tree.get(component, None)
 
-        # TODO: Compare the sub_component.__name__ as well as the class, so that
-        # different @component Elements are distinguished
-        if sub_component.__class__ == old_rendering.__class__ and isinstance(old_rendering, Element):
+        # Compare the sub_component.__name__ as well as the class, so that
+        # different @component ComponentElement are distinguished
+        if sub_component.__class__ == old_rendering.__class__ and sub_component.__class__.__name__ == old_rendering.__class__.__name__ and isinstance(old_rendering, Element):
             # TODO: Call will _receive_props hook
             assert old_rendering is not None
             render_context.widget_tree[component] = self._update_old_component(
