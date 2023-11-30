@@ -14,6 +14,8 @@ import numpy as np
 
 import pyqtgraph as pg
 
+pg.setConfigOption("antialias", True)
+
 # We create time range once so we don't have to recreate it each plot
 time_range = np.linspace(0, 10, num=120)
 
