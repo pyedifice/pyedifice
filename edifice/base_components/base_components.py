@@ -1281,7 +1281,6 @@ class TextInput(QtWidgetElement):
         text: str = "",
         placeholder_text: str | None = None,
         on_change: tp.Optional[tp.Callable[[tp.Text], None | tp.Awaitable[None]]] = None,
-        # on_edited: tp.Optional[tp.Callable[[tp.Text], None | tp.Awaitable[None]]] = None,
         on_edit_finish: tp.Optional[tp.Callable[[], None | tp.Awaitable[None]]] = None,
         # completer: tp.Optional[Completer] = None,
         **kwargs
@@ -1342,7 +1341,9 @@ class TextInput(QtWidgetElement):
 
         commands = super()._qt_update_commands(children, newprops, newstate, self.underlying)
         commands.append(_CommandType(widget.setText, str(self.props.text)))
-        # commands.append(_CommandType(widget.setCursorPosition, widget.cursorPosition()))
+        # This setCursorPosition is needed because otherwise the cursor will
+        # jump to the end of the text after the setText.
+        commands.append(_CommandType(widget.setCursorPosition, widget.cursorPosition()))
         for prop in newprops:
             if prop == "on_change":
                 commands.append(_CommandType(self._set_on_change, newprops[prop]))
