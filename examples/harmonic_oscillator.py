@@ -17,7 +17,7 @@ import pyqtgraph as pg
 pg.setConfigOption("antialias", True)
 
 # We create time range once so we don't have to recreate it each plot
-time_range = np.linspace(0, 10, num=120)
+time_range = np.linspace(0, 10, num=200)
 
 @ed.component
 def Oscillator(self):
@@ -33,7 +33,7 @@ def Oscillator(self):
     """
 
     # Spring parameters: frequency and damping factor. Damping must be negative
-    angular_frequency, angular_frequency_set = ed.use_state(2)
+    angular_frequency, angular_frequency_set = ed.use_state(2.0)
     damping, damping_set = ed.use_state(-0.5)
 
     is_playing, is_playing_set = ed.use_state(False)
@@ -63,12 +63,12 @@ def Oscillator(self):
     ed.use_async(play_tick, (is_playing, play_trigger))
 
     def freq_slider_change(value):
-        angular_frequency_set(value)
+        angular_frequency_set(float(value)/20.0)
         simulation_time_set(0)
         plot_fun_set((lambda figure: plot(figure),))
 
     def damp_slider_change(value):
-        damping_set(value)
+        damping_set(float(value)/100.0)
         simulation_time_set(0)
         plot_fun_set((lambda figure: plot(figure),))
 
@@ -82,11 +82,19 @@ def Oscillator(self):
                 Plot(plot_fun=plot_fun[0])
             with ed.View(layout="row", style={"margin": 10}):
                 ed.Label("Angular Frequency")
-                ed.Slider(value=angular_frequency, min_value=1, max_value=10,
-                            on_change=freq_slider_change)
+                ed.Slider(
+                    value=int(angular_frequency*20.0),
+                    min_value=20,
+                    max_value=200,
+                    on_change=freq_slider_change
+                )
                 ed.Label("Damping Factor")
-                ed.Slider(value=damping, min_value=-3, max_value=0,
-                            on_change=damp_slider_change)
+                ed.Slider(
+                    value=int(damping*100.0),
+                    min_value=-300,
+                    max_value=0,
+                    on_change=damp_slider_change
+                )
 
             # We position the ball and the centroid using absolute positioning.
             # The label and ball offsets are different since we have to take into

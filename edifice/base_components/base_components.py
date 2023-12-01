@@ -1614,8 +1614,6 @@ class CheckBox(QtWidgetElement):
         return commands
 
 
-NumericType = tp.Union[float, int]
-
 class Slider(QtWidgetElement):
     """Slider bar widget.
 
@@ -1630,113 +1628,83 @@ class Slider(QtWidgetElement):
     A Slider bar allows the user to input a continuous value.
     The bar could be displayed either horizontally or vertically.
 
-    The value prop determines the initial value of the widget,
-    and it could either be an integer or a float
-    When the user changes the value of the slider,
+    The value prop determines the position of the slider.
+    When the user changes the position of the slider,
     the on_change callback is called with the new value.
 
     Args:
-        value: the initial value of the slider
-        min_value: the minimum value for the slider
-        max_value: the max value for the slider
-        dtype: the data type for the slider, either int or float.
-        orientation: the orientation of the slider,
-            either horizontal or vertical.
+        value:
+            The value of the slider.
+        min_value:
+            The minimum value for the slider.
+        max_value:
+            The maximum value for the slider.
+        orientation:
+            The orientation of the slider,
+            either :code:`Horizontal` or :code:`Vertical`.
+            See `Orientation <https://doc.qt.io/qtforpython-6/PySide6/QtCore/Qt.html#PySide6.QtCore.PySide6.QtCore.Qt.Orientation>`_.
         on_change: callback for when the slider value changes.
             The callback receives the new value of the slider as an argument.
     """
 
     def __init__(
         self,
-        value: NumericType = 0.0,
-        min_value: NumericType = 0,
-        max_value: NumericType = 1,
-        dtype=float,
-        orientation="horizontal",
-        on_change: tp.Callable[[NumericType], None | tp.Awaitable[None]] = (lambda value: None),
+        value: int,
+        min_value: int = 0,
+        max_value: int = 100,
+        orientation: QtCore.Qt.Orientation = QtCore.Qt.Orientation.Horizontal,
+        on_change: tp.Callable[[int], None | tp.Awaitable[None]] | None = None,
         **kwargs,
     ):
         self._register_props({
             "value": value,
             "min_value": min_value,
             "max_value": max_value,
-            "dtype": dtype,
             "orientation": orientation,
             "on_change": on_change,
         })
         self._register_props(kwargs)
         super().__init__(**kwargs)
-        # A QSlider only accepts integers. We represent floats as
-        # an integer between 0 and 1024.
         self._connected = False
-        # TODO: let user choose?
-        self._granularity = 512
-        if math.isnan(value):
-            raise ValueError("Received nan for value")
-        elif math.isnan(min_value):
-            raise ValueError("Received nan for min_value")
-        elif math.isnan(max_value):
-            raise ValueError("Received nan for max_value")
-        elif min_value == max_value:
-            raise ValueError("min_value must be different from max_value")
-        elif value < min_value or value > max_value:
-            raise ValueError("value must be between min_value and max_value")
 
-        if orientation == "horizontal" or orientation == "row":
-            self.orientation = QtCore.Qt.Orientation.Horizontal
-        elif orientation == "vertical" or orientation == "column":
-            self.orientation = QtCore.Qt.Orientation.Vertical
-        else:
-            raise ValueError("Orientation must be horizontal or vertical, got %s" % orientation)
+    def _initialize(self, orientation):
+        self.underlying = QtWidgets.QSlider(orientation)
 
-    def _initialize(self):
-        self.underlying = QtWidgets.QSlider(self.orientation)
         # TODO: figure out what's the right default height and width
         # if self.orientation == QtCore.Qt.Horizontal:
         #     self._set_size(size * len(self.props.text), size)
         # else:
         #     self._set_size(size * len(self.props.text), size)
+
         self.underlying.setObjectName(str(id(self)))
 
     def _set_on_change(self, on_change):
         assert self.underlying is not None
         widget = tp.cast(QtWidgets.QSlider, self.underlying)
-        def on_change_fun(value):
-            if self.props.dtype == float:
-                min_value, max_value = self.props.min_value, self.props.max_value
-                value = min_value + (max_value - min_value) * (value / self._granularity)
-            return _ensure_future(on_change)(value)
         if self._connected:
             widget.valueChanged.disconnect()
-        widget.valueChanged.connect(on_change_fun)
-        self._connected = True
+            self._connected = False
+        if on_change is not None:
+            def on_change_fun(value):
+                return _ensure_future(on_change)(value)
+            widget.valueChanged.connect(on_change_fun)
+            self._connected = True
 
     def _qt_update_commands(self, children, newprops, newstate):
         if self.underlying is None:
-            self._initialize()
+            self._initialize(newprops.orientation)
         assert self.underlying is not None
         widget = tp.cast(QtWidgets.QSlider, self.underlying)
 
         commands = super()._qt_update_commands(children, newprops, newstate, self.underlying)
-        value = self.props.value
-        if self.props.dtype == float:
-            min_value, max_value = self.props.min_value, self.props.max_value
-            value = int((value - min_value) / (max_value - min_value) * self._granularity)
-
-        if self.props.dtype == float:
-            commands.extend([
-                _CommandType(widget.setMinimum, 0),
-                _CommandType(widget.setMaximum, self._granularity),
-            ])
-        else:
-            commands.extend([
-                _CommandType(widget.setMinimum, self.props.min_value),
-                _CommandType(widget.setMaximum, self.props.max_value),
-            ])
-        commands.append(_CommandType(widget.setValue, value))
-        for prop in newprops:
-            if prop == "on_change":
-                commands.append(_CommandType(self._set_on_change, newprops[prop]))
+        if "min_value" in newprops:
+            commands.append(_CommandType(widget.setMinimum, self.props.min_value))
+        if "max_value" in newprops:
+            commands.append(_CommandType(widget.setMaximum, self.props.max_value))
+        if "value" in newprops:
+            commands.append(_CommandType(widget.setValue, self.props.value))
+        if "on_change" in newprops:
+            commands.append(_CommandType(self._set_on_change, newprops.on_change))
         return commands
 
 

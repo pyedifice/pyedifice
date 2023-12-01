@@ -12,18 +12,18 @@ import edifice as ed
 @ed.component
 def AsyncElement(self):
 
-    a, set_a = ed.use_state(0.0)
+    a, set_a = ed.use_state(0)
     b, set_b = ed.use_state(0)
 
-    async def _on_change(text):
-        set_a(float(text))
+    async def _on_change(v):
+        set_a(v)
         await asyncio.sleep(4)
-        set_a(lambda x: x/2)
+        set_a(lambda x: divmod(x,2)[0])
 
     with ed.View():
         ed.Label(str(a))
         ed.Label(str(b))
-        ed.Slider(a, min_value=0, max_value=1, on_change=_on_change)
+        ed.Slider(a, min_value=0, max_value=100, on_change=_on_change)
         ed.Button("Update b", on_click=lambda e: set_b(lambda x: x+1))
 
 if __name__ == "__main__":
