@@ -3,7 +3,6 @@ import functools
 import importlib.resources
 import inspect
 import logging
-import math
 import re
 import typing as tp
 
@@ -1698,11 +1697,11 @@ class Slider(QtWidgetElement):
 
         commands = super()._qt_update_commands(children, newprops, newstate, self.underlying)
         if "min_value" in newprops:
-            commands.append(_CommandType(widget.setMinimum, self.props.min_value))
+            commands.append(_CommandType(widget.setMinimum, newprops.min_value))
         if "max_value" in newprops:
-            commands.append(_CommandType(widget.setMaximum, self.props.max_value))
+            commands.append(_CommandType(widget.setMaximum, newprops.max_value))
         if "value" in newprops:
-            commands.append(_CommandType(widget.setValue, self.props.value))
+            commands.append(_CommandType(widget.setValue, newprops.value))
         if "on_change" in newprops:
             commands.append(_CommandType(self._set_on_change, newprops.on_change))
         return commands
@@ -2212,4 +2211,78 @@ class Table(QtWidgetElement):
                 for j, el in enumerate(child.children):
                     commands.append(_CommandType(widget.setCellWidget, i, j, el.component.underlying))
             self._already_rendered[child.component] = True
+        return commands
+
+class ProgressBar(QtWidgetElement):
+    """Progress bar widget.
+
+    * Underlying Qt Widget
+      `QProgressBar <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QProgressBar.html>`_.
+
+    A progress bar is used to give the user an indication of the progress of an operation.
+
+    The :code:`value` prop indicates the progress from :code:`min_value` to
+    :code:`max_value`.
+
+    If :code:`min_value` and :code:`max_value` both are set to *0*, the bar shows
+    a busy indicator instead of a percentage of steps.
+
+    Args:
+        value:
+            The progress.
+        min_value:
+            The starting progress.
+        max_value:
+            The ending progress.
+        format:
+            The descriptive text format.
+            See `format <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QProgressBar.html#PySide6.QtWidgets.PySide6.QtWidgets.QProgressBar.format>`_.
+        orientation:
+            The orientation of the bar,
+            either :code:`Horizontal` or :code:`Vertical`.
+            See `Orientation <https://doc.qt.io/qtforpython-6/PySide6/QtCore/Qt.html#PySide6.QtCore.PySide6.QtCore.Qt.Orientation>`_.
+    """
+
+    def __init__(
+        self,
+        value: int,
+        min_value: int = 0,
+        max_value: int = 100,
+        format: str | None = None,
+        orientation: QtCore.Qt.Orientation = QtCore.Qt.Orientation.Horizontal,
+        **kwargs,
+    ):
+        self._register_props({
+            "value": value,
+            "min_value": min_value,
+            "max_value": max_value,
+            "orientation": orientation,
+            "format": format,
+        })
+        self._register_props(kwargs)
+        super().__init__(**kwargs)
+        self._connected = False
+
+    def _initialize(self, orientation):
+        self.underlying = QtWidgets.QProgressBar()
+        self.underlying.setOrientation(orientation)
+        self.underlying.setObjectName(str(id(self)))
+
+    def _qt_update_commands(self, children, newprops, newstate):
+        if self.underlying is None:
+            self._initialize(newprops.orientation)
+        assert self.underlying is not None
+        widget = tp.cast(QtWidgets.QProgressBar, self.underlying)
+
+        commands = super()._qt_update_commands(children, newprops, newstate, self.underlying)
+        if "min_value" in newprops:
+            commands.append(_CommandType(widget.setMinimum, newprops.min_value))
+        if "max_value" in newprops:
+            commands.append(_CommandType(widget.setMaximum, newprops.max_value))
+        if "value" in newprops:
+            commands.append(_CommandType(widget.setValue, newprops.value))
+        if "format" in newprops:
+            commands.append(_CommandType(widget.setFormat, newprops.format))
+        if "orientation" in newprops:
+            commands.append(_CommandType(widget.setOrientation, newprops.orientation))
         return commands

@@ -40,7 +40,7 @@ components allow you to collect input from the user.
 """
 from .base_components import (QtWidgetElement, Window, ExportList, View, ScrollView, TabView,
 															GridView, Label, Image, ImageSvg, Icon, IconButton, Button,
-															TextInput, CheckBox, RadioButton, Slider, Dropdown,
+															TextInput, CheckBox, RadioButton, Slider, ProgressBar, Dropdown,
 															CustomWidget)
 from .button_view import ButtonView
 from .flow_view import FlowView

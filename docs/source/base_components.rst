@@ -30,6 +30,7 @@ Base Elements
    CheckBox
    RadioButton
    Slider
+   ProgressBar
    Dropdown
 
 Events
