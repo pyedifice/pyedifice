@@ -11,7 +11,7 @@ sys.path.insert(0, os.path.join(sys.path[0], '..'))
 
 from edifice.qt import QT_VERSION
 if QT_VERSION == "PyQt6" and not tp.TYPE_CHECKING:
-    from PySide6.QtGui import QDragEnterEvent, QDragLeaveEvent, QDragMoveEvent, QDropEvent
+    from PyQt6.QtGui import QDragEnterEvent, QDragLeaveEvent, QDragMoveEvent, QDropEvent
 else:
     from PySide6.QtGui import QDragEnterEvent, QDragLeaveEvent, QDragMoveEvent, QDropEvent
 
