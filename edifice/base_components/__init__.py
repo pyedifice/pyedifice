@@ -46,3 +46,4 @@ from .button_view import ButtonView
 from .flow_view import FlowView
 from .image_aspect import ImageAspect
 from .table_grid_view import TableGridView
+from .spin_input import SpinInput

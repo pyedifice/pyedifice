@@ -27,6 +27,7 @@ Base Elements
    Button
    ButtonView
    TextInput
+   SpinInput
    CheckBox
    RadioButton
    Slider
