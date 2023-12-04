@@ -21,7 +21,6 @@ Base Elements
    Label
    Image
    ImageSvg
-   ImageAspect
    Icon
    IconButton
    Button

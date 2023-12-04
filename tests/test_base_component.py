@@ -13,9 +13,9 @@ ICONS = importlib.resources.files(edifice.icons)
 
 from edifice.qt import QT_VERSION
 if QT_VERSION == "PyQt6":
-    from PyQt6 import QtCore, QtWidgets
+    from PyQt6 import QtCore, QtWidgets, QtGui
 else:
-    from PySide6 import QtCore, QtWidgets
+    from PySide6 import QtCore, QtWidgets, QtGui
 
 if QtWidgets.QApplication.instance() is None:
     app = QtWidgets.QApplication(["-platform", "offscreen"])
@@ -344,6 +344,9 @@ class WidgetTreeTestCase(unittest.TestCase):
             ])
 
 
+def NDArray8_to_QImage(arr) -> QtGui.QImage:
+    height, width, channel = arr.shape
+    return QtGui.QImage(arr.data, width, height, channel * width, QtGui.QImage.Format.Format_RGB888)
 class BaseElementsTest(unittest.TestCase):
 
     def _test_comp(self, comp, children=None):
@@ -372,8 +375,8 @@ class BaseElementsTest(unittest.TestCase):
         self._test_comp(base_components.IconButton("play", on_click=lambda e: None))
         self._test_comp(base_components.View(context_menu=context_menu))
         self._test_comp(base_components.Label(text="Hello", selectable=True))
-        self._test_comp(base_components.Image(src="tests/example.png", scale_to_fit=True))
-        self._test_comp(base_components.Image(src=np.zeros((100, 100, 3)), scale_to_fit=False))
+        self._test_comp(edifice.Image(src="tests/example.png"))
+        self._test_comp(edifice.Image(src=NDArray8_to_QImage(np.zeros((100, 100, 3)))))
         self._test_comp(base_components.Button("play", on_click=lambda e: None))
         self._test_comp(base_components.TextInput("initial_text", on_change=lambda text: None))
         self._test_comp(base_components.Button("play", on_click=lambda e: None))

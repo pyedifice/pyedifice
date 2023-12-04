@@ -12,7 +12,7 @@ else:
 
 from .base_components import QtWidgetElement, _image_descriptor_to_pixmap, _CommandType
 
-class ScaledLabel(QtWidgets.QLabel):
+class _ScaledLabel(QtWidgets.QLabel):
     """
     https://stackoverflow.com/questions/72188903/pyside6-how-do-i-resize-a-qlabel-without-loosing-the-size-aspect-ratio
     """
@@ -20,6 +20,7 @@ class ScaledLabel(QtWidgets.QLabel):
     def __init__(self, *args, **kwargs):
         QtWidgets.QLabel.__init__(self)
         self._pixmap : QtGui.QPixmap | None = None
+        self._aspect_ratio_mode : QtCore.Qt.AspectRatioMode | None = None
         self._rescale()
 
     def resizeEvent(self, event):
@@ -27,40 +28,79 @@ class ScaledLabel(QtWidgets.QLabel):
 
     def _rescale(self):
         if self._pixmap is not None:
-            QtWidgets.QLabel.setPixmap(self,self._pixmap.scaled(
-                self.frameSize(),
-                QtCore.Qt.AspectRatioMode.KeepAspectRatio,
-                QtCore.Qt.TransformationMode.SmoothTransformation,
-                ))
+            match self._aspect_ratio_mode:
+                case None:
+                    self.setPixmap(self._pixmap)
+                case aspect_ratio_mode:
+                    self.setPixmap(self._pixmap.scaled(
+                        self.frameSize(),
+                        aspect_ratio_mode,
+                        QtCore.Qt.TransformationMode.SmoothTransformation,
+                        ))
 
-    def setPixmap(self, pixmap : QtGui.QPixmap):
+    def _setPixmap(self, pixmap : QtGui.QPixmap):
         if not pixmap:
             return
         self._pixmap = pixmap
         self._rescale()
 
+    def _setAspectRatioMode(self, aspect_ratio_mode : QtCore.Qt.AspectRatioMode | None):
+        self._aspect_ratio_mode = aspect_ratio_mode
+        self._rescale()
 
-class ImageAspect(QtWidgetElement):
-    """An image widget which scales the image to fit inside the widget,
-    while keeping the image aspect ratio fixed.
 
-    * Underlying Qt Layout
+class Image(QtWidgetElement):
+    """An image container.
+
+    * Underlying Qt Widget
       `QLabel <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QLabel.html>`_
 
+    If you want to display a 3-dimensional :code:`uint8` :code:`numpy` array as an image,
+    then first convert it to a :code:`QImage` using a function like this
+    :code:`NDArray8_to_QImage`.
+
+    Example::
+
+        from numpy import uint8
+        from numpy.typing import NDArray
+
+        def NDArray8_to_QImage(arr: NDArray[uint8]) -> QImage:
+            height, width, channel = arr.shape
+            return QImage(arr.data, width, height, channel * width, QImage.Format.Format_RGB888)
+
     Args:
-        src: either the path to the image, or an np array. The np array must be 3 dimensional (height, width, channels)
+        src:
+            One of:
+
+            * A path to an image file.
+            * A `QImage <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QImage.html>`_.
+            * A `QPixmap <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QPixmap.html>`_.
+        aspect_ratio_mode:
+            The aspect ratio mode of the image.
+
+            * :code:`None` for a fixed image which doesn’t scale.
+            * An
+              `AspectRadioMode <https://doc.qt.io/qtforpython-6/PySide6/QtCore/Qt.html#PySide6.QtCore.PySide6.QtCore.Qt.AspectRatioMode>`_.
+              to specify how the image should scale.
+
     """
 
-    def __init__(self, src: tp.Any = "", **kwargs):
+    def __init__(
+        self,
+        src: str | QtGui.QImage | QtGui.QPixmap,
+        aspect_ratio_mode: None | QtCore.Qt.AspectRatioMode = None,
+        **kwargs
+    ):
         self._register_props({
             "src": src,
+            "aspect_ratio_mode": aspect_ratio_mode,
         })
         self._register_props(kwargs)
         super().__init__(**kwargs)
-        self.underlying : ScaledLabel | None = None
+        self.underlying : _ScaledLabel | None = None
 
     def _initialize(self):
-        self.underlying = ScaledLabel()
+        self.underlying = _ScaledLabel()
         self.underlying.setObjectName(str(id(self)))
 
     def _qt_update_commands(self, children, newprops, newstate):
@@ -69,7 +109,8 @@ class ImageAspect(QtWidgetElement):
         assert self.underlying is not None
 
         commands = super()._qt_update_commands(children, newprops, newstate, self.underlying, None)
-        for prop in newprops:
-            if prop == "src" and self.underlying is not None:
-                commands.append(_CommandType(self.underlying.setPixmap, _image_descriptor_to_pixmap(self.props.src)))
+        if "src" in newprops:
+            commands.append(_CommandType(self.underlying._setPixmap, _image_descriptor_to_pixmap(newprops.src)))
+        if "aspect_ratio_mode" in newprops:
+            commands.append(_CommandType(self.underlying._setAspectRatioMode, newprops.aspect_ratio_mode))
         return commands

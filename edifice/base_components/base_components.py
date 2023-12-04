@@ -5,9 +5,7 @@ import inspect
 import logging
 import re
 import typing as tp
-
 import numpy as np
-
 from .._component import WidgetElement, RootElement, _CommandType, PropsDict
 
 from ..qt import QT_VERSION
@@ -41,29 +39,17 @@ def _dict_to_style(d, prefix="QWidget"):
     stylesheet = prefix + "{%s}" % (";".join("%s: %s" % (k, v) for (k, v) in d.items()))
     return stylesheet
 
-def _array_to_pixmap(arr):
-    try:
-        import numpy as np
-    except ImportError:
-        raise ValueError("Image src must be filename or QImage or numpy array")
-
-    height, width, channel = arr.shape
-    if arr.dtype == np.float32 or arr.dtype == np.float64:
-        arr = (255 * arr).round()
-    arr = arr.astype(np.uint8)
-    return QtGui.QPixmap.fromImage(QtGui.QImage(arr.data, width, height, channel * width, QtGui.QImage.Format.Format_RGB888))
-
 @functools.lru_cache(30)
-def _get_image(path):
+def _get_image(path) -> QtGui.QPixmap:
     return QtGui.QPixmap(path)
 
-def _image_descriptor_to_pixmap(inp):
+def _image_descriptor_to_pixmap(inp: str | QtGui.QImage | QtGui.QPixmap) -> QtGui.QPixmap:
     if isinstance(inp, str):
         return _get_image(inp)
     elif isinstance(inp, QtGui.QImage):
         return QtGui.QPixmap.fromImage(inp)
-    else:
-        return _array_to_pixmap(inp)
+    elif isinstance(inp, QtGui.QPixmap):
+        return inp
 
 @functools.lru_cache(100)
 def _get_svg_image_raw(icon_path, size):
@@ -1145,42 +1131,6 @@ class Label(QtWidgetElement):
         return commands
 
 
-class Image(QtWidgetElement):
-    """An image container.
-
-    * Underlying Qt Widget
-      `QLabel <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QLabel.html>`_
-
-    Args:
-        src: either the path to the image, or an RGB np array, or a QtGui.QImage. The np array must be 3 dimensional (height, width, channels)
-        scale_to_fit: if True, the image will be scaled to fit inside the container.
-    """
-
-    def __init__(self, src: tp.Any = "", scale_to_fit: bool = True, **kwargs):
-        self._register_props({
-            "src": src,
-            "scale_to_fit": scale_to_fit,
-        })
-        self._register_props(kwargs)
-        super().__init__(**kwargs)
-
-    def _initialize(self):
-        self.underlying = QtWidgets.QLabel()
-        self.underlying.setObjectName(str(id(self)))
-
-    def _qt_update_commands(self, children, newprops, newstate):
-        if self.underlying is None:
-            self._initialize()
-        assert self.underlying is not None
-
-        commands = super()._qt_update_commands(children, newprops, newstate, self.underlying, None)
-        widget = tp.cast(QtWidgets.QLabel, self.underlying)
-        commands.append(_CommandType(widget.setScaledContents, self.props.scale_to_fit))
-        for prop in newprops:
-            if prop == "src":
-                commands.append(_CommandType(widget.setPixmap, _image_descriptor_to_pixmap(self.props.src)))
-        return commands
-
 class ImageSvg(QtWidgetElement):
     """An SVG Image container.
 
@@ -1897,6 +1847,38 @@ class ScrollView(_LinearView):
         commands.extend(super()._qt_update_commands(children, newprops, newstate, self.underlying, self.underlying_layout))
         return commands
 
+def npones(num_rows, num_cols):
+    """
+    List replacement for numpy.ones()
+    """
+    return [[1 for _ in range(num_cols)] for _ in range(num_rows)]
+
+def npany(arr):
+    """
+    List replacement for numpy.any()
+    """
+    return any([any(x) for x in arr])
+
+def set_slice2(arr, x0, x1, y0, y1, val):
+    """
+    Set a slice of a list of lists to a value.
+    """
+    for x in range(x0, x1):
+        for y in range(y0, y1):
+            arr[x][y] = val
+
+def npargmax(arr):
+    """
+    List replacement for numpy.argmax(). Returns the indices of the maximum values.
+    """
+    i,j = 0,0
+    max_val = arr[0][0]
+    for x in range(len(arr)):
+        for y in range(len(arr[x])):
+            if arr[x][y] > max_val:
+                max_val = arr[x][y]
+                i,j = x,y
+    return i,j
 
 def _layout_str_to_grid_spec(layout):
     """Parses layout to return a grid spec.
@@ -1917,8 +1899,8 @@ def _layout_str_to_grid_spec(layout):
         return (num_rows, 0, [])
 
     corner = (0, 0)
-    unprocessed = np.ones([num_rows, num_cols])
-    while np.any(unprocessed):
+    unprocessed = npones(num_rows, num_cols)
+    while npany(unprocessed):
         char = layout[corner[0]][corner[1]]
         i = corner[1] + 1
         for i in range(corner[1] + 1, num_cols + 1):
@@ -1932,8 +1914,8 @@ def _layout_str_to_grid_spec(layout):
         row_span = j - corner[0]
 
         ls.append((char, corner[0], corner[1], row_span, col_span))
-        unprocessed[corner[0]: corner[0] + row_span, corner[1]: corner[1] + col_span] = 0
-        corner = np.unravel_index(np.argmax(unprocessed), unprocessed.shape)
+        set_slice2(unprocessed, corner[0], corner[0] + row_span, corner[1], corner[1] + col_span, 0)
+        corner = npargmax(unprocessed)
     return (num_rows, num_cols, ls)
 
 

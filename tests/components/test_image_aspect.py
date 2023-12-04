@@ -14,7 +14,7 @@ if QtWidgets.QApplication.instance() is None:
 class FormTest(unittest.TestCase):
 
     def test_ImageAspect_render(self):
-        v = edifice.ImageAspect(src="../example.png")
+        v = edifice.Image(src="../example.png")
         my_app = edifice.App(v, create_application=False)
         with my_app.start_loop() as loop:
             loop.call_later(0.1, loop.stop)

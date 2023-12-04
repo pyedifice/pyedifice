@@ -14,13 +14,13 @@ format = "poetry-core"
 
 [tool.poetry.dependencies]
 python = ">= 3.8,<3.12" # "^3.10"
-numpy = ">= 1.19.4" # "^1.25.1"
 qasync = ">= 0.13.0" # "^0.24.0"
 
 [tool.poetry.group.dev.dependencies]
 certifi = ">= 2020.12.5" # "^2023.5.7"
 chardet = ">= 4.0.0" # "^5.1.0"
 idna = ">= 2.10" # "^3.4"
+numpy = ">= 1.19.4" # "^1.25.1"
 pandas = ">= 1.2.0" # "^2.0.3"
 PyQt6 = ">= 6.0" # "^6.5.1"
 PyQt6-sip = ">= 13.0.0" # "^13.5.1"

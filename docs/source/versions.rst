@@ -39,7 +39,7 @@ in version 16.8.
 * New :code:`with` context manager syntax for declaring children instead of the
   Element :code:`__call__` syntax for declaring children.
 
-* Moved :class:`ButtonView`, :class:`FlowView`, :class:`ImageAspect`,
+* Moved :class:`ButtonView`, :class:`FlowView`, :code:`ImageAspect`,
   :class:`TableGridView` to Base Elements.
 
 * Deprecated all Higher-level Components.
@@ -90,7 +90,7 @@ Released: 2023-09-14
 * Component :code:`Image` props :code:`src` can be a :code:`QtGui.QImage`.
 * Deleted :code:`setup.py`, added Poetry :code:`pyproject.toml`.
 * :code:`App` new props :code:`qapplication`.
-* New Higher-level Component: :class:`ImageAspect`.
+* New Higher-level Component: :code:`ImageAspect`.
 * New Higher-level Component: :class:`ButtonView`.
 * New Higher-level Component: :class:`FlowView`.
 * New Higher-level Component: :class:`TableGridView`.
