@@ -1185,12 +1185,14 @@ class ImageSvg(QtWidgetElement):
     """An SVG Image container.
 
     * Underlying Qt Widget
-      `QSvgWidget <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QSvgWidget.html>`_
+      `QSvgWidget <https://doc.qt.io/qtforpython-6/PySide6/QtSvgWidgets/QSvgWidget.html>`_
 
     Args:
-        src: the path to the SVG image.
+        src:
+            Either a path to an SVG image file, or a :code:`QByteArray`
+            containing the serialized XML representation of an SVG file.
     """
-    def __init__(self, src: str, **kwargs):
+    def __init__(self, src: str | QtCore.QByteArray, **kwargs):
         self._register_props({
             "src": src,
         })
