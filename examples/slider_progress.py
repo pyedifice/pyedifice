@@ -60,8 +60,8 @@ def MyComponent(self):
             y,
             min_value=0,
             max_value=1000,
-            textFromValue=to_percent,
-            valueFromText=from_percent,
+            value_to_text=to_percent,
+            text_to_value=from_percent,
             on_change=y_set,
             style={
                 "font-size": "20px",

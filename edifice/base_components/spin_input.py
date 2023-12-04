@@ -67,10 +67,10 @@ class SpinInput(QtWidgetElement):
             Callback for when the value changes.
             The callback is passed the changed
             value.
-        textFromValue:
+        value_to_text:
             Function to convert the value to a text.
             If not provided, the default text conversion is used.
-        valueFromText:
+        text_to_value:
             Function to convert the text to a value.
             If not provided, the default text conversion is used.
 
@@ -90,8 +90,8 @@ class SpinInput(QtWidgetElement):
         min_value: int = 0,
         max_value: int = 100,
         on_change: tp.Callable[[int], None | tp.Awaitable[None]] | None = None,
-        textFromValue : tp.Callable[[int], str] | None = None,
-        valueFromText : tp.Callable[[str], int | tp.Literal[QValidator.State.Intermediate] | tp.Literal[QValidator.State.Invalid]] | None = None,
+        value_to_text : tp.Callable[[int], str] | None = None,
+        text_to_value : tp.Callable[[str], int | tp.Literal[QValidator.State.Intermediate] | tp.Literal[QValidator.State.Invalid]] | None = None,
         **kwargs
     ):
         self._register_props({
@@ -99,8 +99,8 @@ class SpinInput(QtWidgetElement):
             "min_value": min_value,
             "max_value": max_value,
             "on_change": on_change,
-            "textFromValue": textFromValue,
-            "valueFromText": valueFromText,
+            "value_to_text": value_to_text,
+            "text_to_value": text_to_value,
         })
         self._register_props(kwargs)
         super().__init__(**kwargs)
@@ -130,10 +130,10 @@ class SpinInput(QtWidgetElement):
 
         commands = super()._qt_update_commands(children, newprops, newstate, self.underlying)
 
-        if "textFromValue" in newprops:
-            commands.append(_CommandType(setattr, widget, "_textFromValue", newprops.textFromValue))
-        if "valueFromText" in newprops:
-            commands.append(_CommandType(setattr, widget, "_valueFromText", newprops.valueFromText))
+        if "value_to_text" in newprops:
+            commands.append(_CommandType(setattr, widget, "_textFromValue", newprops.value_to_text))
+        if "text_to_value" in newprops:
+            commands.append(_CommandType(setattr, widget, "_valueFromText", newprops.text_to_value))
         if "min_value" in newprops:
             commands.append(_CommandType(widget.setMinimum, newprops.min_value))
         if "max_value" in newprops:
