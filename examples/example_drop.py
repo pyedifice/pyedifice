@@ -31,20 +31,19 @@ def Component(self):
                 # Handle proposed drop enter
                 if event.mimeData().hasUrls():
                     event.acceptProposedAction()
-                    proposed_files_set([url.path() for url in event.mimeData().urls()])
+                    proposed_files_set([url.toLocalFile() for url in event.mimeData().urls()])
             case QDragMoveEvent():
                 # Handle proposed drop move
                 if event.mimeData().hasUrls():
                     event.acceptProposedAction()
-                    proposed_files_set([url.path() for url in event.mimeData().urls()])
             case QDragLeaveEvent():
                 # Handle proposed drop leave
                 proposed_files_set([])
             case QDropEvent():
                 # Handle finalized drop
                 if event.mimeData().hasUrls():
+                    dropped_files_set(proposed_files)
                     proposed_files_set([])
-                    dropped_files_set([url.path() for url in event.mimeData().urls()])
 
     with View(
         layout="column",
