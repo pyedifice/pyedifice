@@ -1,6 +1,6 @@
 {
   inputs = {
-    nixpkgs.url = "github:nixos/nixpkgs";
+    nixpkgs.url = "github:nixos/nixpkgs/nixos-23.11";
     flake-utils.url = "github:numtide/flake-utils";
     poetry2nix = {
       url = "github:nix-community/poetry2nix";
@@ -49,8 +49,7 @@
       pythonEnv = qtOverride pythonWithPackages.env;
 
       poetryEnvAttrs = {
-        # We cannot currently specify the python version because of
-        # https://github.com/nix-community/poetry2nix/issues/1076
+        python = pkgs.python310;
         projectDir = ./.;
         preferWheels = true;
         overrides = pkgs.poetry2nix.overrides.withDefaults (pyfinal: pyprev: { });
@@ -59,7 +58,7 @@
     {
       # There are 3 devShell flavors here.
       #
-      # 1. nix develop .#default
+      # 1. nix develop .#pythonEnv
       #
       #    Nixpkgs pythonWithPackages environment.
       #    In this environment the tests should pass.
@@ -75,7 +74,7 @@
       #        poetry shell
       #        ./run_tests.sh
       #
-      # 3. nix develop .#poetry2nix
+      # 3. nix develop .#poetry2nix (default)
       #
       #    https://github.com/nix-community/poetry2nix#mkpoetryenv
       #    environment with editable edifice/ source files.
@@ -120,7 +119,6 @@
         };
 
         poetry2nix = (pkgs.poetry2nix.mkPoetryEnv (poetryEnvAttrs // {
-          python=pkgs.python310;
           extras = [ "*" ];
           extraPackages = ps: with ps; [
             pip
