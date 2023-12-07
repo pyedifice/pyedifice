@@ -352,10 +352,13 @@ class RenderEngine(object):
     The per-element hooks for use_async().
     """
     def __init__(self, root:Element, app=None):
-        self._component_tree = {}
+        self._component_tree : dict[Element, Element | list[Element]] = {}
         """
         The _component_tree maps a component to the root component(s) it renders
         """
+        # TODO the type of _component_tree should be dict[Element, list[Element]].
+        # The type which I have set here causes type errors, and I'm pretty
+        # sure that's because there are bugs.
         self._widget_tree = {}
         self._root = root
         self._root._edifice_internal_parent = None
@@ -549,8 +552,10 @@ class RenderEngine(object):
 
         # TODO: match on if old_children is a single Element or not
         if len(component.children) == 1 and len(old_children) == 1:
-            # If both former and current child lists are length 1, just compare class
-            if component.children[0].__class__ == old_children[0].__class__:
+            # If both former and current child lists are length 1 then
+            # compare class and _key. If they match, then update the old child.
+            if (component.children[0].__class__ == old_children[0].__class__
+                    and getattr(component.children[0], "_key", None) == getattr(old_children[0], "_key", None)):
                 self._update_old_component(old_children[0], component.children[0], render_context)
                 children = [old_children[0]]
             else:
@@ -669,7 +674,11 @@ class RenderEngine(object):
 
         # Compare the sub_component.__name__ as well as the class, so that
         # different @component ComponentElement are distinguished
-        if sub_component.__class__ == old_rendering.__class__ and sub_component.__class__.__name__ == old_rendering.__class__.__name__ and isinstance(old_rendering, Element):
+        if (sub_component.__class__ == old_rendering.__class__
+            and sub_component.__class__.__name__ == old_rendering.__class__.__name__
+            and isinstance(old_rendering, Element)
+            and getattr(sub_component, "_key", None) == getattr(old_rendering, "_key", None)
+            ):
             # TODO: Call will _receive_props hook
             assert old_rendering is not None
             render_context.widget_tree[component] = self._update_old_component(
@@ -680,7 +689,7 @@ class RenderEngine(object):
                 render_context.enqueued_deletions.append(old_rendering)
 
             render_context.schedule_callback(component._did_mount)
-            render_context.component_tree[component] = sub_component
+            render_context.component_tree[component] = sub_component #TODO set this to [sub_component] list? Then the type of component_tree can be dict[Element, list[Element]]
             render_context.widget_tree[component] = self._render(sub_component, render_context)
         render_context.schedule_callback(component._did_render)
 
@@ -703,6 +712,25 @@ class RenderEngine(object):
 
     def _request_rerender(self, components: list[Element]) -> RenderResult:
 
+        # Before the render, reduce the _hook_state updaters.
+        # We can't do this after the render, because there may have been state
+        # updates from event handlers.
+        for hooks in self._hook_state.values():
+            for hook in hooks:
+                state0 = hook.state
+                try:
+                    for updater in hook.updaters:
+                        if callable(updater):
+                            hook.state = updater(hook.state)
+                        else:
+                            hook.state = updater
+                except:
+                    # If any of the updaters throws then the state is unchanged.
+                    hook.state = state0
+                    # TODO Should we re-raise this exception somehow?
+                finally:
+                    hook.updaters.clear()
+
         # Generate the widget trees
         with _storage_manager() as storage_manager:
             render_context = _RenderContext(storage_manager, self)
@@ -719,5 +747,25 @@ class RenderEngine(object):
         # Delete components that should be deleted (and call the respective unmounts)
         for component in render_context.enqueued_deletions:
             self._delete_component(component, True)
+
+        # after render, call the use_effect setup functions.
+        # we want to guarantee that elements are fully rendered before
+        # effects are performed.
+        for hooks in self._hook_effect.values():
+            for hook in hooks:
+                if hook.setup is not None:
+                    if hook.cleanup is not None:
+                        try:
+                            hook.cleanup()
+                        except:
+                            pass
+                        finally:
+                            hook.cleanup = None
+                    try:
+                        hook.cleanup = hook.setup()
+                    except:
+                        hook.cleanup = None
+                    finally:
+                        hook.setup = None
 
         return RenderResult(widget_trees, commands, render_context)

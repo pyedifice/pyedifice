@@ -4,6 +4,7 @@ import edifice._component as component
 from edifice.app import App, Window
 import edifice.engine as engine
 import edifice.base_components as base_components
+import edifice as ed
 
 from edifice.qt import QT_VERSION
 if QT_VERSION == "PyQt6":
@@ -12,7 +13,7 @@ else:
     from PySide6 import QtWidgets
 
 if QtWidgets.QApplication.instance() is None:
-    app = QtWidgets.QApplication(["-platform", "offscreen"])
+    qapp = QtWidgets.QApplication(["-platform", "offscreen"])
 
 @component.component
 def Value(self, value):
@@ -154,6 +155,41 @@ class ElementTestCase(unittest.TestCase):
         self.assertTrue(exception_thrown)
         self.assertEqual(a.foo, 1)
         self.assertEqual(a.bar, 2)
+
+    def test_render_view_replacement(self):
+        """
+        Test that when a View row is replaced by a View column, a new View
+        is created and the old View is destroyed.
+        """
+
+        @ed.component
+        def xComponent(self):
+            x, x_set = ed.use_state(0)
+            if x == 0:
+                with ed.View(layout="row").set_key("row"):
+                    ed.Label("Test")
+            else:
+                with ed.View(layout="column").set_key("column"):
+                    ed.Label("Test")
+            x_set(1)
+
+        xcomp = xComponent()
+        root_element = Window()(ed.View()(xcomp))
+        app = App(root_element, create_application=False)
+        render_engine = engine.RenderEngine(root_element, app)
+        render_results = render_engine._request_rerender([root_element])
+        render_results.run()
+        self.assertIsInstance(render_results.trees[0].children[0].children[0].component.underlying_layout, QtWidgets.QHBoxLayout)
+        render_results = render_engine._request_rerender([root_element, xcomp])
+        render_results.run()
+        self.assertIsInstance(render_results.trees[0].children[0].children[0].component.underlying_layout, QtWidgets.QVBoxLayout)
+
+        # container = component.Container()
+        # xcomp = xComponent()
+        # with container:
+        #     xcomp._render_element()
+        # value_component = container.children[0]
+
 
 class MakeElementTestCase(unittest.TestCase):
 

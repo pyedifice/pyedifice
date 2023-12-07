@@ -1759,6 +1759,13 @@ class View(_LinearView):
             self.underlying_layout = None
         else:
             raise ValueError("Layout must be row, column or none, got %s instead", layout)
+        # A bad consequence of the way we have one View which is either QVBoxLayout
+        # or QHBoxLayout is that can't change the layout after it's been set.
+        # This means that if a render replaces a View row with a View column,
+        # the underlying layout will not be changed.
+        # This can be solved by using set_key() to force a new View to be created.
+        # But it's not user-friendly. Maybe we should have different elements
+        # ViewColumn and ViewRow?
 
         self.underlying.setObjectName(str(id(self)))
         if self.underlying_layout is not None:
