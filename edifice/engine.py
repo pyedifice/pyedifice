@@ -308,7 +308,7 @@ class _HookState:
 
 @dataclass
 class _HookEffect:
-    setup: tp.Callable[[], tp.Callable[[], None]] | None
+    setup: tp.Callable[[], tp.Callable[[], None] | None] | None
     cleanup: tp.Callable[[], None] | None
     """
     Cleanup function called on unmount and overwrite
