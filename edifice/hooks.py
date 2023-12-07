@@ -147,8 +147,10 @@ def use_effect(
             use_effect(setup_handler, handler)
 
     Args:
-        setup: An effect **setup function** which returns a **cleanup function**.
-        dependencies: The effect **setup function** will be called when the
+        setup:
+            An effect **setup function** which returns a **cleanup function**.
+        dependencies:
+            The effect **setup function** will be called when the
             dependencies are not :code:`__eq__` to the old dependencies.
     Returns:
         None
@@ -232,8 +234,10 @@ def use_async(
         )
 
     Args:
-        fn_coroutine: Async Coroutine function to be run as a Task.
-        dependencies: The :code:`fn_coroutine` Task will be started when the
+        fn_coroutine:
+            Async Coroutine function to be run as a Task.
+        dependencies:
+            The :code:`fn_coroutine` Task will be started when the
             :code:`dependencies` are not :code:`__eq__` to the old :code:`dependencies`.
     Returns:
         None
