@@ -38,12 +38,42 @@ Font Awesome icon set.
 Finally, the :class:`Button<edifice.Button>` and :class:`TextInput<edifice.TextInput>`
 components allow you to collect input from the user.
 """
-from .base_components import (QtWidgetElement, Window, ExportList, View, ScrollView, TabView,
-                              GridView, Label, ImageSvg, Icon, IconButton, Button,
-                              TextInput, CheckBox, RadioButton, Slider, ProgressBar, Dropdown,
-                              CustomWidget)
+from .base_components import (
+    QtWidgetElement, Window, ExportList, View, ScrollView, TabView,
+    GridView, Label, ImageSvg, Icon, IconButton, Button,
+    TextInput, CheckBox, RadioButton, Slider, ProgressBar, Dropdown,
+    CustomWidget, GroupBox,
+)
 from .button_view import ButtonView
 from .flow_view import FlowView
 from .image_aspect import Image
 from .table_grid_view import TableGridView
 from .spin_input import SpinInput
+
+__all__ = [
+    "QtWidgetElement",
+    "Window",
+    "ExportList",
+    "View",
+    "ScrollView",
+    "TabView",
+    "GridView",
+    "Label",
+    "ImageSvg",
+    "Icon",
+    "IconButton",
+    "Button",
+    "TextInput",
+    "CheckBox",
+    "RadioButton",
+    "Slider",
+    "ProgressBar",
+    "Dropdown",
+    "CustomWidget",
+    "GroupBox",
+    "ButtonView",
+    "FlowView",
+    "Image",
+    "TableGridView",
+    "SpinInput",
+]

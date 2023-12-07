@@ -430,7 +430,7 @@ class RenderEngine(object):
                     # or that there is no cleanup function.
                     try:
                         hook.cleanup()
-                    except:
+                    except Exception:
                         pass
                 del hook.setup
                 del hook.cleanup
@@ -779,7 +779,7 @@ class RenderEngine(object):
                         # If there are use_state updaters and no exceptions
                         # thrown, then we need to re-render this component.
                         components_.append(element)
-                except:
+                except Exception:
                     # If any of the updaters throws then the state is unchanged.
                     hook.state = state0
                     # TODO Should we re-raise this exception somehow?
@@ -812,13 +812,13 @@ class RenderEngine(object):
                     if hook.cleanup is not None:
                         try:
                             hook.cleanup()
-                        except:
+                        except Exception:
                             pass
                         finally:
                             hook.cleanup = None
                     try:
                         hook.cleanup = hook.setup()
-                    except:
+                    except Exception:
                         hook.cleanup = None
                     finally:
                         hook.setup = None
