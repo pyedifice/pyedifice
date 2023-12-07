@@ -5,9 +5,9 @@ from ..engine import _CommandType
 # Import PySide6 or PyQt6 before importing pyqtgraph so that pyqtgraph detects the same
 from ..qt import QT_VERSION
 if QT_VERSION == "PyQt6" and not tp.TYPE_CHECKING:
-    from PyQt6 import QtWidgets
+    pass
 else:
-    from PySide6 import QtWidgets
+    pass
 
 import pyqtgraph as pg
 

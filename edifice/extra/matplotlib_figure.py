@@ -4,9 +4,9 @@ from ..engine import _CommandType
 
 from ..qt import QT_VERSION
 if QT_VERSION == "PyQt6":
-    from PyQt6 import QtWidgets
+    pass
 else:
-    from PySide6 import QtWidgets
+    pass
 
 from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg
 from matplotlib.backend_bases import MouseEvent

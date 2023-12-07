@@ -129,9 +129,72 @@ To ensure control over the rerender process, it is recommended to :func:`Element
 whenever you have many children of the same class.
 """
 
-
 from ._component import Element, component, Reference
 from .app import App
-from .base_components import *
 from .utilities import alert, file_dialog, set_trace
 from .hooks import use_state, use_effect, use_async, use_ref
+
+from .base_components import (
+    QtWidgetElement,
+    Window,
+    ExportList,
+    View,
+    ScrollView,
+    TabView,
+    GridView,
+    Label,
+    ImageSvg,
+    Icon,
+    IconButton,
+    Button,
+    TextInput,
+    CheckBox,
+    RadioButton,
+    Slider,
+    ProgressBar,
+    Dropdown,
+    CustomWidget,
+    ButtonView,
+    FlowView,
+    Image,
+    TableGridView,
+    SpinInput,
+)
+
+__all__ = [
+    "Element",
+    "component",
+    "Reference",
+    "App",
+    "alert",
+    "file_dialog",
+    "set_trace",
+    "use_state",
+    "use_effect",
+    "use_async",
+    "use_ref",
+    "QtWidgetElement",
+    "Window",
+    "ExportList",
+    "View",
+    "ScrollView",
+    "TabView",
+    "GridView",
+    "Label",
+    "ImageSvg",
+    "Icon",
+    "IconButton",
+    "Button",
+    "TextInput",
+    "CheckBox",
+    "RadioButton",
+    "Slider",
+    "ProgressBar",
+    "Dropdown",
+    "CustomWidget",
+    "ButtonView",
+    "FlowView",
+    "Image",
+    "TableGridView",
+    "SpinInput",
+]

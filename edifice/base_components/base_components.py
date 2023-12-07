@@ -5,7 +5,7 @@ import inspect
 import logging
 import re
 import typing as tp
-from .._component import Element, _CommandType, PropsDict
+from .._component import _CommandType, PropsDict
 from ..engine import _WidgetTree, WidgetElement
 
 from ..qt import QT_VERSION

@@ -11,14 +11,14 @@ import typing
 import logging
 
 if typing.TYPE_CHECKING:
-    from PySide6.QtCore import QMargins, QPoint, QRect, QSize, Qt
+    from PySide6.QtCore import QPoint, QRect, QSize, Qt
     from PySide6.QtWidgets import QLayout, QLayoutItem, QSizePolicy, QWidget
 else:
     if QT_VERSION == "PyQt6":
-        from PyQt6.QtCore import QMargins, QPoint, QRect, QSize, Qt
+        from PyQt6.QtCore import QPoint, QRect, QSize, Qt
         from PyQt6.QtWidgets import QLayout, QLayoutItem, QSizePolicy, QWidget
     else:
-        from PySide6.QtCore import QMargins, QPoint, QRect, QSize, Qt
+        from PySide6.QtCore import QPoint, QRect, QSize, Qt
         from PySide6.QtWidgets import QLayout, QLayoutItem, QSizePolicy, QWidget
 
 from .base_components import _LinearView, QtWidgetElement
