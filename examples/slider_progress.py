@@ -40,7 +40,8 @@ def MyComponent(self):
             x,
             min_value=0,
             max_value=100,
-            format="%p% is the progress",
+            # format="%p% is the progress",
+            format=f"{x}% is the progress",
         )
         ProgressBar(
             0,

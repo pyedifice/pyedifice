@@ -20,6 +20,11 @@ else:
 
 logger = logging.getLogger("Edifice")
 
+# TODO
+# https://stackoverflow.com/questions/37278647/fire-and-forget-python-async-await/37345564#37345564
+# “Replace asyncio.ensure_future with asyncio.create_task everywhere if you're
+# using Python >= 3.7 It's a newer, nicer way to spawn tasks.”
+
 def _ensure_future(fn):
     # Ensures future if fn is a coroutine, otherwise don't modify fn
     if inspect.iscoroutinefunction(fn):
@@ -2265,14 +2270,14 @@ class ProgressBar(QtWidgetElement):
         widget = tp.cast(QtWidgets.QProgressBar, self.underlying)
 
         commands = super()._qt_update_commands(children, newprops, newstate, self.underlying)
+        if "orientation" in newprops:
+            commands.append(_CommandType(widget.setOrientation, newprops.orientation))
         if "min_value" in newprops:
             commands.append(_CommandType(widget.setMinimum, newprops.min_value))
         if "max_value" in newprops:
             commands.append(_CommandType(widget.setMaximum, newprops.max_value))
-        if "value" in newprops:
-            commands.append(_CommandType(widget.setValue, newprops.value))
         if "format" in newprops:
             commands.append(_CommandType(widget.setFormat, newprops.format))
-        if "orientation" in newprops:
-            commands.append(_CommandType(widget.setOrientation, newprops.orientation))
+        if "value" in newprops:
+            commands.append(_CommandType(widget.setValue, newprops.value))
         return commands
