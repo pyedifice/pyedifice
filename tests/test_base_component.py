@@ -6,7 +6,7 @@ import numpy as np
 import unittest
 import unittest.mock
 import edifice.engine as engine
-import edifice.base_components as base_components
+import edifice.base_components.base_components as base_components
 from edifice._component import _CommandType
 import edifice.icons
 ICONS = importlib.resources.files(edifice.icons)
