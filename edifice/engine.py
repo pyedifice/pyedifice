@@ -9,7 +9,7 @@ from textwrap import dedent
 from dataclasses import dataclass
 
 from ._component import (
-    BaseElement, RootElement, Element, PropsDict, _CommandType, _Tracker, local_state, Container,
+    BaseElement, Element, PropsDict, _CommandType, _Tracker, local_state, Container,
 )
 
 logger = logging.getLogger("Edifice")
@@ -236,11 +236,14 @@ class _RenderContext(object):
 class _WidgetTree(object):
     __slots__ = ("component", "children")
 
-    def __init__(self, component: Element, children):
-        self.component = component
-        self.children : list[_WidgetTree] = children
+    def __init__(self, component: Element, children: list["_WidgetTree"]):
+        self.component: Element = component
+        self.children: list[_WidgetTree] = children
 
     def _dereference(self, address):
+        """
+        This method used only for testing
+        """
         widget_tree : _WidgetTree = self
         for index in address:
             widget_tree = widget_tree.children[index]
@@ -619,7 +622,7 @@ class RenderEngine(object):
         render_context.mark_props_change(component, PropsDict(props_dict))
         return render_context.widget_tree[component]
 
-    def _render(self, component: Element, render_context: _RenderContext):
+    def _render(self, component: Element, render_context: _RenderContext) -> _WidgetTree:
         if component in render_context.widget_tree:
             return render_context.widget_tree[component]
         try:

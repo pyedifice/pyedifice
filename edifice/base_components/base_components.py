@@ -7,6 +7,7 @@ import re
 import typing as tp
 import numpy as np
 from .._component import WidgetElement, RootElement, _CommandType, PropsDict
+from ..engine import _WidgetTree
 
 from ..qt import QT_VERSION
 
@@ -348,6 +349,7 @@ class QtWidgetElement(WidgetElement):
         self._size_from_font = size_from_font
 
     def _get_width(self, children):
+        # TODO this function is unreferenced
         if self._width:
             return self._width
         layout = self.props._get("layout", "none")
@@ -360,6 +362,7 @@ class QtWidgetElement(WidgetElement):
 
 
     def _get_height(self, children):
+        # TODO this function is unreferenced
         if self._height:
             return self._height
         layout = self.props._get("layout", "none")
@@ -510,7 +513,7 @@ class QtWidgetElement(WidgetElement):
 
     def _gen_styling_commands(
         self,
-        children,
+        children : list[_WidgetTree],
         style,
         underlying: QtWidgets.QWidget,
         underlying_layout: QtWidgets.QLayout | None = None,
@@ -647,8 +650,8 @@ class QtWidgetElement(WidgetElement):
 
     def _qt_update_commands(
         self,
-        children,
-        newprops,
+        children: list[_WidgetTree],
+        newprops : PropsDict,
         newstate,
         underlying: QtWidgets.QWidget,
         underlying_layout: QtWidgets.QLayout | None = None
@@ -1729,7 +1732,6 @@ class View(_LinearView):
 
     def __init__(self, layout: tp.Text = "column", **kwargs):
         self._register_props({"layout": layout})
-        self._register_props(kwargs)
         super().__init__(**kwargs)
 
     def _delete_child(self, i, old_child):
@@ -1742,6 +1744,7 @@ class View(_LinearView):
         old_child._destroy_widgets()
 
     def _soft_delete_child(self, i, old_child):
+        # TODO this function is unreferenced
         if self.underlying_layout is not None:
             self.underlying_layout.takeAt(i)
         else:
@@ -1830,6 +1833,7 @@ class ScrollView(_LinearView):
         old_child._destroy_widgets()
 
     def _soft_delete_child(self, i, old_child):
+        # TODO this function is unreferenced
         self.underlying_layout.takeAt(i)
 
     def _add_child(self, i, child_component):
@@ -2052,6 +2056,7 @@ class TabView(_LinearView):
         widget.removeTab(i)
 
     def _soft_delete_child(self, i, old_child):
+        # TODO this function is unreferenced
         assert self.underlying is not None
         widget = tp.cast(QtWidgets.QTabWidget, self.underlying)
         widget.removeTab(i)
