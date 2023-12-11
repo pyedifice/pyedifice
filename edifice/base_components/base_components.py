@@ -1745,8 +1745,12 @@ class View(_LinearView):
         if self.underlying_layout is not None:
             child_node = self.underlying_layout.takeAt(i)
             # From debugging: child_node is a QWidgetItem.
-            if child_node.widget():
-                child_node.widget().deleteLater() # setParent(self._garbage_collector)
+            if child_node is not None:
+                # child_node is not None should not be necessary, but
+                # there is a bug where sometimes it is None if there are
+                # very rapid updates to the UI.
+                if child_node.widget():
+                    child_node.widget().deleteLater() # setParent(self._garbage_collector)
         else:
             assert old_child.underlying is not None
             old_child.underlying.setParent(None)
@@ -1837,8 +1841,12 @@ class ScrollView(_LinearView):
 
     def _delete_child(self, i, old_child):
         child_node = self.underlying_layout.takeAt(i)
-        if child_node.widget():
-            child_node.widget().deleteLater() # setParent(self._garbage_collector)
+        if child_node is not None:
+            # child_node is not None should not be necessary, but
+            # there is a bug where sometimes it is None if there are
+            # very rapid updates to the UI.
+            if child_node.widget():
+                child_node.widget().deleteLater() # setParent(self._garbage_collector)
         old_child._destroy_widgets()
 
     def _soft_delete_child(self, i, old_child):
