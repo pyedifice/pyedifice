@@ -5,7 +5,6 @@ import inspect
 import logging
 import re
 import typing as tp
-import numpy as np
 from .._component import WidgetElement, RootElement, _CommandType, PropsDict
 from ..engine import _WidgetTree
 
@@ -304,7 +303,7 @@ class QtWidgetElement(WidgetElement):
         self._width = 0
         self._top = 0
         self._left = 0
-        self._size_from_font = None
+        self._size_from_font = None # TODO _size_from_font is unused
         self._on_click = None
         self._on_key_down = None
         self._default_on_key_down = None
@@ -316,7 +315,7 @@ class QtWidgetElement(WidgetElement):
         self._on_mouse_up = None
         self._on_mouse_move = None
         self._on_drop: tp.Optional[tp.Callable[[QtGui.QDragEnterEvent | QtGui.QDragMoveEvent | QtGui.QDragLeaveEvent | QtGui.QDropEvent], None]] = None
-        self._widget_children = []
+        self._widget_children: list[QtWidgetElement] = []
         self._default_mouse_press_event = None
         self._default_mouse_release_event = None
         self._default_mouse_move_event = None
@@ -515,7 +514,7 @@ class QtWidgetElement(WidgetElement):
         self,
         children : list[_WidgetTree],
         style,
-        underlying: QtWidgets.QWidget,
+        underlying: QtWidgets.QWidget | None,
         underlying_layout: QtWidgets.QLayout | None = None,
     ):
         commands: list[_CommandType] = []
@@ -1675,16 +1674,17 @@ class _LinearView(QtWidgetElement):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self._widget_children = []
+        self._widget_children: list[QtWidgetElement] = []
 
     def __del__(self):
         pass
 
     def _recompute_children(self, children: list[_WidgetTree]):
         commands: list[_CommandType] = []
-        children = [child for child in children if child.component.underlying is not None]
-        new_children = set()
-        for child in children:
+        children_ = [child for child in children if tp.cast(QtWidgetElement, child.component).underlying is not None]
+        new_children: set[QtWidgetElement] = set()
+        for child in children_:
+            assert isinstance(child.component, QtWidgetElement)
             new_children.add(child.component)
 
         for i, old_child in reversed(list(enumerate(self._widget_children))):
@@ -1694,18 +1694,20 @@ class _LinearView(QtWidgetElement):
 
         old_child_index = 0
         old_children_len = len(self._widget_children)
-        for i, child in enumerate(children):
+        for i, child in enumerate(children_):
             old_child = None
             if old_child_index < old_children_len:
                 old_child = self._widget_children[old_child_index]
 
             if old_child is None or child.component is not old_child:
+                assert isinstance(child.component, QtWidgetElement)
+                assert isinstance(child.component.underlying, QtWidgets.QWidget)
                 commands.append(_CommandType(self._add_child, i, child.component.underlying))
                 old_child_index -= 1
 
             old_child_index += 1
 
-        self._widget_children = [child.component for child in children]
+        self._widget_children = [tp.cast(QtWidgetElement, child.component) for child in children_]
         return commands
     def _add_child(self, i, child_component: QtWidgets.QWidget):
         raise NotImplementedError
@@ -1742,6 +1744,7 @@ class View(_LinearView):
     def _delete_child(self, i, old_child: QtWidgetElement):
         if self.underlying_layout is not None:
             child_node = self.underlying_layout.takeAt(i)
+            # From debugging: child_node is a QWidgetItem.
             if child_node.widget():
                 child_node.widget().deleteLater() # setParent(self._garbage_collector)
         else:
