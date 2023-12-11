@@ -1108,6 +1108,11 @@ class Label(QtWidgetElement):
         size = self.underlying.font().pointSize()
         self._set_size(size * len(str(self.props.text)), size, lambda size: (size * len(str(self.props.text)), size))
 
+        # TODO
+        # If you want the QLabel to fit the text then you must use adjustSize()
+        # https://github.com/pyedifice/pyedifice/issues/41
+        # https://stackoverflow.com/questions/48665788/qlabels-getting-clipped-off-at-the-end/48665900#48665900
+
         widget = tp.cast(QtWidgets.QLabel, self.underlying)
         commands = super()._qt_update_commands(children, newprops, newstate, self.underlying, None)
         for prop in newprops:
@@ -1675,7 +1680,7 @@ class _LinearView(QtWidgetElement):
     def __del__(self):
         pass
 
-    def _recompute_children(self, children):
+    def _recompute_children(self, children: list[_WidgetTree]):
         commands: list[_CommandType] = []
         children = [child for child in children if child.component.underlying is not None]
         new_children = set()
@@ -1702,9 +1707,9 @@ class _LinearView(QtWidgetElement):
 
         self._widget_children = [child.component for child in children]
         return commands
-    def _add_child(self, i, child_component):
+    def _add_child(self, i, child_component: QtWidgets.QWidget):
         raise NotImplementedError
-    def _delete_child(self, i, old_child):
+    def _delete_child(self, i, old_child: QtWidgetElement):
         raise NotImplementedError
 
 
@@ -1734,12 +1739,13 @@ class View(_LinearView):
         self._register_props({"layout": layout})
         super().__init__(**kwargs)
 
-    def _delete_child(self, i, old_child):
+    def _delete_child(self, i, old_child: QtWidgetElement):
         if self.underlying_layout is not None:
             child_node = self.underlying_layout.takeAt(i)
             if child_node.widget():
                 child_node.widget().deleteLater() # setParent(self._garbage_collector)
         else:
+            assert old_child.underlying is not None
             old_child.underlying.setParent(None)
         old_child._destroy_widgets()
 
@@ -1750,7 +1756,7 @@ class View(_LinearView):
         else:
             old_child.underlying.setParent(None)
 
-    def _add_child(self, i, child_component):
+    def _add_child(self, i, child_component: QtWidgets.QWidget):
         if self.underlying_layout is not None:
             self.underlying_layout.insertWidget(i, child_component)
         else:

@@ -284,12 +284,6 @@ class Element:
     _edifice_internal_parent: tp.Optional["Element"] = None
     _controller: ControllerProtocol | None = None
     _edifice_internal_references: set[Reference] | None = None
-    _hook_state_index: int = 0
-    """use_state hook index for current render."""
-    _hook_effect_index: int = 0
-    """use_effect hook index for current render."""
-    _hook_async_index: int = 0
-    """use_async hook index for current render."""
 
     def __init__(self):
         super().__setattr__("_ignored_variables", set())
@@ -305,6 +299,15 @@ class Element:
             if len(trackers) > 0:
                 parent = trackers[-1]
                 parent.append_child(self)
+
+        # We don't really need these hook indices to be per-instance state.
+        # They are only used during a render.
+        self._hook_state_index: int = 0
+        """use_state hook index for current render."""
+        self._hook_effect_index: int = 0
+        """use_effect hook index for current render."""
+        self._hook_async_index: int = 0
+        """use_async hook index for current render."""
 
     def __enter__(self: Self) -> Self:
         ctx = get_render_context()

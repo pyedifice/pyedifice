@@ -77,6 +77,8 @@ class _RenderContext(object):
     """Stack of _Tracker"""
     current_element: Element | None
     """The Element currently being rendered."""
+    # I guess static scope typing of instance members is normal in Python?
+    # https://peps.python.org/pep-0526/#class-and-instance-variable-annotations
     def __init__(
         self,
         storage_manager: _ChangeManager,
@@ -89,7 +91,7 @@ class _RenderContext(object):
         self.component_to_old_props = {}
         self.force_refresh = force_refresh
 
-        self.component_tree = {}
+        self.component_tree : dict[Element, list[Element]]= {}
         self.widget_tree: dict[Element, _WidgetTree] = {}
         self.enqueued_deletions = []
 
@@ -300,6 +302,9 @@ class RenderResult(object):
         self.render_context : _RenderContext = render_context
 
     def run(self):
+        """
+        This is the phase of the render when the commands run.
+        """
         for command in self.commands:
             command.fn(*command.args, **command.kwargs)
         self.render_context.run_callbacks()
@@ -357,7 +362,7 @@ class RenderEngine(object):
     def __init__(self, root:Element, app=None):
         self._component_tree : dict[Element, Element | list[Element]] = {}
         """
-        The _component_tree maps a component to the root component(s) it renders
+        The _component_tree maps an Element to its children.
         """
         # TODO the type of _component_tree should be dict[Element, list[Element]].
         # The type which I have set here causes type errors, and I'm pretty
@@ -412,7 +417,7 @@ class RenderEngine(object):
                 if hook.task is not None:
                     hook.task.cancel()
                 hook.queue.clear()
-                del hook.task
+                del hook.task #TODO Is it okay to del this task before the CancelledError has propagated?
                 del hook.queue
                 del hook.dependencies
                 del hook
