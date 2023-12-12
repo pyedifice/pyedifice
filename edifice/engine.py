@@ -233,7 +233,8 @@ class _RenderContext(object):
                 hook.queue.append(fn_coroutine)
                 hook.task.cancel()
             else:
-                hook.task = asyncio.create_task(fn_coroutine()).add_done_callback(done_callback)
+                hook.task = asyncio.create_task(fn_coroutine())
+                hook.task.add_done_callback(done_callback)
 
 class _WidgetTree(object):
     __slots__ = ("component", "children")
