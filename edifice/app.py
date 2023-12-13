@@ -210,9 +210,9 @@ class App(object):
         Enqueue elements for rerendering on the next event loop iteration.
         Idempotent.
         """
-        self._defer_rerender_elements.update(components)
-        if not self._is_rerenderding:
+        if not self._is_rerenderding and len(self._defer_rerender_elements) == 0:
             asyncio.get_event_loop().call_soon(self._rerender_callback)
+        self._defer_rerender_elements.update(components)
 
     def _request_rerender(self, components: list[Element], newstate):
         """
