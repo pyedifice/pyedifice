@@ -387,13 +387,6 @@ class RenderEngine(object):
                     self._delete_component(sub_comp, recursive)
             # Node deletion
 
-        assert component._edifice_internal_references is not None
-        for ref in component._edifice_internal_references:
-            ref._value = None
-        component._will_unmount()
-        del self._component_tree[component]
-        del self._widget_tree[component]
-
         # Clean up hook state for the component
         if component in self._hook_state:
             for hook in self._hook_state[component]:
@@ -423,6 +416,16 @@ class RenderEngine(object):
                 del hook.dependencies
                 del hook
             del self._hook_async[component]
+
+        # Clean up component references
+        # Do this after use_effect cleanup, so that the cleanup function
+        # can still access the component References.
+        assert component._edifice_internal_references is not None
+        for ref in component._edifice_internal_references:
+            ref._value = None
+        component._will_unmount()
+        del self._component_tree[component]
+        del self._widget_tree[component]
 
     def _refresh_by_class(self, classes) -> RenderResult:
         # This refresh is done only for a hot reload. It refreshes all

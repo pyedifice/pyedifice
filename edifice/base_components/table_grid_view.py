@@ -1,5 +1,6 @@
 from typing import TYPE_CHECKING
 from typing_extensions import Self
+import typing as tp
 
 from ..qt import QT_VERSION
 if QT_VERSION == "PyQt6" and not TYPE_CHECKING:
@@ -9,6 +10,9 @@ else:
 
 from .._component import Element, BaseElement, _CommandType
 from .base_components import QtWidgetElement
+
+# TODO instead of attaching these attributes to the elements, the
+# TableGridView could have a dict of dict[Element, tuple[row,column,key]]
 
 def _get_tablerowcolumn(c:Element) -> tuple[int,int]:
     """
@@ -145,7 +149,7 @@ class TableGridView(QtWidgetElement):
         })
         self._register_props(kwargs)
         self.underlying = None
-        self._widget_children_dict = {}
+        self._widget_children_dict : dict[tuple[int,int,str], QtWidgetElement] = {}
         """Like _LinearView._widget_children"""
         self._row_stretch = row_stretch
         self._column_stretch = column_stretch
@@ -178,8 +182,9 @@ class TableGridView(QtWidgetElement):
         while self.underlying_layout.takeAt(0) is not None:
             pass
 
-    def _add_child(self, child_component, row:int, column:int):
+    def _add_child(self, child_component: QtWidgetElement, row:int, column:int):
         # https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGridLayout.html#PySide6.QtWidgets.PySide6.QtWidgets.QGridLayout.addWidget
+        assert type(child_component.underlying) == QWidget
         self.underlying_layout.addWidget(child_component.underlying, row, column)
         if len(self._row_stretch) > row:
             self.underlying_layout.setRowStretch(row, self._row_stretch[row])
@@ -190,7 +195,7 @@ class TableGridView(QtWidgetElement):
         if len(self._column_minwidth) > column:
             self.underlying_layout.setColumnMinimumWidth(column, self._column_minwidth[column])
 
-    def _delete_child(self, child_component, row:int, column:int):
+    def _delete_child(self, child_component: QtWidgetElement, row:int, column:int):
         layoutitem = self.underlying_layout.itemAtPosition(row, column)
         assert layoutitem is not None
         widget = layoutitem.widget()
