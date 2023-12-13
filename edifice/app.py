@@ -1,5 +1,5 @@
 import logging
-
+from . import logger as _logger_module
 import asyncio
 import contextlib
 import os
@@ -25,8 +25,7 @@ from .base_components import Window, QtWidgetElement, ExportList
 from .engine import RenderEngine
 from .inspector import inspector
 
-logger = logging.getLogger("Edifice")
-logger_mod = logger
+logger = _logger_module.logger
 
 BLACK, RED, GREEN, YELLOW, BLUE, MAGENTA, CYAN, WHITE = range(8)
 
@@ -87,6 +86,16 @@ class App(object):
     This widget can then be plugged into the rest of your application, and there's no need
     to manage the rendering of the widget -- state changes will trigger automatic re-render
     without any intervention.
+
+    Logging
+    -------
+
+    To enable Edifice logging set the logging level. Example::
+
+        import logging
+        logger = logging.getLogger("Edifice")
+        logger.setLevel(logging.INFO)
+
 
     Args:
         root_element: the root Element of the application.

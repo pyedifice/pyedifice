@@ -307,7 +307,12 @@ class RenderResult(object):
         This is the phase of the render when the commands run.
         """
         for command in self.commands:
-            command.fn(*command.args, **command.kwargs)
+            try:
+                command.fn(*command.args, **command.kwargs)
+            except Exception as ex:
+                logger.exception("Exception while running command:\n"
+                                 + str(command) + "\n"
+                                 + str(ex) + "\n")
         self.render_context.run_callbacks()
 
 @dataclass

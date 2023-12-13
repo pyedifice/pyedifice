@@ -46,5 +46,5 @@ handler = logging.StreamHandler()
 handler.setFormatter(ColoredFormatter(FORMAT, "%Y-%m-%d %H:%M:%S"))
 
 logger = logging.getLogger("Edifice")
-logger.setLevel(logging.INFO)
+logger.setLevel(logging.FATAL)
 logger.addHandler(handler)
