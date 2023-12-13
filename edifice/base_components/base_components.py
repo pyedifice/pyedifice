@@ -1751,6 +1751,9 @@ class View(_LinearView):
                 # very rapid updates to the UI.
                 if child_node.widget():
                     child_node.widget().deleteLater() # setParent(self._garbage_collector)
+            else:
+                logger.error(old_child.__class__.__name__ +
+                    " was not deleted because View QLayoutItem at " + str(i) + " was None")
         else:
             assert old_child.underlying is not None
             old_child.underlying.setParent(None)
