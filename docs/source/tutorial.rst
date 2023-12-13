@@ -31,7 +31,7 @@ First, install Edifice::
 Let us create the basic skeleton of our UI.
 Copy this code into a new file, for example tutorial.py::
 
-    from edifice import Label, TextInput, View
+    from edifice import App, Label, TextInput, View, Window, component
 
     @component
     def MyApp(self):
@@ -94,7 +94,7 @@ Here, what we need is to add margins between the view and window boundary,
 make the Labels shorter, and add a margin between the label and text input.
 For example::
 
-    from edifice import App, Label, TextInput, View, component
+    from edifice import App, Label, TextInput, View, Window, component
 
     @component
     def MyApp(self):
@@ -108,7 +108,7 @@ For example::
                 Label("Measurement in feet:", style=feet_label_style)
 
     if __name__ == "__main__":
-       App(MyApp()).start()
+        App(MyApp()).start()
 
 If you want to make adjustments to this styling, you can simply edit your source file, and all changes will automatically
 be reflected.
@@ -119,7 +119,7 @@ This function will be called whenever the contents in the text input changes,
 allowing us to ensure that the numbers in the input
 box and in the label are in sync::
 
-    from edifice import App, Label, TextInput, View, component, use_state
+    from edifice import App, Label, TextInput, View, Window, component, use_state
 
     METERS_TO_FEET = 3.28084
 
@@ -177,7 +177,7 @@ was created with Edifice). Play around with the application and see how the stat
 Now suppose we want to add conversion from feet to meters. Instead of copying our code and repeating
 it for each measurement pair, we can factor out the conversion logic into its own component::
 
-    from edifice import Label, TextInput, View, App, component, use_state
+    from edifice import App, Label, TextInput, View, Window, component, use_state
 
     METERS_TO_FEET = 3.28084
 
@@ -190,7 +190,7 @@ it for each measurement pair, we can factor out the conversion logic into its ow
     @component
     def ConversionWidget(self, from_unit, to_unit, factor):
 
-        current_text, current_text_set  = use_state("0.0")
+        current_text, current_text_set = use_state("0.0")
 
         to_text = "%.3f" % (str_to_float(current_text) * self.props.factor)
 
