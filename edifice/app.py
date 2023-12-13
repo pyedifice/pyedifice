@@ -213,6 +213,9 @@ class App(object):
         if not self._is_rerenderding and len(self._defer_rerender_elements) == 0:
             asyncio.get_event_loop().call_soon(self._rerender_callback)
         self._defer_rerender_elements.update(components)
+        # Since we know that we are going to rerender, we can immediately
+        # start buffering the _defer_rerender calls with _is_rerendering=True.
+        self._is_rerenderding = True
 
     def _request_rerender(self, components: list[Element], newstate):
         """
