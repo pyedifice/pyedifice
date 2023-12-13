@@ -239,9 +239,10 @@ class App(object):
         if self._inspector_component is not None and not all(isinstance(comp, inspector.InspectorElement) for comp in components):
             self._inspector_component._refresh()
 
-        self._is_rerenderding = False
         if len(self._defer_rerender_elements) > 0:
             asyncio.get_event_loop().call_soon(self._rerender_callback)
+        else:
+            self._is_rerenderding = False
 
     def set_stylesheet(self, stylesheet):
         """Adds a global stylesheet for the app.
