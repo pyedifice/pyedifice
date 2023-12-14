@@ -195,7 +195,7 @@ class App(object):
         self._inspector_component = None
 
         self._defer_rerender_elements : set[Element] = set()
-        self._is_rerenderding = False
+        self._is_rerendering = False
 
     def __hash__(self):
         return id(self)
@@ -210,18 +210,18 @@ class App(object):
         Enqueue elements for rerendering on the next event loop iteration.
         Idempotent.
         """
-        if not self._is_rerenderding and len(self._defer_rerender_elements) == 0:
+        if not self._is_rerendering and len(self._defer_rerender_elements) == 0:
             asyncio.get_event_loop().call_soon(self._rerender_callback)
         self._defer_rerender_elements.update(components)
         # Since we know that we are going to rerender, we can immediately
         # start buffering the _defer_rerender calls with _is_rerendering=True.
-        self._is_rerenderding = True
+        self._is_rerendering = True
 
     def _request_rerender(self, components: list[Element], newstate):
         """
         Call the RenderEngine to immediately render the widget tree.
         """
-        self._is_rerenderding = True
+        self._is_rerendering = True
         del newstate #TODO?
         start_time = time.process_time()
 
@@ -242,7 +242,7 @@ class App(object):
         if len(self._defer_rerender_elements) > 0:
             asyncio.get_event_loop().call_soon(self._rerender_callback)
         else:
-            self._is_rerenderding = False
+            self._is_rerendering = False
 
     def set_stylesheet(self, stylesheet):
         """Adds a global stylesheet for the app.
