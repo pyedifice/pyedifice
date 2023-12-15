@@ -184,7 +184,7 @@ class TableGridView(QtWidgetElement):
 
     def _add_child(self, child_component: QtWidgetElement, row:int, column:int):
         # https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGridLayout.html#PySide6.QtWidgets.PySide6.QtWidgets.QGridLayout.addWidget
-        assert type(child_component.underlying) == QWidget
+        assert child_component.underlying is not None
         self.underlying_layout.addWidget(child_component.underlying, row, column)
         if len(self._row_stretch) > row:
             self.underlying_layout.setRowStretch(row, self._row_stretch[row])
