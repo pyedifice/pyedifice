@@ -13,6 +13,7 @@ else:
 
 from .._component import Element, BaseElement, _CommandType
 from .base_components import QtWidgetElement
+from ..engine import _WidgetTree
 
 # TODO instead of attaching these attributes to the elements, the
 # TableGridView could have a dict of dict[Element, tuple[row,column,key]]
@@ -41,14 +42,15 @@ def _get_key(c:Element, default:str = "") -> str:
     else:
         return default
 
-def _childdict(children):
+def _childdict(children: list[_WidgetTree]) -> dict[tuple[int,int,str], QtWidgetElement]:
     """
     Produce a dictionary of child components keyed by tuple (row,column,_key).
     """
-    d = {}
+    d: dict[tuple[int,int,str], QtWidgetElement] = {}
     for child in children:
         row,column = _get_tablerowcolumn(child.component)
         key = _get_key(child.component)
+        assert isinstance(child.component, QtWidgetElement)
         d[(row,column,key)] = child.component
     return d
 
@@ -82,7 +84,7 @@ class _TableGridViewRow(BaseElement):
 
     def _qt_update_commands(
         self,
-        children, # : list[_WidgetTree],
+        children : list[_WidgetTree],
         newprops,
         newstate
     ):
@@ -205,15 +207,24 @@ class TableGridView(QtWidgetElement):
             if (layoutitem := self.underlying_layout.itemAtPosition(row, column)) is None:
                 logger.warning("_delete_child itemAtPosition failed " + str((row,column)) + " " + str(self))
             else:
-                self.underlying_layout.removeItem(layoutitem)
                 if (w := layoutitem.widget()) is None:
                     logger.warning("_delete_child widget is None " + str((row,column)) + " " + str(self))
                 else:
                     w.deleteLater()
+                self.underlying_layout.removeItem(layoutitem)
+
+    def _soft_delete_child(self, child_component: QtWidgetElement, row:int, column:int):
+        if self.underlying_layout is None:
+            logger.warning("_delete_child No underlying_layout " + str(self))
+        else:
+            if (layoutitem := self.underlying_layout.itemAtPosition(row, column)) is None:
+                logger.warning("_delete_child itemAtPosition failed " + str((row,column)) + " " + str(self))
+            else:
+                self.underlying_layout.removeItem(layoutitem)
 
     def _qt_update_commands(
         self,
-        children, # : list[_WidgetTree],
+        children : list[_WidgetTree],
         newprops,
         newstate
     ):
@@ -225,11 +236,20 @@ class TableGridView(QtWidgetElement):
         # the TableGridViewRow_ doesn't have a Qt instantiation so we
         # want to treat the TableGridViewRow_ children as the children of
         # the TableGridView.
-        children_of_rows = list()
+
+        children_of_rows: list[_WidgetTree] = list()
         for c in children:
             children_of_rows.extend(c.children)
+        # children_of_rows: list[QtWidgetElement] = list()
+        # for c in children:
+        #     # children_of_rows.extend([comp.component for comp in c.children])
+        #     for comp in c.children:
+        #         assert isinstance(comp.component, QtWidgetElement)
+        #         children_of_rows.append(comp.component)
 
         newchildren = _childdict(children_of_rows)
+
+        newchildren_values = set(newchildren.values())
 
         old_keys = self._widget_children_dict.keys()
         new_keys = newchildren.keys()
@@ -239,9 +259,11 @@ class TableGridView(QtWidgetElement):
 
         commands: list[_CommandType] = []
         for row,column,_key in old_deletions:
-            commands.append(_CommandType(self._delete_child, self._widget_children_dict[(row,column,_key)], row, column))
-            # Is this del doing anything?
-            del self._widget_children_dict[(row,column,_key)]
+            w = self._widget_children_dict[(row,column,_key)]
+            if w in newchildren_values:
+                commands.append(_CommandType(self._soft_delete_child, w, row, column))
+            else:
+                commands.append(_CommandType(self._delete_child, w, row, column))
 
         for row,column,_key in new_additions:
             commands.append(_CommandType(self._add_child, newchildren[(row,column,_key)], row, column))
