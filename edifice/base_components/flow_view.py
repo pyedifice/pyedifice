@@ -8,6 +8,8 @@
 
 from ..qt import QT_VERSION
 import typing
+import logging
+
 if typing.TYPE_CHECKING:
     from PySide6.QtCore import QMargins, QPoint, QRect, QSize, Qt
     from PySide6.QtWidgets import QLayout, QLayoutItem, QSizePolicy, QWidget
@@ -19,8 +21,9 @@ else:
         from PySide6.QtCore import QMargins, QPoint, QRect, QSize, Qt
         from PySide6.QtWidgets import QLayout, QLayoutItem, QSizePolicy, QWidget
 
-from .base_components import _LinearView
+from .base_components import _LinearView, QtWidgetElement
 
+logger = logging.getLogger("Edifice")
 
 class FlowLayout(QLayout):
     def __init__(self, parent=None):
@@ -147,21 +150,46 @@ class FlowView(_LinearView):
         super().__init__(**kwargs)
         self.underlying = None
 
-    def _delete_child(self, i, old_child):
-        # if self.underlying_layout is not None: # TODO this is never true
-        child_node = self.underlying_layout.takeAt(i)
-        #     if child_node is not None and child_node.widget():
-        #         child_node.widget().deleteLater()
-        # else:
-        #     old_child.underlying.setParent(None)
-        # old_child._destroy_widgets()
+    # def _delete_child(self, i, old_child):
+    #     # if self.underlying_layout is not None: # TODO this is never true
+    #     child_node = self.underlying_layout.takeAt(i)
+    #     #     if child_node is not None and child_node.widget():
+    #     #         child_node.widget().deleteLater()
+    #     # else:
+    #     #     old_child.underlying.setParent(None)
+    #     # old_child._destroy_widgets()
+    #     assert child_node is not None
+    #     child_node.widget().setParent(None)
 
-    def _soft_delete_child(self, i, old_child):
-        # TODO This function is unreferenced
-        # if self.underlying_layout is not None:
-        self.underlying_layout.takeAt(i)
-        # else:
-        #     old_child.underlying.setParent(None)
+    def _delete_child(self, i, old_child: QtWidgetElement):
+        # https://doc.qt.io/qtforpython-6/PySide6/QtCore/QObject.html#detailed-description
+        # “The parent takes ownership of the object; i.e., it will automatically delete its children in its destructor.”
+        # I think that sometimes when we try to delete a widget, it has already
+        # been deleted by its parent. So we can't just fail if the delete fails.
+        if self.underlying_layout is None:
+            logger.warning("_delete_child No underlying_layout " + str(self))
+        else:
+            if (child_node := self.underlying_layout.takeAt(i)) is None:
+                logger.warning("_delete_child takeAt failed " + str(i) + " " + str(self))
+            else:
+                if (w := child_node.widget()) is None:
+                    logger.warning("_delete_child widget is None " + str(i) + " " + str(self))
+                else:
+                    w.deleteLater()
+
+    # def _soft_delete_child(self, i, old_child):
+    #     # TODO This function is unreferenced
+    #     # if self.underlying_layout is not None:
+    #     self.underlying_layout.takeAt(i)
+    #     # else:
+    #     #     old_child.underlying.setParent(None)
+    def _soft_delete_child(self, i, old_child: QtWidgetElement):
+        if self.underlying_layout is None:
+            logger.warning("_soft_delete_child No underlying_layout " + str(self))
+        else:
+            if self.underlying_layout.takeAt(i) is None:
+                logger.warning("_soft_delete_child takeAt failed " + str(i) + " " + str(self))
+
 
     def _add_child(self, i, child_component):
         # if self.underlying_layout is not None:

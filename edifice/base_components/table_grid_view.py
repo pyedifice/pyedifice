@@ -1,6 +1,9 @@
 from typing import TYPE_CHECKING
 from typing_extensions import Self
 import typing as tp
+import logging
+
+logger = logging.getLogger("Edifice")
 
 from ..qt import QT_VERSION
 if QT_VERSION == "PyQt6" and not TYPE_CHECKING:
@@ -196,12 +199,17 @@ class TableGridView(QtWidgetElement):
             self.underlying_layout.setColumnMinimumWidth(column, self._column_minwidth[column])
 
     def _delete_child(self, child_component: QtWidgetElement, row:int, column:int):
-        layoutitem = self.underlying_layout.itemAtPosition(row, column)
-        assert layoutitem is not None
-        widget = layoutitem.widget()
-        assert widget is not None
-        # widget.deleteLater()
-        self.underlying_layout.removeItem(layoutitem)
+        if self.underlying_layout is None:
+            logger.warning("_delete_child No underlying_layout " + str(self))
+        else:
+            if (layoutitem := self.underlying_layout.itemAtPosition(row, column)) is None:
+                logger.warning("_delete_child itemAtPosition failed " + str((row,column)) + " " + str(self))
+            else:
+                self.underlying_layout.removeItem(layoutitem)
+                if (w := layoutitem.widget()) is None:
+                    logger.warning("_delete_child widget is None " + str((row,column)) + " " + str(self))
+                else:
+                    w.deleteLater()
 
     def _qt_update_commands(
         self,

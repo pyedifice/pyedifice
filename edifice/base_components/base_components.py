@@ -337,13 +337,13 @@ class QtWidgetElement(WidgetElement):
         The underlying QWidget, which may not exist if this Element has not rendered.
         """
 
-    def _destroy_widgets(self):
-        """
-        Delete all children widgets recursively.
-        """
-        self.underlying = None # No guarantee that self.underlying exists
-        for child in self._widget_children:
-            child._destroy_widgets()
+    # def _destroy_widgets(self):
+    #     """
+    #     Delete all children widgets recursively.
+    #     """
+    #     self.underlying = None # No guarantee that self.underlying exists
+    #     for child in self._widget_children:
+    #         child._destroy_widgets()
 
     def _set_size(self, width, height, size_from_font=None):
         self._height = height
@@ -1762,19 +1762,38 @@ class View(_LinearView):
         super().__init__(**kwargs)
 
     def _delete_child(self, i, old_child: QtWidgetElement):
-        assert self.underlying_layout is not None
-        child_node = self.underlying_layout.takeAt(i)
-        # child_node.widget().deleteLater()
-        # old_child._destroy_widgets()
+        # assert self.underlying_layout is not None
+        # self.underlying_layout.takeAt(i).widget().deleteLater()
 
-    def _destroy_widgets(self):
-        for i, child in reversed(list(enumerate(self._widget_children))):
-            self._delete_child(i, child)
-        self._widget_children = []
+        # https://doc.qt.io/qtforpython-6/PySide6/QtCore/QObject.html#detailed-description
+        # “The parent takes ownership of the object; i.e., it will automatically delete its children in its destructor.”
+        # I think that sometimes when we try to delete a widget, it has already
+        # been deleted by its parent. So we can't just fail if the delete fails.
+        if self.underlying_layout is None:
+            logger.warning("_delete_child No underlying_layout " + str(self))
+        else:
+            if (child_node := self.underlying_layout.takeAt(i)) is None:
+                logger.warning("_delete_child takeAt failed " + str(i) + " " + str(self))
+            else:
+                if (w := child_node.widget()) is None:
+                    logger.warning("_delete_child widget is None " + str(i) + " " + str(self))
+                else:
+                    w.deleteLater()
 
-    def _soft_delete_child(self, i, old_child):
-        assert self.underlying_layout is not None
-        self.underlying_layout.takeAt(i)
+    # def _destroy_widgets(self):
+    #     for i, child in reversed(list(enumerate(self._widget_children))):
+    #         self._delete_child(i, child)
+    #     self._widget_children = []
+
+    def _soft_delete_child(self, i, old_child: QtWidgetElement):
+        # assert self.underlying_layout is not None
+        # self.underlying_layout.takeAt(i)
+
+        if self.underlying_layout is None:
+            logger.warning("_soft_delete_child No underlying_layout " + str(self))
+        else:
+            if self.underlying_layout.takeAt(i) is None:
+                logger.warning("_soft_delete_child takeAt failed " + str(i) + " " + str(self))
 
     def _add_child(self, i, child_component: QtWidgets.QWidget):
         assert self.underlying_layout is not None
@@ -1852,20 +1871,29 @@ class ScrollView(_LinearView):
         self._register_props(kwargs)
         super().__init__(**kwargs)
 
-    def _delete_child(self, i, old_child):
-        assert self.underlying_layout is not None
-        child_node = self.underlying_layout.takeAt(i)
-        # child_node.widget().deleteLater()
-        # old_child._destroy_widgets()
+    def _delete_child(self, i, old_child: QtWidgetElement):
+        if self.underlying_layout is None:
+            logger.warning("_delete_child No underlying_layout " + str(self))
+        else:
+            if (child_node := self.underlying_layout.takeAt(i)) is None:
+                logger.warning("_delete_child takeAt failed " + str(i) + " " + str(self))
+            else:
+                if (w := child_node.widget()) is None:
+                    logger.warning("_delete_child widget is None " + str(i) + " " + str(self))
+                else:
+                    w.deleteLater()
 
-    def _destroy_widgets(self):
-        for i, child in reversed(list(enumerate(self._widget_children))):
-            self._delete_child(i, child)
-        self._widget_children = []
+    # def _destroy_widgets(self):
+    #     for i, child in reversed(list(enumerate(self._widget_children))):
+    #         self._delete_child(i, child)
+    #     self._widget_children = []
 
-    def _soft_delete_child(self, i, old_child):
-        assert self.underlying_layout is not None
-        self.underlying_layout.takeAt(i)
+    def _soft_delete_child(self, i, old_child: QtWidgetElement):
+        if self.underlying_layout is None:
+            logger.warning("_soft_delete_child No underlying_layout " + str(self))
+        else:
+            if self.underlying_layout.takeAt(i) is None:
+                logger.warning("_soft_delete_child takeAt failed " + str(i) + " " + str(self))
 
     def _add_child(self, i, child_component):
         self.underlying_layout.insertWidget(i, child_component)
@@ -2085,7 +2113,7 @@ class TabView(_LinearView):
         assert type(self.underlying) == QtWidgets.QTabWidget
         self.underlying.removeTab(i)
 
-    def _soft_delete_child(self, i, old_child):
+    def _soft_delete_child(self, i, old_child: QtWidgetElement):
         assert type(self.underlying) == QtWidgets.QTabWidget
         self.underlying.removeTab(i)
 
