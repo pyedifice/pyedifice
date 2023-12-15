@@ -1765,7 +1765,7 @@ class View(_LinearView):
         assert self.underlying_layout is not None
         child_node = self.underlying_layout.takeAt(i)
         child_node.widget().deleteLater()
-        old_child._destroy_widgets()
+        # old_child._destroy_widgets()
 
     def _destroy_widgets(self):
         for i, child in reversed(list(enumerate(self._widget_children))):
@@ -1856,7 +1856,7 @@ class ScrollView(_LinearView):
         assert self.underlying_layout is not None
         child_node = self.underlying_layout.takeAt(i)
         child_node.widget().deleteLater()
-        old_child._destroy_widgets()
+        # old_child._destroy_widgets()
 
     def _destroy_widgets(self):
         for i, child in reversed(list(enumerate(self._widget_children))):
