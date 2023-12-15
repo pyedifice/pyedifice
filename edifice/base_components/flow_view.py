@@ -148,26 +148,26 @@ class FlowView(_LinearView):
         self.underlying = None
 
     def _delete_child(self, i, old_child):
-        if self.underlying_layout is not None: # TODO this is never true
-            child_node = self.underlying_layout.takeAt(i)
-            if child_node is not None and child_node.widget():
-                child_node.widget().deleteLater()
-        else:
-            old_child.underlying.setParent(None)
-        old_child._destroy_widgets()
+        # if self.underlying_layout is not None: # TODO this is never true
+        child_node = self.underlying_layout.takeAt(i)
+        #     if child_node is not None and child_node.widget():
+        #         child_node.widget().deleteLater()
+        # else:
+        #     old_child.underlying.setParent(None)
+        # old_child._destroy_widgets()
 
     def _soft_delete_child(self, i, old_child):
         # TODO This function is unreferenced
-        if self.underlying_layout is not None:
-            self.underlying_layout.takeAt(i)
-        else:
-            old_child.underlying.setParent(None)
+        # if self.underlying_layout is not None:
+        self.underlying_layout.takeAt(i)
+        # else:
+        #     old_child.underlying.setParent(None)
 
     def _add_child(self, i, child_component):
-        if self.underlying_layout is not None:
-            self.underlying_layout.insertWidget(i, child_component)
-        else:
-            child_component.setParent(self.underlying)
+        # if self.underlying_layout is not None:
+        self.underlying_layout.insertWidget(i, child_component)
+        # else:
+        #     child_component.setParent(self.underlying)
 
     def _initialize(self):
         self.underlying = QWidget()

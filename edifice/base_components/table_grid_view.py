@@ -200,7 +200,7 @@ class TableGridView(QtWidgetElement):
         assert layoutitem is not None
         widget = layoutitem.widget()
         assert widget is not None
-        widget.deleteLater()
+        # widget.deleteLater()
         self.underlying_layout.removeItem(layoutitem)
 
     def _qt_update_commands(

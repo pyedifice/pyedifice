@@ -1764,7 +1764,7 @@ class View(_LinearView):
     def _delete_child(self, i, old_child: QtWidgetElement):
         assert self.underlying_layout is not None
         child_node = self.underlying_layout.takeAt(i)
-        child_node.widget().deleteLater()
+        # child_node.widget().deleteLater()
         # old_child._destroy_widgets()
 
     def _destroy_widgets(self):
@@ -1855,7 +1855,7 @@ class ScrollView(_LinearView):
     def _delete_child(self, i, old_child):
         assert self.underlying_layout is not None
         child_node = self.underlying_layout.takeAt(i)
-        child_node.widget().deleteLater()
+        # child_node.widget().deleteLater()
         # old_child._destroy_widgets()
 
     def _destroy_widgets(self):
