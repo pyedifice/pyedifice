@@ -1769,9 +1769,8 @@ class View(_LinearView):
         # “The parent takes ownership of the object; i.e., it will automatically delete its children in its destructor.”
         # I think that sometimes when we try to delete a widget, it has already
         # been deleted by its parent. So we can't just fail if the delete fails.
-        if self.underlying_layout is None:
-            logger.warning("_delete_child No underlying_layout " + str(self))
-        else:
+
+        if self.underlying_layout is not None:
             if (child_node := self.underlying_layout.takeAt(i)) is None:
                 logger.warning("_delete_child takeAt failed " + str(i) + " " + str(self))
             else:
@@ -1779,6 +1778,12 @@ class View(_LinearView):
                     logger.warning("_delete_child widget is None " + str(i) + " " + str(self))
                 else:
                     w.deleteLater()
+        else:
+            # Then this is a fixed-position View
+            assert old_child.underlying is not None
+            old_child.underlying.setParent(None)
+            #TODO old_child.underlying.deleteLater()?
+
 
     # def _destroy_widgets(self):
     #     for i, child in reversed(list(enumerate(self._widget_children))):
@@ -1789,15 +1794,20 @@ class View(_LinearView):
         # assert self.underlying_layout is not None
         # self.underlying_layout.takeAt(i)
 
-        if self.underlying_layout is None:
-            logger.warning("_soft_delete_child No underlying_layout " + str(self))
-        else:
+        if self.underlying_layout is not None:
             if self.underlying_layout.takeAt(i) is None:
                 logger.warning("_soft_delete_child takeAt failed " + str(i) + " " + str(self))
+        else:
+            # Then this is a fixed-position View
+            assert old_child.underlying is not None
+            old_child.underlying.setParent(None)
 
     def _add_child(self, i, child_component: QtWidgets.QWidget):
-        assert self.underlying_layout is not None
-        self.underlying_layout.insertWidget(i, child_component)
+        if self.underlying_layout is not None:
+            self.underlying_layout.insertWidget(i, child_component)
+        else:
+            # Then this is a fixed-position View
+            child_component.setParent(self.underlying)
 
     def _initialize(self):
         self.underlying = QtWidgets.QWidget()
