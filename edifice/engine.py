@@ -160,7 +160,7 @@ class _RenderContext(object):
             hook.updaters.append(updater)
             app = self.engine._app
             assert app is not None
-            app._defer_rerender([element])
+            app._defer_rerender()
 
         return (hook.state, setter)
 
@@ -739,10 +739,11 @@ class RenderEngine(object):
 
     def _request_rerender(self, components: list[Element]) -> RenderResult:
 
+        components_ = components[:]
         # Before the render, reduce the _hook_state updaters.
         # We can't do this after the render, because there may have been state
         # updates from event handlers.
-        for hooks in self._hook_state.values():
+        for element,hooks in self._hook_state.items():
             for hook in hooks:
                 state0 = hook.state
                 try:
@@ -751,6 +752,10 @@ class RenderEngine(object):
                             hook.state = updater(hook.state)
                         else:
                             hook.state = updater
+                    if len(hook.updaters) > 0:
+                        # If there are use_state updaters and no exceptions
+                        # thrown, then we need to re-render this component.
+                        components_.append(element)
                 except:
                     # If any of the updaters throws then the state is unchanged.
                     hook.state = state0
@@ -762,7 +767,7 @@ class RenderEngine(object):
         with _storage_manager() as storage_manager:
             render_context = _RenderContext(storage_manager, self)
             local_state.render_context = render_context
-            widget_trees = self._gen_widget_trees(components, render_context)
+            widget_trees = self._gen_widget_trees(components_, render_context)
 
         # Generate the update commands from the widget trees
         commands = self._gen_commands(widget_trees, render_context)
