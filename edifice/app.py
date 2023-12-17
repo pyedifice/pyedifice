@@ -194,13 +194,15 @@ class App(object):
         self._inspector = inspector
         self._inspector_component = None
 
-        self._pending_rerender = False
+        self._rerender_called_soon = False
+        self._is_rerendering = False
+        self._rerender_wanted = False
 
     def __hash__(self):
         return id(self)
 
     def _rerender_callback(self):
-        self._pending_rerender = False
+        self._rerender_called_soon = False
         self._request_rerender([], {})
 
     def _defer_rerender(self):
@@ -208,14 +210,19 @@ class App(object):
         Rerender on the next event loop iteration.
         Idempotent.
         """
-        if not self._pending_rerender:
+        if not self._rerender_called_soon and not self._is_rerendering:
             asyncio.get_event_loop().call_soon(self._rerender_callback)
-        self._pending_rerender = True
+            self._rerender_called_soon = True
+        self._rerender_wanted = True
+
 
     def _request_rerender(self, components: list[Element], newstate):
         """
         Call the RenderEngine to immediately render the widget tree.
         """
+        self._is_rerendering = True
+        self._rerender_wanted = False
+
         del newstate #TODO?
         start_time = time.process_time()
 
@@ -232,6 +239,11 @@ class App(object):
 
         if self._inspector_component is not None and not all(isinstance(comp, inspector.InspectorElement) for comp in components):
             self._inspector_component._refresh()
+
+        self._is_rerendering = False
+        if self._rerender_wanted and not self._rerender_called_soon:
+            asyncio.get_event_loop().call_soon(self._rerender_callback)
+
 
     def set_stylesheet(self, stylesheet):
         """Adds a global stylesheet for the app.
