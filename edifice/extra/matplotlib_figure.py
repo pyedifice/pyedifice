@@ -15,7 +15,7 @@ from matplotlib.axes import Axes
 
 class MatplotlibFigure(QtWidgetElement):
     """
-     A **matplotlib** `Figure <https://matplotlib.org/stable/api/figure_api.html#matplotlib.figure.Figure>`_.
+    A **matplotlib** `Figure <https://matplotlib.org/stable/api/figure_api.html#matplotlib.figure.Figure>`_.
 
     Requires `matplotlib <https://matplotlib.org/stable/>`_.
 
