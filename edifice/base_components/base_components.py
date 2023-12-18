@@ -1683,40 +1683,89 @@ class _LinearView(QtWidgetElement):
         pass
 
     def _recompute_children(self, children: list[_WidgetTree]):
+        """
+        Diffing and reconciliation of QtWidgetElements.
+        Compute the sequence of commands to transform self._widget_children
+        into the new children.
+        """
 
         children_new: list[QtWidgetElement] = [tp.cast(QtWidgetElement, child.component) for child in children]
 
         commands: list[_CommandType] = []
 
-        children_old_positioned = [] # old children in the same position as new children
+        children_old_positioned_reverse: list[QtWidgetElement] = []
+        # old children in the same position as new children.
+        # In reverse order for speed because popping from the end of a list is
+        # faster than popping from the beginning of a list?
 
-        # It might be worth trying to handle two special cases:
+
+		# First we delete old children that are not in the right position.
+        # We do this in two cases:
         # 1. If the first new child is the same as the first old child
-        # 2. If the last new child is the same as the last old child
+        # 2. Else we hope the last new child is the same as the last old child
 
-        for i, child_old in reversed(list(enumerate(self._widget_children))):
-            if i<len(children_new) and child_old is children_new[i]:
-            # old child is in the same position as new child
-                children_old_positioned.insert(0, child_old)
-            else:
-            # if old child is out of position
-                if child_old in children_new:
-                # if child will be added back in later
-                    commands.append(_CommandType(self._soft_delete_child, i, child_old))
+		# Case 1: If the first new child is the same as the first old child.
+        # Then we iterate forward pairwise and hope that we get a lot of
+        # matches between old and new children so we can reuse them
+        # instead of deleting them.
+        #
+        # Note: QLayout.takeAt will decrement the indices of all greater children.
+        if len(children_new)>0 and len(self._widget_children)>0 and children_new[0] is self._widget_children[0]:
+            i_new=0
+            i_old=0
+            for child_old in self._widget_children:
+                if i_new<len(children_new) and child_old is children_new[i_new]:
+                    # old child is in the same position as new child
+                    children_old_positioned_reverse.append(child_old)
+                    i_old+=1
                 else:
-                # else child will be deleted
-                    commands.append(_CommandType(self._delete_child, i, child_old))
+                    # old child is out of position
+                    if child_old in children_new:
+                        # child will be added back in later
+                        commands.append(_CommandType(self._soft_delete_child, i_old, child_old))
+                    else:
+                        # child will be deleted
+                        commands.append(_CommandType(self._delete_child, i_old, child_old))
+                i_new+=1
 
+            r = list(reversed(children_old_positioned_reverse))
+            children_old_positioned_reverse = r
+
+		# Case 2:
+        # Then we iterate backwards pairwise and hope that we get a lot of
+        # matches between old and new children so we can reuse them
+        # instead of deleting them.
+        # This will likely be true if the last old child is the same as the
+        # last new child.
+        else:
+            i_new = len(children_new)-1
+            for i_old, child_old in reversed(list(enumerate(self._widget_children))):
+                if i_new>0 and child_old is children_new[i_new]:
+                    # old child is in the same position as new child
+                    children_old_positioned_reverse.append(child_old)
+                else:
+                    # old child is out of position
+                    if child_old in children_new:
+                        # child will be added back in later
+                        commands.append(_CommandType(self._soft_delete_child, i_old, child_old))
+                    else:
+                        # child will be deleted
+                        commands.append(_CommandType(self._delete_child, i_old, child_old))
+                i_new-=1
+
+        # Now we have deleted all the old children that are not in the right position.
+        # Add in the missing new children.
         for i, child_new in enumerate(children_new):
-            if len(children_old_positioned) > 0 and child_new is children_old_positioned[0]:
+            if len(children_old_positioned_reverse) > 0 and child_new is children_old_positioned_reverse[-1]:
                 # if child is already in the right position
-                del children_old_positioned[0]
+                del children_old_positioned_reverse[-1]
             else:
                 assert isinstance(child_new, QtWidgetElement)
                 assert child_new.underlying is not None
                 commands.append(_CommandType(self._add_child, i, child_new.underlying))
 
-        assert len(children_old_positioned)==0
+		# assert sanity check that we used all the old children.
+        assert len(children_old_positioned_reverse)==0
         self._widget_children = children_new
         return commands
 
