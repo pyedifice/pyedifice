@@ -240,12 +240,6 @@ class TableGridView(QtWidgetElement):
         children_of_rows: list[_WidgetTree] = list()
         for c in children:
             children_of_rows.extend(c.children)
-        # children_of_rows: list[QtWidgetElement] = list()
-        # for c in children:
-        #     # children_of_rows.extend([comp.component for comp in c.children])
-        #     for comp in c.children:
-        #         assert isinstance(comp.component, QtWidgetElement)
-        #         children_of_rows.append(comp.component)
 
         newchildren = _childdict(children_of_rows)
 

@@ -337,14 +337,6 @@ class QtWidgetElement(WidgetElement):
         The underlying QWidget, which may not exist if this Element has not rendered.
         """
 
-    # def _destroy_widgets(self):
-    #     """
-    #     Delete all children widgets recursively.
-    #     """
-    #     self.underlying = None # No guarantee that self.underlying exists
-    #     for child in self._widget_children:
-    #         child._destroy_widgets()
-
     def _set_size(self, width, height, size_from_font=None):
         self._height = height
         self._width = width
@@ -1831,18 +1823,9 @@ class View(_LinearView):
             # Then this is a fixed-position View
             assert old_child.underlying is not None
             old_child.underlying.setParent(None)
-            #TODO old_child.underlying.deleteLater()?
 
-
-    # def _destroy_widgets(self):
-    #     for i, child in reversed(list(enumerate(self._widget_children))):
-    #         self._delete_child(i, child)
-    #     self._widget_children = []
 
     def _soft_delete_child(self, i, old_child: QtWidgetElement):
-        # assert self.underlying_layout is not None
-        # self.underlying_layout.takeAt(i)
-
         if self.underlying_layout is not None:
             if self.underlying_layout.takeAt(i) is None:
                 logger.warning("_soft_delete_child takeAt failed " + str(i) + " " + str(self))
@@ -1890,7 +1873,11 @@ class View(_LinearView):
             self._initialize()
         assert self.underlying is not None
         commands = []
-        # TODO should we run the child commands after the View commands?
+        # Should we run the child commands after the View commands?
+        # No because children must be able to delete themselves before parent
+        # deletes them.
+        # https://doc.qt.io/qtforpython-6/PySide6/QtCore/QObject.html#detailed-description
+        # “The parent takes ownership of the object; i.e., it will automatically delete its children in its destructor.”
         commands.extend(self._recompute_children(children))
         commands.extend(self._qt_stateless_commands(children, newprops, newstate))
         return commands
@@ -1941,11 +1928,6 @@ class ScrollView(_LinearView):
                     logger.warning("_delete_child widget is None " + str(i) + " " + str(self))
                 else:
                     w.deleteLater()
-
-    # def _destroy_widgets(self):
-    #     for i, child in reversed(list(enumerate(self._widget_children))):
-    #         self._delete_child(i, child)
-    #     self._widget_children = []
 
     def _soft_delete_child(self, i, old_child: QtWidgetElement):
         if self.underlying_layout is None:

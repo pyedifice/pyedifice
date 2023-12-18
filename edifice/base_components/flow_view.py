@@ -150,22 +150,7 @@ class FlowView(_LinearView):
         super().__init__(**kwargs)
         self.underlying = None
 
-    # def _delete_child(self, i, old_child):
-    #     # if self.underlying_layout is not None: # TODO this is never true
-    #     child_node = self.underlying_layout.takeAt(i)
-    #     #     if child_node is not None and child_node.widget():
-    #     #         child_node.widget().deleteLater()
-    #     # else:
-    #     #     old_child.underlying.setParent(None)
-    #     # old_child._destroy_widgets()
-    #     assert child_node is not None
-    #     child_node.widget().setParent(None)
-
     def _delete_child(self, i, old_child: QtWidgetElement):
-        # https://doc.qt.io/qtforpython-6/PySide6/QtCore/QObject.html#detailed-description
-        # “The parent takes ownership of the object; i.e., it will automatically delete its children in its destructor.”
-        # I think that sometimes when we try to delete a widget, it has already
-        # been deleted by its parent. So we can't just fail if the delete fails.
         if self.underlying_layout is None:
             logger.warning("_delete_child No underlying_layout " + str(self))
         else:
@@ -177,12 +162,6 @@ class FlowView(_LinearView):
                 else:
                     w.deleteLater()
 
-    # def _soft_delete_child(self, i, old_child):
-    #     # TODO This function is unreferenced
-    #     # if self.underlying_layout is not None:
-    #     self.underlying_layout.takeAt(i)
-    #     # else:
-    #     #     old_child.underlying.setParent(None)
     def _soft_delete_child(self, i, old_child: QtWidgetElement):
         if self.underlying_layout is None:
             logger.warning("_soft_delete_child No underlying_layout " + str(self))
@@ -192,10 +171,7 @@ class FlowView(_LinearView):
 
 
     def _add_child(self, i, child_component):
-        # if self.underlying_layout is not None:
         self.underlying_layout.insertWidget(i, child_component)
-        # else:
-        #     child_component.setParent(self.underlying)
 
     def _initialize(self):
         self.underlying = QWidget()
