@@ -1,3 +1,3 @@
-qasync==0.26.0 ; python_version >= "3.8" and python_version < "3.12" \
+qasync==0.26.0 ; python_version >= "3.8" and python_version < "3.13" \
     --hash=sha256:0d51daf21ad6ee84e306d19ba856e7e1ca4836e3504e7b22c9493dbd4c85b3a3 \
     --hash=sha256:c2f73c39171981884699689fa6867a33aa1882220417d4f3949cd8499397f830

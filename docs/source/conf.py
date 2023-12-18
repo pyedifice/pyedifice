@@ -7,10 +7,10 @@
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
 project = 'Edifice'
+release = '0.3.0'
 # Copyright is broken, renders as '1980, David Ding' for some reason
 # project_copyright = '2021, David Ding'
-author = 'David Ding © 2021'
-release = '0.2.1'
+author = 'David Ding, James D. Brock, Viktor Kronvall'
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration

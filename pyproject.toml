@@ -1,8 +1,8 @@
 [tool.poetry]
 name = "pyedifice"
-version = "0.2.1"
+version = "0.3.0"
 description = "Declarative GUI framework for Python and Qt"
-authors = ["David Ding", "James Dawson Brock"]
+authors = ["David Ding", "James D. Brock", "Viktor Kronvall"]
 license = "MIT"
 readme = "README.md"
 homepage = "https://pyedifice.github.io"
@@ -13,8 +13,8 @@ packages = [{include = "edifice", from = "."}]
 format = "poetry-core"
 
 [tool.poetry.dependencies]
-python = ">= 3.8,<3.12" # "^3.10"
-qasync = ">= 0.13.0" # "^0.24.0"
+python = ">= 3.8,<3.13"
+qasync = ">= 0.26.0"
 
 [tool.poetry.group.dev.dependencies]
 certifi = ">= 2020.12.5" # "^2023.5.7"

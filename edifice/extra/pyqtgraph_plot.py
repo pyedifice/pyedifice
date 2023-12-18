@@ -2,6 +2,7 @@ import typing as tp
 from ..base_components import QtWidgetElement
 from ..engine import _CommandType
 
+# Import PySide6 or PyQt6 before importing pyqtgraph so that pyqtgraph detects the same
 from ..qt import QT_VERSION
 if QT_VERSION == "PyQt6" and not tp.TYPE_CHECKING:
     from PyQt6 import QtWidgets
@@ -10,7 +11,7 @@ else:
 
 import pyqtgraph as pg
 
-class Plot(QtWidgetElement):
+class PyQtPlot(QtWidgetElement):
     """
     A **PyQtGraph**
     `PlotWidget <https://pyqtgraph.readthedocs.io/en/latest/api_reference/widgets/plotwidget.html>`_.
@@ -24,8 +25,9 @@ class Plot(QtWidgetElement):
 
     Example::
 
+            import numpy as np
             from edifice import View, component
-            from edifice.components.pyqtgraph_plot import Plot
+            from edifice.extra import PyQtPlot
             import pyqtgraph as pg
 
             @component
@@ -37,7 +39,7 @@ class Plot(QtWidgetElement):
                     plot_item.plot(x=xs, y=ys)
 
                 with View():
-                    Plot(plot_fun=plot_fun)
+                    PyQtPlot(plot_fun=plot_fun)
 
     Args:
         plot_fun:

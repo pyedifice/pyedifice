@@ -9,7 +9,7 @@ import typing as tp
 import asyncio
 import edifice as ed
 
-from edifice.extra.pyqtgraph_plot import Plot
+from edifice.extra.pyqtgraph_plot import PyQtPlot
 import numpy as np
 
 import pyqtgraph as pg
@@ -79,7 +79,7 @@ def Oscillator(self):
                                 on_click=lambda e: is_playing_set(lambda p: not p))
                 ed.Button("Reset", on_click=lambda e: simulation_time_set(0))
             with ed.View():
-                Plot(plot_fun=plot_fun[0])
+                PyQtPlot(plot_fun=plot_fun[0])
             with ed.View(layout="row", style={"margin": 10}):
                 ed.Label("Angular Frequency")
                 ed.Slider(

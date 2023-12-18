@@ -7,7 +7,7 @@ import sys, os
 sys.path.insert(0, os.path.join(sys.path[0], '..'))
 import typing as tp
 import edifice as ed
-from edifice.extra.matplotlib_figure import MatplotlibFigure
+from edifice.extra import MatplotlibFigure
 import numpy as np
 
 from matplotlib.backend_bases import MouseEvent

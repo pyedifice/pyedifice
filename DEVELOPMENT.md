@@ -52,7 +52,7 @@ nix flake show github:pyedifice/pyedifice
 - version agreement
    - `pyproject.toml` `version`
    - `docs/source/version.rst`
-   - `docs/conf.py` `release`
+   - `docs/source/conf.py` `release`
 - `nix run .#run_tests`
 
 ```

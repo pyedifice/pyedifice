@@ -4,14 +4,24 @@
 Release Notes
 =============
 
-0.2.2
+0.3.0
 -----
-Released:
+Released: 2023-12-19
 
+* New Base Elements:
+    - :class:`SpinInput`
+    - :class:`ProgressBar`
 * :class:`QtWidgetElement` :code:`on_drop` event handler.
 * **Extra Elements**
-    - :class:`extra.matplotlib_figure.MatplotlibFigure`
-    - :class:`extra.pyqtgraph_plot.Plot`
+    - :class:`extra.MatplotlibFigure`
+    - :class:`extra.PyQtPlot`
+* Removed **numpy** dependency.
+* Bugfixes in child diffing and reconciliation.
+* :func:`use_effect` cleanup function can be :code:`None`.
+* Bugfix :func:`use_async` cancellation of previous task.
+* Base Element :class:`Slider` only allows integer values.
+* Merged Base Elements :class:`Image` and :code:`ImageAspect`
+* Removed deprecated modules :code:`forms`, :code:`plotting`.
 * Hot-reload bugfixes.
 
 0.2.1

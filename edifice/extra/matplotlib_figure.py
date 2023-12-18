@@ -15,9 +15,21 @@ from matplotlib.axes import Axes
 
 class MatplotlibFigure(QtWidgetElement):
     """
-    **matplotlib** `Figure <https://matplotlib.org/stable/api/figure_api.html#matplotlib.figure.Figure>`_.
+     A **matplotlib** `Figure <https://matplotlib.org/stable/api/figure_api.html#matplotlib.figure.Figure>`_.
 
     Requires `matplotlib <https://matplotlib.org/stable/>`_.
+
+    Example::
+
+        from matplotlib.axes import Axes
+        import numpy as np
+        from edifice.extra import MatplotlibFigure
+
+        def plot_fun(ax:Axes):
+            time_range = np.linspace(-10, 10, num=120)
+            ax.plot(time_range, np.sin(time_range))
+
+        MatplotlibFigure(plot_fun=plot_fun)
 
     Args:
         plot_fun:

@@ -17,7 +17,7 @@ else:
     from PySide6 import QtGui
 
 import edifice as ed
-from edifice.extra.pyqtgraph_plot import Plot
+from edifice.extra import PyQtPlot
 import pyqtgraph as pg
 
 pg.setConfigOption("antialias", True)
@@ -49,11 +49,11 @@ def Component(self):
             },
         ):
             ed.Label("Increment x_min")
-        Plot(plot_fun=plot_fn)
+        PyQtPlot(plot_fun=plot_fn)
 
 @ed.component
 def Main(self):
-    with ed.Window("PyQtGraph Example"):
+    with ed.Window("PyQtPlot Example"):
         with ed.View():
             Component()
 
