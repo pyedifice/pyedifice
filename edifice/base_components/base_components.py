@@ -337,11 +337,6 @@ class QtWidgetElement(WidgetElement):
         The underlying QWidget, which may not exist if this Element has not rendered.
         """
 
-    def _destroy_widgets(self):
-        self.underlying = None # No guarantee that self.underlying exists
-        for child in self._widget_children:
-            child._destroy_widgets()
-
     def _set_size(self, width, height, size_from_font=None):
         self._height = height
         self._width = width
@@ -1680,38 +1675,104 @@ class _LinearView(QtWidgetElement):
         pass
 
     def _recompute_children(self, children: list[_WidgetTree]):
+        """
+        Diffing and reconciliation of QtWidgetElements.
+        Compute the sequence of commands to transform self._widget_children
+        into the new children.
+        """
+
+        children_new: list[QtWidgetElement] = [tp.cast(QtWidgetElement, child.component) for child in children]
+
         commands: list[_CommandType] = []
-        children_ = [child for child in children if tp.cast(QtWidgetElement, child.component).underlying is not None]
-        new_children: set[QtWidgetElement] = set()
-        for child in children_:
-            assert isinstance(child.component, QtWidgetElement)
-            new_children.add(child.component)
 
-        for i, old_child in reversed(list(enumerate(self._widget_children))):
-            if old_child not in new_children:
-                commands.append(_CommandType(self._delete_child, i, old_child))
-                del self._widget_children[i]
+        children_old_positioned_reverse: list[QtWidgetElement] = []
+        # old children in the same position as new children.
+        # In reverse order for speed because popping from the end of a list is
+        # faster than popping from the beginning of a list?
 
-        old_child_index = 0
-        old_children_len = len(self._widget_children)
-        for i, child in enumerate(children_):
-            old_child = None
-            if old_child_index < old_children_len:
-                old_child = self._widget_children[old_child_index]
 
-            if old_child is None or child.component is not old_child:
-                assert isinstance(child.component, QtWidgetElement)
-                assert isinstance(child.component.underlying, QtWidgets.QWidget)
-                commands.append(_CommandType(self._add_child, i, child.component.underlying))
-                old_child_index -= 1
+		# First we delete old children that are not in the right position.
+        # We do this in two cases:
+        # 1. If the first new child is the same as the first old child
+        # 2. Else we hope the last new child is the same as the last old child
 
-            old_child_index += 1
+		# Case 1: If the first new child is the same as the first old child.
+        # Then we iterate forward pairwise and hope that we get a lot of
+        # matches between old and new children so we can reuse them
+        # instead of deleting them.
+        #
+        # Note: QLayout.takeAt will decrement the indices of all greater children.
+        if len(children_new)>0 and len(self._widget_children)>0 and children_new[0] is self._widget_children[0]:
+            i_new=0
+            i_old=0
+            for child_old in self._widget_children:
+                if i_new<len(children_new) and child_old is children_new[i_new]:
+                    # old child is in the same position as new child
+                    children_old_positioned_reverse.append(child_old)
+                    i_old+=1
+                else:
+                    # old child is out of position
+                    if child_old in children_new:
+                        # child will be added back in later
+                        commands.append(_CommandType(self._soft_delete_child, i_old, child_old))
+                    else:
+                        # child will be deleted
+                        commands.append(_CommandType(self._delete_child, i_old, child_old))
+                i_new+=1
 
-        self._widget_children = [tp.cast(QtWidgetElement, child.component) for child in children_]
+            r = list(reversed(children_old_positioned_reverse))
+            children_old_positioned_reverse = r
+
+		# Case 2:
+        # Then we iterate backwards pairwise and hope that we get a lot of
+        # matches between old and new children so we can reuse them
+        # instead of deleting them.
+        # This will likely be true if the last old child is the same as the
+        # last new child.
+        else:
+            i_new = len(children_new)-1
+            for i_old, child_old in reversed(list(enumerate(self._widget_children))):
+                if i_new>0 and child_old is children_new[i_new]:
+                    # old child is in the same position as new child
+                    children_old_positioned_reverse.append(child_old)
+                else:
+                    # old child is out of position
+                    if child_old in children_new:
+                        # child will be added back in later
+                        commands.append(_CommandType(self._soft_delete_child, i_old, child_old))
+                    else:
+                        # child will be deleted
+                        commands.append(_CommandType(self._delete_child, i_old, child_old))
+                i_new-=1
+
+        # Now we have deleted all the old children that are not in the right position.
+        # Add in the missing new children.
+        for i, child_new in enumerate(children_new):
+            if len(children_old_positioned_reverse) > 0 and child_new is children_old_positioned_reverse[-1]:
+                # if child is already in the right position
+                del children_old_positioned_reverse[-1]
+            else:
+                assert isinstance(child_new, QtWidgetElement)
+                assert child_new.underlying is not None
+                commands.append(_CommandType(self._add_child, i, child_new.underlying))
+
+		# assert sanity check that we used all the old children.
+        assert len(children_old_positioned_reverse)==0
+        self._widget_children = children_new
         return commands
+
     def _add_child(self, i, child_component: QtWidgets.QWidget):
         raise NotImplementedError
     def _delete_child(self, i, old_child: QtWidgetElement):
+        """
+        Delete the child from the layout.
+        """
+        raise NotImplementedError
+    def _soft_delete_child(self, i, old_child: QtWidgetElement):
+        """
+        Take the child out of the layout, but don't delete it. It will be
+        added back to the layout.
+        """
         raise NotImplementedError
 
 
@@ -1742,31 +1803,42 @@ class View(_LinearView):
         super().__init__(**kwargs)
 
     def _delete_child(self, i, old_child: QtWidgetElement):
+        # assert self.underlying_layout is not None
+        # self.underlying_layout.takeAt(i).widget().deleteLater()
+
+        # https://doc.qt.io/qtforpython-6/PySide6/QtCore/QObject.html#detailed-description
+        # “The parent takes ownership of the object; i.e., it will automatically delete its children in its destructor.”
+        # I think that sometimes when we try to delete a widget, it has already
+        # been deleted by its parent. So we can't just fail if the delete fails.
+
         if self.underlying_layout is not None:
-            child_node = self.underlying_layout.takeAt(i)
-            # From debugging: child_node is a QWidgetItem.
-            if child_node is not None:
-                # child_node is not None should not be necessary, but
-                # there is a bug where sometimes it is None if there are
-                # very rapid updates to the UI.
-                if child_node.widget():
-                    child_node.widget().deleteLater() # setParent(self._garbage_collector)
+            if (child_node := self.underlying_layout.takeAt(i)) is None:
+                logger.warning("_delete_child takeAt failed " + str(i) + " " + str(self))
+            else:
+                if (w := child_node.widget()) is None:
+                    logger.warning("_delete_child widget is None " + str(i) + " " + str(self))
+                else:
+                    w.deleteLater()
         else:
+            # Then this is a fixed-position View
             assert old_child.underlying is not None
             old_child.underlying.setParent(None)
-        old_child._destroy_widgets()
 
-    def _soft_delete_child(self, i, old_child):
-        # TODO this function is unreferenced
+
+    def _soft_delete_child(self, i, old_child: QtWidgetElement):
         if self.underlying_layout is not None:
-            self.underlying_layout.takeAt(i)
+            if self.underlying_layout.takeAt(i) is None:
+                logger.warning("_soft_delete_child takeAt failed " + str(i) + " " + str(self))
         else:
+            # Then this is a fixed-position View
+            assert old_child.underlying is not None
             old_child.underlying.setParent(None)
 
     def _add_child(self, i, child_component: QtWidgets.QWidget):
         if self.underlying_layout is not None:
             self.underlying_layout.insertWidget(i, child_component)
         else:
+            # Then this is a fixed-position View
             child_component.setParent(self.underlying)
 
     def _initialize(self):
@@ -1800,7 +1872,13 @@ class View(_LinearView):
         if self.underlying is None:
             self._initialize()
         assert self.underlying is not None
-        commands = self._recompute_children(children)
+        commands = []
+        # Should we run the child commands after the View commands?
+        # No because children must be able to delete themselves before parent
+        # deletes them.
+        # https://doc.qt.io/qtforpython-6/PySide6/QtCore/QObject.html#detailed-description
+        # “The parent takes ownership of the object; i.e., it will automatically delete its children in its destructor.”
+        commands.extend(self._recompute_children(children))
         commands.extend(self._qt_stateless_commands(children, newprops, newstate))
         return commands
 
@@ -1839,19 +1917,24 @@ class ScrollView(_LinearView):
         self._register_props(kwargs)
         super().__init__(**kwargs)
 
-    def _delete_child(self, i, old_child):
-        child_node = self.underlying_layout.takeAt(i)
-        if child_node is not None:
-            # child_node is not None should not be necessary, but
-            # there is a bug where sometimes it is None if there are
-            # very rapid updates to the UI.
-            if child_node.widget():
-                child_node.widget().deleteLater() # setParent(self._garbage_collector)
-        old_child._destroy_widgets()
+    def _delete_child(self, i, old_child: QtWidgetElement):
+        if self.underlying_layout is None:
+            logger.warning("_delete_child No underlying_layout " + str(self))
+        else:
+            if (child_node := self.underlying_layout.takeAt(i)) is None:
+                logger.warning("_delete_child takeAt failed " + str(i) + " " + str(self))
+            else:
+                if (w := child_node.widget()) is None:
+                    logger.warning("_delete_child widget is None " + str(i) + " " + str(self))
+                else:
+                    w.deleteLater()
 
-    def _soft_delete_child(self, i, old_child):
-        # TODO this function is unreferenced
-        self.underlying_layout.takeAt(i)
+    def _soft_delete_child(self, i, old_child: QtWidgetElement):
+        if self.underlying_layout is None:
+            logger.warning("_soft_delete_child No underlying_layout " + str(self))
+        else:
+            if self.underlying_layout.takeAt(i) is None:
+                logger.warning("_soft_delete_child takeAt failed " + str(i) + " " + str(self))
 
     def _add_child(self, i, child_component):
         self.underlying_layout.insertWidget(i, child_component)
@@ -2068,20 +2151,16 @@ class TabView(_LinearView):
         super().__init__(**kwargs)
 
     def _delete_child(self, i, old_child):
-        assert self.underlying is not None
-        widget = tp.cast(QtWidgets.QTabWidget, self.underlying)
-        widget.removeTab(i)
+        assert type(self.underlying) == QtWidgets.QTabWidget
+        self.underlying.removeTab(i)
 
-    def _soft_delete_child(self, i, old_child):
-        # TODO this function is unreferenced
-        assert self.underlying is not None
-        widget = tp.cast(QtWidgets.QTabWidget, self.underlying)
-        widget.removeTab(i)
+    def _soft_delete_child(self, i, old_child: QtWidgetElement):
+        assert type(self.underlying) == QtWidgets.QTabWidget
+        self.underlying.removeTab(i)
 
     def _add_child(self, i, child_component):
-        assert self.underlying is not None
-        widget = tp.cast(QtWidgets.QTabWidget, self.underlying)
-        widget.insertTab(i, child_component, self.props.labels[i])
+        assert type(self.underlying) == QtWidgets.QTabWidget
+        self.underlying.insertTab(i, child_component, self.props.labels[i])
 
     def _initialize(self):
         self.underlying = QtWidgets.QTabWidget()

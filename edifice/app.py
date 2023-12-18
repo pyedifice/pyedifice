@@ -1,5 +1,5 @@
 import logging
-
+from . import logger as _logger_module
 import asyncio
 import contextlib
 import os
@@ -25,8 +25,7 @@ from .base_components import Window, QtWidgetElement, ExportList
 from .engine import RenderEngine
 from .inspector import inspector
 
-logger = logging.getLogger("Edifice")
-logger_mod = logger
+logger = _logger_module.logger
 
 BLACK, RED, GREEN, YELLOW, BLUE, MAGENTA, CYAN, WHITE = range(8)
 
@@ -87,6 +86,16 @@ class App(object):
     This widget can then be plugged into the rest of your application, and there's no need
     to manage the rendering of the widget -- state changes will trigger automatic re-render
     without any intervention.
+
+    Logging
+    -------
+
+    To enable Edifice logging set the logging level. Example::
+
+        import logging
+        logger = logging.getLogger("Edifice")
+        logger.setLevel(logging.INFO)
+
 
     Args:
         root_element: the root Element of the application.
@@ -185,28 +194,35 @@ class App(object):
         self._inspector = inspector
         self._inspector_component = None
 
-        self._defer_rerender_elements : set[Element] = set()
+        self._rerender_called_soon = False
+        self._is_rerendering = False
+        self._rerender_wanted = False
 
     def __hash__(self):
         return id(self)
 
-    def _defer_rerender(self, components: list[Element]):
+    def _rerender_callback(self):
+        self._rerender_called_soon = False
+        self._request_rerender([], {})
+
+    def _defer_rerender(self):
         """
-        Enqueue elements for rerendering on the next event loop iteration.
+        Rerender on the next event loop iteration.
         Idempotent.
         """
-        if len(self._defer_rerender_elements) == 0:
-            def rerender_callback():
-                els = self._defer_rerender_elements.copy()
-                self._defer_rerender_elements.clear()
-                self._request_rerender(list(els), {})
-            asyncio.get_event_loop().call_soon(rerender_callback)
-        self._defer_rerender_elements.update(components)
+        if not self._rerender_called_soon and not self._is_rerendering:
+            asyncio.get_event_loop().call_soon(self._rerender_callback)
+            self._rerender_called_soon = True
+        self._rerender_wanted = True
+
 
     def _request_rerender(self, components: list[Element], newstate):
         """
         Call the RenderEngine to immediately render the widget tree.
         """
+        self._is_rerendering = True
+        self._rerender_wanted = False
+
         del newstate #TODO?
         start_time = time.process_time()
 
@@ -223,6 +239,11 @@ class App(object):
 
         if self._inspector_component is not None and not all(isinstance(comp, inspector.InspectorElement) for comp in components):
             self._inspector_component._refresh()
+
+        self._is_rerendering = False
+        if self._rerender_wanted and not self._rerender_called_soon:
+            asyncio.get_event_loop().call_soon(self._rerender_callback)
+
 
     def set_stylesheet(self, stylesheet):
         """Adds a global stylesheet for the app.

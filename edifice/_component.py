@@ -711,11 +711,21 @@ def Container(self):
 
 class BaseElement(Element):
     """Base Element, whose rendering is defined by the backend."""
+    # TODO _qt_update_commands should be a virtual function but _WidgetTree
+    # isn't defined here.
+    #
+    # def _qt_update_commands(
+    #     self,
+    #     children: list[_WidgetTree],
+    #     newprops : PropsDict,
+    #     newstate,
+    #     underlying: QtWidgets.QWidget,
+    #     underlying_layout: QtWidgets.QLayout | None = None
+    # ) -> list[_CommandType]:
+    #     raise NotImplementedError
+
 
 class WidgetElement(BaseElement):
-    pass
-
-class LayoutElement(BaseElement):
     pass
 
 

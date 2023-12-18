@@ -261,7 +261,7 @@ class WidgetTreeTestCase(unittest.TestCase):
 
         label1.underlying.font().pointSize()
 
-        self.assertCountEqual(commands, label1_commands + [
+        commands_expected = label1_commands + [
             _CommandType(view.underlying.setStyleSheet, "QWidget#%s{}" % id(view)),
             _CommandType(view.underlying.setProperty, "css_class", []),
             _CommandType(view.underlying.style().unpolish, view.underlying),
@@ -277,12 +277,13 @@ class WidgetTreeTestCase(unittest.TestCase):
             _CommandType(view._set_on_mouse_move, view.underlying, None),
             _CommandType(view._set_on_click, view.underlying, None),
             _CommandType(view._set_on_drop, view.underlying, None),
-            _CommandType(view._add_child, 0, label1.underlying)])
+            _CommandType(view._add_child, 0, label1.underlying)]
 
+        self.assertCountEqual(commands, commands_expected)
         view_tree = engine._WidgetTree(view, [label1_tree, label2_tree])
         with engine._storage_manager() as manager:
             commands = view_tree.gen_qt_commands(MockRenderContext(manager, eng))
-        self.assertCountEqual(commands, label1_commands + label2_commands + [
+        commands_expected = label1_commands + label2_commands + [
             _CommandType(view.underlying.setStyleSheet, "QWidget#%s{}" % id(view)),
             _CommandType(view.underlying.setProperty, "css_class", []),
             _CommandType(view.underlying.style().unpolish, view.underlying),
@@ -298,17 +299,16 @@ class WidgetTreeTestCase(unittest.TestCase):
             _CommandType(view._set_on_mouse_move, view.underlying, None),
             _CommandType(view._set_on_click, view.underlying, None),
             _CommandType(view._set_on_drop, view.underlying, None),
-            _CommandType(view._add_child, 1, label2.underlying)])
+            _CommandType(view._add_child, 1, label2.underlying)]
+        self.assertCountEqual(commands, commands_expected)
 
         inner_view = base_components.View()
         old_child = view_tree.children[0].component
-
-        view_tree = engine._WidgetTree(view, [label2_tree, engine._WidgetTree(inner_view, [])])
+        inner_view_tree = engine._WidgetTree(inner_view, [])
+        view_tree = engine._WidgetTree(view, [label2_tree, inner_view_tree])
         with engine._storage_manager() as manager:
             commands = view_tree.gen_qt_commands(MockRenderContext(manager, eng))
-        self.assertCountEqual(
-            commands,
-            label2_commands + [
+        commands_expected = label2_commands + [
                 _CommandType(view.underlying.setStyleSheet, "QWidget#%s{}" % id(view)),
                 _CommandType(view.underlying.setProperty, "css_class", []),
                 _CommandType(view.underlying.style().unpolish, view.underlying),
@@ -339,10 +339,12 @@ class WidgetTreeTestCase(unittest.TestCase):
                 _CommandType(inner_view._set_on_mouse_move, inner_view.underlying, None),
                 _CommandType(inner_view._set_on_click, inner_view.underlying, None),
                 _CommandType(inner_view._set_on_drop, inner_view.underlying, None),
-                _CommandType(view._delete_child, 0, old_child),
-                _CommandType(view._add_child, 1, inner_view.underlying)
-            ])
-
+                _CommandType(view._soft_delete_child, 1, label2),
+                _CommandType(view._delete_child, 0, label1),
+                _CommandType(view._add_child, 0, label2.underlying),
+                _CommandType(view._add_child, 1, inner_view.underlying),
+            ]
+        self.assertCountEqual(commands, commands_expected)
 
 def NDArray8_to_QImage(arr) -> QtGui.QImage:
     height, width, channel = arr.shape

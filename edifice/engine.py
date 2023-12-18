@@ -160,7 +160,7 @@ class _RenderContext(object):
             hook.updaters.append(updater)
             app = self.engine._app
             assert app is not None
-            app._defer_rerender([element])
+            app._defer_rerender()
 
         return (hook.state, setter)
 
@@ -307,7 +307,12 @@ class RenderResult(object):
         This is the phase of the render when the commands run.
         """
         for command in self.commands:
-            command.fn(*command.args, **command.kwargs)
+            try:
+                command.fn(*command.args, **command.kwargs)
+            except Exception as ex:
+                logger.exception("Exception while running command:\n"
+                                 + str(command) + "\n"
+                                 + str(ex) + "\n")
         self.render_context.run_callbacks()
 
 @dataclass
@@ -339,6 +344,9 @@ class _HookAsync:
     The dependencies of use_async().
     """
 
+def elements_match(a: Element, b: Element) -> bool:
+    return ((a.__class__.__name__ == b.__class__.__name__)
+        and (getattr(a, "_key", None) == getattr(b, "_key", None)))
 
 class RenderEngine(object):
     """
@@ -387,13 +395,6 @@ class RenderEngine(object):
                     self._delete_component(sub_comp, recursive)
             # Node deletion
 
-        assert component._edifice_internal_references is not None
-        for ref in component._edifice_internal_references:
-            ref._value = None
-        component._will_unmount()
-        del self._component_tree[component]
-        del self._widget_tree[component]
-
         # Clean up hook state for the component
         if component in self._hook_state:
             for hook in self._hook_state[component]:
@@ -423,6 +424,16 @@ class RenderEngine(object):
                 del hook.dependencies
                 del hook
             del self._hook_async[component]
+
+        # Clean up component references
+        # Do this after use_effect cleanup, so that the cleanup function
+        # can still access the component References.
+        assert component._edifice_internal_references is not None
+        for ref in component._edifice_internal_references:
+            ref._value = None
+        component._will_unmount()
+        del self._component_tree[component]
+        del self._widget_tree[component]
 
     def _refresh_by_class(self, classes) -> RenderResult:
         # This refresh is done only for a hot reload. It refreshes all
@@ -539,58 +550,65 @@ class RenderEngine(object):
         render_context.mark_props_change(component, newprops)
         render_context.mark_qt_rerender(component, False)
         return self._widget_tree[component]
+        # TODO return None?
 
-    def _get_child_using_key(self, d, key, newchild, render_context: _RenderContext):
-        if key not in d or d[key].__class__ != newchild.__class__:
-            return newchild
-        self._update_old_component(d[key], newchild, render_context)
-        return d[key]
-
-    def _attach_keys(self, component: Element, render_context: _RenderContext):
-        for i, child in enumerate(component.children):
-            if not hasattr(child, "_key"):
-                # logger.warning("Setting child key of %s to: %s", component, "KEY" + str(i))
-                render_context.set(child, "_key", "KEY" + str(i))
-
-    def _recycle_children(self, component: Element, render_context: _RenderContext):
+    def _recycle_children(self, component: BaseElement, render_context: _RenderContext):
+        # Children diffing and reconciliation
+        #
         # Returns children, which contains all the future children of the component:
         # a mixture of old components (if they can be updated) and new ones
 
-        # Determine list of former children
-        old_children = self._component_tree[component]
+        children_old_bykey : dict[str, Element] = dict()
+        children_new_bykey : dict[str, Element] = dict()
 
-        # TODO: match on if old_children is a single Element or not
-        if len(component.children) == 1 and len(old_children) == 1:
-            # If both former and current child lists are length 1 then
-            # compare class and _key. If they match, then update the old child.
-            if (component.children[0].__class__ == old_children[0].__class__
-                    and getattr(component.children[0], "_key", None) == getattr(old_children[0], "_key", None)):
-                self._update_old_component(old_children[0], component.children[0], render_context)
-                children = [old_children[0]]
-            else:
-                children = [component.children[0]]
-        else:
-            if len(component.children) <= 1:
-                self._attach_keys(component, render_context)
-            if len(component.children) != len(set(child._key for child in component.children)):
-                raise ValueError("Duplicate keys found in %s" % component)
-            if len(old_children) == 1:
-                if not hasattr(old_children[0], "_key"):
-                    render_context.set(old_children[0], "_key", "KEY0")
-            key_to_old_child = {child._key: child for child in old_children}
-            children = [self._get_child_using_key(key_to_old_child, new_child._key, new_child, render_context)
-                        for new_child in component.children]
+        children_old_ = self._component_tree[component]
+        assert isinstance(children_old_, list)
 
-        # Delete all old children that are not used
-        children_set = set(children)
-        for old_child in old_children:
-            if old_child not in children_set:
-                render_context.enqueued_deletions.append(old_child)
-        return children
+		# We will mutate children_old to reuse and remove old elements if we can match them.
+        # Ordering of children_old must be preserved for reverse deletion.
+        children_old: list[Element] = children_old_[:]
+        for child_old in children_old:
+            if hasattr(child_old, "_key"):
+                children_old_bykey[child_old._key] = child_old
+
+		# We will mutate children_new to replace them with old elements if we can match them.
+        children_new: list[Element] = component.children[:]
+        for child_new in children_new:
+            if hasattr(child_new, "_key"):
+                if children_new_bykey.get(child_new._key, None) is not None:
+                    raise ValueError("Duplicate keys found in %s" % component)
+                children_new_bykey[child_new._key] = child_new
+
+        # We will not try to intelligently handle the situation where
+        # an unkeyed element is added or removed.
+        # If the elements are unkeyed then try to match them pairwise.
+        i_old = 0
+        i_new = 0
+        while i_new < len(children_new):
+            child_new = children_new[i_new]
+            if (key := getattr(child_new, "_key", None)) is not None:
+                if ((child_old_bykey := children_old_bykey.get(key, None)) is not None
+                    and elements_match(child_old_bykey, child_new)):
+                    # then we have a match for reuse
+                    self._update_old_component(child_old_bykey, child_new, render_context)
+                    children_new[i_new] = child_old_bykey
+                    children_old.remove(child_old_bykey)
+            elif i_old < len(children_old):
+                child_old = children_old[i_old]
+                if elements_match(child_old, child_new):
+                    # then we have a match for reuse
+                    self._update_old_component(child_old, child_new, render_context)
+                    children_new[i_new] = child_old
+                    del children_old[i_old]
+                else:
+                    # leave this old element to be deleted
+                    i_old += 1
+            i_new += 1
+
+        render_context.enqueued_deletions.extend(children_old)
+        return children_new
 
     def _render_base_component(self, component: BaseElement, render_context: _RenderContext) -> _WidgetTree:
-        if len(component.children) > 1:
-            self._attach_keys(component, render_context)
         if component not in self._component_tree:
             # New component, simply render everything
             render_context.component_tree[component] = list(component.children)
@@ -600,7 +618,7 @@ class RenderEngine(object):
             render_context.schedule_callback(component._did_mount)
             return render_context.widget_tree[component]
 
-        # Figure out which children are pre-existing
+        # Figure out which children can be re-used
         children = self._recycle_children(component, render_context)
 
         # TODO: What if children key order changed??
@@ -721,10 +739,11 @@ class RenderEngine(object):
 
     def _request_rerender(self, components: list[Element]) -> RenderResult:
 
+        components_ = components[:]
         # Before the render, reduce the _hook_state updaters.
         # We can't do this after the render, because there may have been state
         # updates from event handlers.
-        for hooks in self._hook_state.values():
+        for element,hooks in self._hook_state.items():
             for hook in hooks:
                 state0 = hook.state
                 try:
@@ -733,6 +752,10 @@ class RenderEngine(object):
                             hook.state = updater(hook.state)
                         else:
                             hook.state = updater
+                    if len(hook.updaters) > 0:
+                        # If there are use_state updaters and no exceptions
+                        # thrown, then we need to re-render this component.
+                        components_.append(element)
                 except:
                     # If any of the updaters throws then the state is unchanged.
                     hook.state = state0
@@ -744,7 +767,7 @@ class RenderEngine(object):
         with _storage_manager() as storage_manager:
             render_context = _RenderContext(storage_manager, self)
             local_state.render_context = render_context
-            widget_trees = self._gen_widget_trees(components, render_context)
+            widget_trees = self._gen_widget_trees(components_, render_context)
 
         # Generate the update commands from the widget trees
         commands = self._gen_commands(widget_trees, render_context)

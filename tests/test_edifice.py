@@ -293,7 +293,11 @@ class RenderTestCase(unittest.TestCase):
         def new_C(*args):
             return _commands_for_address(_new_qt_tree, args)
         expected_commands = (new_C(2, 0) + new_C(2, 1) + new_V(2) + new_C(2) +
-                             [_CommandType(qt_tree.component._add_child, 2, _new_qt_tree.children[2].component.underlying)])
+            [
+                _CommandType(qt_tree.component._soft_delete_child, 2, _new_qt_tree.children[3].component),
+                _CommandType(qt_tree.component._add_child, 2, _new_qt_tree.children[2].component.underlying),
+                _CommandType(qt_tree.component._add_child, 3, _new_qt_tree.children[3].component.underlying),
+            ])
 
         self.assertEqual(qt_commands, expected_commands)
 
@@ -311,9 +315,12 @@ class RenderTestCase(unittest.TestCase):
         _new_qt_tree = render_result.trees[0]
         qt_commands = render_result.commands
 
-        expected_commands = (
-            [_CommandType(qt_tree.component._add_child, 0, qt_tree.children[2].component.underlying)]
-            + [_CommandType(qt_tree.component._add_child, 1, qt_tree.children[1].component.underlying)])
+        expected_commands = ([
+            _CommandType(qt_tree.component._soft_delete_child, 2, qt_tree.children[2].component),
+            _CommandType(qt_tree.component._soft_delete_child, 0, qt_tree.children[0].component),
+            _CommandType(qt_tree.component._add_child, 0, qt_tree.children[2].component.underlying),
+            _CommandType(qt_tree.component._add_child, 2, qt_tree.children[0].component.underlying),
+        ])
 
         self.assertEqual(qt_commands, expected_commands)
 
@@ -592,6 +599,47 @@ class RefreshClassTestCase(unittest.TestCase):
         assert isinstance(inner_comp, OldInnerClass)
         self.assertEqual(inner_comp.props.val, 5)
 
+
+    def test_view_recalculate_children_1(self):
+        def make_tree(children):
+            return [engine._WidgetTree(child, []) for child in children]
+
+        v = base_components.View()
+        v._initialize()
+        children1 = [base_components.Label("A"), base_components.Button("B"), base_components.RadioButton(False,"C")]
+        for c in children1:
+            c._initialize()
+
+        v._widget_children = children1[:]
+        new_children = [
+            children1[0],
+            children1[1],
+        ]
+        new_tree = make_tree(new_children)
+        commands = v._recompute_children(new_tree)
+        self.assertEqual(
+            commands,
+            [ _CommandType(v._delete_child, 2, children1[2]),
+            ],
+        )
+
+        v._widget_children = children1[:]
+        new_children = [
+            children1[2],
+            children1[1],
+            children1[0],
+        ]
+        new_tree = make_tree(new_children)
+        commands = v._recompute_children(new_tree)
+        self.assertEqual(
+            commands,
+            [
+                _CommandType(v._soft_delete_child, 2, children1[2]),
+                _CommandType(v._soft_delete_child, 0, children1[0]),
+                _CommandType(v._add_child, 0, children1[2].underlying),
+                _CommandType(v._add_child, 2, children1[0].underlying),
+            ],
+        )
 
 
 if __name__ == "__main__":
