@@ -245,7 +245,7 @@ class RenderContextProtocol(tp.Protocol):
         ...
     def use_effect(
         self,
-        setup: Callable[[], Callable[[], None]],
+        setup: Callable[[], Callable[[], None] | None],
         dependencies: tp.Any,
     ) -> None:
         ...

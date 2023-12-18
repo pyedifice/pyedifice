@@ -109,7 +109,7 @@ def use_state(initial_state:_T_use_state) -> tuple[
 
 
 def use_effect(
-    setup: Callable[[], Callable[[], None]],
+    setup: Callable[[], Callable[[], None] | None],
     dependencies: Any,
 ) -> None:
     """
