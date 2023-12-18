@@ -133,6 +133,9 @@ def use_effect(
     Exceptions raised from the **setup function** and **cleanup function**
     will be suppressed.
 
+    The **setup function** can return :code:`None` if there is no
+    **cleanup function**.
+
     Example::
 
         @component
@@ -148,7 +151,8 @@ def use_effect(
 
     Args:
         setup:
-            An effect **setup function** which returns a **cleanup function**.
+            An effect **setup function** which returns a **cleanup function**
+            or :code:`None`.
         dependencies:
             The effect **setup function** will be called when the
             dependencies are not :code:`__eq__` to the old dependencies.

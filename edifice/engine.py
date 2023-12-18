@@ -166,7 +166,7 @@ class _RenderContext(object):
 
     def use_effect(
         self,
-        setup: tp.Callable[[], tp.Callable[[], None]],
+        setup: tp.Callable[[], tp.Callable[[], None] | None],
         dependencies: tp.Any,
     ) -> None:
         # https://legacy.reactjs.org/docs/hooks-effect.html#example-using-hooks
@@ -404,7 +404,9 @@ class RenderEngine(object):
             del self._hook_state[component]
         if component in self._hook_effect:
             for hook in self._hook_effect[component]:
-                if hook.cleanup is not None: # None indicates that the setup effect failed.
+                if hook.cleanup is not None:
+                    # None indicates that the setup effect failed,
+                    # or that there is no cleanup function.
                     try:
                         hook.cleanup()
                     except:
