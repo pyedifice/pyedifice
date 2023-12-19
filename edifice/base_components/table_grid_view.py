@@ -1,9 +1,5 @@
 from typing import TYPE_CHECKING
-from typing_extensions import Self
-import typing as tp
 import logging
-
-logger = logging.getLogger("Edifice")
 
 from ..qt import QT_VERSION
 if QT_VERSION == "PyQt6" and not TYPE_CHECKING:
@@ -11,56 +7,17 @@ if QT_VERSION == "PyQt6" and not TYPE_CHECKING:
 else:
     from PySide6.QtWidgets import QGridLayout, QWidget
 
-from .._component import Element, BaseElement, _CommandType
+from .._component import _CommandType, PropsDict
 from .base_components import QtWidgetElement
-from ..engine import _WidgetTree
+from ..engine import _WidgetTree, WidgetElement
 
-# TODO instead of attaching these attributes to the elements, the
-# TableGridView could have a dict of dict[Element, tuple[row,column,key]]
+logger = logging.getLogger("Edifice")
 
-def _get_tablerowcolumn(c:Element) -> tuple[int,int]:
-    """
-    Sometimes it’s on the QtWidgetElement, sometimes on the Element’s _edifice_internal_parent.
-
-    We need it, so crash if we don't find it.
-    We can proceed without a _key but not without a _tablerowcolumn
-    """
-    if hasattr(c, "_tablerowcolumn"):
-        return c.__getattribute__("_tablerowcolumn")
-    else:
-        return c._edifice_internal_parent.__getattribute__("_tablerowcolumn")
-
-def _get_key(c:Element, default:str = "") -> str:
-    """
-    Sometimes it’s on the QtWidgetElement, sometimes on the Element’s _edifice_internal_parent.
-    """
-    if hasattr(c, "_key"):
-        # We can proceed without a _key but not without a _tablerowcolumn
-        return c.__getattribute__("_key")
-    elif hasattr(c._edifice_internal_parent, "_key"):
-        return c._edifice_internal_parent.__getattribute__("_key")
-    else:
-        return default
-
-def _childdict(children: list[_WidgetTree]) -> dict[tuple[int,int,str], QtWidgetElement]:
-    """
-    Produce a dictionary of child components keyed by tuple (row,column,_key).
-    """
-    d: dict[tuple[int,int,str], QtWidgetElement] = {}
-    for child in children:
-        row,column = _get_tablerowcolumn(child.component)
-        key = _get_key(child.component)
-        assert isinstance(child.component, QtWidgetElement)
-        d[(row,column,key)] = child.component
-    return d
-
-class _TableGridViewRow(BaseElement):
+class _TableGridViewRow(WidgetElement):
     """
     Row Element of a :class:`TableGridView`.
 
-    This Element has no Qt instantiation.
-
-    Hooks cannot be used in this Element.
+    Do not create this Element directly. Instead, use the :func:`TableGridView.row` method.
     """
 
     def __init__(self, tgv: "TableGridView"):
@@ -69,31 +26,16 @@ class _TableGridViewRow(BaseElement):
         self._column_current: int = 0
         """The current column in the context of the TableGridView render"""
 
-    def __enter__(self: Self) -> Self:
-        self._column_current = 0
-        return super().__enter__()
-
-    def __exit__(self, *args):
-        super().__exit__(args)
-        children = self._props.get("children", [])
-        for child in children:
-            child.__setattr__("_tablerowcolumn", (self._table_grid_view._row_current,self._column_current))
-            self._column_current += 1
-        self._table_grid_view._row_current += 1
-
-
     def _qt_update_commands(
         self,
-        children : list[_WidgetTree],
-        newprops,
-        newstate
-    ):
+        children: list[_WidgetTree],
+        newprops : PropsDict,
+        newstate,
+    ) -> list[_CommandType]:
         # This element has no Qt underlying so it has nothing to do except store
         # the children of the row.
         # The _qt_update_commands for TableGridView will render the children.
         return []
-
-    # def render(self):
 
 class TableGridView(QtWidgetElement):
     """Table-style grid layout displays its children as aligned rows of columns.
@@ -110,8 +52,6 @@ class TableGridView(QtWidgetElement):
     the row Element returned by the :func:`row` method. The :func:`row`
     Element establishes a row in the table, and may have children of
     any type of :class:`Element`.
-
-    Every child Element must have a unique key.
 
     Example::
 
@@ -140,10 +80,10 @@ class TableGridView(QtWidgetElement):
 
     def __init__(
             self,
-            row_stretch : list[int] = [], # noqa: B006
-            column_stretch : list[int] = [], # noqa: B006
-            row_minheight : list[int] = [], # noqa: B006
-            column_minwidth : list[int] = [], # noqa: B006
+            row_stretch : list[int] = [],
+            column_stretch : list[int] = [],
+            row_minheight : list[int] = [],
+            column_minwidth : list[int] = [],
             **kwargs,
         ):
         self._register_props({
@@ -154,26 +94,17 @@ class TableGridView(QtWidgetElement):
         })
         self._register_props(kwargs)
         self.underlying = None
-        self._widget_children_dict : dict[tuple[int,int,str], QtWidgetElement] = {}
+        self._old_children: dict[QtWidgetElement, tuple[int,int]] = {}
         """Like _LinearView._widget_children"""
+
         self._row_stretch = row_stretch
         self._column_stretch = column_stretch
         self._row_minheight = row_minheight
         self._column_minwidth = column_minwidth
-        self._row_current: int = 0
-        """The current row in the context of the TableGridView render"""
         super().__init__(**kwargs)
 
     def row(self):
         return _TableGridViewRow(self)
-
-    def __enter__(self: Self) -> Self:
-        # Reset the current row to 0 for the current render.
-        self._row_current = 0
-        return super().__enter__()
-
-    def __exit__(self, *args):
-        super().__exit__(args)
 
     def _initialize(self):
         self.underlying = QWidget()
@@ -237,32 +168,28 @@ class TableGridView(QtWidgetElement):
         # want to treat the TableGridViewRow_ children as the children of
         # the TableGridView.
 
+        new_children: dict[QtWidgetElement, tuple[int,int]] = {}
         children_of_rows: list[_WidgetTree] = list()
-        for c in children:
+        for row,c in enumerate(children):
             children_of_rows.extend(c.children)
+            for col,child in enumerate(c.children):
+                assert isinstance(child.component, QtWidgetElement)
+                new_children[child.component] = (row,col)
 
-        newchildren = _childdict(children_of_rows)
-
-        newchildren_values = set(newchildren.values())
-
-        old_keys = self._widget_children_dict.keys()
-        new_keys = newchildren.keys()
-
-        old_deletions = old_keys - new_keys
-        new_additions = new_keys - old_keys
+        old_deletions = self._old_children.items() - new_children.items()
+        new_additions = new_children.items() - self._old_children.items()
 
         commands: list[_CommandType] = []
-        for row,column,_key in old_deletions:
-            w = self._widget_children_dict[(row,column,_key)]
-            if w in newchildren_values:
+        for w,(row,column) in old_deletions:
+            if w in new_children:
                 commands.append(_CommandType(self._soft_delete_child, w, row, column))
             else:
                 commands.append(_CommandType(self._delete_child, w, row, column))
 
-        for row,column,_key in new_additions:
-            commands.append(_CommandType(self._add_child, newchildren[(row,column,_key)], row, column))
+        for w,(row,column) in new_additions:
+            commands.append(_CommandType(self._add_child, w, row, column))
 
-        self._widget_children_dict = newchildren
+        self._old_children = new_children
 
         # Pass the self.underlying_layout if we want it to be styled with the style props?
         # Like this:

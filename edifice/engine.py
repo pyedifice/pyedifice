@@ -8,8 +8,14 @@ import typing as tp
 from textwrap import dedent
 from dataclasses import dataclass
 
+from .qt import QT_VERSION
+if QT_VERSION == "PyQt6" and not tp.TYPE_CHECKING:
+    from PyQt6 import QtWidgets
+else:
+    from PySide6 import QtWidgets
+
 from ._component import (
-    BaseElement, Element, PropsDict, _CommandType, _Tracker, local_state, Container,
+    Element, PropsDict, _CommandType, _Tracker, local_state, Container,
 )
 
 logger = logging.getLogger("Edifice")
@@ -53,11 +59,19 @@ def _storage_manager() -> Iterator[_ChangeManager]:
         changes.unwind()
         raise e
 
-def _try_neq(a, b):
-    try:
-        return bool(a != b)
-    except Exception:
-        return a is not b
+class WidgetElement(Element):
+    """
+    Base Element, whose rendering is defined by the backend.
+
+    Protocol for QtWidgetElement.
+    """
+    def _qt_update_commands(
+        self,
+        children: list["_WidgetTree"],
+        newprops : PropsDict,
+        newstate,
+    ) -> list[_CommandType]:
+        raise NotImplementedError
 
 
 class _RenderContext(object):
@@ -91,8 +105,14 @@ class _RenderContext(object):
         self.component_to_old_props = {}
         self.force_refresh = force_refresh
 
-        self.component_tree : dict[Element, list[Element]]= {}
+        self.component_tree : dict[Element, Element | list[Element]]= {}
+        """
+        Map of a component to its children.
+        """
         self.widget_tree: dict[Element, _WidgetTree] = {}
+        """
+        Map of a component to its rendered widget tree.
+        """
         self.enqueued_deletions = []
 
         self._callback_queue = []
@@ -130,10 +150,10 @@ class _RenderContext(object):
     def set(self, obj, k, v):
         self.storage_manager.set(obj, k, v)
 
-    def mark_qt_rerender(self, component, need_rerender):
+    def mark_qt_rerender(self, component: WidgetElement, need_rerender: bool):
         self.need_qt_command_reissue[component] = need_rerender
 
-    def need_rerender(self, component):
+    def need_rerender(self, component: WidgetElement):
         return self.need_qt_command_reissue.get(component, False)
 
     def use_state(self, initial_state:_T_use_state) -> tuple[
@@ -239,8 +259,8 @@ class _RenderContext(object):
 class _WidgetTree(object):
     __slots__ = ("component", "children")
 
-    def __init__(self, component: Element, children: list["_WidgetTree"]):
-        self.component: Element = component
+    def __init__(self, component: WidgetElement, children: list["_WidgetTree"]):
+        self.component: WidgetElement = component # type should actually be QtWidgetElement
         self.children: list[_WidgetTree] = children
 
     def _dereference(self, address):
@@ -264,11 +284,9 @@ class _WidgetTree(object):
         old_props = render_context.get_old_props(self.component)
         new_props = PropsDict({
             k: v for k, v in self.component.props._items
-            if k not in old_props or _try_neq(old_props[k], v)
+                if k not in old_props or old_props[k] != v
         })
-        update_commands = getattr(self.component, "_qt_update_commands", None)
-        assert update_commands is not None
-        commands.extend(update_commands(self.children, new_props, {}))
+        commands.extend(self.component._qt_update_commands(self.children, new_props, {}))
         return commands
 
     def __hash__(self):
@@ -376,7 +394,10 @@ class RenderEngine(object):
         # TODO the type of _component_tree should be dict[Element, list[Element]].
         # The type which I have set here causes type errors, and I'm pretty
         # sure that's because there are bugs.
-        self._widget_tree = {}
+        self._widget_tree : dict[Element, _WidgetTree] = {}
+        """
+        Map of an Element to its rendered widget tree.
+        """
         self._root = root
         self._root._edifice_internal_parent = None
         self._app = app
@@ -550,11 +571,12 @@ class RenderEngine(object):
             return rerendered_obj
 
         render_context.mark_props_change(component, newprops)
+        # TODO Why the does a non-WidgetElement need mark_qt_rerender?
         render_context.mark_qt_rerender(component, False)
         return self._widget_tree[component]
         # TODO return None?
 
-    def _recycle_children(self, component: BaseElement, render_context: _RenderContext):
+    def _recycle_children(self, component: Element, render_context: _RenderContext):
         # Children diffing and reconciliation
         #
         # Returns children, which contains all the future children of the component:
@@ -610,7 +632,7 @@ class RenderEngine(object):
         render_context.enqueued_deletions.extend(children_old)
         return children_new
 
-    def _render_base_component(self, component: BaseElement, render_context: _RenderContext) -> _WidgetTree:
+    def _render_base_component(self, component: WidgetElement, render_context: _RenderContext) -> _WidgetTree:
         if component not in self._component_tree:
             # New component, simply render everything
             render_context.component_tree[component] = list(component.children)
@@ -665,7 +687,7 @@ class RenderEngine(object):
         component._edifice_internal_parent = render_context.component_parent
         render_context.component_parent = component
 
-        if isinstance(component, BaseElement):
+        if isinstance(component, WidgetElement):
             ret = self._render_base_component(component, render_context)
             render_context.component_parent = component._edifice_internal_parent
             return ret

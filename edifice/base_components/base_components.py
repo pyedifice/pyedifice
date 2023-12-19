@@ -5,8 +5,8 @@ import inspect
 import logging
 import re
 import typing as tp
-from .._component import WidgetElement, RootElement, _CommandType, PropsDict
-from ..engine import _WidgetTree
+from .._component import Element, _CommandType, PropsDict
+from ..engine import _WidgetTree, WidgetElement
 
 from ..qt import QT_VERSION
 
@@ -718,7 +718,7 @@ class QtWidgetElement(WidgetElement):
         return commands
 
 
-class Window(RootElement):
+class Window(WidgetElement):
     """
     The root element of an :class:`App` which runs in an operating system
     window.
@@ -2225,7 +2225,7 @@ class CustomWidget(QtWidgetElement):
         return commands
 
 
-class ExportList(RootElement):
+class ExportList(QtWidgetElement):
     """
     The root element for an App which does :func:`App.export_widgets`.
     """

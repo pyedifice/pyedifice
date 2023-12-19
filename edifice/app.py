@@ -1,4 +1,3 @@
-import logging
 from . import logger as _logger_module
 import asyncio
 import contextlib

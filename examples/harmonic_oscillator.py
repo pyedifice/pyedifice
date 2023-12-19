@@ -7,6 +7,7 @@ import sys, os
 sys.path.insert(0, os.path.join(sys.path[0], '..'))
 import typing as tp
 import asyncio
+import logging
 import edifice as ed
 
 from edifice.extra.pyqtgraph_plot import PyQtPlot
@@ -15,6 +16,9 @@ import numpy as np
 import pyqtgraph as pg
 
 pg.setConfigOption("antialias", True)
+
+logger = logging.getLogger("Edifice")
+logger.setLevel(logging.INFO)
 
 # We create time range once so we don't have to recreate it each plot
 time_range = np.linspace(0, 10, num=200)
