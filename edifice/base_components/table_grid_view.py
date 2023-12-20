@@ -7,7 +7,7 @@ if QT_VERSION == "PyQt6" and not TYPE_CHECKING:
 else:
     from PySide6.QtWidgets import QGridLayout, QWidget
 
-from .._component import _CommandType, PropsDict
+from .._component import _CommandType, PropsDict, Element
 from .base_components import QtWidgetElement
 from ..engine import _WidgetTree, WidgetElement
 
@@ -22,9 +22,6 @@ class _TableGridViewRow(WidgetElement):
 
     def __init__(self, tgv: "TableGridView"):
         super().__init__()
-        self._table_grid_view: "TableGridView" = tgv
-        self._column_current: int = 0
-        """The current column in the context of the TableGridView render"""
 
     def _qt_update_commands(
         self,
@@ -103,7 +100,7 @@ class TableGridView(QtWidgetElement):
         self._column_minwidth = column_minwidth
         super().__init__(**kwargs)
 
-    def row(self):
+    def row(self) -> Element:
         return _TableGridViewRow(self)
 
     def _initialize(self):
@@ -163,9 +160,9 @@ class TableGridView(QtWidgetElement):
             self._initialize()
         assert self.underlying is not None
 
-        # The direct children of this Element are TableGridViewRow_, but
-        # the TableGridViewRow_ doesn't have a Qt instantiation so we
-        # want to treat the TableGridViewRow_ children as the children of
+        # The direct children of this Element are _TableGridViewRow, but
+        # the _TableGridViewRow doesn't have a Qt instantiation so we
+        # want to treat the _TableGridViewRow children as the children of
         # the TableGridView.
 
         new_children: dict[QtWidgetElement, tuple[int,int]] = {}
