@@ -25,7 +25,7 @@ OPERATORS = {
 
 
 window_style = {"background-color": "#404040", "height": 300, "width": 242}
-button_style = {"font-size": 20, "color": "white", "height": 60, "width": 60, "border": "1px solid #333333"}
+button_style = {"font-size": 20, "color": "white", "height": 46, "width": 60, "border": "1px solid #333333"}
 digits_style = button_style | {"background-color": "#777777"}
 binary_style = button_style | {"background-color": "#ff9e00", "font-size": 30}
 unary_style = button_style | {"background-color": "#595959"}
