@@ -282,6 +282,7 @@ class Element:
     _render_unwind_context: dict | None = None
     _ignored_variables: set[tp.Text] | None = None
     _edifice_internal_parent: tp.Optional["Element"] = None
+    # TODO Delete _edifice_internal_parent
     _controller: ControllerProtocol | None = None
     _edifice_internal_references: set[Reference] | None = None
 
