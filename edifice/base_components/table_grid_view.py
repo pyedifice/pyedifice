@@ -54,23 +54,27 @@ class TableGridView(QtWidgetElement):
 
         with TableGridView() as tgv:
             with tgv.row():
-                Label(text="row 0 column 0").set_key("a")
-                Label(text="row 0 column 1").set_key("b")
+                Label(text="row 0 column 0")
+                Label(text="row 0 column 1")
             with tgv.row():
-                Label(text="row 1 column 0").set_key("c")
-                with ButtonView().set_key("d"):
+                Label(text="row 1 column 0")
+                with ButtonView():
                     Label(text="row 1 column 1")
 
     Args:
-        row_stretch: Rows stretch size in proportion to the corresponding
-            int in this list.
+        row_stretch:
+            *n*:sup:`th` row stretch size in proportion to the *n*:sup:`th`
+            :code:`int` in this list.
             See `setRowStretch <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGridLayout.html#PySide6.QtWidgets.PySide6.QtWidgets.QGridLayout.setRowStretch>`_
-        column_stretch: Columns stretch size in proportion to the corresponding
-            int in this list.
+        column_stretch:
+            *n*:sup:`th` column stretch size in proportion to the *n*:sup:`th`
+            :code:`int` in this list.
             See `setColumnStretch <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGridLayout.html#PySide6.QtWidgets.PySide6.QtWidgets.QGridLayout.setColumnStretch>`_
-        row_minheight: Row minimum height corresponding to the int in this list.
+        row_minheight:
+            *n*:sup:`th` row minimum height is the *n*:sup:`th` :code:`int` in this list.
             See `setRowMinimumHeight <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGridLayout.html#PySide6.QtWidgets.PySide6.QtWidgets.QGridLayout.setRowMinimumHeight>`_
-        column_minwidth: Column minimum width corresponding the int in this list.
+        column_minwidth:
+            *n*:sup:`th` column minimum width is the *n*:sup:`th` :code:`int` in this list.
             See `setColumnMinimumWidth <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGridLayout.html#PySide6.QtWidgets.PySide6.QtWidgets.QGridLayout.setColumnMinimumWidth>`_
 
     """
@@ -160,6 +164,8 @@ class TableGridView(QtWidgetElement):
             self._initialize()
         assert self.underlying is not None
 
+        # The following is equivalent to _LinearView._recompute_children().
+        #
         # The direct children of this Element are _TableGridViewRow, but
         # the _TableGridViewRow doesn't have a Qt instantiation so we
         # want to treat the _TableGridViewRow children as the children of
@@ -177,6 +183,7 @@ class TableGridView(QtWidgetElement):
         new_additions = new_children.items() - self._old_children.items()
 
         commands: list[_CommandType] = []
+
         for w,(row,column) in old_deletions:
             if w in new_children:
                 commands.append(_CommandType(self._soft_delete_child, w, row, column))
@@ -188,20 +195,20 @@ class TableGridView(QtWidgetElement):
 
         self._old_children = new_children
 
+        if "row_stretch" in newprops:
+            commands.append(_CommandType(self._set_row_stretch, newprops["row_stretch"]))
+        if "column_stretch" in newprops:
+            commands.append(_CommandType(self._set_column_stretch, newprops["column_stretch"]))
+        if "row_minheight" in newprops:
+            commands.append(_CommandType(self._set_row_minheight, newprops["row_minheight"]))
+        if "column_minwidth" in newprops:
+            commands.append(_CommandType(self._set_column_minwidth, newprops["column_minwidth"]))
+
         # Pass the self.underlying_layout if we want it to be styled with the style props?
         # Like this:
         # # commands.extend(super()._qt_update_commands
         # # (children, newprops, newstate, self.underlying, self.underlying_layout))
         commands.extend(super()._qt_update_commands(children_of_rows, newprops, newstate, self.underlying, None))
-        for prop in newprops:
-            if prop == "row_stretch":
-                commands.append(_CommandType(self._set_row_stretch, newprops[prop]))
-            elif prop == "column_stretch":
-                commands.append(_CommandType(self._set_column_stretch, newprops[prop]))
-            elif prop == "row_minheight":
-                commands.append(_CommandType(self._set_row_minheight, newprops[prop]))
-            elif prop == "column_minwidth":
-                commands.append(_CommandType(self._set_column_minwidth, newprops[prop]))
 
         return commands
 

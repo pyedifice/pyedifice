@@ -41,11 +41,11 @@ def myComponent(self):
             ) as tgv:
                 for rkey in rows:
                     with tgv.row():
-                        ed.Label(text="Key " + str(rkey) + " Column 0").set_key(str(rkey) + "_0")
-                        ed.Label(text="Key " + str(rkey) + " Column 1").set_key(str(rkey) + "_1")
+                        ed.Label(text="Key " + str(rkey) + " Column 0")
+                        ed.Label(text="Key " + str(rkey) + " Column 1")
                         with ButtonView(
                             on_click=lambda ev, rkey=rkey: del_key(rkey)
-                        ).set_key(str(rkey) + "_2"):
+                        ):
                             ed.Label(text="Delete Key " + str(rkey))
 
 if __name__ == "__main__":
