@@ -315,7 +315,6 @@ class QtWidgetElement(WidgetElement):
         self._on_mouse_up = None
         self._on_mouse_move = None
         self._on_drop: tp.Optional[tp.Callable[[QtGui.QDragEnterEvent | QtGui.QDragMoveEvent | QtGui.QDragLeaveEvent | QtGui.QDropEvent], None]] = None
-        self._widget_children: list[QtWidgetElement] = []
         self._default_mouse_press_event = None
         self._default_mouse_release_event = None
         self._default_mouse_move_event = None
