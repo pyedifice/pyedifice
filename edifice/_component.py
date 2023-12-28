@@ -487,11 +487,7 @@ class Element:
         """
 
         for k,v in newprops._items:
-            if k == "children":
-            # We always rerender if the element has children.
-                if len(v) > 0 or len(self.children) > 0:
-                    return True
-            elif k in self.props:
+            if k in self.props:
             # If the prop is in the old props, then we check if it's changed.
                 v2 = self.props._get(k)
                 if v2 != v:

@@ -557,9 +557,8 @@ class RenderEngine(object):
         # component needs re-rendering if
         #  1) props changed
         #  2) state changed
-        #  3) it has any children
-        #  4) it has any pending _hook_state updates
-        #  5) it has any references
+        #  3) it has any pending _hook_state updates
+        #  4) it has any references
         pending_hook_state_updates = False
         for h in self._hook_state[component]:
             if len(h.updaters) > 0:
