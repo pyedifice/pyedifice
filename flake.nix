@@ -12,7 +12,32 @@
     let
       pkgs = import inputs.nixpkgs {
         inherit system;
-        overlays = [ inputs.poetry2nix.overlay ];
+        overlays = [
+          inputs.poetry2nix.overlay
+          (_final: prev: {
+            # Disable eventlet tests so that we can `nix develop .#poetry`
+            # https://github.com/NixOS/nixpkgs/issues/272430
+            # https://github.com/NixOS/nixpkgs/blob/release-23.11/doc/languages-frameworks/python.section.md#how-to-override-a-python-package-for-all-python-versions-using-extensions-how-to-override-a-python-package-for-all-python-versions-using-extensions
+            pythonPackagesExtensions = prev.pythonPackagesExtensions ++ [
+              (
+                _pyfinal: pyprev: {
+                  eventlet = pyprev.eventlet.overridePythonAttrs (oldAttrs: {
+                    disabledTests = oldAttrs.disabledTests ++ [
+                      "test_full_duplex"
+                      "test_invalid_connection"
+                      "test_nonblocking_accept_mark_as_reopened"
+                      "test_raised_multiple_readers"
+                      "test_recv_into_timeout"
+                    ];
+                  });
+                }
+              )
+            ];
+          })
+          (final: prev: {
+            poetry = prev.poetry.override { python3 = final.python310; };
+          })
+        ];
       };
 
       qasync_ = import ./nix/qasync/default.nix;
