@@ -28,10 +28,10 @@ def use_state(initial_state:_T_use_state) -> tuple[
         def Stateful(self):
             x, x_setter = use_state(0)
 
-            if x < 1:
-                x_setter(1)
-
-            Label(text=str(x))
+            Button(
+                title=str(x)
+                on_click = lambda _event: x_setter(x + 1)
+            )
 
     If an **updater function** is passed to the **setter function**, then at the end of
     the render the state will be modified by calling all of the
@@ -44,13 +44,13 @@ def use_state(initial_state:_T_use_state) -> tuple[
         def Stateful(self):
             x, x_setter = use_state(0)
 
-            def updater(y):
-                return y + 1
+            def updater(x_previous):
+                return x_previous + 1
 
-            if x < 1:
-                x_setter(updater)
-
-            Label(text=str(x))
+            Button(
+                title=str(x)
+                on_click = lambda _event: x_setter(updater)
+            )
 
     If any of the **updater functions** raises an exception, then all state
     updates will be cancelled and the state value will be unchanged for the
@@ -64,20 +64,20 @@ def use_state(initial_state:_T_use_state) -> tuple[
     of it to pass to the **setter function**::
 
         def Stateful(self):
-            x, x_setter = use_state([])
+            x, x_setter = use_state(cast(list[str], []))
 
-            def add_one():
-                x_new = x[:]
-                x_new.append("Label Text")
-                x_setter(x_new)
+            def updater(x_previous):
+                x_new = x_previous[:]
+                x_new.append("Label Text " + str(len(x_previous)))
+                return x_new
 
             with View():
                 Button(
                     title="Add One",
-                    on_click = lambda _event: add_one
+                    on_click = lambda _event: x_setter(updater)
                 )
-                for i = range(x):
-                    Label(text=i)
+                for t in x:
+                    Label(text=t)
 
     A good technique for declaring immutable state datastructures is to use
     `frozen dataclasses <https://docs.python.org/3/library/dataclasses.html#frozen-instances>`_.

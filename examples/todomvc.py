@@ -2,23 +2,37 @@
 # python examples/todomvc.py
 #
 
-import os, sys
+import os
+import sys
+
 # We need this sys.path line for running this example, especially in VSCode debugger.
 sys.path.insert(0, os.path.join(sys.path[0], '..'))
-import asyncio
 from collections import OrderedDict
 from dataclasses import dataclass
-from PySide6 import QtGui, QtCore
-from edifice import (component, App, Window, View, TextInput, TableGridView, CheckBox,
-                    Label, Button, RadioButton, use_state)
+from typing import cast
+
+from PySide6 import QtCore, QtGui
+
+from edifice import (
+    App,
+    Button,
+    CheckBox,
+    Label,
+    RadioButton,
+    TableGridView,
+    TextInput,
+    View,
+    Window,
+    component,
+    use_state,
+)
+
 
 @dataclass(frozen=True)
 class Todo:
     completed: bool = False
     text: str = ""
     editing: bool = False
-
-todos_init : OrderedDict[int, Todo] = OrderedDict([])
 
 @component
 def TodoItem(
@@ -60,7 +74,8 @@ def TodoItem(
 @component
 def TodoMVC(self):
 
-    todos, todos_set = use_state(todos_init)
+    todos, todos_set = use_state(cast(OrderedDict[int, Todo], OrderedDict([])))
+
     filter, filter_set = use_state("All")
     next_key, next_key_set = use_state(int(0))
     input, input_set = use_state("")
