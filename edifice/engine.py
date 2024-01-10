@@ -644,7 +644,6 @@ class RenderEngine(object):
         # Figure out which children can be re-used
         children = self._recycle_children(component, render_context)
 
-        # TODO: What if children key order changed??
         rendered_children = []
         parent_needs_rerendering = False
 
