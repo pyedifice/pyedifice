@@ -2,6 +2,7 @@
 # python examples/calculator.py
 #
 
+import logging
 import os, sys
 # We need this sys.path line for running this example, especially in VSCode debugger.
 sys.path.insert(0, os.path.join(sys.path[0], '..'))
@@ -12,6 +13,8 @@ if QT_VERSION == "PyQt6":
     from PyQt6 import QtCore, QtGui
 else:
     from PySide6 import QtCore, QtGui
+
+logging.getLogger("Edifice").setLevel(logging.INFO)
 
 OPERATORS = {
     "+": lambda stored, display: stored + display,
@@ -132,7 +135,8 @@ def Calculator(self):
 @ed.component
 def Main(self):
     with ed.Window(title="Calculator"):
-        Calculator()
+        with ed.View():
+            Calculator()
 
 if __name__ == "__main__":
     ed.App(Main()).start()

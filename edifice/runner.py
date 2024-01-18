@@ -37,7 +37,35 @@ def _file_to_module_name():
     return d
 
 def _module_to_components(module):
-    return inspect.getmembers(module, lambda x: inspect.isclass(x) and issubclass(x, Element))
+    """
+    Get all user Elements which are defined in this module (not imported).
+    """
+    def pred(x):
+        # What we actually want for this predicate is that is should be true if x is
+        # a subclass of ComponentElement which is defined in the passed-in module,
+        # like
+        #
+        #     issubclass(x, ComponentElement) and x.__module__ == module.__name__
+        #
+        # But that's not possible because x.__module__ is the module in which
+        # ComponentElement is defined, not the module in which x is defined.
+        # And since Element is defined in that module, we use the module name
+        # from Element.
+        #
+        # Unfortunately, this means that component classes imported unqualfied
+        # in the passed-in module will also be reloaded.
+        return (
+            inspect.isclass(x)
+            and
+            issubclass(x, Element)
+            and
+            (x.__module__ == module.__name__ or x.__module__ == Element.__module__)
+        )
+
+    return inspect.getmembers(
+        module,
+        pred,
+    )
 
 def _reload(module):
     return importlib.reload(module)
