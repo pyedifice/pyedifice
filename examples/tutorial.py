@@ -2,10 +2,13 @@
 # python examples/tutorial.py
 #
 
+import logging
 import os, sys
 # We need this sys.path line for running this example, especially in VSCode debugger.
 sys.path.insert(0, os.path.join(sys.path[0], '..'))
 from edifice import Window, Label, TextInput, View, App, component, use_state
+
+logging.getLogger("Edifice").setLevel(logging.INFO)
 
 METERS_TO_FEET = 3.28084
 
@@ -33,7 +36,7 @@ def ConversionWidget(self, from_unit, to_unit, factor):
 @component
 def MyApp(self):
     with Window():
-        with View(layout="column", style={}):
+        with View(layout="column"):
             ConversionWidget("meters", "feet", METERS_TO_FEET)
             ConversionWidget("feet", "meters", 1 / METERS_TO_FEET)
 

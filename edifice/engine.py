@@ -363,8 +363,21 @@ class _HookAsync:
     """
 
 def elements_match(a: Element, b: Element) -> bool:
-    return ((a.__class__.__name__ == b.__class__.__name__)
-        and (getattr(a, "_key", None) == getattr(b, "_key", None)))
+    """
+    Should return True if element b can be used to update element a
+    by _update_old_component().
+    """
+    # Elements must be of the same __class__.
+    # Elements must have the same __class__.__name__. This is to distinguish
+    # between different @component Components. (Why does class __eq__ return
+    # True if the class __name__ is different?)
+    return (
+        (a.__class__ == b.__class__)
+        and
+        (a.__class__.__name__ == b.__class__.__name__)
+        and
+        (getattr(a, "_key", None) == getattr(b, "_key", None))
+    )
 
 class RenderEngine(object):
     """
@@ -466,12 +479,12 @@ class RenderEngine(object):
         # Algorithm:
         # 1) Find all old components that's not a child of another component
 
-        # TODO: handle changes in the tree root
-        # List of pairs: (old_component, new_component_class, parent component, new_component)
+        # components_to_replace is (old_component, new_component_class, parent component, new_component)
         components_to_replace = []
+        # classes should be only ComponentElement, because only ComponentElement can change in user code.
         old_components = [cls for cls, _ in classes]
         def traverse(comp, parent):
-            if comp.__class__ in old_components:
+            if comp.__class__ in old_components and parent is not None: # We can't replace the unparented root
                 new_component_class = [new_cls for old_cls, new_cls in classes if old_cls == comp.__class__][0]
                 if new_component_class is None:
                     raise ValueError("Error after updating code: cannot find class %s" % comp.__class__)
@@ -528,6 +541,7 @@ class RenderEngine(object):
 
         # 5) call _render for all new component parents
         try:
+            logger.info("Rerendering parents of: %s", [new_comp_class.__name__ for _, new_comp_class, _, _ in components_to_replace])
             logger.info("Rerendering: %s", [parent for _, _, parent, _ in components_to_replace])
             ret = self._request_rerender([parent_comp for _, _, parent_comp, _ in components_to_replace])
         except Exception as e:
@@ -721,13 +735,7 @@ class RenderEngine(object):
                 raise ValueError(message)
         old_rendering: Element | list[Element] | None = self._component_tree.get(component, None)
 
-        # Compare the sub_component.__name__ as well as the class, so that
-        # different @component ComponentElement are distinguished
-        if (sub_component.__class__ == old_rendering.__class__
-            and sub_component.__class__.__name__ == old_rendering.__class__.__name__
-            and isinstance(old_rendering, Element)
-            and getattr(sub_component, "_key", None) == getattr(old_rendering, "_key", None)
-            ):
+        if elements_match(old_rendering, sub_component):
             # TODO: Call will _receive_props hook
             assert old_rendering is not None
             render_context.widget_tree[component] = self._update_old_component(
