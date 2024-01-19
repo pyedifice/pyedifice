@@ -4,6 +4,13 @@
 Release Notes
 =============
 
+0.3.1
+-----
+Released: 2024-01-19
+
+* Hot-reload improvements and bugfixes.
+* :class:`TableGridView` improvements and bugfixes.
+
 0.3.0
 -----
 Released: 2023-12-19
