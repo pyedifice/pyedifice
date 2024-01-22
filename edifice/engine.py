@@ -533,6 +533,28 @@ class RenderEngine(object):
                 for i, comp in enumerate(parent_comp.children):
                     if comp is old_comp:
                         parent_comp._props["children"][i] = new_comp
+                        # Move the hook states to the new component.
+                        # We want to be careful that the hooks don't have
+                        # any references to the old component, especially
+                        # function closures. I think this code is okay.
+                        #
+                        # During the effect functions and the async coroutine, usually
+                        # what happens is that some use_state setters are called,
+                        # and those use_state setters would be closures on the
+                        # state which was moved, not references to the old_comp.
+                        #
+                        # Because this is only during hot-reload, so only during
+                        # development, it's not catastrophic if some references
+                        # to old_comp are retained and cause bugs.
+                        if old_comp in self._hook_state:
+                            self._hook_state[new_comp] = self._hook_state[old_comp]
+                            del self._hook_state[old_comp]
+                        if old_comp in self._hook_effect:
+                            self._hook_effect[new_comp] = self._hook_effect[old_comp]
+                            del self._hook_effect[old_comp]
+                        if old_comp in self._hook_async:
+                            self._hook_async[new_comp] = self._hook_async[old_comp]
+                            del self._hook_async[old_comp]
             else:
                 logger.warning(
                     f"Cannot reload {new_comp} (rendered by {parent_comp}) "
@@ -553,6 +575,9 @@ class RenderEngine(object):
         # for old_comp, _, _, _ in components_to_replace:
         #     if old_comp in self._component_tree:
         #         self._delete_component(old_comp, recursive=True)
+        # Note: I think David Ding realized he didn't need to do this
+        # deletion step because the old components are deleted during
+        # _request_rerender().
         return ret
 
 
