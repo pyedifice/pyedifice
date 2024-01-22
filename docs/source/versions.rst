@@ -4,6 +4,12 @@
 Release Notes
 =============
 
+0.3.2
+-----
+Released: 2024-01-22
+
+* Hooks are preserved during hot-reload.
+
 0.3.1
 -----
 Released: 2024-01-19
