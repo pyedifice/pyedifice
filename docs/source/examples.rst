@@ -5,9 +5,9 @@ Examples
 Calculator
 ----------
 
-It's easy to create a good looking program with Edifice.
-In this example, we imitate the standard look of the Mac OS Calculator app
-in 100 lines of code (most of which is implementing the intricacies of the calculator state machine).
+It's easy to create a good-looking program with Edifice.
+In this example, we imitate the look of the MacOS *Calculator* app
+in 100 lines of code (most of which is implementing the calculator state machine).
 
 The code is available at `calculator.py <https://github.com/pyedifice/pyedifice/tree/master/examples/calculator.py>`_.
 
