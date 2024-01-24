@@ -8,12 +8,6 @@ import typing as tp
 from textwrap import dedent
 from dataclasses import dataclass
 
-from .qt import QT_VERSION
-if QT_VERSION == "PyQt6" and not tp.TYPE_CHECKING:
-    from PyQt6 import QtWidgets
-else:
-    from PySide6 import QtWidgets
-
 from ._component import (
     Element, PropsDict, _CommandType, _Tracker, local_state, Container,
 )
