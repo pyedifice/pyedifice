@@ -793,6 +793,7 @@ class RenderEngine(object):
         # We can't do this after the render, because there may have been state
         # updates from event handlers.
         for element,hooks in self._hook_state.items():
+            needs_update = False
             for hook in hooks:
                 state0 = hook.state
                 try:
@@ -801,16 +802,17 @@ class RenderEngine(object):
                             hook.state = updater(hook.state)
                         else:
                             hook.state = updater
-                    if len(hook.updaters) > 0:
-                        # If there are use_state updaters and no exceptions
-                        # thrown, then we need to re-render this component.
-                        components_.append(element)
+                        needs_update = True
                 except Exception:
                     # If any of the updaters throws then the state is unchanged.
                     hook.state = state0
                     # TODO Should we re-raise this exception somehow?
                 finally:
                     hook.updaters.clear()
+            if needs_update:
+                # If there are use_state updaters and no exceptions
+                # thrown, then we need to re-render this component.
+                components_.append(element)
 
         # Generate the widget trees
         with _storage_manager() as storage_manager:
