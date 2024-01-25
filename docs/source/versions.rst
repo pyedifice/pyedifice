@@ -4,6 +4,12 @@
 Release Notes
 =============
 
+0.3.3
+-----
+Released: 2024-01-25
+
+* Internal improvements and *typing-extensions* requirement.
+
 0.3.2
 -----
 Released: 2024-01-22
