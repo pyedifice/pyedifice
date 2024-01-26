@@ -105,6 +105,11 @@ class TableGridView(QtWidgetElement):
         super().__init__(**kwargs)
 
     def row(self) -> Element:
+        """
+        Returns an :class:`Element` that represents a new row in
+        this :class:`TableGridView`. Each child of the new row element
+        will be rendered in columns aligned with the other rows.
+        """
         return _TableGridViewRow(self)
 
     def _initialize(self):
