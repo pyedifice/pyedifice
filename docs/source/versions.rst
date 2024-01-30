@@ -4,6 +4,12 @@
 Release Notes
 =============
 
+0.3.4
+-----
+Released: 2024-01-31
+
+* New Hook :func:`use_async_call`
+
 0.3.3
 -----
 Released: 2024-01-25
