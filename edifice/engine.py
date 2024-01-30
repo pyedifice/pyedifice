@@ -227,8 +227,10 @@ class _RenderContext(object):
 
         if len(hooks) <= h_index:
             # then this is the first render.
+            task = asyncio.create_task(fn_coroutine())
+            task.add_done_callback(done_callback)
             hooks.append(_HookAsync(
-                task = asyncio.create_task(fn_coroutine()).add_done_callback(done_callback),
+                task=task,
                 dependencies=dependencies,
                 queue=[],
             ))
