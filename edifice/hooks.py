@@ -1,6 +1,7 @@
-from collections.abc import Callable, Coroutine
+from collections.abc import Awaitable, Callable, Coroutine
 from edifice._component import get_render_context_maybe, _T_use_state, Reference
-from typing import Any
+from typing import Any, Generic, ParamSpec, cast
+from asyncio import get_event_loop
 
 def use_state(initial_state:_T_use_state) -> tuple[
     _T_use_state, # current value
@@ -258,3 +259,55 @@ def use_ref() -> Reference:
     """
     r,_ = use_state(Reference())
     return r
+
+_P_async = ParamSpec("_P_async")
+
+class _AsyncCommand(Generic[_P_async]):
+    def __init__(self, *args: _P_async.args, **kwargs: _P_async.kwargs):
+        self.args = args
+        self.kwargs = kwargs
+
+def use_async_call(fn_coroutine:Callable[_P_async, Awaitable[None]]) -> Callable[_P_async, None]:
+    """
+    Hook to call an async function from a non-async context.
+
+    The Hook takes an async function and returns a non-async
+    function with the same argument signature as the async function.
+
+    The async function can have any argument signature, but it must
+    return :code:`None`. The return value is discarded.
+
+    The non-async function returned by this Hook can be called to create a new task which runs
+    the async function on the main Edifice thread event loop as a :func:`use_async`
+    Hook. The returned non-async function is safe to call from any thread.
+
+    This Hook is similar to
+    `create_task() <https://docs.python.org/3/library/asyncio-eventloop.html#asyncio.loop.create_task>`_ ,
+    but because it uses
+    :func:`use_async`, it will cancel the task
+    when this :func:`edifice.component` is unmounted, or when the function is called again.
+
+    This Hook is similar to :code:`useAsyncCallback` from
+    https://www.npmjs.com/package/react-async-hook
+
+    Example::
+
+        async def delay_print_async(message:str):
+            await asyncio.sleep(1)
+            print(message)
+
+        delay_print = use_async_call(delay_print_async)
+
+        delay_print("Hello World")
+    """
+    triggered, triggered_set = use_state(cast(_AsyncCommand[_P_async] | None, None))
+    loop = get_event_loop()
+    def callback(*args: _P_async.args, **kwargs: _P_async.kwargs) -> None:
+        loop.call_soon_threadsafe(triggered_set, _AsyncCommand(*args, **kwargs))
+
+    async def wrapper():
+        if triggered is not None:
+            await fn_coroutine(*triggered.args, **triggered.kwargs)
+
+    use_async(wrapper, triggered)
+    return callback
