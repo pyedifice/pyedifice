@@ -11,7 +11,7 @@ Rules of Hooks
 
 Hooks are inspired by `React Hooks <https://react.dev/reference/react/hooks>`_,
 and follow the React
-`Rules of Hooks <https://react.dev/warnings/invalid-hook-call-warning>`_:
+`Rules of Hooks <https://legacy.reactjs.org/docs/hooks-rules.html>`_:
 
 The exact same Hooks must be called
 in exactly the same order on every call to a :func:`component` function.
