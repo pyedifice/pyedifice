@@ -20,6 +20,7 @@ First, install Edifice::
     install PySide6, you can run::
 
         pip install qasync  # A dependency required for asyncio integration
+        pip install typing-extensions
         pip install --no-dependencies pyedifice
 
     You can switch to using PyQt6 by setting the :code:`EDIFICE_QT_VERSION` environment variable to :code:`PyQt6`::
@@ -153,10 +154,10 @@ Meters is a **state** variable in our component :code:`MyApp`,
 so we have to use the :func:`edifice.use_state` hook.
 :func:`edifice.use_state` returns a tuple with the current value
 of :code:`meters`, and also a function which we can use to set
-a new value for :code:`meters`
-we expect all changes to meters to be reflected in the UI.
+a new value for :code:`meters`.
+We expect all changes to :code:`meters` to be reflected in the UI.
 Think of the component function as a map from the state,
-meters, to UI Elements.
+:code:`meters`, to UI Elements.
 
 In the component function, we read the value of meters and convert it to feet,
 and we populate the text input and label with the meters and feet respectively.
