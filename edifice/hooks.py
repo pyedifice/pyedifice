@@ -281,15 +281,6 @@ def use_async_call(fn_coroutine:Callable[_P_async, Awaitable[None]]) -> Callable
     the async function on the main Edifice thread event loop as a :func:`use_async`
     Hook. The returned non-async function is safe to call from any thread.
 
-    This Hook is similar to
-    `create_task() <https://docs.python.org/3/library/asyncio-eventloop.html#asyncio.loop.create_task>`_ ,
-    but because it uses
-    :func:`use_async`, it will cancel the task
-    when this :func:`edifice.component` is unmounted, or when the function is called again.
-
-    This Hook is similar to :code:`useAsyncCallback` from
-    https://www.npmjs.com/package/react-async-hook
-
     Example::
 
         async def delay_print_async(message:str):
@@ -299,7 +290,25 @@ def use_async_call(fn_coroutine:Callable[_P_async, Awaitable[None]]) -> Callable
         delay_print = use_async_call(delay_print_async)
 
         delay_print("Hello World")
+
+    This Hook is similar to :code:`useAsyncCallback` from
+    https://www.npmjs.com/package/react-async-hook
+
+    This Hook is similar to
+    `create_task() <https://docs.python.org/3/library/asyncio-eventloop.html#asyncio.loop.create_task>`_ ,
+    but because it uses
+    :func:`use_async`, it will cancel the task
+    when this :func:`edifice.component` is unmounted, or when the function is called again.
+
+    We can
+    `“debounce”
+    <https://stackoverflow.com/questions/25991367/difference-between-throttling-and-debouncing-a-function>`_
+    a function by using this Hook on an async function
+    which has an
+    `await asyncio.sleep() <https://docs.python.org/3/library/asyncio-task.html#asyncio.sleep>`_
+    delay at the beginning of it.
     """
+
     triggered, triggered_set = use_state(cast(_AsyncCommand[_P_async] | None, None))
     loop = get_event_loop()
     def callback(*args: _P_async.args, **kwargs: _P_async.kwargs) -> None:
