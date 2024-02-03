@@ -11,9 +11,24 @@ import asyncio
 from concurrent.futures import ThreadPoolExecutor
 import edifice as ed
 
+@ed.component
+def ComponentWithAsync(self):
+    """
+    Component with an async Hook so we can test unmounting.
+    """
+
+    x, set_x = ed.use_state("async incomplete")
+
+    async def set_label():
+        await asyncio.sleep(1)
+        set_x("async complete")
+
+    ed.use_async(set_label, ())
+
+    ed.Label(x)
 
 @ed.component
-def AsyncElement(self):
+def Main(self):
 
     a, set_a = ed.use_state(0)
     b, set_b = ed.use_state(0)
@@ -43,6 +58,18 @@ def AsyncElement(self):
             await loop.run_in_executor(pool, lambda: callback1(v))
 
 
+    d, set_d = ed.use_state(0)
+    e, set_e = ed.use_state(0)
+
+    async def _on_change3():
+        """
+        Test use_async
+        """
+        set_e(d)
+    ed.use_async(_on_change3, d)
+
+    checked, set_checked = ed.use_state(False)
+
     with ed.View():
         with ed.View(
             style={
@@ -56,6 +83,7 @@ def AsyncElement(self):
             ed.Label(str(a))
             ed.Label(str(b))
             ed.Slider(a, min_value=0, max_value=100, on_change=_on_change1)
+
         with ed.View(
             style={
                 "margin-top": 20,
@@ -67,5 +95,36 @@ def AsyncElement(self):
         ):
             ed.Label(str(c))
             ed.Slider(c, min_value=0, max_value=100, on_change=_on_change2)
+
+        with ed.View(
+            style={
+                "margin-top": 20,
+                "margin-bottom": 20,
+                "border-top-width": "1px",
+                "border-top-style": "solid",
+                "border-top-color": "black",
+            },
+        ):
+            ed.Label(str(e))
+            ed.Slider(d, min_value=0, max_value=100, on_change=set_d)
+
+        with ed.View(
+            style={
+                "margin-top": 20,
+                "margin-bottom": 20,
+                "border-top-width": "1px",
+                "border-top-style": "solid",
+                "border-top-color": "black",
+            },
+        ):
+            with ed.View(layout="row"):
+                ed.CheckBox(
+                    checked=checked,
+                    on_change=set_checked,
+                )
+                if checked:
+                    ComponentWithAsync()
+
+
 if __name__ == "__main__":
-    ed.App(ed.Window()(AsyncElement())).start()
+    ed.App(ed.Window()(Main())).start()
