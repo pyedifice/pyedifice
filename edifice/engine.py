@@ -216,24 +216,30 @@ class _RenderContext(object):
         h_index = element._hook_async_index
         element._hook_async_index += 1
 
-        def done_callback(_):
-            # We might be unmounting at this time but I think that's okay.
-            hooks[h_index].task = None
-            if len(hooks[h_index].queue) > 0:
-                # There is another async task waiting in the queue
-                task = asyncio.create_task(hooks[h_index].queue.pop(0)())
-                hooks[h_index].task = task
-                task.add_done_callback(done_callback)
+        # When the done_callback is called,
+        # this component might have already unmounted. In that case
+        # this done_callback will still be holding a reference to the
+        # _HookAsync, and the _HookAsync.queue will be cleared.
+        # After the done_callback is called, the _HookAsync object
+        # should be garbage collected.
 
         if len(hooks) <= h_index:
             # then this is the first render.
             task = asyncio.create_task(fn_coroutine())
-            task.add_done_callback(done_callback)
             hooks.append(_HookAsync(
                 task=task,
                 dependencies=dependencies,
                 queue=[],
             ))
+            hook = hooks[h_index]
+            def done_callback(_future_object):
+                hook.task = None
+                if len(hook.queue) > 0:
+                    # There is another async task waiting in the queue
+                    task = asyncio.create_task(hook.queue.pop(0)())
+                    hook.task = task
+                    task.add_done_callback(done_callback)
+            task.add_done_callback(done_callback)
 
         elif dependencies != (hook := hooks[h_index]).dependencies:
             # then this is not the first render and deps changed
@@ -250,6 +256,13 @@ class _RenderContext(object):
                 hook.task.cancel()
             else:
                 hook.task = asyncio.create_task(fn_coroutine())
+                def done_callback(_future_object):
+                    hook.task = None
+                    if len(hook.queue) > 0:
+                        # There is another async task waiting in the queue
+                        task = asyncio.create_task(hook.queue.pop(0)())
+                        hook.task = task
+                        task.add_done_callback(done_callback)
                 hook.task.add_done_callback(done_callback)
 
 class _WidgetTree(object):
@@ -427,10 +440,6 @@ class RenderEngine(object):
 
         # Clean up hook state for the component
         if component in self._hook_state:
-            for hook in self._hook_state[component]:
-                del hook.state
-                del hook.updaters
-                del hook
             del self._hook_state[component]
         if component in self._hook_effect:
             for hook in self._hook_effect[component]:
@@ -441,20 +450,12 @@ class RenderEngine(object):
                         hook.cleanup()
                     except Exception:
                         pass
-                del hook.setup
-                del hook.cleanup
-                del hook.dependencies
-                del hook
             del self._hook_effect[component]
         if component in self._hook_async:
             for hook in self._hook_async[component]:
                 if hook.task is not None:
                     hook.task.cancel()
                 hook.queue.clear()
-                del hook.task #TODO Is it okay to del this task before the CancelledError has propagated?
-                del hook.queue
-                del hook.dependencies
-                del hook
             del self._hook_async[component]
 
         # Clean up component references
