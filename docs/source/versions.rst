@@ -4,6 +4,12 @@
 Release Notes
 =============
 
+0.3.5
+-----
+Released: 2024-02-03
+
+* :func:`use_async` bugfix.
+
 0.3.4
 -----
 Released: 2024-01-31
