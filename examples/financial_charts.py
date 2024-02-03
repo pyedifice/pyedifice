@@ -207,7 +207,8 @@ def App(self):
 @ed.component
 def Main(self):
     with ed.Window(title="Financial Charts"):
-        App()
+        with ed.View(): # Need an extra View so hot-reload doesn't recreate the window
+            App()
 
 
 # Finally to start the the app, we pass the Element to the edifice.App object
