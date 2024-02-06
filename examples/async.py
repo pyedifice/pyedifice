@@ -10,6 +10,7 @@ sys.path.insert(0, os.path.join(sys.path[0], '..'))
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
 import edifice as ed
+from typing import cast, Callable
 
 @ed.component
 def ComponentWithAsync(self):
@@ -30,6 +31,8 @@ def ComponentWithAsync(self):
 @ed.component
 def Main(self):
 
+    #########
+
     a, set_a = ed.use_state(0)
     b, set_b = ed.use_state(0)
 
@@ -41,6 +44,7 @@ def Main(self):
         await asyncio.sleep(1)
         set_b(v)
 
+    ##########
 
     c, set_c = ed.use_state(0)
 
@@ -57,6 +61,7 @@ def Main(self):
         with ThreadPoolExecutor() as pool:
             await loop.run_in_executor(pool, lambda: callback1(v))
 
+    ###########
 
     d, set_d = ed.use_state(0)
     e, set_e = ed.use_state(0)
@@ -68,7 +73,30 @@ def Main(self):
         set_e(d)
     ed.use_async(_on_change3, d)
 
+    ##########
+
     checked, set_checked = ed.use_state(False)
+
+    ###########
+
+    j, set_j = ed.use_state(0)
+    j_cancel, j_cancel_set = ed.use_state(cast(tuple[Callable[[],None]] | None, None))
+
+    async def start_j_async():
+        try:
+            set_j(1)
+            await asyncio.sleep(1)
+        finally:
+            set_j(0)
+            j_cancel_set(None)
+
+    start_j = ed.use_async_call(start_j_async)
+
+    def click_start_j():
+        cancel_j = start_j()
+        j_cancel_set((cancel_j,))
+
+    ##########
 
     with ed.View():
         with ed.View(
@@ -125,6 +153,38 @@ def Main(self):
                 if checked:
                     ComponentWithAsync()
 
+        with ed.View(
+            layout="row",
+            style={
+                "margin-top": 20,
+                "margin-bottom": 20,
+                "border-top-width": "1px",
+                "border-top-style": "solid",
+                "border-top-color": "black",
+            },
+        ):
+            with ed.ButtonView(
+                on_click=lambda _ev: click_start_j(),
+            ):
+                ed.Label(text="Start")
+
+            if j_cancel is None:
+                with ed.ButtonView(
+                    enabled=False,
+                ):
+                    ed.Label(text="Cancel")
+            else:
+                with ed.ButtonView(
+                    on_click=lambda _ev: j_cancel[0](),
+                    enabled=True,
+                ):
+                    ed.Label(text="Cancel")
+
+
+            if j == 0:
+                ed.Label("Stopped")
+            else:
+                ed.Label("Running")
 
 if __name__ == "__main__":
     ed.App(ed.Window()(Main())).start()

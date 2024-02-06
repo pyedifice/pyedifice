@@ -226,14 +226,12 @@ class _RenderContext(object):
         if len(hooks) <= h_index:
             # then this is the first render.
             task = asyncio.create_task(fn_coroutine())
-            hooks.append(
-                _HookAsync(
-                    task=task,
-                    dependencies=dependencies,
-                    queue=[],
-                )
+            hook = _HookAsync(
+                task=task,
+                dependencies=dependencies,
+                queue=[],
             )
-            hook = hooks[h_index]
+            hooks.append(hook)
 
             def done_callback(_future_object):
                 hook.task = None
@@ -263,6 +261,7 @@ class _RenderContext(object):
                 hook.queue.clear()
                 hook.queue.append(fn_coroutine)
                 hook.task.cancel()
+
             else:
                 hook.task = asyncio.create_task(fn_coroutine())
 
@@ -274,6 +273,26 @@ class _RenderContext(object):
                         hook.task = task
                         task.add_done_callback(done_callback)
                 hook.task.add_done_callback(done_callback)
+
+            def cancel():
+                if hook.task is not None:
+                    hook.task.cancel()
+                else:
+                    hook.queue.clear()
+
+            return cancel
+
+        else:
+            # not first render, dependencies did not change
+            hook = hooks[h_index]
+
+            def cancel():
+                if hook.task is not None:
+                    hook.task.cancel()
+                else:
+                    hook.queue.clear()
+
+            return cancel
 
 class _WidgetTree(object):
     __slots__ = ("component", "children")

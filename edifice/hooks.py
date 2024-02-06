@@ -179,7 +179,23 @@ def use_async(
 
     The :code:`fn_coroutine` will be called every time the :code:`dependencies` change.
 
-    If the Component is unmounted before the :code:`fn_coroutine` Task completes, then
+    Example::
+
+        @component
+        def Asynchronous(self):
+            myword, myword_set = use_state("")
+
+            async def fetcher():
+                x = await fetch_word_from_the_internet()
+                myword_set(x)
+
+            _cancel_fetcher = use_async(fetcher, 0)
+            Label(text=myword)
+
+    Cancellation
+    ============
+
+    If the component is unmounted before the :code:`fn_coroutine` Task completes, then
     the :code:`fn_coroutine` Task will be cancelled by calling
     `cancel() <https://docs.python.org/3/library/asyncio-task.html#asyncio.Task.cancel>`_
     on the Task.
@@ -194,23 +210,14 @@ def use_async(
     Write your :code:`fn_coroutine` function in such a way that it
     cleans itself up after exceptions.
     Make sure that the :code:`fn_coroutine` function
-    does not try to do anything with this Component after an
+    does not try to do anything with this component after an
     :code:`asyncio.CancelledError`
-    is raised, because this Component may at that time
+    is raised, because this component may at that time
     already have been unmounted.
 
-    Example::
-
-        @component
-        def Asynchronous(self):
-            myword, myword_set = use_state("")
-
-            async def fetcher():
-                x = await fetch_word_from_the_internet()
-                myword_set(x)
-
-            use_async(fetcher, 0)
-            Label(text=myword)
+    The :code:`use_async` Hook returns a function which can be called to
+    cancel the :code:`fn_coroutine` Task manually. In the example above,
+    the :code:`_cancel_fetcher()` function can be called to cancel the fetcher.
 
     Timers
     ======
@@ -274,7 +281,7 @@ class _AsyncCommand(Generic[_P_async]):
 
 def use_async_call(
     fn_coroutine: Callable[_P_async, Awaitable[None]]
-) -> tuple[Callable[_P_async, None], Callable[[], None]]:
+) -> Callable[_P_async, Callable[[], None]]:
     """
     Hook to call an async function from a non-async context.
 
@@ -288,6 +295,9 @@ def use_async_call(
     the async function on the main Edifice thread event loop as a :func:`use_async`
     Hook. The returned non-async function is safe to call from any thread.
 
+    The returned non-async function, when called, returns a cancellation
+    function to cancel the Task manually.
+
     Example::
 
         async def delay_print_async(message:str):
@@ -296,7 +306,10 @@ def use_async_call(
 
         delay_print = use_async_call(delay_print_async)
 
-        delay_print("Hello World")
+        cancel_print = delay_print("Hello World")
+
+        # some time later, if we want to cancel the delayed print:
+        cancel_print()
 
     This Hook is similar to :code:`useAsyncCallback` from
     https://www.npmjs.com/package/react-async-hook
@@ -304,7 +317,7 @@ def use_async_call(
     This Hook is similar to
     `create_task() <https://docs.python.org/3/library/asyncio-eventloop.html#asyncio.loop.create_task>`_ ,
     but because it uses
-    :func:`use_async`, it will cancel the task
+    :func:`use_async`, it will cancel the Task
     when this :func:`edifice.component` is unmounted, or when the function is called again.
 
     We can
@@ -327,4 +340,12 @@ def use_async_call(
             await fn_coroutine(*triggered.args, **triggered.kwargs)
 
     cancel = use_async(wrapper, triggered)
-    return callback, cancel
+
+    def cancel_threadsafe() -> None:
+        loop.call_soon_threadsafe(cancel)
+
+    def returnfn(*args: _P_async.args, **kwargs: _P_async.kwargs) -> Callable[[], None]:
+        callback(*args, **kwargs)
+        return cancel_threadsafe
+
+    return returnfn
