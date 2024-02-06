@@ -4,6 +4,12 @@
 Release Notes
 =============
 
+0.3.6
+-----
+Released: 2024-02-06
+
+* Hooks :func:`use_async` and :func:`use_async_call` are manually cancellable.
+
 0.3.5
 -----
 Released: 2024-02-03
