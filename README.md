@@ -30,10 +30,13 @@ Edifice has function props and Hooks just like React.
 
 * **Installation**
   ```
+  pip install PySide6
+  ```
+  ```
   pip install pyedifice
   ```
 * **Source** published at [github.com/pyedifice/pyedifice](https://github.com/pyedifice/pyedifice)
-* **Package** published at [pypi.org/project/pyedifice/](https://pypi.org/project/pyedifice/)
+* **Package** published at [pypi.org/project/pyedifice](https://pypi.org/project/pyedifice)
 * **Documentation** published at [pyedifice.github.io](https://pyedifice.github.io)
 
 ## Why Edifice?
