@@ -252,8 +252,6 @@ def use_async(
         dependencies:
             The :code:`fn_coroutine` Task will be started when the
             :code:`dependencies` are not :code:`__eq__` to the old :code:`dependencies`.
-    Returns:
-        None
     """
     context = get_render_context_maybe()
     if context is None:
@@ -281,22 +279,24 @@ class _AsyncCommand(Generic[_P_async]):
 
 def use_async_call(
     fn_coroutine: Callable[_P_async, Awaitable[None]]
-) -> Callable[_P_async, Callable[[], None]]:
+) -> tuple[Callable[_P_async, None], Callable[[], None]]:
     """
     Hook to call an async function from a non-async context.
 
-    The Hook takes an async function and returns a non-async
-    function with the same argument signature as the async function.
+    The async :code:`fn_coroutine` function can have any argument
+    signature, but it must return :code:`None`. The return value is discarded.
 
-    The async function can have any argument signature, but it must
-    return :code:`None`. The return value is discarded.
+    The Hook takes an async function :code:`fn_coroutine` and returns a pair
+    of non-async functions.
 
-    The non-async function returned by this Hook can be called to create a new task which runs
-    the async function on the main Edifice thread event loop as a :func:`use_async`
-    Hook. The returned non-async function is safe to call from any thread.
-
-    The returned non-async function, when called, returns a cancellation
-    function to cancel the Task manually.
+    1. A non-async function with the same argument signature as the
+       :code:`fn_coroutine`. When called, this non-async function will start a
+       new Task an the main Edifice thread event loop as a :func:`use_async`
+       Hook which calls :code:`fn_coroutine`. This non-async function is
+       safe to call from any thread.
+    2. A non-async cancellation function which can be called to cancel
+       the :code:`fn_coroutine` Task manually. This cancellation function is
+       safe to call from any thread.
 
     Example::
 
@@ -304,11 +304,11 @@ def use_async_call(
             await asyncio.sleep(1)
             print(message)
 
-        delay_print = use_async_call(delay_print_async)
+        delay_print, cancel_print = use_async_call(delay_print_async)
 
-        cancel_print = delay_print("Hello World")
+        delay_print("Hello World")
 
-        # some time later, if we want to cancel the delayed print:
+        # some time later, if we want to manually cancel the delayed print:
         cancel_print()
 
     This Hook is similar to :code:`useAsyncCallback` from
@@ -327,6 +327,10 @@ def use_async_call(
     which has an
     `await asyncio.sleep() <https://docs.python.org/3/library/asyncio-task.html#asyncio.sleep>`_
     delay at the beginning of it.
+
+    Args:
+        fn_coroutine:
+            Async Coroutine function to be run as a Task.
     """
 
     triggered, triggered_set = use_state(cast(_AsyncCommand[_P_async] | None, None))
@@ -344,8 +348,4 @@ def use_async_call(
     def cancel_threadsafe() -> None:
         loop.call_soon_threadsafe(cancel)
 
-    def returnfn(*args: _P_async.args, **kwargs: _P_async.kwargs) -> Callable[[], None]:
-        callback(*args, **kwargs)
-        return cancel_threadsafe
-
-    return returnfn
+    return callback, cancel_threadsafe
