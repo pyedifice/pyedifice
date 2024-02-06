@@ -253,7 +253,7 @@ class RenderContextProtocol(tp.Protocol):
         self,
         fn_coroutine: Callable[[], Coroutine[None, None, None]],
         dependencies: tp.Any,
-    ) -> None:
+    ) -> Callable[[],None]:
         ...
 
 local_state = threading.local()

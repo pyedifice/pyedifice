@@ -1,5 +1,5 @@
 import asyncio
-from collections.abc import Coroutine, Iterator
+from collections.abc import Callable, Coroutine, Iterator
 from collections import defaultdict
 import contextlib
 import inspect
@@ -199,7 +199,7 @@ class _RenderContext(object):
             hook = _HookEffect(setup, None, dependencies)
             hooks.append(hook)
 
-        elif ((hook := hooks[h_index]).dependencies != dependencies):
+        elif (hook := hooks[h_index]).dependencies != dependencies:
             # then this is not the first render and deps changed
             hook.dependencies = dependencies
             hook.setup = setup
@@ -208,7 +208,7 @@ class _RenderContext(object):
         self,
         fn_coroutine: tp.Callable[[], Coroutine[None, None, None]],
         dependencies: tp.Any,
-    ) -> None:
+    ) -> Callable[[], None]:
         element = self.current_element
         assert element is not None
 
@@ -226,12 +226,15 @@ class _RenderContext(object):
         if len(hooks) <= h_index:
             # then this is the first render.
             task = asyncio.create_task(fn_coroutine())
-            hooks.append(_HookAsync(
-                task=task,
-                dependencies=dependencies,
-                queue=[],
-            ))
+            hooks.append(
+                _HookAsync(
+                    task=task,
+                    dependencies=dependencies,
+                    queue=[],
+                )
+            )
             hook = hooks[h_index]
+
             def done_callback(_future_object):
                 hook.task = None
                 if len(hook.queue) > 0:
@@ -239,7 +242,13 @@ class _RenderContext(object):
                     task = asyncio.create_task(hook.queue.pop(0)())
                     hook.task = task
                     task.add_done_callback(done_callback)
+
             task.add_done_callback(done_callback)
+
+            def cancel():
+                task.cancel()
+
+            return cancel
 
         elif dependencies != (hook := hooks[h_index]).dependencies:
             # then this is not the first render and deps changed
@@ -256,6 +265,7 @@ class _RenderContext(object):
                 hook.task.cancel()
             else:
                 hook.task = asyncio.create_task(fn_coroutine())
+
                 def done_callback(_future_object):
                     hook.task = None
                     if len(hook.queue) > 0:

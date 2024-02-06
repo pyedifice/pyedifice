@@ -165,10 +165,11 @@ def use_effect(
         raise ValueError("use_effect used outside component")
     return context.use_effect(setup, dependencies)
 
+
 def use_async(
     fn_coroutine: Callable[[], Coroutine[None, None, None]],
     dependencies: Any,
-) -> None:
+) -> Callable[[], None]:
     """
     Asynchronous side-effect Hook inside a :func:`edifice.component` function.
 
@@ -252,22 +253,28 @@ def use_async(
         raise ValueError("use_async used outside component")
     return context.use_async(fn_coroutine, dependencies)
 
+
 def use_ref() -> Reference:
     """
     Hook for creating a :class:`Reference` inside a :func:`edifice.component`
     function.
     """
-    r,_ = use_state(Reference())
+    r, _ = use_state(Reference())
     return r
 
+
 _P_async = ParamSpec("_P_async")
+
 
 class _AsyncCommand(Generic[_P_async]):
     def __init__(self, *args: _P_async.args, **kwargs: _P_async.kwargs):
         self.args = args
         self.kwargs = kwargs
 
-def use_async_call(fn_coroutine:Callable[_P_async, Awaitable[None]]) -> Callable[_P_async, None]:
+
+def use_async_call(
+    fn_coroutine: Callable[_P_async, Awaitable[None]]
+) -> tuple[Callable[_P_async, None], Callable[[], None]]:
     """
     Hook to call an async function from a non-async context.
 
@@ -311,6 +318,7 @@ def use_async_call(fn_coroutine:Callable[_P_async, Awaitable[None]]) -> Callable
 
     triggered, triggered_set = use_state(cast(_AsyncCommand[_P_async] | None, None))
     loop = get_event_loop()
+
     def callback(*args: _P_async.args, **kwargs: _P_async.kwargs) -> None:
         loop.call_soon_threadsafe(triggered_set, _AsyncCommand(*args, **kwargs))
 
@@ -318,5 +326,5 @@ def use_async_call(fn_coroutine:Callable[_P_async, Awaitable[None]]) -> Callable
         if triggered is not None:
             await fn_coroutine(*triggered.args, **triggered.kwargs)
 
-    use_async(wrapper, triggered)
-    return callback
+    cancel = use_async(wrapper, triggered)
+    return callback, cancel
