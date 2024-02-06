@@ -281,7 +281,7 @@ class _AsyncCommand(Generic[_P_async]):
 
 def use_async_call(
     fn_coroutine: Callable[_P_async, Awaitable[None]]
-) -> Callable[_P_async, Callable[[], None]]:
+) -> tuple[Callable[_P_async, None], Callable[[], None]]:
     """
     Hook to call an async function from a non-async context.
 
@@ -304,9 +304,9 @@ def use_async_call(
             await asyncio.sleep(1)
             print(message)
 
-        delay_print = use_async_call(delay_print_async)
+        delay_print, cancel_print = use_async_call(delay_print_async)
 
-        cancel_print = delay_print("Hello World")
+        delay_print("Hello World")
 
         # some time later, if we want to cancel the delayed print:
         cancel_print()
@@ -344,8 +344,7 @@ def use_async_call(
     def cancel_threadsafe() -> None:
         loop.call_soon_threadsafe(cancel)
 
-    def returnfn(*args: _P_async.args, **kwargs: _P_async.kwargs) -> Callable[[], None]:
+    def returnfn(*args: _P_async.args, **kwargs: _P_async.kwargs) -> None:
         callback(*args, **kwargs)
-        return cancel_threadsafe
 
-    return returnfn
+    return returnfn, cancel_threadsafe

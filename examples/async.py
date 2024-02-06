@@ -51,7 +51,7 @@ def Main(self):
     async def async_callback1(v:int):
         set_c(v)
 
-    callback1 = ed.use_async_call(async_callback1)
+    callback1, _ = ed.use_async_call(async_callback1)
 
     async def _on_change2(v:int):
         """
@@ -80,7 +80,6 @@ def Main(self):
     ###########
 
     j, set_j = ed.use_state(0)
-    j_cancel, j_cancel_set = ed.use_state(cast(tuple[Callable[[],None]] | None, None))
 
     async def start_j_async():
         try:
@@ -88,13 +87,8 @@ def Main(self):
             await asyncio.sleep(1)
         finally:
             set_j(0)
-            j_cancel_set(None)
 
-    start_j = ed.use_async_call(start_j_async)
-
-    def click_start_j():
-        cancel_j = start_j()
-        j_cancel_set((cancel_j,))
+    start_j, cancel_j = ed.use_async_call(start_j_async)
 
     ##########
 
@@ -164,21 +158,15 @@ def Main(self):
             },
         ):
             with ed.ButtonView(
-                on_click=lambda _ev: click_start_j(),
+                on_click=lambda _ev: start_j(),
             ):
                 ed.Label(text="Start")
 
-            if j_cancel is None:
-                with ed.ButtonView(
-                    enabled=False,
-                ):
-                    ed.Label(text="Cancel")
-            else:
-                with ed.ButtonView(
-                    on_click=lambda _ev: j_cancel[0](),
-                    enabled=True,
-                ):
-                    ed.Label(text="Cancel")
+            with ed.ButtonView(
+                on_click=lambda _ev: cancel_j(),
+                enabled=True,
+            ):
+                ed.Label(text="Cancel")
 
 
             if j == 0:

@@ -4,6 +4,11 @@
 Release Notes
 =============
 
+0.3.7
+-----
+
+* Hooks :func:`use_async_call` now return the cancel function from the hook directly.
+
 0.3.6
 -----
 Released: 2024-02-06
