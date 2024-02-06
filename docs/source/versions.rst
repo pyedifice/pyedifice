@@ -4,6 +4,13 @@
 Release Notes
 =============
 
+0.3.7
+-----
+Released: 2024-02-06
+
+* Breaking change: Hook :func:`use_async_call` returns canceller function in a
+  tuple.
+
 0.3.6
 -----
 Released: 2024-02-06
