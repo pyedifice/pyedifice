@@ -25,5 +25,4 @@ def MainComp(self):
 
 if __name__ == "__main__":
     my_app = App(MainComp())
-    with my_app.start_loop() as loop:
-        loop.run_forever()
+    my_app.start()

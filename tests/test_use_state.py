@@ -62,11 +62,10 @@ class IntegrationTestCase(unittest.TestCase):
                     ),
                     Button(
                         title="Exit",
-                        on_click=lambda ev: loop.call_soon(loop.stop)
+                        on_click=lambda ev: loop.call_soon(my_app.stop)
                     ),
                 )
 
         my_app = App(Wrapper(), create_application=False)
         with my_app.start_loop() as loop:
-            loop.call_later(0.1, loop.stop)
-            loop.run_forever()
+            loop.call_later(0.1, my_app.stop)

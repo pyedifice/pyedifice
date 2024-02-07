@@ -62,14 +62,12 @@ class IntegrationTestCase(unittest.TestCase):
     def test_integration(self):
         my_app = app.App(Window()(base_components.Label("Hello World!")), create_application=False)
         with my_app.start_loop() as loop:
-            loop.call_later(0.1, loop.stop)
-            loop.run_forever()
+            loop.call_later(0.1, my_app.stop)
 
     def test_integration_with_inspector(self):
         my_app = app.App(Window()(base_components.Label("Hello World!")), inspector=True, create_application=False)
         with my_app.start_loop() as loop:
-            loop.call_later(0.1, loop.stop)
-            loop.run_forever()
+            loop.call_later(0.1, my_app.stop)
 
     def test_subscribe_unmount(self):
         """
@@ -119,12 +117,11 @@ class IntegrationTestCase(unittest.TestCase):
                 return base_components.Label(text="child2")
             def _did_render(self):
                 loop = asyncio.get_running_loop()
-                loop.call_soon(loop.stop)
 
         state_value = state.StateValue(1)
         my_app = app.App(Window()(TestComp(state_value)), create_application=False)
         with my_app.start_loop() as loop:
-            loop.run_forever()
+            loop.call_later(0.1, my_app.stop)
 
         self.assertEqual(state_value.value, 2)
 
@@ -148,5 +145,4 @@ class IntegrationTestCase(unittest.TestCase):
             create_application=False
         )
         with my_app.start_loop() as loop:
-            loop.call_later(0.1, loop.stop)
-            loop.run_forever()
+            loop.call_later(0.1, my_app.stop)

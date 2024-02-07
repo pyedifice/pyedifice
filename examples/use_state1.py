@@ -54,12 +54,11 @@ def TestComp(self):
         )
         Button(
             title="Exit",
-            on_click=lambda ev: asyncio.get_event_loop().call_soon(asyncio.get_event_loop().stop)
+            on_click=lambda ev: asyncio.get_event_loop().call_soon(my_app.stop)
         )
         for i in range(x):
             Label(text=str(i))
 
 if __name__ == "__main__":
     my_app = App(UseState1())
-    with my_app.start_loop() as loop:
-        loop.run_forever()
+    my_app.start()

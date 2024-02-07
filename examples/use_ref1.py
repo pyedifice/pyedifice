@@ -24,7 +24,6 @@ def MyComp(self):
         element = ref()
         assert isinstance(element, Label)
         cast(QLabel, element.underlying).setText("After")
-        return lambda:None
 
     use_effect(did_render, ref)
 
@@ -34,5 +33,4 @@ def MyComp(self):
 
 if __name__ == "__main__":
     my_app = App(MyComp())
-    with my_app.start_loop() as loop:
-        loop.run_forever()
+    my_app.start()

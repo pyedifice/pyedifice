@@ -17,5 +17,4 @@ class FormTest(unittest.TestCase):
         fv = edifice.FlowView()(edifice.Label(text="FlowView"))
         my_app = edifice.App(fv, create_application=False)
         with my_app.start_loop() as loop:
-            loop.call_later(0.1, loop.stop)
-            loop.run_forever()
+            loop.call_later(0.1, my_app.stop)

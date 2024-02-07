@@ -278,6 +278,5 @@ class MakeElementTestCase(unittest.TestCase):
             except ValueError as e:
                 self.assertEqual(e.__str__(), "This should error")
         with app.start_loop() as loop:
-            loop.call_later(0.1, loop.stop)
             loop.call_soon(update)
-            loop.run_forever()
+            loop.call_later(0.1, app.stop)

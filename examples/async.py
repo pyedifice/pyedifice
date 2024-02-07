@@ -21,8 +21,15 @@ def ComponentWithAsync(self):
     x, set_x = ed.use_state("async incomplete")
 
     async def set_label():
-        await asyncio.sleep(1)
-        set_x("async complete")
+        print("async start")
+        try:
+            await asyncio.sleep(1)
+            print("async complete")
+            set_x("async complete")
+        except asyncio.CancelledError as ex:
+            print("async cancelled")
+            set_x("async cancelled")
+            raise ex
 
     ed.use_async(set_label, ())
 
@@ -30,6 +37,10 @@ def ComponentWithAsync(self):
 
 @ed.component
 def Main(self):
+
+    ##########
+
+    checked, set_checked = ed.use_state(False)
 
     #########
 
@@ -75,10 +86,6 @@ def Main(self):
 
     ##########
 
-    checked, set_checked = ed.use_state(False)
-
-    ##########
-
     k, set_k = ed.use_state(cast(list[tuple[int, str]], []))
 
     async def start_k_async():
@@ -120,6 +127,24 @@ def Main(self):
 
 
     with ed.View():
+
+        with ed.View(
+            style={
+                "margin-top": 20,
+                "margin-bottom": 20,
+                "border-top-width": "1px",
+                "border-top-style": "solid",
+                "border-top-color": "black",
+            },
+        ):
+            with ed.View(layout="row"):
+                ed.CheckBox(
+                    checked=checked,
+                    on_change=set_checked,
+                )
+                if checked:
+                    ComponentWithAsync()
+
         with ed.View(
             style={
                 "margin-top": 20,
@@ -167,23 +192,6 @@ def Main(self):
             },
         ):
             with ed.View(layout="row"):
-                ed.CheckBox(
-                    checked=checked,
-                    on_change=set_checked,
-                )
-                if checked:
-                    ComponentWithAsync()
-
-        with ed.View(
-            style={
-                "margin-top": 20,
-                "margin-bottom": 20,
-                "border-top-width": "1px",
-                "border-top-style": "solid",
-                "border-top-color": "black",
-            },
-        ):
-            with ed.View(layout="row"):
                 with ed.ButtonView(
                     on_click=lambda _ev: start_k(),
                 ):
@@ -197,4 +205,4 @@ def Main(self):
                 ed.ProgressBar(value=k_[0], format=k_[1])
 
 if __name__ == "__main__":
-    ed.App(ed.Window()(Main())).start()
+    ed.App(ed.Window(title="Async Example")(Main())).start()
