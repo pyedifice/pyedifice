@@ -77,20 +77,47 @@ def Main(self):
 
     checked, set_checked = ed.use_state(False)
 
-    ###########
+    ##########
 
-    j, set_j = ed.use_state(0)
+    k, set_k = ed.use_state(cast(list[tuple[int, str]], []))
 
-    async def start_j_async():
+    async def start_k_async():
+        def k_updater_new():
+            def updater(k_):
+                k_u = k_[:]
+                k_u.insert(0, (0, "Running"))
+                return k_u
+            return updater
+
+        def k_updater_progress(progress, message):
+            def updater(k_):
+                k_u = k_[:]
+                k_u[0] = (progress, message)
+                return k_u
+            return updater
+
+        def k_updater_cancel():
+            def updater(k_):
+                k_u = k_[:]
+                k_u[0] = (k_[0][0], "Cancelled")
+                return k_u
+            return updater
+
         try:
-            set_j(1)
-            await asyncio.sleep(1)
-        finally:
-            set_j(0)
+            set_k(k_updater_new())
+            for i in range(1,9):
+                await asyncio.sleep(0.1)
+                set_k(k_updater_progress(i*10, "Running"))
+            await asyncio.sleep(0.1)
+            set_k(k_updater_progress(100, "Finished"))
+        except asyncio.CancelledError as e:
+            set_k(k_updater_cancel())
+            raise e
 
-    start_j, cancel_j = ed.use_async_call(start_j_async)
+    start_k, cancel_k = ed.use_async_call(start_k_async)
 
     ##########
+
 
     with ed.View():
         with ed.View(
@@ -148,7 +175,6 @@ def Main(self):
                     ComponentWithAsync()
 
         with ed.View(
-            layout="row",
             style={
                 "margin-top": 20,
                 "margin-bottom": 20,
@@ -157,27 +183,18 @@ def Main(self):
                 "border-top-color": "black",
             },
         ):
-            with ed.ButtonView(
-                on_click=lambda _ev: start_j(),
-            ):
-                ed.Label(text="Start")
-
-            if j == 0:
+            with ed.View(layout="row"):
                 with ed.ButtonView(
-                    enabled=False,
+                    on_click=lambda _ev: start_k(),
+                ):
+                    ed.Label(text="Start")
+                with ed.ButtonView(
+                    on_click=lambda _ev: cancel_k(),
+                    enabled = len(k)>0 and k[0][1] == "Running",
                 ):
                     ed.Label(text="Cancel")
-            else:
-                with ed.ButtonView(
-                    on_click=lambda _ev: cancel_j(),
-                    enabled=True,
-                ):
-                    ed.Label(text="Cancel")
-
-            if j == 0:
-                ed.Label("Stopped")
-            else:
-                ed.Label("Running")
+            for k_ in k:
+                ed.ProgressBar(value=k_[0], format=k_[1])
 
 if __name__ == "__main__":
     ed.App(ed.Window()(Main())).start()
