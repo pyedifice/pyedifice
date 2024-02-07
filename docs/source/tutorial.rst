@@ -6,8 +6,9 @@ Tutorial
 This tutorial will help you create your first Edifice app.
 We will create an app that converts measurements in different units.
 
-First, install Edifice::
+First, install Qt and Edifice::
 
+    pip install PySide6
     pip install pyedifice
 
 .. note::
@@ -19,13 +20,11 @@ First, install Edifice::
     If you would prefer to use the PyQt6 library and do not wish to
     install PySide6, you can run::
 
-        pip install qasync  # A dependency required for asyncio integration
-        pip install typing-extensions
-        pip install --no-dependencies pyedifice
+        pip install PyQt6
+        pip install pyedifice
 
     You can switch to using PyQt6 by setting the :code:`EDIFICE_QT_VERSION` environment variable to :code:`PyQt6`::
 
-        # Add to your bashrc
         export EDIFICE_QT_VERSION=PyQt6
 
 
@@ -37,7 +36,7 @@ Copy this code into a new file, for example tutorial.py::
     @component
     def MyApp(self):
         with Window(): # Top of every App must be a Window
-            with View(layout="row"): # Top Window must have one static child
+            with View(layout="row"):
                 Label("Measurement in meters:")
                 TextInput("")
                 Label("Measurement in feet:")
@@ -206,10 +205,9 @@ it for each measurement pair, we can factor out the conversion logic into its ow
 
     @component
     def MyApp(self):
-        with Window():
-            with View(layout="column", style={}):
-                ConversionWidget("meters", "feet", METERS_TO_FEET)
-                ConversionWidget("feet", "meters", 1 / METERS_TO_FEET)
+        with Window(title="Measurement Conversion"):
+            ConversionWidget("meters", "feet", METERS_TO_FEET)
+            ConversionWidget("feet", "meters", 1 / METERS_TO_FEET)
 
     if __name__ == "__main__":
         App(MyApp()).start()

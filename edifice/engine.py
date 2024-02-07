@@ -425,18 +425,6 @@ class RenderEngine(object):
         "_component_tree", "_widget_tree", "_root", "_app",
         "_hook_state", "_hook_effect", "_hook_async"
     )
-    _hook_state: defaultdict[Element, list[_HookState]]
-    """
-    The per-element hooks for use_state().
-    """
-    _hook_effect: defaultdict[Element, list[_HookEffect]]
-    """
-    The per-element hooks for use_effect().
-    """
-    _hook_async: defaultdict[Element, list[_HookAsync]]
-    """
-    The per-element hooks for use_async().
-    """
     def __init__(self, root:Element, app=None):
         self._component_tree : dict[Element, Element | list[Element]] = {}
         """
@@ -452,9 +440,32 @@ class RenderEngine(object):
         self._root = root
         self._root._edifice_internal_parent = None
         self._app = app
-        self._hook_state = defaultdict(list)
-        self._hook_effect = defaultdict(list)
-        self._hook_async = defaultdict(list)
+
+        self._hook_state: defaultdict[Element, list[_HookState]] = defaultdict(list)
+        """
+        The per-element hooks for use_state().
+        """
+        self._hook_effect: defaultdict[Element, list[_HookEffect]] = defaultdict(list)
+        """
+        The per-element hooks for use_effect().
+        """
+        self._hook_async: defaultdict[Element, list[_HookAsync]] = defaultdict(list)
+        """
+        The per-element hooks for use_async().
+        """
+
+    def is_hook_async_done(self, element: Element) -> bool:
+        """
+        True if all of the async hooks for an Element are done.
+        """
+        if element not in self._hook_async:
+            return True
+        hooks = self._hook_async[element]
+        for hook in hooks:
+            if hook.task is not None:
+                if not hook.task.done():
+                    return False
+        return True
 
     def _delete_component(self, component: Element, recursive: bool):
         # Delete component from render trees
@@ -482,10 +493,20 @@ class RenderEngine(object):
             del self._hook_effect[component]
         if component in self._hook_async:
             for hook in self._hook_async[component]:
-                if hook.task is not None:
-                    hook.task.cancel()
                 hook.queue.clear()
-            del self._hook_async[component]
+                if hook.task is not None:
+                    # If there are some running tasks, wait until they are
+                    # done and then delete this HookAsync object.
+                    def done_callback(_future_object):
+                        if self.is_hook_async_done(component):
+                            del self._hook_async[component]
+                    hook.task.add_done_callback(done_callback)
+                    hook.task.cancel()
+            if self.is_hook_async_done(component):
+                # If there are no running tasks, then we can delete this
+                # HookAsync object immediately.
+                del self._hook_async[component]
+
 
         # Clean up component references
         # Do this after use_effect cleanup, so that the cleanup function

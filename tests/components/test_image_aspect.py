@@ -17,5 +17,4 @@ class FormTest(unittest.TestCase):
         v = edifice.Image(src="../example.png")
         my_app = edifice.App(v, create_application=False)
         with my_app.start_loop() as loop:
-            loop.call_later(0.1, loop.stop)
-            loop.run_forever()
+            loop.call_later(0.1, my_app.stop)

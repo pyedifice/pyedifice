@@ -35,10 +35,9 @@ def ConversionWidget(self, from_unit, to_unit, factor):
 
 @component
 def MyApp(self):
-    with Window():
-        with View(layout="column"):
-            ConversionWidget("meters", "feet", METERS_TO_FEET)
-            ConversionWidget("feet", "meters", 1 / METERS_TO_FEET)
+    with Window(title="Measurement Conversion"):
+        ConversionWidget("meters", "feet", METERS_TO_FEET)
+        ConversionWidget("feet", "meters", 1 / METERS_TO_FEET)
 
 if __name__ == "__main__":
     App(MyApp()).start()

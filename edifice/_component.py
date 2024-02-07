@@ -205,6 +205,8 @@ class ControllerProtocol(tp.Protocol):
         pass
     def _defer_rerender(self, components: list["Element"]):
         pass
+    def stop(self):
+        pass
 
 
 class _Tracker:

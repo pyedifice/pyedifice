@@ -19,4 +19,4 @@ if __name__ == "__main__":
     window = QtWidgets.QWidget()
     window.setLayout(outer_layout)
     window.show()
-    app.exec_()
+    app.exec()

@@ -717,108 +717,6 @@ class QtWidgetElement(WidgetElement):
         return commands
 
 
-class Window(WidgetElement):
-    """
-    The root element of an :class:`App` which runs in an operating system
-    window.
-
-    The Window must have exactly one child, and the child must not change.
-    Usually the one child of a Window will be a :class:`View`.
-    (The reason for this is
-    that the Window cannot diff its children.)
-
-    Args:
-        title:
-            The window title.
-        icon:
-            The window icon.
-        menu:
-            The window's menu bar. In some GUI settings, for example Mac OS,
-            this menu will appear seperately from the window.
-        on_close:
-            Event handler for when this window is closed.
-    """
-
-    def __init__(self, title: tp.Text = "Edifice Application",
-                 icon:tp.Optional[tp.Union[tp.Text, tp.Sequence]] = None,
-                 menu=None,
-                 on_close: tp.Optional[tp.Callable[[QtGui.QCloseEvent], None | tp.Awaitable[None]]] = None):
-        self._register_props({
-            "title": title,
-            "icon": icon,
-            "menu": menu,
-            "on_close": on_close,
-        })
-        super().__init__()
-
-        # Window.underlying is always None. Instead it uses the
-        # _previous_rendering.underlying, which is the first child of
-        # Whatever element it rendered to?
-        # Why do we even need Window?
-
-        self._previous_rendering = None
-        # self._on_click = None
-        self._menu_bar = None
-        self.underlying = None
-
-    def _will_unmount(self):
-        if self._previous_rendering:
-            self._previous_rendering.underlying.close()
-
-    def _set_on_close(self, underlying, on_close):
-        self._on_close = on_close
-        if on_close:
-            underlying.closeEvent = _ensure_future(self._on_close)
-        else:
-            underlying.closeEvent = lambda e: None
-
-    def _attach_menubar(self, menu_bar, menus):
-        assert self._previous_rendering is not None
-        menu_bar.setParent(self._previous_rendering.underlying)
-        for menu_title, menu in menus.items():
-            if not isinstance(menu, dict):
-                raise ValueError(
-                    "Menu must be a dict of dicts (each of which describes a submenu)")
-            menu_bar.addMenu(_create_qmenu(menu, menu_title))
-
-    def _qt_update_commands(self, children, newprops, newstate):
-        if len(children) != 1:
-            raise ValueError("Window can only have 1 child")
-
-        child = children[0].component
-        commands: list[_CommandType] = []
-
-        if self._previous_rendering:
-            old_position = self._previous_rendering.underlying.pos()
-            if child != self._previous_rendering:
-                commands.append(_CommandType(self._previous_rendering.underlying.close,))
-                if old_position:
-                    commands.append(_CommandType(child.underlying.move, old_position))
-                commands.append(_CommandType(child.underlying.show,))
-                newprops = self.props
-                self._menu_bar = None
-        else:
-            commands.append(_CommandType(child.underlying.show,))
-            newprops = self.props
-            self._menu_bar = None
-        self._previous_rendering = child
-
-        for prop in newprops:
-            if prop == "title":
-                commands.append(_CommandType(self._previous_rendering.underlying.setWindowTitle, newprops.title))
-            elif prop == "on_close":
-                commands.append(_CommandType(self._set_on_close, self._previous_rendering.underlying, newprops.on_close))
-            elif prop == "icon" and newprops.icon:
-                pixmap = _image_descriptor_to_pixmap(newprops.icon)
-                commands.append(_CommandType(self._previous_rendering.underlying.setWindowIcon, QtGui.QIcon(pixmap)))
-            elif prop == "menu" and newprops.menu:
-                if self._menu_bar is not None:
-                    self._menu_bar.setParent(None)
-                self._menu_bar = QtWidgets.QMenuBar()
-                commands.append(_CommandType(self._attach_menubar, self._menu_bar, newprops.menu))
-        return commands
-
-
 class GroupBox(QtWidgetElement):
     """
     Underlying
@@ -1886,6 +1784,91 @@ class View(_LinearView):
         assert self.underlying is not None
         commands = super()._qt_update_commands(children, newprops, newstate, self.underlying, self.underlying_layout)
         return commands
+
+class Window(View):
+    """
+    The root :class:`View` element of an :class:`App` which runs in an
+    operating system window.
+
+    The children of this :class:`Window` are the visible Elements of the
+    :class:`App`. When this :class:`Window` closes, all of the children
+    are unmounted and then the :class:`App` stops.
+
+    Args:
+        title:
+            The window title.
+        icon:
+            The window icon image.
+        menu:
+            The window’s menu bar. In some GUI settings, for example Mac OS,
+            this menu will appear seperately from the window.
+        on_close:
+            Event handler for when this window is closing. This event handler
+            will fire before the children are unmounted.
+    """
+
+    def __init__(
+        self,
+        title: str = "Edifice Application",
+        icon:tp.Optional[tp.Union[tp.Text, tp.Sequence]] = None,
+        menu = None,
+        on_close: tp.Optional[tp.Callable[[QtGui.QCloseEvent], None | tp.Awaitable[None]]] = None
+    ):
+        self._register_props({
+            "title": title,
+            "icon": icon,
+            "menu": menu,
+            "on_close": on_close,
+        })
+        super().__init__()
+
+        self._menu_bar = None
+        self._on_close: tp.Optional[tp.Callable[[QtGui.QCloseEvent], None | tp.Awaitable[None]]] = None
+
+    def _set_on_close(self, on_close):
+        self._on_close = on_close
+
+    def _handle_close(self, event: QtGui.QCloseEvent):
+        event.ignore() # Don't kill the app yet, instead stop the app after the children are unmounted.
+        if self._on_close:
+            _ensure_future(self._on_close)(event)
+        if self._controller is not None:
+            self._controller.stop()
+
+    def _attach_menubar(self, menu_bar, menus):
+        assert self.underlying is not None
+        menu_bar.setParent(self.underlying)
+        for menu_title, menu in menus.items():
+            if not isinstance(menu, dict):
+                raise ValueError(
+                    "Menu must be a dict of dicts (each of which describes a submenu)")
+            menu_bar.addMenu(_create_qmenu(menu, menu_title))
+
+    def _qt_update_commands(self, children, newprops, newstate):
+
+        if self.underlying is None:
+            super()._initialize()
+            assert self.underlying is not None
+            self.underlying.closeEvent = self._handle_close
+            self.underlying.show()
+
+        commands: list[_CommandType] = super()._qt_update_commands(children, newprops, newstate)
+
+        if "title" in newprops:
+            commands.append(_CommandType(self.underlying.setWindowTitle, newprops.title))
+        if "on_close" in newprops:
+            commands.append(_CommandType(self._set_on_close, newprops.on_close))
+        if "icon" in newprops and newprops.icon:
+            pixmap = _image_descriptor_to_pixmap(newprops.icon)
+            commands.append(_CommandType(self.underlying.setWindowIcon, QtGui.QIcon(pixmap)))
+        if "menu" in newprops and newprops.menu:
+            if self._menu_bar is not None:
+                self._menu_bar.setParent(None)
+            self._menu_bar = QtWidgets.QMenuBar()
+            commands.append(_CommandType(self._attach_menubar, self._menu_bar, newprops.menu))
+
+        return commands
+
 
 
 class ScrollView(_LinearView):

@@ -72,19 +72,50 @@ class _RateLimitedLogger(object):
 class App(object):
     """The main application object.
 
+    Start
+    -----
+
     To start the application, call the :func:`App.start` method::
 
         App(MyRootElement()).start()
 
     If the application is normal application in an operating
-    system window, then the top Element rendered by :code:`MyRootElement`
+    system window, then the root Element rendered by :code:`MyRootElement`
     must be a :class:`Window`.
 
-    If you just want to create a widget that you'll integrate with an existing
-    Qt application, use the :func:`App.export_widgets` method.
-    This widget can then be plugged into the rest of your application, and there's no need
-    to manage the rendering of the widget -- state changes will trigger automatic re-render
+    1. Create the application event loop
+       `qasync.QEventLoop <https://github.com/CabbageDevelopment/qasync>`_.
+    2. Start the application event loop.
+    3. Render the root Element.
+
+
+    Stop
+    ----
+
+    When the user closes the :class:`Window` or when :func:`App.stop` is called,
+    the application will stop.
+
+    Stopping the application will:
+
+    1. Unmount all Elements.
+    2. Cancel all :func:`edifice.use_async` tasks.
+    3. Wait for the :func:`edifice.use_async` tasks to cancel.
+    4. Stop the application event loop.
+    5. Close the application event loop.
+    6. Exit.
+
+    Export Widgets
+    --------------
+
+    If you just want to create widgets that you'll integrate with an existing
+    Qt application, use the :func:`App.export_widgets` method instead of
+    :func:`App.start`.
+    These widgets can then be plugged into the rest of your Qt application, and there's no need
+    to manage the rendering of the widgets — state changes will trigger automatic re-render
     without any intervention.
+
+    Caveat: Your Qt application must use a
+    `qasync.QEventLoop <https://github.com/CabbageDevelopment/qasync>`_.
 
     Logging
     -------
@@ -95,11 +126,17 @@ class App(object):
         logger = logging.getLogger("Edifice")
         logger.setLevel(logging.INFO)
 
+    App Construction
+    ----------------
+
+    By default, :func:`App` creates a new
+    `QtWidgets.QApplication <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QApplication.html>`_
+    instance.
 
     Args:
         root_element: the root Element of the application.
             It must render to an instance of :class:`Window` or
-            some other :class:`RootElement`
+            :class:`ExportList`.
         inspector: whether or not to run an instance of the Edifice Inspector
             alongside the main app. Defaults to False
         create_application: (default True) whether or not to create an instance of QApplication.
@@ -244,8 +281,11 @@ class App(object):
             asyncio.get_event_loop().call_soon(self._rerender_callback)
 
 
-    def set_stylesheet(self, stylesheet):
+    def set_stylesheet(self, stylesheet: str) -> "App":
         """Adds a global stylesheet for the app.
+
+        See
+        `Qt Style Sheets <https://doc.qt.io/qtforpython-6/overviews/stylesheet.html-style-sheets>`_.
 
         Args:
             stylesheet: String containing the contents of the stylesheet
@@ -256,8 +296,8 @@ class App(object):
         return self
 
     def export_widgets(self) -> list[QtWidgets.QWidget]:
-        """Exports the underlying Qt :code:`QWidgets` s from the components
-        in the :class:`ExportList`.
+        """Exports the underlying Qt :code:`QWidgets` s from the Edifice
+        Elements in the :class:`ExportList`.
 
         Returns a list of `QtWidgets.QWidget <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html>`_.
 
@@ -268,15 +308,19 @@ class App(object):
             # Suppose parent_widget is defined in Qt code.
 
             @component
-            def export_components(self):
+            def export_elements(self):
                 with ExportList():
                     MyAwesomeComponent()
+                    AnotherComponent()
 
-            widgets = edifice.App(export_components).export_widgets()
-            widget[0].setParent(parent_widget)
+            edifice_app = edifice.App(export_elements(), create_application=False)
+            edifice_widgets = edifice_app.export_widgets()
 
-        Args:
-            None
+            edifice_widgets[0].setParent(parent_widget)
+            parent_widget.layout().add_widget(edifice_widgets[0])
+
+            edifice_widgets[1].setParent(parent_widget)
+            parent_widget.layout().add_widget(edifice_widgets[1])
 
         """
         self._request_rerender([self._root], {})
@@ -290,77 +334,74 @@ class App(object):
         else:
             raise RuntimeError("The root element of the App for export_widgets() must be an ExportList")
 
-    def start(self) -> tp.Any:
+    def start(self) -> None:
+        """
+        Start the application event loop.
+        """
+
+        with self.start_loop() as _loop:
+            pass
+
+    @contextlib.contextmanager
+    def start_loop(self) -> tp.Generator[QEventLoop, None, None]:
         """
         Start the application event loop.
 
-        Args:
-            None
-        Returns:
-            The result of :code:`loop.run_forever()`.
-        """
-
-        with self.start_loop() as loop:
-            ret = loop.run_forever()
-        return ret
-
-    @contextlib.contextmanager
-    def start_loop(self):
-        """
-        Start the application event loop manually.
-
         A context manager alternative to :func:`App.start` which allows
         access to the application’s
-        `qasync.QEventLoop <https://github.com/CabbageDevelopment/qasync>`_.
+        `qasync.QEventLoop <https://github.com/CabbageDevelopment/qasync>`_
+        after the application starts, and before the first render.
 
-        The `asyncio event loop <https://docs.python.org/3/library/asyncio-eventloop.html>`_
-        uses the `QEventLoop` as the current event loop. You can also access the
+        The :code:`QEventLoop` is the
+        `asyncio current event loop <https://docs.python.org/3/library/asyncio-eventloop.html>`_.
+        You can also access the
         **asyncio** current event loop in the usual way with
-        `asyncio.get_running_loop() <https://docs.python.org/3/library/asyncio-eventloop.html?highlight=run_forever#asyncio.get_running_loop>`_.
+        `asyncio.get_running_loop() <https://docs.python.org/3/library/asyncio-eventloop.html#asyncio.get_running_loop>`_.
 
-        When you use :func:`start_loop`, you must explicitly run the event loop,
-        for example with `run_forever() <https://docs.python.org/3/library/asyncio-eventloop.html#asyncio.loop.run_forever>`_.
-        When the user closes the :class:`App` it will stop the event loop,
-        see `QApplication.exit_() <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QApplication.html#PySide6.QtWidgets.PySide6.QtWidgets.QApplication.exec_>`_.
-
-        In this example, we add a Unix :code:`SIGINT` handler which will also stop
-        the event loop.
-
-        Example::
+        In this example, we add a Unix :code:`SIGINT` handler which will
+        :func:`App.stop` the application::
 
             app = edifice.App(MyAppElement())
             with app.start_loop() as loop:
-                loop.add_signal_handler(signal.SIGINT, loop.stop)
-                loop.run_forever()
+                loop.add_signal_handler(signal.SIGINT, app.stop)
 
         """
         loop = QEventLoop(self.app)
-        try:
-            asyncio.set_event_loop(loop)
-            async def first_render():
-                self._request_rerender([self._root], {})
-                if self._inspector:
-                    logger.info("Running inspector")
-                    def cleanup(e):
-                        self._inspector_component = None
+        asyncio.set_event_loop(loop)
+        yield loop
 
-                    self._inspector_component = inspector.Inspector(
-                        self._render_engine._component_tree, self._root,
-                        refresh=(lambda: (self._render_engine._component_tree, self._root)))
-                    icon_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), "inspector/icon.png")
-                    component = Window(title="Element Inspector", on_close=cleanup, icon=icon_path)(self._inspector_component)
-                    component._edifice_internal_parent = None
-                    self._request_rerender([component], {})
-            t = loop.create_task(first_render())
-            yield loop
-            del t
-        finally:
-            # This is not right. Intead of run_forever() and then stop()ing the
-            # event loop, we should run_until_complete(). To exit, we should
-            # unmount all components, which would then remove all of the
-            # waiting event completions from the event loop, which would
-            # then cause the event loop to exit.
-            # See
-            # https://github.com/CabbageDevelopment/qasync/blob/ee9b0a3ab9548240c71d4a52e6c6a060a633e930/qasync/__init__.py#L404
-            loop.close()
+        async def first_render():
+            self._request_rerender([self._root], {})
+            if self._inspector:
+                logger.info("Running inspector")
+                def cleanup(e):
+                    self._inspector_component = None
+
+                self._inspector_component = inspector.Inspector(
+                    self._render_engine._component_tree, self._root,
+                    refresh=(lambda: (self._render_engine._component_tree, self._root)))
+                icon_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), "inspector/icon.png")
+                component = Window(title="Element Inspector", on_close=cleanup, icon=icon_path)(self._inspector_component)
+                component._edifice_internal_parent = None
+                self._request_rerender([component], {})
+        t = loop.create_task(first_render())
+
+        self._app_close_event = asyncio.Event()
+
+        async def app_run():
+            await self._app_close_event.wait()
             self._render_engine._delete_component(self._root, True)
+            # At this time, all use_async hook tasks have been cancel()ed.
+            # Wait until all the cancelled tasks are done(), then exit.
+            while len(self._render_engine._hook_async) > 0:
+                await asyncio.sleep(0.0)
+
+        loop.run_until_complete(app_run())
+        del t
+        loop.close()
+
+    def stop(self) -> None:
+        """
+        Stop the application.
+        """
+        self._app_close_event.set()

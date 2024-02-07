@@ -135,8 +135,7 @@ def Calculator(self):
 @ed.component
 def Main(self):
     with ed.Window(title="Calculator"):
-        with ed.View():
-            Calculator()
+        Calculator()
 
 if __name__ == "__main__":
     ed.App(Main()).start()
