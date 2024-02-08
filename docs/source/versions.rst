@@ -4,6 +4,30 @@
 Release Notes
 =============
 
+0.4.0
+-----
+Released: 2024-02-08
+
+Major changes to :class:`App` and the :class:`Window`
+
+* :class:`App`
+    * :func:`App.start_loop` runs the event loop to completion. It no longer
+      requires the user to run the loop. The user should never
+      call :code:`loop.run_forever()`.
+    * New method :func:`App.stop`
+        * Will unmount all Elements.
+        * Will call all :func:`use_effect` cleanup functions.
+        * Will cancel all :func:`use_async` tasks and wait until they are cancelled.
+* :class:`Window`
+    * :class:`Window` is a subclass of :class:`View` and can have multiple children.
+    * :class:`Window` no longer needs an extra :class:`View` child for
+      hot-reloading to work properly.
+    * Qt window on_close event causes :func:`App.stop`.
+
+Bugfixes:
+
+* :func:`use_effect` runs after all the render prop updates.
+
 0.3.7
 -----
 Released: 2024-02-06
