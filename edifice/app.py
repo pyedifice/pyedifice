@@ -185,7 +185,7 @@ class App(object):
                     while not self._class_rerender_queue.empty():
                         file_name, classes = self._class_rerender_queue.get_nowait()
                         try:
-                            render_result = self._render_engine._refresh_by_class(classes)
+                            self._render_engine._refresh_by_class(classes)
                         except Exception as exception:
                             logger.error("Encountered exception while reloading: %s", exception)
                             self._class_rerender_response_queue.put_nowait(False)
@@ -213,8 +213,6 @@ class App(object):
                                 print((COLOR_SEQ % (30 + RED)) + line + RESET_SEQ, end="")
 
                             continue
-
-                        render_result.run()
 
                         self._class_rerender_queue.task_done()
                         self._class_rerender_response_queue.put_nowait(True)
@@ -262,8 +260,7 @@ class App(object):
         del newstate #TODO?
         start_time = time.process_time()
 
-        render_result = self._render_engine._request_rerender(components)
-        render_result.run()
+        self._render_engine._request_rerender(components)
         end_time = time.process_time()
 
         if not self._first_render:
