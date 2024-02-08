@@ -518,7 +518,7 @@ class RenderEngine(object):
         del self._component_tree[component]
         del self._widget_tree[component]
 
-    def _refresh_by_class(self, classes) -> RenderResult:
+    def _refresh_by_class(self, classes) -> None:
         # This refresh is done only for a hot reload. It refreshes all
         # elements which were defined in a module which was changed
         # on the filesystem.
@@ -612,20 +612,12 @@ class RenderEngine(object):
         try:
             logger.info("Rerendering parents of: %s", [new_comp_class.__name__ for _, new_comp_class, _, _ in components_to_replace])
             logger.info("Rerendering: %s", [parent for _, _, parent, _ in components_to_replace])
-            ret = self._request_rerender([parent_comp for _, _, parent_comp, _ in components_to_replace])
+            self._request_rerender([parent_comp for _, _, parent_comp, _ in components_to_replace])
         except Exception as e:
             # Restore components
             for parent_comp, backup_val in backup.items():
                 parent_comp._props["children"] = backup_val
             raise e
-        # # 4) Delete all old_components from the tree, and do this recursively
-        # for old_comp, _, _, _ in components_to_replace:
-        #     if old_comp in self._component_tree:
-        #         self._delete_component(old_comp, recursive=True)
-        # Note: I think David Ding realized he didn't need to do this
-        # deletion step because the old components are deleted during
-        # _request_rerender().
-        return ret
 
 
     def _update_old_component(
@@ -884,6 +876,9 @@ class RenderEngine(object):
         for component in render_context.enqueued_deletions:
             self._delete_component(component, True)
 
+        ret = RenderResult(widget_trees, commands, render_context)
+        ret.run()
+
         # after render, call the use_effect setup functions.
         # we want to guarantee that elements are fully rendered before
         # effects are performed.
@@ -904,4 +899,4 @@ class RenderEngine(object):
                     finally:
                         hook.setup = None
 
-        return RenderResult(widget_trees, commands, render_context)
+        return ret

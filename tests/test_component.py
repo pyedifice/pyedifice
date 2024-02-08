@@ -53,8 +53,7 @@ class ElementLifeCycleTestCase(unittest.TestCase):
     def test_mount_and_dismount(self):
         component = MockElement(0)
         app = engine.RenderEngine(component)
-        render_results = app._request_rerender([component])
-        render_results.run()
+        app._request_rerender([component])
         component._did_mount.assert_called_once()
         component._did_render.assert_called_once()
 
@@ -178,10 +177,8 @@ class ElementTestCase(unittest.TestCase):
         app = App(root_element, create_application=False)
         render_engine = engine.RenderEngine(root_element, app)
         render_results = render_engine._request_rerender([root_element])
-        render_results.run()
         self.assertIsInstance(render_results.trees[0].children[0].children[0].component.underlying_layout, QtWidgets.QHBoxLayout)
         render_results = render_engine._request_rerender([root_element, xcomp])
-        render_results.run()
         self.assertIsInstance(render_results.trees[0].children[0].children[0].component.underlying_layout, QtWidgets.QVBoxLayout)
 
         # container = component.Container()
