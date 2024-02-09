@@ -15,7 +15,7 @@ def KeyboardEvents(self):
     def key_down(e):
         text_set(chr(e.key()))
 
-    with Window():
+    with ed.Window():
         with ed.View(on_key_down=key_down):
             ed.Label(text)
 
