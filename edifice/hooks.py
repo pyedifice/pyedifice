@@ -98,7 +98,7 @@ def use_state(initial_state:_T_use_state) -> tuple[
     Args:
         initial_state: The initial state value.
     Returns:
-        A tuple containing
+        A tuple pair containing
 
         1. The current state value.
         2. A **setter function** for setting or updating the state value.
@@ -252,6 +252,8 @@ def use_async(
         dependencies:
             The :code:`fn_coroutine` Task will be started when the
             :code:`dependencies` are not :code:`__eq__` to the old :code:`dependencies`.
+    Returns:
+        A function which can be called to cancel the :code:`fn_coroutine` Task manually.
     """
     context = get_render_context_maybe()
     if context is None:
@@ -286,8 +288,8 @@ def use_async_call(
     The async :code:`fn_coroutine` function can have any argument
     signature, but it must return :code:`None`. The return value is discarded.
 
-    The Hook takes an async function :code:`fn_coroutine` and returns a pair
-    of non-async functions.
+    The Hook takes an async function :code:`fn_coroutine` and returns a tuple
+    pair of non-async functions.
 
     1. A non-async function with the same argument signature as the
        :code:`fn_coroutine`. When called, this non-async function will start a
@@ -331,6 +333,13 @@ def use_async_call(
     Args:
         fn_coroutine:
             Async Coroutine function to be run as a Task.
+    Returns:
+        A tuple pair of non-async functions.
+            1. A non-async function with the same argument signature as the
+               :code:`fn_coroutine`.
+            2. A non-async cancellation function which can be called to cancel
+               the :code:`fn_coroutine` Task manually.
+
     """
 
     triggered, triggered_set = use_state(cast(_AsyncCommand[_P_async] | None, None))
