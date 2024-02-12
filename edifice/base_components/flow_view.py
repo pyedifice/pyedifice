@@ -21,7 +21,7 @@ else:
         from PySide6.QtCore import QPoint, QRect, QSize, Qt
         from PySide6.QtWidgets import QLayout, QLayoutItem, QSizePolicy, QWidget
 
-from .base_components import _LinearView, QtWidgetElement
+from .base_components import _LinearView, QtWidgetElement, Element, _WidgetTree, _get_widget_children
 
 logger = logging.getLogger("Edifice")
 
@@ -185,15 +185,16 @@ class FlowView(_LinearView):
         else:
             self.underlying.setMinimumSize(100, 100)
 
-    def _qt_update_commands(self, children, newprops, newstate):
+    def _qt_update_commands(
+        self,
+        widget_trees: dict[Element, _WidgetTree],
+        newprops,
+        newstate
+    ):
         if self.underlying is None:
             self._initialize()
-        commands = self._recompute_children(children)
-        commands.extend(self._qt_stateless_commands(children, newprops, newstate))
-        return commands
-
-    def _qt_stateless_commands(self, children, newprops, newstate):
-        # This stateless render command is used to test rendering
         assert self.underlying is not None
-        commands = super()._qt_update_commands(children, newprops, newstate, self.underlying, self.underlying_layout)
+        children = _get_widget_children(widget_trees, self)
+        commands = self._recompute_children(children)
+        commands.extend(super()._qt_update_commands_super(widget_trees, newprops, newstate, self.underlying, self.underlying_layout))
         return commands

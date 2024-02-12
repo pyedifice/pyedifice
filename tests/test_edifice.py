@@ -1,7 +1,7 @@
 import unittest
 import unittest.mock
 from edifice import Element, Reference, component, use_ref
-from edifice._component import _CommandType
+from edifice._component import _CommandType, _dereference_tree, _WidgetTree, QtWidgetElement
 import edifice.engine as engine
 import edifice.base_components as base_components
 
@@ -50,15 +50,15 @@ class TestReference(unittest.TestCase):
         root = TestCompWrapper()
         render_engine = engine.RenderEngine(root)
         render_engine._request_rerender([root])
-        sub_comp = render_engine._component_tree[root]
-        label_comp = render_engine._component_tree[sub_comp]
+        sub_comp = render_engine._component_tree[root][0]
+        label_comp = render_engine._component_tree[sub_comp][0]
         self.assertEqual(sub_comp.ref1(), label_comp)
         self.assertEqual(sub_comp.ref2(), None)
 
         # Rerender so that ref2 should also point to label
         render_engine._request_rerender([root])
-        new_sub_comp = render_engine._component_tree[root]
-        new_label = render_engine._component_tree[new_sub_comp]
+        new_sub_comp = render_engine._component_tree[root][0]
+        new_label = render_engine._component_tree[new_sub_comp][0]
         self.assertEqual(new_sub_comp, sub_comp)
         self.assertEqual(new_label, label_comp)
         self.assertEqual(sub_comp.ref1(), label_comp)
@@ -66,8 +66,8 @@ class TestReference(unittest.TestCase):
 
         # Rerender to test dismount behavior
         render_engine._request_rerender([root])
-        new_sub_comp = render_engine._component_tree[root]
-        assert sub_comp not in render_engine._component_tree
+        new_sub_comp = render_engine._component_tree[root][0]
+        self.assertNotIn(sub_comp, render_engine._component_tree)
         self.assertEqual(sub_comp.ref1(), None)
         self.assertEqual(sub_comp.ref2(), None)
 
@@ -111,15 +111,15 @@ class TestReference(unittest.TestCase):
         root = TestCompWrapper()
         render_engine = engine.RenderEngine(root)
         render_engine._request_rerender([root])
-        sub_comp = render_engine._component_tree[root]
-        label_comp = render_engine._component_tree[sub_comp]
+        sub_comp = render_engine._component_tree[root][0]
+        label_comp = render_engine._component_tree[sub_comp][0]
         self.assertEqual(sub_comp_ref[0](), label_comp)
         self.assertEqual(sub_comp_ref[1](), None)
 
         # Rerender so that ref1 should also point to label
         render_engine._request_rerender([root])
-        new_sub_comp = render_engine._component_tree[root]
-        new_label = render_engine._component_tree[new_sub_comp]
+        new_sub_comp = render_engine._component_tree[root][0]
+        new_label = render_engine._component_tree[new_sub_comp][0]
         self.assertEqual(new_sub_comp, sub_comp)
         self.assertEqual(new_label, label_comp)
         self.assertEqual(sub_comp_ref[0](), label_comp)
@@ -127,7 +127,7 @@ class TestReference(unittest.TestCase):
 
         # Rerender to test dismount behavior
         render_engine._request_rerender([root])
-        new_sub_comp = render_engine._component_tree[root]
+        new_sub_comp = render_engine._component_tree[root][0]
         assert sub_comp not in render_engine._component_tree
         self.assertEqual(sub_comp_ref[0](), None)
         self.assertEqual(sub_comp_ref[1](), None)
@@ -210,11 +210,11 @@ class _TestElementOuterList(Element):
         )
 
 
-def _commands_for_address(qt_tree, address):
-    qt_tree = qt_tree._dereference(address)
+def _commands_for_address(widget_trees: dict[Element, _WidgetTree],qt_tree, address):
+    qt_tree = _dereference_tree(widget_trees, qt_tree, address)
     if isinstance(qt_tree.component, base_components.View):
-        return qt_tree.component._qt_stateless_commands(qt_tree.children, qt_tree.component.props, {})
-    return qt_tree.component._qt_update_commands(qt_tree.children, qt_tree.component.props, {})
+        return qt_tree.component._qt_stateless_commands(widget_trees, qt_tree.component.props, {})
+    return qt_tree.component._qt_update_commands(widget_trees, qt_tree.component.props, {})
 
 
 class RenderTestCase(unittest.TestCase):
@@ -223,15 +223,16 @@ class RenderTestCase(unittest.TestCase):
         component = _TestElementOuter()
         app = engine.RenderEngine(component)
         render_result = app._request_rerender([component])
-        qt_tree = render_result.trees[0]
+        # qt_tree = render_result.trees[0]
+        qt_tree = app._widget_tree[component]
         qt_commands = render_result.commands
 
         def C(*args):
-            return _commands_for_address(qt_tree, args)
+            return _commands_for_address(app._widget_tree, qt_tree, args)
 
         def V(*args):
-            view = qt_tree._dereference(args)
-            return [_CommandType(view.component._add_child, i, child.component.underlying)
+            view = _dereference_tree(app._widget_tree, qt_tree, list(args))
+            return [_CommandType(view.component._add_child, i, child.underlying)
                     for (i, child) in enumerate(view.children)]
 
         expected_commands = C(0, 0) + C(0, 1) + V(0) + C(0) + C(1, 0) + C(1, 1) + V(1) + C(1) + C(2) + V() + C()
@@ -246,7 +247,7 @@ class RenderTestCase(unittest.TestCase):
         # After everything rendered, a rerender shouldn't involve any commands
         # TODO: make sure this is actually true!
         render_result = app._request_rerender([component])
-        qt_tree = render_result.trees[0]
+        qt_tree = app._widget_tree[component]
         qt_commands = render_result.commands
         self.assertEqual(qt_commands, [])
 
@@ -254,28 +255,29 @@ class RenderTestCase(unittest.TestCase):
         component = _TestElementOuter()
         app = engine.RenderEngine(component)
         render_result = app._request_rerender([component])
-        qt_tree = render_result.trees[0]
+        qt_tree = app._widget_tree[component]
         qt_commands = render_result.commands
 
         component.state_a = "AChanged"
         render_result = app._request_rerender([component])
-        render_result.trees[0]
+        qt_tree = app._widget_tree[component]
         qt_commands = render_result.commands
         # TODO: Make it so that only the label (0, 0) needs to update!
-        expected_commands = [_CommandType(qt_tree._dereference([0, 0]).component.underlying.setText, "AChanged")]
+        expected_commands = [_CommandType(_dereference_tree(app._widget_tree, qt_tree, [0, 0]).component.underlying.setText, "AChanged")]
         self.assertEqual(qt_commands, expected_commands)
 
         component.state_b = "BChanged"
         render_result = app._request_rerender([component])
+        qt_tree = app._widget_tree[component]
         qt_commands = render_result.commands
-        expected_commands = [_CommandType(qt_tree._dereference([1, 0]).component.underlying.setText, "BChanged")]
+        expected_commands = [_CommandType(_dereference_tree(app._widget_tree, qt_tree, [1, 0]).component.underlying.setText, "BChanged")]
         self.assertEqual(qt_commands, expected_commands)
 
         component.state_c = "CChanged"
         render_result = app._request_rerender([component])
-        render_result.trees[0]
+        qt_tree = app._widget_tree[component]
         qt_commands = render_result.commands
-        expected_commands = [_CommandType(qt_tree._dereference([2]).component.underlying.setText, "CChanged")]
+        expected_commands = [_CommandType(_dereference_tree(app._widget_tree, qt_tree, [2]).component.underlying.setText, "CChanged")]
 
         self.assertEqual(qt_commands, expected_commands)
 
@@ -283,27 +285,27 @@ class RenderTestCase(unittest.TestCase):
         component = _TestElementOuterList(True, True)
         app = engine.RenderEngine(component)
         render_result = app._request_rerender([component])
-        qt_tree = render_result.trees[0]
+        qt_tree = app._widget_tree[component]
         qt_commands = render_result.commands
 
         component.state = ["A", "B", "D", "C"]
         render_result = app._request_rerender([component])
-        _new_qt_tree = render_result.trees[0]
+        _new_qt_tree = app._widget_tree[component]
         qt_commands = render_result.commands
 
         def new_V(*args):
-            view = _new_qt_tree._dereference(args)
-            return [_CommandType(view.component._add_child, i, child.component.underlying)
+            view = _dereference_tree(app._widget_tree, _new_qt_tree, args)
+            return [_CommandType(view.component._add_child, i, child.underlying)
                     for (i, child) in enumerate(view.children)]
 
-        self.assertEqual(_new_qt_tree._dereference([2, 0]).component.props.text, "D")
+        self.assertEqual(_dereference_tree(app._widget_tree, _new_qt_tree, [2, 0]).component.props.text, "D")
         def new_C(*args):
-            return _commands_for_address(_new_qt_tree, args)
+            return _commands_for_address(app._widget_tree, _new_qt_tree, args)
         expected_commands = (new_C(2, 0) + new_C(2, 1) + new_V(2) + new_C(2) +
             [
-                _CommandType(qt_tree.component._soft_delete_child, 2, _new_qt_tree.children[3].component),
-                _CommandType(qt_tree.component._add_child, 2, _new_qt_tree.children[2].component.underlying),
-                _CommandType(qt_tree.component._add_child, 3, _new_qt_tree.children[3].component.underlying),
+                _CommandType(qt_tree.component._soft_delete_child, 2, _new_qt_tree.children[3]),
+                _CommandType(qt_tree.component._add_child, 2, _new_qt_tree.children[2].underlying),
+                _CommandType(qt_tree.component._add_child, 3, _new_qt_tree.children[3].underlying),
             ])
 
         # Disabling this test.
@@ -317,21 +319,20 @@ class RenderTestCase(unittest.TestCase):
         component = _TestElementOuterList(True, True)
         app = engine.RenderEngine(component)
         render_result = app._request_rerender([component])
-        qt_tree = render_result.trees[0]
+        qt_tree = app._widget_tree[component]
         qt_commands = render_result.commands
-        qt_tree.children[0].component
-        qt_tree.children[2].component
+        qt_tree.children[0]
+        qt_tree.children[2]
 
         component.state = ["C", "B", "A"]
         render_result = app._request_rerender([component])
-        _new_qt_tree = render_result.trees[0]
         qt_commands = render_result.commands
 
         expected_commands = ([
-            _CommandType(qt_tree.component._soft_delete_child, 2, qt_tree.children[2].component),
-            _CommandType(qt_tree.component._soft_delete_child, 0, qt_tree.children[0].component),
-            _CommandType(qt_tree.component._add_child, 0, qt_tree.children[2].component.underlying),
-            _CommandType(qt_tree.component._add_child, 2, qt_tree.children[0].component.underlying),
+            _CommandType(qt_tree.component._soft_delete_child, 2, qt_tree.children[2]),
+            _CommandType(qt_tree.component._soft_delete_child, 0, qt_tree.children[0]),
+            _CommandType(qt_tree.component._add_child, 0, qt_tree.children[2].underlying),
+            _CommandType(qt_tree.component._add_child, 2, qt_tree.children[0].underlying),
         ])
 
         self.assertEqual(qt_commands, expected_commands)
@@ -340,17 +341,16 @@ class RenderTestCase(unittest.TestCase):
         component = _TestElementOuterList(True, False)
         app = engine.RenderEngine(component)
         render_result = app._request_rerender([component])
-        qt_tree = render_result.trees[0]
+        qt_tree = app._widget_tree[component]
         qt_commands = render_result.commands
 
         component.state = ["C", "B", "A"]
         render_result = app._request_rerender([component])
-        _new_qt_tree = render_result.trees[0]
         qt_commands = render_result.commands
 
         expected_commands = [
-            _CommandType(qt_tree._dereference([0, 0]).component.underlying.setText, "C"),
-            _CommandType(qt_tree._dereference([2, 0]).component.underlying.setText, "A"),
+            _CommandType(_dereference_tree(app._widget_tree, qt_tree, [0, 0]).component.underlying.setText, "C"),
+            _CommandType(_dereference_tree(app._widget_tree, qt_tree, [2, 0]).component.underlying.setText, "A"),
         ]
         self.assertEqual(qt_commands, expected_commands)
 
@@ -358,16 +358,15 @@ class RenderTestCase(unittest.TestCase):
         component = _TestElementOuterList(True, True)
         app = engine.RenderEngine(component)
         render_result = app._request_rerender([component])
-        qt_tree = render_result.trees[0]
-        old_child = qt_tree.children[2].component
+        old_child = app._widget_tree[component].children[2]
         qt_commands = render_result.commands
 
         component.state = ["A", "B"]
         render_result = app._request_rerender([component])
-        _new_qt_tree = render_result.trees[0]
+        _new_qt_tree = app._widget_tree[component]
         qt_commands = render_result.commands
 
-        expected_commands = [_CommandType(qt_tree.component._delete_child, 2, old_child)]
+        expected_commands = [_CommandType(app._widget_tree[component].component._delete_child, 2, old_child)]
 
         self.assertEqual(qt_commands, expected_commands)
 
@@ -393,13 +392,13 @@ class RenderTestCase(unittest.TestCase):
         test_comp.value = 2
         app = engine.RenderEngine(test_comp)
         app._request_rerender([test_comp])
-        inner_comp = app._component_tree[app._component_tree[test_comp]][0]
+        inner_comp = app._component_tree[app._component_tree[test_comp][0]][0]
         self.assertEqual(inner_comp.count, 1)
         self.assertEqual(inner_comp.props.val, 2)
 
         test_comp.value = 4
         app._request_rerender([test_comp])
-        inner_comp = app._component_tree[app._component_tree[test_comp]][0]
+        inner_comp = app._component_tree[app._component_tree[test_comp][0]][0]
         self.assertEqual(inner_comp.count, 2)
         self.assertEqual(inner_comp.props.val, 4)
 
@@ -446,7 +445,7 @@ class RenderTestCase(unittest.TestCase):
         test_comp.value = 2
         app = engine.RenderEngine(test_comp)
         app._request_rerender([test_comp])
-        inner_comp1, inner_comp2 = app._component_tree[app._component_tree[test_comp]]
+        inner_comp1, inner_comp2 = app._component_tree[app._component_tree[test_comp][0]]
         self.assertEqual(inner_comp1.count, 1)
         self.assertEqual(inner_comp1.props.val, 4)
         self.assertEqual(inner_comp2.count, 1)
@@ -457,7 +456,7 @@ class RenderTestCase(unittest.TestCase):
             app._request_rerender([test_comp])
         except AssertionError:
             pass
-        inner_comp1, inner_comp2 = app._component_tree[app._component_tree[test_comp]]
+        inner_comp1, inner_comp2 = app._component_tree[app._component_tree[test_comp][0]]
         self.assertEqual(inner_comp1.props.val, 4)
         self.assertEqual(inner_comp2.count, 2)
         self.assertEqual(inner_comp2.success_count, 1)
@@ -509,11 +508,11 @@ class RefreshClassTestCase(unittest.TestCase):
         outer_comp = OuterClass()
         app = engine.RenderEngine(outer_comp)
         app._request_rerender([outer_comp])
-        old_inner_comp = app._component_tree[app._component_tree[outer_comp]][0]
+        old_inner_comp = app._component_tree[app._component_tree[outer_comp][0]][0]
         assert isinstance(old_inner_comp, OldInnerClass)
 
         app._refresh_by_class([(OldInnerClass, NewInnerClass)])
-        inner_comp = app._component_tree[app._component_tree[outer_comp]][0]
+        inner_comp = app._component_tree[app._component_tree[outer_comp][0]][0]
         old_inner_comp._will_unmount.assert_called_once()
         assert isinstance(inner_comp, NewInnerClass)
         self.assertEqual(inner_comp.props.val, 5)
@@ -546,11 +545,11 @@ class RefreshClassTestCase(unittest.TestCase):
         outer_comp = OuterClass()
         app = engine.RenderEngine(outer_comp)
         app._request_rerender([outer_comp])
-        old_inner_comp = app._component_tree[app._component_tree[outer_comp]][0]
+        old_inner_comp = app._component_tree[app._component_tree[outer_comp][0]][0]
         assert type(old_inner_comp).__name__ == "OldInnerClass"
 
         app._refresh_by_class([(OldInnerClass, NewInnerClass)])
-        inner_comp = app._component_tree[app._component_tree[outer_comp]][0]
+        inner_comp = app._component_tree[app._component_tree[outer_comp][0]][0]
         assert old_inner_render_count[0] == 1
         assert type(inner_comp).__name__ == "NewInnerClass"
         self.assertEqual(inner_comp.props.val, 5)
@@ -599,26 +598,24 @@ class RefreshClassTestCase(unittest.TestCase):
         outer_comp = OuterClass()
         app = engine.RenderEngine(outer_comp)
         app._request_rerender([outer_comp])
-        old_inner_comp = app._component_tree[app._component_tree[outer_comp]][0]
+        old_inner_comp = app._component_tree[app._component_tree[outer_comp][0]][0]
         assert isinstance(old_inner_comp, OldInnerClass)
 
         try:
             app._refresh_by_class([(OldInnerClass, NewInnerClass)])
         except AssertionError:
             pass
-        inner_comp = app._component_tree[app._component_tree[outer_comp]][0]
+        inner_comp = app._component_tree[app._component_tree[outer_comp][0]][0]
         old_inner_comp._will_unmount.assert_not_called()
         assert isinstance(inner_comp, OldInnerClass)
         self.assertEqual(inner_comp.props.val, 5)
 
 
     def test_view_recalculate_children_1(self):
-        def make_tree(children):
-            return [engine._WidgetTree(child, []) for child in children]
 
         v = base_components.View()
         v._initialize()
-        children1 = [base_components.Label("A"), base_components.Button("B"), base_components.RadioButton(False,"C")]
+        children1:list[QtWidgetElement] = [base_components.Label("A"), base_components.Button("B"), base_components.RadioButton(False,"C")]
         for c in children1:
             c._initialize()
 
@@ -627,8 +624,7 @@ class RefreshClassTestCase(unittest.TestCase):
             children1[0],
             children1[1],
         ]
-        new_tree = make_tree(new_children)
-        commands = v._recompute_children(new_tree)
+        commands = v._recompute_children(new_children)
         self.assertEqual(
             commands,
             [ _CommandType(v._delete_child, 2, children1[2]),
@@ -641,8 +637,7 @@ class RefreshClassTestCase(unittest.TestCase):
             children1[1],
             children1[0],
         ]
-        new_tree = make_tree(new_children)
-        commands = v._recompute_children(new_tree)
+        commands = v._recompute_children(new_children)
         self.assertEqual(
             commands,
             [

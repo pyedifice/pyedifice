@@ -325,8 +325,8 @@ class App(object):
         if isinstance(exportlist.component, ExportList):
             widgets = []
             for e in exportlist.children:
-                if isinstance(e.component, QtWidgetElement):
-                    widgets.append(e.component.underlying)
+                if isinstance(e, QtWidgetElement):
+                    widgets.append(e.underlying)
             return widgets
         else:
             raise RuntimeError("The root element of the App for export_widgets() must be an ExportList")

@@ -67,7 +67,7 @@ class MatplotlibFigure(QtWidgetElement):
         assert self.underlying is not None
         assert self.subplots is not None
 
-        commands = super()._qt_update_commands(children, newprops, newstate, self.underlying, None)
+        commands = super()._qt_update_commands_super(children, newprops, newstate, self.underlying, None)
 
         if "plot_fun" in newprops:
             def _command_plot_fun(self):

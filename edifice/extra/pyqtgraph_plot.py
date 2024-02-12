@@ -67,7 +67,7 @@ class PyQtPlot(QtWidgetElement):
         if self.underlying is None:
             self.underlying = pg.PlotWidget()
 
-        commands = super()._qt_update_commands(children, newprops, newstate, self.underlying)
+        commands = super()._qt_update_commands_super(children, newprops, newstate, self.underlying)
 
         if "plot_fun" in newprops:
             plot_fun = tp.cast(tp.Callable[[pg.PlotItem], None], self.props.plot_fun)

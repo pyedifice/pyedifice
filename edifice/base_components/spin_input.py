@@ -8,7 +8,7 @@ else:
     from PySide6.QtGui import QValidator
     from PySide6.QtWidgets import QSpinBox
 
-from .base_components import QtWidgetElement, _CommandType, _ensure_future
+from .base_components import QtWidgetElement, _CommandType, _ensure_future, Element, _WidgetTree
 
 class _SpinBox(QSpinBox):
     def __init__(self, *args, **kwargs):
@@ -122,13 +122,18 @@ class SpinInput(QtWidgetElement):
             widget.valueChanged.connect(on_change_fun)
             self._on_change_connected = True
 
-    def _qt_update_commands(self, children, newprops, newstate):
+    def _qt_update_commands(
+        self,
+        widget_trees: dict[Element, _WidgetTree],
+        newprops,
+        newstate
+    ):
         if self.underlying is None:
             self._initialize()
         assert self.underlying is not None
         widget = tp.cast(_SpinBox, self.underlying)
 
-        commands = super()._qt_update_commands(children, newprops, newstate, self.underlying)
+        commands = super()._qt_update_commands_super(widget_trees, newprops, newstate, self.underlying)
 
         if "value_to_text" in newprops:
             commands.append(_CommandType(setattr, widget, "_textFromValue", newprops.value_to_text))

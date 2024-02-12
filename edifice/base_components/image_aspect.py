@@ -10,7 +10,7 @@ else:
     import PySide6.QtGui as QtGui
     import PySide6.QtWidgets as QtWidgets
 
-from .base_components import QtWidgetElement, _image_descriptor_to_pixmap, _CommandType
+from .base_components import QtWidgetElement, _image_descriptor_to_pixmap, _CommandType, Element, _WidgetTree
 
 class _ScaledLabel(QtWidgets.QLabel):
     """
@@ -103,12 +103,17 @@ class Image(QtWidgetElement):
         self.underlying = _ScaledLabel()
         self.underlying.setObjectName(str(id(self)))
 
-    def _qt_update_commands(self, children, newprops, newstate):
+    def _qt_update_commands(
+        self,
+        widget_trees: dict[Element, _WidgetTree],
+        newprops,
+        newstate
+    ):
         if self.underlying is None:
             self._initialize()
         assert self.underlying is not None
 
-        commands = super()._qt_update_commands(children, newprops, newstate, self.underlying, None)
+        commands = super()._qt_update_commands_super(widget_trees, newprops, newstate, self.underlying, None)
         if "src" in newprops:
             commands.append(_CommandType(self.underlying._setPixmap, _image_descriptor_to_pixmap(newprops.src)))
         if "aspect_ratio_mode" in newprops:

@@ -9,7 +9,7 @@ from textwrap import dedent
 from dataclasses import dataclass
 
 from ._component import (
-    Element, PropsDict, _CommandType, _Tracker, local_state, Container,
+    Element, QtWidgetElement, PropsDict, _CommandType, _Tracker, local_state, Container, _WidgetTree, _get_widget_children
 )
 
 logger = logging.getLogger("Edifice")
@@ -53,21 +53,6 @@ def _storage_manager() -> Iterator[_ChangeManager]:
         changes.unwind()
         raise e
 
-class WidgetElement(Element):
-    """
-    Base Element, whose rendering is defined by the backend.
-
-    Protocol for QtWidgetElement.
-    """
-    def _qt_update_commands(
-        self,
-        children: list["_WidgetTree"],
-        newprops : PropsDict,
-        newstate,
-    ) -> list[_CommandType]:
-        raise NotImplementedError
-
-
 class _RenderContext(object):
     """
     Encapsulates various state that's needed for rendering.
@@ -99,7 +84,7 @@ class _RenderContext(object):
         self.component_to_old_props = {}
         self.force_refresh = force_refresh
 
-        self.component_tree : dict[Element, Element | list[Element]]= {}
+        self.component_tree : dict[Element, list[Element]]= {}
         """
         Map of a component to its children.
         """
@@ -107,7 +92,7 @@ class _RenderContext(object):
         """
         Map of a component to its rendered widget tree.
         """
-        self.enqueued_deletions = []
+        self.enqueued_deletions: list[Element] = []
 
         self._callback_queue = []
         self.component_parent: Element | None = None
@@ -144,10 +129,10 @@ class _RenderContext(object):
     def set(self, obj, k, v):
         self.storage_manager.set(obj, k, v)
 
-    def mark_qt_rerender(self, component: WidgetElement, need_rerender: bool):
+    def mark_qt_rerender(self, component: QtWidgetElement, need_rerender: bool):
         self.need_qt_command_reissue[component] = need_rerender
 
-    def need_rerender(self, component: WidgetElement):
+    def need_rerender(self, component: QtWidgetElement):
         return self.need_qt_command_reissue.get(component, False)
 
     def use_state(self, initial_state:_T_use_state) -> tuple[
@@ -172,6 +157,7 @@ class _RenderContext(object):
 
         def setter(updater):
             hook.updaters.append(updater)
+            self.engine._hook_state_setted.add(element)
             app = self.engine._app
             assert app is not None
             app._defer_rerender()
@@ -294,52 +280,6 @@ class _RenderContext(object):
 
             return cancel
 
-class _WidgetTree(object):
-    __slots__ = ("component", "children")
-
-    def __init__(self, component: WidgetElement, children: list["_WidgetTree"]):
-        self.component: WidgetElement = component # type should actually be QtWidgetElement
-        self.children: list[_WidgetTree] = children
-
-    def _dereference(self, address):
-        """
-        This method used only for testing
-        """
-        widget_tree : _WidgetTree = self
-        for index in address:
-            widget_tree = widget_tree.children[index]
-        return widget_tree
-
-    def gen_qt_commands(self, render_context: _RenderContext) -> list[_CommandType]:
-        commands : list[_CommandType] = []
-        for child in self.children:
-            rendered = child.gen_qt_commands(render_context)
-            commands.extend(rendered)
-
-        if not render_context.need_rerender(self.component):
-            return commands
-
-        old_props = render_context.get_old_props(self.component)
-        new_props = PropsDict({
-            k: v for k, v in self.component.props._items
-                if k not in old_props or old_props[k] != v
-        })
-        commands.extend(self.component._qt_update_commands(self.children, new_props, {}))
-        return commands
-
-    def __hash__(self):
-        return id(self)
-
-    def print_tree(self, indent=0):
-        tags = self.component._tags()
-        if self.children:
-            print("\t" * indent + tags[0])
-            for child in self.children:
-                child.print_tree(indent=indent + 1)
-            print("\t" * indent + tags[1])
-        else:
-            print("\t" * indent + tags[2])
-
 
 class RenderResult(object):
     """Encapsulates the results of a render.
@@ -350,26 +290,9 @@ class RenderResult(object):
 
     def __init__(
         self,
-        trees: list[_WidgetTree],
         commands: list[_CommandType],
-        render_context: _RenderContext
     ):
-        self.trees : list [_WidgetTree] = trees
         self.commands : list[_CommandType] = commands
-        self.render_context : _RenderContext = render_context
-
-    def run(self):
-        """
-        This is the phase of the render when the commands run.
-        """
-        for command in self.commands:
-            try:
-                command.fn(*command.args, **command.kwargs)
-            except Exception as ex:
-                logger.exception("Exception while running command:\n"
-                                 + str(command) + "\n"
-                                 + str(ex) + "\n")
-        self.render_context.run_callbacks()
 
 @dataclass
 class _HookState:
@@ -423,10 +346,11 @@ class RenderEngine(object):
     """
     __slots__ = (
         "_component_tree", "_widget_tree", "_root", "_app",
-        "_hook_state", "_hook_effect", "_hook_async"
+        "_hook_state", "_hook_state_setted",
+        "_hook_effect", "_hook_async"
     )
     def __init__(self, root:Element, app=None):
-        self._component_tree : dict[Element, Element | list[Element]] = {}
+        self._component_tree : dict[Element, list[Element]] = {}
         """
         The _component_tree maps an Element to its children.
         """
@@ -444,6 +368,11 @@ class RenderEngine(object):
         self._hook_state: defaultdict[Element, list[_HookState]] = defaultdict(list)
         """
         The per-element hooks for use_state().
+        """
+        self._hook_state_setted: set[Element] = set()
+        """
+        The set of elements which have had their use_state() setters called
+        since the last render.
         """
         self._hook_effect: defaultdict[Element, list[_HookEffect]] = defaultdict(list)
         """
@@ -471,16 +400,14 @@ class RenderEngine(object):
         # Delete component from render trees
         sub_components = self._component_tree[component]
         if recursive:
-            if isinstance(sub_components, Element):
-                self._delete_component(sub_components, recursive)
-            else:
-                for sub_comp in sub_components:
-                    self._delete_component(sub_comp, recursive)
+            for sub_comp in sub_components:
+                self._delete_component(sub_comp, recursive)
             # Node deletion
 
         # Clean up hook state for the component
         if component in self._hook_state:
             del self._hook_state[component]
+        self._hook_state_setted.discard(component)
         if component in self._hook_effect:
             for hook in self._hook_effect[component]:
                 if hook.cleanup is not None:
@@ -498,8 +425,9 @@ class RenderEngine(object):
                     # If there are some running tasks, wait until they are
                     # done and then delete this HookAsync object.
                     def done_callback(_future_object):
-                        if self.is_hook_async_done(component):
-                            del self._hook_async[component]
+                        if component in self._hook_async:
+                            if self.is_hook_async_done(component):
+                                del self._hook_async[component]
                     hook.task.add_done_callback(done_callback)
                     hook.task.cancel()
             if self.is_hook_async_done(component):
@@ -575,7 +503,6 @@ class RenderEngine(object):
 
         backup = {}
         for old_comp, _, parent_comp, new_comp in components_to_replace:
-            if isinstance(self._component_tree[parent_comp], list):
                 backup[parent_comp] = list(parent_comp.children)
                 for i, comp in enumerate(parent_comp.children):
                     if comp is old_comp:
@@ -602,11 +529,6 @@ class RenderEngine(object):
                         if old_comp in self._hook_async:
                             self._hook_async[new_comp] = self._hook_async[old_comp]
                             del self._hook_async[old_comp]
-            else:
-                logger.warning(
-                    f"Cannot reload {new_comp} (rendered by {parent_comp}) "
-                    "because calling render function is just a wrapper."
-                    "Consider putting it inside an edifice.View or another Element that has the children prop")
 
         # 5) call _render for all new component parents
         try:
@@ -626,7 +548,8 @@ class RenderEngine(object):
         new_component: Element,
         render_context: _RenderContext
     ) -> _WidgetTree:
-        # This function is called whenever we want to update component to have props of new_component
+        # This function is called whenever we want to update old component
+        # to have props of new_component.
         assert component._edifice_internal_references is not None
         assert new_component._edifice_internal_references is not None
         newprops = new_component.props
@@ -637,42 +560,45 @@ class RenderEngine(object):
         #  2) state changed
         #  3) it has any pending _hook_state updates
         #  4) it has any references
-        pending_hook_state_updates = False
-        for h in self._hook_state[component]:
-            if len(h.updaters) > 0:
-                pending_hook_state_updates = True
-        if component._should_update(newprops, {}) or len(component._edifice_internal_references) > 0 or pending_hook_state_updates:
+        if (component._should_update(newprops, {})
+            or len(component._edifice_internal_references) > 0
+            or component in self._hook_state_setted
+            ):
             render_context.mark_props_change(component, newprops)
             rerendered_obj = self._render(component, render_context)
             render_context.mark_qt_rerender(rerendered_obj.component, True)
             return rerendered_obj
 
         render_context.mark_props_change(component, newprops)
-        # TODO Why the does a non-WidgetElement need mark_qt_rerender?
-        render_context.mark_qt_rerender(component, False)
         return self._widget_tree[component]
-        # TODO return None?
 
-    def _recycle_children(self, component: Element, render_context: _RenderContext):
+    def _recycle_children(
+        self,
+        component: QtWidgetElement,
+        render_context: _RenderContext
+    ) -> list[Element]:
         # Children diffing and reconciliation
         #
-        # Returns children, which contains all the future children of the component:
+        # Returns element children, which contains all the future children of the component:
         # a mixture of old components (if they can be updated) and new ones
+        #
+        # Returns children widget trees, cached or newly rendered.
 
         children_old_bykey : dict[str, Element] = dict()
         children_new_bykey : dict[str, Element] = dict()
 
         children_old_ = self._component_tree[component]
-        assert isinstance(children_old_, list)
 
-		# We will mutate children_old to reuse and remove old elements if we can match them.
+        widgettree = _WidgetTree(component, [])
+
+        # We will mutate children_old to reuse and remove old elements if we can match them.
         # Ordering of children_old must be preserved for reverse deletion.
         children_old: list[Element] = children_old_[:]
         for child_old in children_old:
             if hasattr(child_old, "_key"):
                 children_old_bykey[child_old._key] = child_old
 
-		# We will mutate children_new to replace them with old elements if we can match them.
+        # We will mutate children_new to replace them with old elements if we can match them.
         children_new: list[Element] = component.children[:]
         for child_new in children_new:
             if hasattr(child_new, "_key"):
@@ -690,57 +616,68 @@ class RenderEngine(object):
             if (key := getattr(child_new, "_key", None)) is not None:
                 if ((child_old_bykey := children_old_bykey.get(key, None)) is not None
                     and elements_match(child_old_bykey, child_new)):
-                    # then we have a match for reuse
+                    # then we have a match for reusing the old child
                     self._update_old_component(child_old_bykey, child_new, render_context)
                     children_new[i_new] = child_old_bykey
+                    if (w := render_context.widget_tree.get(child_old_bykey, None)) is not None:
+                        # Try to get the cached WidgetTree from this render
+                        widgettree.children.append(w.component)
+                    else:
+                        # Get the cached WidgetTree from previous render
+                        widgettree.children.append(self._widget_tree[child_old_bykey].component)
                     children_old.remove(child_old_bykey)
+                else:
+                    # new child so render
+                    widgettree.children.append(self._render(child_new, render_context).component)
+                    # this component will need qt rerender
+                    render_context.mark_qt_rerender(component, True)
+
             elif i_old < len(children_old):
                 child_old = children_old[i_old]
                 if elements_match(child_old, child_new):
-                    # then we have a match for reuse
+                    # then we have a match for reusing the old child
                     self._update_old_component(child_old, child_new, render_context)
                     children_new[i_new] = child_old
+                    if (w := render_context.widget_tree.get(child_old, None)) is not None:
+                        # Try to get the cached WidgetTree from this render
+                        widgettree.children.append(w.component)
+                    else:
+                        # Get the cached WidgetTree from previous render
+                        widgettree.children.append(self._widget_tree[child_old].component)
                     del children_old[i_old]
                 else:
+                    # new child so render
+                    widgettree.children.append(self._render(child_new, render_context).component)
+                    # this component will need qt rerender
+                    render_context.mark_qt_rerender(component, True)
                     # leave this old element to be deleted
                     i_old += 1
+            else:
+                # new child so render
+                widgettree.children.append(self._render(child_new, render_context).component)
+                # this component will need qt rerender
+                render_context.mark_qt_rerender(component, True)
             i_new += 1
 
         render_context.enqueued_deletions.extend(children_old)
+        render_context.component_tree[component] = children_new
+        render_context.widget_tree[component] = widgettree
         return children_new
 
-    def _render_base_component(self, component: WidgetElement, render_context: _RenderContext) -> _WidgetTree:
+    def _render_base_component(self, component: QtWidgetElement, render_context: _RenderContext) -> _WidgetTree:
         if component not in self._component_tree:
             # New component, simply render everything
             render_context.component_tree[component] = list(component.children)
             rendered_children = [self._render(child, render_context) for child in component.children]
-            render_context.widget_tree[component] = _WidgetTree(component, rendered_children)
+            widgettree = _WidgetTree(component, [c.component for c in rendered_children])
+            render_context.widget_tree[component] = widgettree
             render_context.mark_qt_rerender(component, True)
             render_context.schedule_callback(component._did_mount)
-            return render_context.widget_tree[component]
+            return widgettree
 
         # Figure out which children can be re-used
         children = self._recycle_children(component, render_context)
 
-        rendered_children = []
-        parent_needs_rerendering = False
-
-        # Go through children, reuse old children if they are compatible,
-        # and render incompatible children
-        for child1, child2 in zip(children, component.children):
-            # child1 == child2 if they are both new, i.e. no old child matches child1
-            # This component would then need to be updated to draw said new child
-            # Otherwise, no component has been added, so no re-rendering is necessary
-            if child1 is not child2:
-                rendered_children.append(render_context.widget_tree.get(child1, self._widget_tree[child1]))
-            else:
-                parent_needs_rerendering = True
-                rendered_children.append(self._render(child1, render_context))
-        if parent_needs_rerendering:
-            render_context.mark_qt_rerender(component, True)
-
-        render_context.component_tree[component] = children
-        render_context.widget_tree[component] = _WidgetTree(component, rendered_children)
         props_dict = dict(component.props._items)
         props_dict["children"] = list(children)
         render_context.mark_props_change(component, PropsDict(props_dict))
@@ -763,7 +700,7 @@ class RenderEngine(object):
         component._edifice_internal_parent = render_context.component_parent
         render_context.component_parent = component
 
-        if isinstance(component, WidgetElement):
+        if isinstance(component, QtWidgetElement):
             ret = self._render_base_component(component, render_context)
             render_context.component_parent = component._edifice_internal_parent
             return ret
@@ -772,6 +709,9 @@ class RenderEngine(object):
         component._hook_state_index = 0
         component._hook_effect_index = 0
         component._hook_async_index = 0
+
+        # Record that we are rendering this component with current use_state
+        self._hook_state_setted.discard(component)
 
         # Call user provided render function and retrieve old results
         with Container() as container:
@@ -793,43 +733,52 @@ class RenderEngine(object):
             else:
                 newline = "\n"
                 message = dedent(f"""\
-                    An Element must render as exactly one Element.
+                    A @component must render as exactly one Element.
                     Element {component} renders as {len(container.children)} elements.""") \
                     + newline.join([child.__str__() for child in container.children])
                 raise ValueError(message)
-        old_rendering: Element | list[Element] | None = self._component_tree.get(component, None)
+        old_rendering: list[Element] | None = self._component_tree.get(component, None)
 
-        if elements_match(old_rendering, sub_component):
-            # TODO: Call will _receive_props hook
-            assert old_rendering is not None
+        if old_rendering is not None and elements_match(old_rendering[0], sub_component):
             render_context.widget_tree[component] = self._update_old_component(
-                old_rendering, sub_component, render_context)
+                old_rendering[0], sub_component, render_context)
             render_context.schedule_callback(component._did_update)
         else:
             if old_rendering is not None:
-                render_context.enqueued_deletions.append(old_rendering)
-
+                render_context.enqueued_deletions.extend(old_rendering)
             render_context.schedule_callback(component._did_mount)
-            render_context.component_tree[component] = sub_component #TODO set this to [sub_component] list? Then the type of component_tree can be dict[Element, list[Element]]
+            render_context.component_tree[component] = [sub_component]
             render_context.widget_tree[component] = self._render(sub_component, render_context)
+
         render_context.schedule_callback(component._did_render)
 
         render_context.component_parent = component._edifice_internal_parent
         return render_context.widget_tree[component]
 
-    def _gen_commands(self, widget_trees: list[_WidgetTree], render_context: _RenderContext) -> list[_CommandType]:
-        commands = []
-        for widget_tree in widget_trees:
-            commands.extend(widget_tree.gen_qt_commands(render_context))
-        return commands
+    def gen_qt_commands(
+        self,
+        element: QtWidgetElement,
+        render_context: _RenderContext
+    ) -> list[_CommandType]:
+        """
+        Recursively generate the update commands for the widget tree.
+        """
+        commands : list[_CommandType] = []
+        children = _get_widget_children(render_context.widget_tree, element)
+        for child in children:
+            rendered = self.gen_qt_commands(child, render_context)
+            commands.extend(rendered)
 
-    def _gen_widget_trees(self, components: list[Element], render_context: _RenderContext) -> list[_WidgetTree]:
-        widget_trees : list[_WidgetTree] = []
-        for component in components:
-            if component not in render_context.widget_tree:
-                render_context.component_parent = component._edifice_internal_parent
-                widget_trees.append(self._render(component, render_context))
-        return widget_trees
+        if not render_context.need_rerender(element):
+            return commands
+
+        old_props = render_context.get_old_props(element)
+        new_props = PropsDict({
+            k: v for k, v in element.props._items
+                if k not in old_props or old_props[k] != v
+        })
+        commands.extend(element._qt_update_commands(render_context.widget_tree, new_props, {}))
+        return commands
 
     def _request_rerender(self, components: list[Element]) -> RenderResult:
 
@@ -837,47 +786,77 @@ class RenderEngine(object):
         # Before the render, reduce the _hook_state updaters.
         # We can't do this after the render, because there may have been state
         # updates from event handlers.
-        for element,hooks in self._hook_state.items():
-            needs_update = False
+        for element in self._hook_state_setted:
+            hooks = self._hook_state[element]
             for hook in hooks:
                 state0 = hook.state
-                try:
-                    for updater in hook.updaters:
-                        if callable(updater):
-                            hook.state = updater(hook.state)
-                        else:
-                            hook.state = updater
-                        needs_update = True
-                except Exception:
-                    # If any of the updaters throws then the state is unchanged.
-                    hook.state = state0
-                    # TODO Should we re-raise this exception somehow?
-                finally:
-                    hook.updaters.clear()
-            if needs_update:
-                # If there are use_state updaters and no exceptions
-                # thrown, then we need to re-render this component.
-                components_.append(element)
+                for updater in hook.updaters:
+                    if callable(updater):
+                        hook.state = updater(hook.state)
+                        # We don't catch the state updater exceptions.
+                        # We want the program to crash if state updaters throw.
+                    else:
+                        hook.state = updater
+                if state0 != hook.state:
+                    # State changed so we need to re-render this component.
+                    components_.append(element)
+                hook.updaters.clear()
+
+        all_commands: list[_CommandType] = []
+
+        # Here is the problem.
+        # We need to render the child before parent if the child state changed.
+        # We need to render the parent before child if the child props changed.
+        # So we do a complete render of each component invividually, and then
+        # we don't have to solve the problem of the order of rendering.
+        for component in components_:
 
         # Generate the widget trees
-        with _storage_manager() as storage_manager:
-            render_context = _RenderContext(storage_manager, self)
-            local_state.render_context = render_context
-            widget_trees = self._gen_widget_trees(components_, render_context)
+        # widget_trees : list[_WidgetTree] = []
 
-        # Generate the update commands from the widget trees
-        commands = self._gen_commands(widget_trees, render_context)
+            commands: list[_CommandType] = []
+            with _storage_manager() as storage_manager:
+                render_context = _RenderContext(storage_manager, self)
+                local_state.render_context = render_context
+                # widget_trees = self._gen_widget_trees(components_, render_context)
 
-        # Update the stored component trees and widget trees
-        self._component_tree.update(render_context.component_tree)
-        self._widget_tree.update(render_context.widget_tree)
+            # def _gen_widget_trees(self, components: list[Element], render_context: _RenderContext) -> list[_WidgetTree]:
 
-        # Delete components that should be deleted (and call the respective unmounts)
-        for component in render_context.enqueued_deletions:
-            self._delete_component(component, True)
+                # for component in components_:
+                # if component not in render_context.widget_tree:
+                render_context.component_parent = component._edifice_internal_parent
+                # widget_trees.append(self._render(component, render_context))
+                widget_tree = self._render(component, render_context)
+                # return widget_trees
 
-        ret = RenderResult(widget_trees, commands, render_context)
-        ret.run()
+
+                # Generate the update commands from the widget trees
+                # commands = self._gen_commands(widget_trees, render_context)
+            # def _gen_commands(self, widget_trees: list[_WidgetTree], render_context: _RenderContext) -> list[_CommandType]:
+                # commands: list[_CommandType] = []
+                # for widget_tree in widget_trees:
+                commands.extend(self.gen_qt_commands(widget_tree.component, render_context))
+                # return commands
+
+
+                # Update the stored component trees and widget trees
+                self._component_tree.update(render_context.component_tree)
+                self._widget_tree.update(render_context.widget_tree)
+
+                # Delete components that should be deleted (and call the respective unmounts)
+                for component_delete in render_context.enqueued_deletions:
+                    self._delete_component(component_delete, True)
+
+                # This is the phase of the render when the commands run.
+                for command in commands:
+                    try:
+                        command.fn(*command.args, **command.kwargs)
+                    except Exception as ex:
+                        logger.exception("Exception while running command:\n"
+                                        + str(command) + "\n"
+                                        + str(ex) + "\n")
+                render_context.run_callbacks()
+                all_commands.extend(commands)
 
         # after render, call the use_effect setup functions.
         # we want to guarantee that elements are fully rendered before
@@ -899,4 +878,5 @@ class RenderEngine(object):
                     finally:
                         hook.setup = None
 
-        return ret
+        # We return all the commands but that's only needed for testing.
+        return RenderResult(all_commands)
