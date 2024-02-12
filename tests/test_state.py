@@ -123,7 +123,7 @@ class StateValueTestCase(unittest.TestCase):
         test_comp = TestComp()
         app = MockApp(test_comp)
         app._request_rerender([test_comp])
-        inner_comp = app._render_engine._component_tree[test_comp]
+        inner_comp = app._render_engine._component_tree[test_comp][0]
         self.assertEqual(test_comp.render_called_count, 1)
         self.assertEqual(test_comp.value, 2)
         self.assertEqual(inner_comp.props.val, 2)
@@ -132,7 +132,7 @@ class StateValueTestCase(unittest.TestCase):
             state_value.set(5)
         except AssertionError:
             pass
-        inner_comp = app._render_engine._component_tree[test_comp]
+        inner_comp = app._render_engine._component_tree[test_comp][0]
         self.assertEqual(test_comp.render_called_count, 2)
         self.assertEqual(test_comp.value, 5)
         self.assertEqual(state_value.value, 2)
@@ -179,7 +179,7 @@ class StateManagerTestCase(unittest.TestCase):
 
         def extract_inner_components(comp):
             tree = app._render_engine._component_tree
-            return tree[tree[comp]]
+            return tree[tree[comp][0]]
 
         test_comp = TestComp()
         app = MockApp(test_comp)
@@ -262,7 +262,7 @@ class StateManagerTestCase(unittest.TestCase):
 
         def extract_inner_components(comp):
             tree = app._render_engine._component_tree
-            return tree[tree[comp]]
+            return tree[tree[comp][0]]
 
         test_comp = TestComp()
         app = MockApp(test_comp)

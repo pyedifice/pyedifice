@@ -158,26 +158,18 @@ class ElementTestCase(unittest.TestCase):
             if x == 0:
                 with ed.View(layout="row").set_key("row"):
                     ed.Label("Test")
+                x_set(1)
             else:
                 with ed.View(layout="column").set_key("column"):
                     ed.Label("Test")
-            x_set(1)
 
-        xcomp = xComponent()
-        root_element = Window()(ed.View()(xcomp))
+        root_element = Window()(xComponent())
         app = App(root_element, create_application=False)
         render_engine = engine.RenderEngine(root_element, app)
-        render_results = render_engine._request_rerender([root_element])
-        self.assertIsInstance(render_results.trees[0].children[0].children[0].component.underlying_layout, QtWidgets.QHBoxLayout)
-        render_results = render_engine._request_rerender([root_element, xcomp])
-        self.assertIsInstance(render_results.trees[0].children[0].children[0].component.underlying_layout, QtWidgets.QVBoxLayout)
-
-        # container = component.Container()
-        # xcomp = xComponent()
-        # with container:
-        #     xcomp._render_element()
-        # value_component = container.children[0]
-
+        _render_results1 = render_engine._request_rerender([root_element])
+        self.assertIsInstance(render_engine._widget_tree[root_element].children[0].underlying_layout, QtWidgets.QHBoxLayout)
+        _render_results2 = render_engine._request_rerender([root_element])
+        self.assertIsInstance(render_engine._widget_tree[root_element].children[0].underlying_layout, QtWidgets.QVBoxLayout)
 
 class MakeElementTestCase(unittest.TestCase):
 

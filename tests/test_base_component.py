@@ -65,7 +65,7 @@ class StyleTestCase(unittest.TestCase):
         }
         layout = Layout()
         comp = MockElement(style=style)
-        commands = comp._gen_styling_commands([], style, None, layout)
+        commands = comp._gen_styling_commands(style, None, layout)
         self.assertTrue("margin" not in style)
         self.assertCountEqual(
             commands,
@@ -81,7 +81,7 @@ class StyleTestCase(unittest.TestCase):
         }
         layout = Layout()
         comp = MockElement(style=style)
-        commands = comp._gen_styling_commands([], style, None, layout)
+        commands = comp._gen_styling_commands(style, None, layout)
         self.assertTrue("margin" not in style)
         self.assertCountEqual(
             commands,
@@ -101,7 +101,7 @@ class StyleTestCase(unittest.TestCase):
             }
             layout = Layout()
             comp = MockElement(style=style)
-            commands = comp._gen_styling_commands([], style, None, layout)
+            commands = comp._gen_styling_commands(style, None, layout)
             self.assertTrue("align" not in style)
             self.assertCountEqual(
                 commands,
@@ -121,7 +121,7 @@ class StyleTestCase(unittest.TestCase):
                 "align": align,
             }
             comp = MockElement(style=style)
-            comp._gen_styling_commands([], style, None, None)
+            comp._gen_styling_commands(style, None, None)
             self.assertTrue("align" not in style)
             self.assertEqual(style["qproperty-alignment"], qt_align)
 
@@ -138,7 +138,7 @@ class StyleTestCase(unittest.TestCase):
         }
         comp = MockElement(style=style)
         comp._size_from_font = None
-        comp._gen_styling_commands([], style, None, None)
+        comp._gen_styling_commands(style, None, None)
         self.assertEqual(style["font-size"], "12px")
 
     def test_top_left(self):
@@ -147,7 +147,7 @@ class StyleTestCase(unittest.TestCase):
             "left": 24,
         }
         comp = MockElement(style=style)
-        commands = comp._gen_styling_commands([], style, None, None)
+        commands = comp._gen_styling_commands(style, None, None)
         self.assertTrue(_CommandType(comp.underlying.move, 24, 12) in commands)
 
 
@@ -167,7 +167,7 @@ class WidgetTreeTestCase(unittest.TestCase):
         button_tree = engine._WidgetTree(button, [])
         eng = engine.RenderEngine(button)
         with engine._storage_manager() as manager:
-            commands = button_tree.gen_qt_commands(MockRenderContext(manager, eng))
+            commands = eng.gen_qt_commands(button, MockRenderContext(manager, eng))
         qt_button = button.underlying
         assert qt_button is not None
         style = qt_button.style()
@@ -209,10 +209,9 @@ class WidgetTreeTestCase(unittest.TestCase):
         color = (0, 255, 0, 255)
         rotation = 45
         icon = base_components.Icon(name="play", size=15, color=color, rotation=rotation)
-        icon_tree = engine._WidgetTree(icon, [])
         eng = engine.RenderEngine(icon)
         with engine._storage_manager() as manager:
-            commands = icon_tree.gen_qt_commands(MockRenderContext(manager, eng))
+            commands = eng.gen_qt_commands(icon, MockRenderContext(manager, eng))
 
         render_img_args = (str(ICONS / "font-awesome" / "solid" / "play.svg"),
                            size, color, rotation)
@@ -249,15 +248,15 @@ class WidgetTreeTestCase(unittest.TestCase):
         eng =  engine.RenderEngine(view)
 
         def label_tree(label):
-            tree = engine._WidgetTree(label, [])
             with engine._storage_manager() as manager:
-                return tree, tree.gen_qt_commands(MockRenderContext(manager, eng))
+                return eng.gen_qt_commands(label, MockRenderContext(manager, eng))
 
-        label1_tree, label1_commands = label_tree(label1)
-        label2_tree, label2_commands = label_tree(label2)
-        view_tree = engine._WidgetTree(view, [label1_tree])
+        label1_commands = label_tree(label1)
+        label2_commands = label_tree(label2)
         with engine._storage_manager() as manager:
-            commands = view_tree.gen_qt_commands(MockRenderContext(manager, eng))
+            context = MockRenderContext(manager, eng)
+            context.widget_tree[view] = engine._WidgetTree(view, [label1])
+            commands = eng.gen_qt_commands(view, context)
 
         label1.underlying.font().pointSize()
 
@@ -280,9 +279,10 @@ class WidgetTreeTestCase(unittest.TestCase):
             _CommandType(view._add_child, 0, label1.underlying)]
 
         self.assertCountEqual(commands, commands_expected)
-        view_tree = engine._WidgetTree(view, [label1_tree, label2_tree])
         with engine._storage_manager() as manager:
-            commands = view_tree.gen_qt_commands(MockRenderContext(manager, eng))
+            context = MockRenderContext(manager, eng)
+            context.widget_tree[view] = engine._WidgetTree(view, [label1, label2])
+            commands = eng.gen_qt_commands(view, context)
         commands_expected = label1_commands + label2_commands + [
             _CommandType(view.underlying.setStyleSheet, "QWidget#%s{}" % id(view)),
             _CommandType(view.underlying.setProperty, "css_class", []),
@@ -303,11 +303,10 @@ class WidgetTreeTestCase(unittest.TestCase):
         self.assertCountEqual(commands, commands_expected)
 
         inner_view = base_components.View()
-        old_child = view_tree.children[0].component
-        inner_view_tree = engine._WidgetTree(inner_view, [])
-        view_tree = engine._WidgetTree(view, [label2_tree, inner_view_tree])
         with engine._storage_manager() as manager:
-            commands = view_tree.gen_qt_commands(MockRenderContext(manager, eng))
+            context = MockRenderContext(manager, eng)
+            context.widget_tree[view] = engine._WidgetTree(view, [label2, inner_view])
+            commands = eng.gen_qt_commands(view, context)
         commands_expected = label2_commands + [
                 _CommandType(view.underlying.setStyleSheet, "QWidget#%s{}" % id(view)),
                 _CommandType(view.underlying.setProperty, "css_class", []),
@@ -354,8 +353,7 @@ class BaseElementsTest(unittest.TestCase):
     def _test_comp(self, comp, children=None):
         children = children or []
         render_engine = engine.RenderEngine(comp)
-        res = render_engine._request_rerender([comp])
-        res.run()
+        render_engine._request_rerender([comp])
 
     def test_components(self):
         context_menu = {

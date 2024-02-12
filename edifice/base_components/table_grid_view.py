@@ -7,13 +7,11 @@ if QT_VERSION == "PyQt6" and not TYPE_CHECKING:
 else:
     from PySide6.QtWidgets import QGridLayout, QWidget
 
-from .._component import _CommandType, PropsDict, Element
-from .base_components import QtWidgetElement
-from ..engine import _WidgetTree, WidgetElement
+from .._component import _CommandType, PropsDict, Element, _get_widget_children, _WidgetTree, QtWidgetElement
 
 logger = logging.getLogger("Edifice")
 
-class _TableGridViewRow(WidgetElement):
+class _TableGridViewRow(QtWidgetElement):
     """
     Row Element of a :class:`TableGridView`.
 
@@ -161,7 +159,7 @@ class TableGridView(QtWidgetElement):
 
     def _qt_update_commands(
         self,
-        children : list[_WidgetTree],
+        widget_trees: dict[Element, _WidgetTree],
         newprops,
         newstate
     ):
@@ -176,13 +174,14 @@ class TableGridView(QtWidgetElement):
         # want to treat the _TableGridViewRow children as the children of
         # the TableGridView.
 
+        children = _get_widget_children(widget_trees, self)
         new_children: dict[QtWidgetElement, tuple[int,int]] = {}
-        children_of_rows: list[_WidgetTree] = list()
+        children_of_rows: list[QtWidgetElement] = list()
         for row,c in enumerate(children):
-            children_of_rows.extend(c.children)
-            for col,child in enumerate(c.children):
-                assert isinstance(child.component, QtWidgetElement)
-                new_children[child.component] = (row,col)
+            children_of_row = _get_widget_children(widget_trees, c)
+            children_of_rows.extend(children_of_row)
+            for col,child in enumerate(children_of_row):
+                new_children[child] = (row,col)
 
         old_deletions = self._old_children.items() - new_children.items()
         new_additions = new_children.items() - self._old_children.items()
@@ -209,11 +208,7 @@ class TableGridView(QtWidgetElement):
         if "column_minwidth" in newprops:
             commands.append(_CommandType(self._set_column_minwidth, newprops["column_minwidth"]))
 
-        # Pass the self.underlying_layout if we want it to be styled with the style props?
-        # Like this:
-        # # commands.extend(super()._qt_update_commands
-        # # (children, newprops, newstate, self.underlying, self.underlying_layout))
-        commands.extend(super()._qt_update_commands(children_of_rows, newprops, newstate, self.underlying, None))
+        commands.extend(super()._qt_update_commands_super(widget_trees, newprops, newstate, self.underlying, self.underlying_layout))
 
         return commands
 
