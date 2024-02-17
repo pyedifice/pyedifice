@@ -4,6 +4,14 @@
 Release Notes
 =============
 
+0.4.1
+-----
+Released: 2024-02-17
+
+* Rending logic correctness and stability improvements.
+* :func:`use_async` window close Task done bugfix.
+* :func:`use_state` will not re-render if state is :code:`__eq__` after update.
+
 0.4.0
 -----
 Released: 2024-02-08
