@@ -39,7 +39,13 @@ def Component(self):
 
 @ed.component
 def Main(self):
-    with ed.Window("Matplotlib Example"):
+    with ed.Window(
+        title="Matplotlib Example",
+        style={
+            "min-width": "200px",
+            "min-height": "200px",
+        },
+    ):
         Component()
 
 if __name__ == "__main__":

@@ -1223,7 +1223,8 @@ class Window(View):
         title: str = "Edifice Application",
         icon:tp.Optional[tp.Union[tp.Text, tp.Sequence]] = None,
         menu = None,
-        on_close: tp.Optional[tp.Callable[[QtGui.QCloseEvent], None | tp.Awaitable[None]]] = None
+        on_close: tp.Optional[tp.Callable[[QtGui.QCloseEvent], None | tp.Awaitable[None]]] = None,
+        **kwargs,
     ):
         self._register_props({
             "title": title,
@@ -1231,7 +1232,7 @@ class Window(View):
             "menu": menu,
             "on_close": on_close,
         })
-        super().__init__()
+        super().__init__(**kwargs)
 
         self._menu_bar = None
         self._on_close: tp.Optional[tp.Callable[[QtGui.QCloseEvent], None | tp.Awaitable[None]]] = None
@@ -1264,7 +1265,7 @@ class Window(View):
 
         if self.underlying is None:
             super()._initialize()
-            assert self.underlying is not None
+            assert isinstance(self.underlying, QtWidgets.QWidget)
             self.underlying.closeEvent = self._handle_close
             self.underlying.show()
 
