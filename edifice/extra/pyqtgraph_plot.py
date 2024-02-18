@@ -66,6 +66,9 @@ class PyQtPlot(QtWidgetElement):
     def _qt_update_commands(self, children, newprops, newstate):
         if self.underlying is None:
             self.underlying = pg.PlotWidget()
+            # Disable mouse interaction
+            # https://pyqtgraph.readthedocs.io/en/latest/api_reference/graphicsItems/viewbox.html#pyqtgraph.ViewBox.setMouseEnabled
+            self.underlying.setMouseEnabled(x=False, y=False)
 
         commands = super()._qt_update_commands_super(children, newprops, newstate, self.underlying)
 
