@@ -43,6 +43,14 @@ def TestComp(self):
         return cleanup
     use_effect(setup, x)
 
+    def setup_always():
+        print("effect setup always")
+        def cleanup():
+            print("effect cleanup always")
+            pass
+        return cleanup
+    use_effect(setup_always, None)
+
     with View(
         style={
             "align":"top"

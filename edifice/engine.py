@@ -167,7 +167,7 @@ class _RenderContext(object):
     def use_effect(
         self,
         setup: tp.Callable[[], tp.Callable[[], None] | None],
-        dependencies: tp.Any,
+        dependencies: tp.Any = None,
     ) -> None:
         # https://legacy.reactjs.org/docs/hooks-effect.html#example-using-hooks
         # effects happen “after render”.
@@ -185,10 +185,13 @@ class _RenderContext(object):
             hook = _HookEffect(setup, None, dependencies)
             hooks.append(hook)
 
-        elif (hook := hooks[h_index]).dependencies != dependencies:
-            # then this is not the first render and deps changed
+        else:
+            # then this is not the first render
+            hook = hooks[h_index]
+            if hook.dependencies is None or hook.dependencies != dependencies:
+                # deps changed
+                hook.setup = setup
             hook.dependencies = dependencies
-            hook.setup = setup
 
     def use_async(
         self,

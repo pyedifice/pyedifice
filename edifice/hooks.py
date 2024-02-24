@@ -111,7 +111,7 @@ def use_state(initial_state:_T_use_state) -> tuple[
 
 def use_effect(
     setup: Callable[[], Callable[[], None] | None],
-    dependencies: Any,
+    dependencies: Any = None,
 ) -> None:
     """
     Side-effect Hook inside a :func:`edifice.component` function.
@@ -128,6 +128,12 @@ def use_effect(
 
     If the dependencies change, then the old **cleanup function** is called and
     then the new **setup function** is called.
+
+    If the dependencies are :code:`None`, then the new effect
+    **setup function** will always be called.
+
+    If you want to call the **setup function** only once, then pass an empty
+    tuple :code:`()` as the dependencies.
 
     If the **setup function** raises an Exception then the
     **cleanup function** will not be called.
@@ -157,6 +163,9 @@ def use_effect(
         dependencies:
             The effect **setup function** will be called when the
             dependencies are not :code:`__eq__` to the old dependencies.
+
+            If the dependencies are :code:`None`, then the effect
+            **setup function** will always be called.
     Returns:
         None
     """
