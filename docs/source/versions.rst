@@ -4,6 +4,13 @@
 Release Notes
 =============
 
+0.4.2
+-----
+Released: 2024-02-26
+
+* :func:`use_effect` allways run when :code:`dependencies` is :code:`None`.
+* :class:`extra.PyQtPlot` disable mouse interaction.
+
 0.4.1
 -----
 Released: 2024-02-17
