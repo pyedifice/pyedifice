@@ -371,8 +371,9 @@ class Label(QtWidgetElement):
         if self.underlying is None:
             self._initialize()
         assert self.underlying is not None
-        size = self.underlying.font().pointSize()
-        self._set_size(size * len(str(self.props.text)), size, lambda size: (size * len(str(self.props.text)), size))
+
+        # size = self.underlying.font().pointSize()
+        # self._set_size(size * len(str(self.props.text)), size, lambda size: (size * len(str(self.props.text)), size))
 
         # TODO
         # If you want the QLabel to fit the text then you must use adjustSize()
@@ -382,9 +383,7 @@ class Label(QtWidgetElement):
         widget = tp.cast(QtWidgets.QLabel, self.underlying)
         commands = super()._qt_update_commands_super(widget_trees, newprops, newstate, self.underlying, None)
         for prop in newprops:
-            if prop == "text":
-                commands.append(_CommandType(widget.setText, str(newprops[prop])))
-            elif prop == "word_wrap":
+            if prop == "word_wrap":
                 commands.append(_CommandType(widget.setWordWrap, self.props.word_wrap))
             elif prop == "link_open":
                 commands.append(_CommandType(widget.setOpenExternalLinks, self.props.link_open))
@@ -406,6 +405,8 @@ class Label(QtWidgetElement):
                     commands.append(_CommandType(widget.setCursor, _CURSORS["text"]))
                 if interaction_flags:
                     commands.append(_CommandType(widget.setTextInteractionFlags, interaction_flags))
+            elif prop == "text":
+                commands.append(_CommandType(widget.setText, str(newprops[prop])))
         return commands
 
 
