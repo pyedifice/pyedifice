@@ -13,7 +13,7 @@
       pkgs = import inputs.nixpkgs {
         inherit system;
         overlays = [
-          inputs.poetry2nix.overlay
+          inputs.poetry2nix.overlays.default
           (_final: prev: {
             # Disable eventlet tests so that we can `nix develop .#poetry`
             # https://github.com/NixOS/nixpkgs/issues/272430
