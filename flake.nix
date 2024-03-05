@@ -73,11 +73,25 @@
 
       pythonEnv = qtOverride pythonWithPackages.env;
 
+
+      # https://github.com/nix-community/poetry2nix?tab=readme-ov-file#creating-a-custom-poetry2nix-instance
+      #
+      # We can remove poetry2nix-custom with pyqt6-qt6 override when the following PR is merged.
+      # https://github.com/nix-community/poetry2nix/pull/1551
+      poetry2nix-custom = pkgs.poetry2nix.overrideScope' (p2n_self: p2n_super: {
+        defaultPoetryOverrides = p2n_super.defaultPoetryOverrides.extend(pyself: pysuper: {
+          pyqt6-qt6 = pysuper.pyqt6-qt6.overridePythonAttrs (old: {
+            autoPatchelfIgnoreMissingDeps = old.autoPatchelfIgnoreMissingDeps or [] ++ [
+              "libmimerapi.so"
+              ];
+          });
+        });
+      });
+
       poetryEnvAttrs = {
         python = pkgs.python310;
         projectDir = ./.;
         preferWheels = true;
-        overrides = pkgs.poetry2nix.overrides.withDefaults (pyfinal: pyprev: { });
       };
     in
     {
@@ -143,7 +157,7 @@
             '';
         };
 
-        poetry2nix = (pkgs.poetry2nix.mkPoetryEnv (poetryEnvAttrs // {
+        poetry2nix = (poetry2nix-custom.mkPoetryEnv (poetryEnvAttrs // {
           extras = [ "*" ];
           extraPackages = ps: with ps; [ ];
         })).env.overrideAttrs (oldAttrs: {
@@ -169,7 +183,7 @@
               script = pkgs.writeShellApplication {
                 name = "edifice-run-tests";
                 runtimeInputs = [
-                  (pkgs.poetry2nix.mkPoetryEnv poetryEnvAttrs)
+                  (poetry2nix-custom.mkPoetryEnv poetryEnvAttrs)
                 ];
                 text = "${run_tests_sh}";
               };
@@ -183,7 +197,7 @@
               script-virtualX = pkgs.writeShellApplication {
                 name = "edifice-run-tests";
                 runtimeInputs = [
-                  (pkgs.poetry2nix.mkPoetryEnv poetryEnvAttrs)
+                  (poetry2nix-custom.mkPoetryEnv poetryEnvAttrs)
                   pkgs.xvfb-run
                 ];
                 text = "xvfb-run ${run_tests_sh}";
@@ -198,7 +212,7 @@
               script = pkgs.writeShellApplication {
                 name = "edifice-example";
                 runtimeInputs = [
-                  (pkgs.poetry2nix.mkPoetryEnv poetryEnvAttrs)
+                  (poetry2nix-custom.mkPoetryEnv poetryEnvAttrs)
                 ];
                 text = "cd ${inputs.self.outPath}; python examples/calculator.py";
               };
@@ -212,7 +226,7 @@
               script = pkgs.writeShellApplication {
                 name = "edifice-example";
                 runtimeInputs = [
-                  (pkgs.poetry2nix.mkPoetryEnv (poetryEnvAttrs // {
+                  (poetry2nix-custom.mkPoetryEnv (poetryEnvAttrs // {
                     extraPackages = ps: with ps; [ ];
                   }))
                 ];
@@ -228,7 +242,7 @@
               script = pkgs.writeShellApplication {
                 name = "edifice-example";
                 runtimeInputs = [
-                  (pkgs.poetry2nix.mkPoetryEnv poetryEnvAttrs)
+                  (poetry2nix-custom.mkPoetryEnv poetryEnvAttrs)
                 ];
                 text = "cd ${inputs.self.outPath}; python examples/harmonic_oscillator.py";
               };
@@ -242,7 +256,7 @@
               script = pkgs.writeShellApplication {
                 name = "edifice-example";
                 runtimeInputs = [
-                  (pkgs.poetry2nix.mkPoetryEnv poetryEnvAttrs)
+                  (poetry2nix-custom.mkPoetryEnv poetryEnvAttrs)
                 ];
                 text = "cd ${inputs.self.outPath}; python examples/todomvc.py";
               };
