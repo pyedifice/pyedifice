@@ -6,15 +6,12 @@ Everything is reactive -- changes will automatically be reflected in the entire 
 """
 
 #
-# pip install pandas yfinance matplotlib
-#
 # python examples/financial_charts.py
 #
 
 import sys, os
 # We need this sys.path line for running this example, especially in VSCode debugger.
 sys.path.insert(0, os.path.join(sys.path[0], '..'))
-import asyncio
 from collections import OrderedDict
 import typing as tp
 import edifice as ed
@@ -41,12 +38,14 @@ def _create_state_for_plot() -> dict[str, tp.Any]:
     }
 
 # We create a component which describes the options for each axis (data source, transform).
-# Since this component owns no state, we can simply write a render function and use the
-# component decorator.
 @ed.component
-def AxisDescriptor(self, name, key, plot, plots_set): #TODO does plots_set change on every render?
-    # We subscribe to app_state, so that state changes would trigger a re-render
-    # Subscribe returns the data stored in app_state
+def AxisDescriptor(
+        self,
+        name,
+        key,
+        plot,
+        plot_change: tp.Callable[[dict[str, tp.Any]], None],
+    ):
     data = plot[f"{key}.data"]
     data_type, ticker = data
     transform = plot[f"{key}.transform"]
@@ -55,20 +54,24 @@ def AxisDescriptor(self, name, key, plot, plots_set): #TODO does plots_set chang
     row_style = {"align": "left", "width": 350}
 
     def handle_data_type(data_type_text):
-        plot[f"{key}.data"] = (data_type_text, ticker)
-        plots_set(lambda x: x)
+        plot_ = plot.copy()
+        plot_[f"{key}.data"] = (data_type_text, ticker)
+        plot_change(plot_)
 
     def handle_ticker(ticker_text):
-        plot[f"{key}.data"] = (data_type, ticker_text)
-        plots_set(lambda x: x)
+        plot_ = plot.copy()
+        plot_[f"{key}.data"] = (data_type, ticker_text)
+        plot_change(plot_)
 
     def handle_transform_type(transform_type_text):
-        plot[f"{key}.transform"] = (transform_type_text, param)
-        plots_set(lambda x: x)
+        plot_ = plot.copy()
+        plot_[f"{key}.transform"] = (transform_type_text, param)
+        plot_change(plot_)
 
     def handle_param(param_val):
-        plot[f"{key}.transform"] = (transform_type, param_val)
-        plots_set(lambda x: x)
+        plot_ = plot.copy()
+        plot_[f"{key}.transform"] = (transform_type, param_val)
+        plot_change(plot_)
 
 
     with View(layout="column"):
@@ -110,22 +113,28 @@ def add_divider(comp):
 # Now we make a component to describe the entire plot: the descriptions of both axis,
 # plot type, and color
 @ed.component
-def PlotDescriptor(self, plot, plots_set):
+def PlotDescriptor(
+        self,
+        plot: dict[str, tp.Any],
+        plot_change: tp.Callable[[dict[str, tp.Any]], None]
+    ):
     plot_type = plot["type"]
     color = plot["color"]
 
     def handle_plot_type(plot_type_text):
-        plot["type"] = plot_type_text
-        plots_set(lambda x: x)
+        plot_ = plot.copy()
+        plot_["type"] = plot_type_text
+        plot_change(plot_)
 
     def handle_color(color_text):
-        plot["color"] = color_text
-        plots_set(lambda x: x)
+        plot_ = plot.copy()
+        plot_["color"] = color_text
+        plot_change(plot_)
 
     with View(layout="row", style={"margin": 5, "align":"left"}):
         with View(layout="column", style={"align": "top", "width":400}):
-            AxisDescriptor("x-axis", "xaxis", plot, plots_set)
-            AxisDescriptor("y-axis", "yaxis", plot, plots_set)
+            AxisDescriptor("x-axis", "xaxis", plot, plot_change)
+            AxisDescriptor("y-axis", "yaxis", plot, plot_change)
         with View(layout="column", style={"align": "top", "margin-left": 10}):
             labeled_elem(
                 "Chart type",
@@ -149,17 +158,17 @@ def PlotDescriptor(self, plot, plots_set):
 def App(self):
 
     next_i, next_i_set = ed.use_state(int(1))
-    # We're cheating a bit here with the plots state.
-    # plots is a mutable dictionary, so we mutate the dictionary
-    # and then call plots_set to notify Edifice that it changed.
     plots, plots_set = ed.use_state(OrderedDict([(int(0), _create_state_for_plot())]))
 
     # Adding a plot is very simple conceptually (and in Edifice).
     # Just add new state for the new plot!
+    # The state is immutable, so we need to create a new state object
+    # with a shallow copy of the old state and the new plot.
     def add_plot(e):
-        plots.update([(next_i, _create_state_for_plot())])
+        plots_ = plots.copy()
+        plots_.update({next_i: _create_state_for_plot()})
         next_i_set(lambda j: j+1)
-        plots_set(plots) # sets to the same mutable OrderedDict
+        plots_set(plots_)
 
     # The Plotting function called by the MatplotlibFigure component.
     # The plotting function is passed a Matplotlib axis object.
@@ -194,15 +203,17 @@ def App(self):
 
     with View(layout="column", style={"margin": 10, "align":"top"}):
         with View(layout="column"):
-            for plot in plots.values():
-                add_divider(lambda: PlotDescriptor(plot, plots_set))
+            for key, plot in plots.items():
+                def plot_change(p: dict[str, tp.Any]) -> None:
+                    plots_ = plots.copy()
+                    plots_.update([(key, p)])
+                    plots_set(plots_)
+                add_divider(lambda: PlotDescriptor(plot, plot_change))
             # Edifice comes with Font-Awesome icons for your convenience
             IconButton(name="plus", title="Add Plot", on_click=add_plot)
 
-        # We create a lambda fuction so that the method doesn't compare equal to itself.
-        # This forces re-renders everytime this entire component renders.
         with View(style={"height":500, "margin-top":10}):
-            MatplotlibFigure(lambda ax: plot_figure(ax))
+            MatplotlibFigure(plot_figure)
 
 @ed.component
 def Main(self):
