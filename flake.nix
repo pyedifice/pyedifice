@@ -95,8 +95,8 @@
       #    Poetry environment.
       #    In this environment the tests should pass.
       #
-      #        poetry install --sync --all-extras --no-root
       #        poetry shell
+      #        poetry install --sync --all-extras
       #        ./run_tests.sh
       #
       # 3. nix develop .#poetry2nix (default)
@@ -145,18 +145,7 @@
 
         poetry2nix = (pkgs.poetry2nix.mkPoetryEnv (poetryEnvAttrs // {
           extras = [ "*" ];
-          extraPackages = ps: with ps; [
-            pip
-
-            # sphinx packages for make docs
-            sphinx-book-theme
-            sphinx-autodoc-typehints
-
-            # pandas, yfinance, matplotlib for running examples/financial_charts.py
-            pandas
-            yfinance
-            matplotlib
-          ];
+          extraPackages = ps: with ps; [ ];
         })).env.overrideAttrs (oldAttrs: {
           buildInputs = [ pkgs.nodePackages.pyright ];
         });
@@ -224,11 +213,7 @@
                 name = "edifice-example";
                 runtimeInputs = [
                   (pkgs.poetry2nix.mkPoetryEnv (poetryEnvAttrs // {
-                    extraPackages = ps: with ps; [
-                      pandas
-                      yfinance
-                      matplotlib
-                    ];
+                    extraPackages = ps: with ps; [ ];
                   }))
                 ];
                 text = "cd ${inputs.self.outPath}; python examples/financial_charts.py";

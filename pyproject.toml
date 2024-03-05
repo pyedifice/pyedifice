@@ -13,31 +13,28 @@ packages = [{include = "edifice", from = "."}]
 format = "poetry-core"
 
 [tool.poetry.dependencies]
-python = ">= 3.8,<3.13"
-qasync = ">= 0.26.0"
-typing-extensions = ">= 4.0.0"
+# we need typing and async features from python 3.10
+python = ">=3.10, <3.13"
+qasync = ">=0.26.0"
+typing-extensions = ">=4.0.0"
 
 [tool.poetry.group.dev.dependencies]
-certifi = ">= 2020.12.5" # "^2023.5.7"
-chardet = ">= 4.0.0" # "^5.1.0"
-idna = ">= 2.10" # "^3.4"
-numpy = ">= 1.19.4" # "^1.25.1"
-pandas = ">= 1.2.0" # "^2.0.3"
-PyQt6 = ">= 6.0" # "^6.5.1"
-PyQt6-sip = ">= 13.0.0" # "^13.5.1"
+PyQt6 = ">= 6.0"
 PySide6 = ">= 6.0.0"
-shiboken6 = ">= 6.0.0"
-six = ">= 1.15.0" # "^1.16.0"
-snowballstemmer = ">= 2.0.0" # "^2.2.0"
-pytz = ">= 2020.5" # "^2023.3"
-requests = ">= 2.25.1" # "^2.31.0"
-watchdog = ">= 1.0.2" # "^3.0.0"
-urllib3 = ">= 1.26.2" # "^2.0.3"
-python-dateutil = ">= 2.8.1" # "^2.8.2"
-matplotlib = ">= 3.3.3" # "^3.7.2"
-pyqtgraph = ">= 0.13.0"
-ruff = "^0.1.3"
-ruff-lsp = "^0.0.42"
+
+matplotlib = ">= 3.3.3" # for https://pyedifice.github.io/stubs/edifice.extra.MatplotlibFigure.html
+pyqtgraph = ">= 0.13.0" # for https://pyedifice.github.io/stubs/edifice.extra.PyQtPlot.html
+
+ruff = "^0.1.3" # for dev environment
+ruff-lsp = "^0.0.42" # for dev environment
+watchdog = ">= 1.0.2" # for hot-reload https://pyedifice.github.io/developer_tools.html#dynamic-hot-reload
+
+sphinx-book-theme = "*" # sphinx packages for make docs
+sphinx-autodoc-typehints = "*" # sphinx packages for make docs
+
+numpy = ">= 1.19.4" # for examples
+pandas = ">= 1.2.0" # for examples/financial_charts.py
+yfinance = "*" # for examples/financial_charts.py
 
 
 [build-system]
