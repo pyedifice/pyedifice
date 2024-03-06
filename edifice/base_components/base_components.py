@@ -579,19 +579,19 @@ class TextInput(QtWidgetElement):
         widget = tp.cast(QtWidgets.QLineEdit, self.underlying)
 
         commands = super()._qt_update_commands_super(widget_trees, newprops, newstate, self.underlying)
-        commands.append(_CommandType(widget.setText, str(self.props.text)))
-        # This setCursorPosition is needed because otherwise the cursor will
-        # jump to the end of the text after the setText.
-        commands.append(_CommandType(widget.setCursorPosition, widget.cursorPosition()))
-        for prop in newprops:
-            if prop == "on_change":
-                commands.append(_CommandType(self._set_on_change, newprops[prop]))
-            elif prop == "on_edit_finish":
-                commands.append(_CommandType(self._set_on_edit_finish, newprops[prop]))
+        if "text" in newprops:
+            commands.append(_CommandType(widget.setText, str(newprops.text)))
+            # This setCursorPosition is needed because otherwise the cursor will
+            # jump to the end of the text after the setText.
+            commands.append(_CommandType(widget.setCursorPosition, widget.cursorPosition()))
+        if "on_change" in newprops:
+            commands.append(_CommandType(self._set_on_change, newprops.on_change))
+        if "on_edit_finish" in newprops:
+            commands.append(_CommandType(self._set_on_edit_finish, newprops.on_edit_finish))
     #         elif prop == "completer":
     #             commands.append((self._set_completer, newprops[prop]))
-            elif prop == "placeholder_text":
-                commands.append(_CommandType(widget.setPlaceholderText, newprops[prop]))
+        if "placeholder_text" in newprops:
+            commands.append(_CommandType(widget.setPlaceholderText, newprops.placeholder_text))
         return commands
 
 
