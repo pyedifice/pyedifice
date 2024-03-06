@@ -4,6 +4,13 @@
 Release Notes
 =============
 
+0.4.3
+-----
+Released: 2024-03-06
+
+* :class:`TextInput` bugfix don’t :code:`setText` on every render.
+* Clean up Python dependencies.
+
 0.4.2
 -----
 Released: 2024-02-26
