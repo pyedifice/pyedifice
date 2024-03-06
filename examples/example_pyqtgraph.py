@@ -39,6 +39,9 @@ def Component(self):
         ys = np.sin(xs)
         plot_item.plot(x=xs, y=ys, pen=pen, fillLevel=-1.0, brush=brush)
 
+    def handle_mouse(ev):
+        print(f"Mouse move: {ev}")
+
     with ed.View():
         with ed.ButtonView(
             on_trigger=lambda _: x_min_set(x_min + 1.0),
@@ -49,7 +52,12 @@ def Component(self):
             },
         ):
             ed.Label("Increment x_min")
-        PyQtPlot(plot_fun=plot_fn)
+        PyQtPlot(
+            plot_fun = plot_fn,
+            # on_plot_mouse_move=lambda ev: print(f"PG Mouse move: {ev.pos()}"),
+            # on_mouse_move=lambda ev: print(f"Qt Mouse move: {ev.pos()}"),
+            on_plot_mouse_move=handle_mouse,
+        )
 
 @ed.component
 def Main(self):
