@@ -407,10 +407,7 @@ class RenderEngine(object):
                 self._delete_component(sub_comp, recursive)
             # Node deletion
 
-        # Clean up hook state for the component
-        if component in self._hook_state:
-            del self._hook_state[component]
-        self._hook_state_setted.discard(component)
+        # Clean up use_effect for the component
         if component in self._hook_effect:
             for hook in self._hook_effect[component]:
                 if hook.cleanup is not None:
@@ -421,6 +418,7 @@ class RenderEngine(object):
                     except Exception:
                         pass
             del self._hook_effect[component]
+        # Clean up use_async for the component
         if component in self._hook_async:
             for hook in self._hook_async[component]:
                 hook.queue.clear()
@@ -437,6 +435,10 @@ class RenderEngine(object):
                 # If there are no running tasks, then we can delete this
                 # HookAsync object immediately.
                 del self._hook_async[component]
+        # Clean up use_state for the component
+        if component in self._hook_state:
+            del self._hook_state[component]
+        self._hook_state_setted.discard(component)
 
 
         # Clean up component references
