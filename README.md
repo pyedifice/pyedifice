@@ -17,7 +17,7 @@ or “[Model-View-Update](https://thomasbandt.com/model-view-update).”
 
 Edifice uses [PySide6](https://doc.qt.io/qtforpython-6/)
 or [PyQt6](https://www.riverbankcomputing.com/static/Docs/PyQt6/introduction.html)
-as a backend. So Edifice is like
+as a backend. Edifice is like
 [React](https://react.dev/), but with
 Python instead of JavaScript, and [Qt Widgets](https://doc.qt.io/qt-6/qtwidgets-index.html) instead of the HTML DOM.
 

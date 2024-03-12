@@ -46,7 +46,7 @@ or “`Model-View-Update <https://thomasbandt.com/model-view-update>`_.”
 
 Edifice uses `PySide6 <https://doc.qt.io/qtforpython-6/>`_
 or `PyQt6 <https://www.riverbankcomputing.com/static/Docs/PyQt6/introduction.html>`_
-as a backend. So Edifice is like
+as a backend. Edifice is like
 `React <https://react.dev/>`_, but with
 Python instead of JavaScript, and `Qt Widgets <https://doc.qt.io/qt-6/qtwidgets-index.html>`_
 instead of the HTML DOM.

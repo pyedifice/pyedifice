@@ -626,7 +626,7 @@ def not_ignored(arg: tuple[str, tp.Any]) -> bool:
 def component(f: Callable[tp.Concatenate[C,P], None]) -> Callable[P,Element]:
     """Decorator turning a render function of **props** into an :class:`Element`.
 
-    The compoment will be re-rendered when its **props** are not :code:`__eq__`
+    The component will be re-rendered when its **props** are not :code:`__eq__`
     to the **props** from the last time the component rendered.
 
     The component function must render exactly one :class:`Element`.
