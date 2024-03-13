@@ -21,12 +21,12 @@
 			"args": ["examples/tutorial.py", "MyApp"]
 		},
 		{
-			"name": "Runner calculator.py",
+			"name": "Runner inspector calculator.py",
 			"type": "python",
 			"request": "launch",
 			"module": "edifice",
 			"justMyCode": true,
-			"args": ["examples/calculator.py", "Main"]
+			"args": ["--inspect", "examples/calculator.py", "Main"]
 		},
 		{
 			"name": "Runner financial_charts.py",
