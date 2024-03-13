@@ -230,24 +230,25 @@ class App(object):
 
         self._rerender_called_soon = False
         self._is_rerendering = False
-        self._rerender_wanted = False
+        self._rerender_wanted : list[Element] = []
 
     def __hash__(self):
         return id(self)
 
     def _rerender_callback(self):
         self._rerender_called_soon = False
-        self._request_rerender([], {})
+        self._request_rerender(self._rerender_wanted[:], {})
 
-    def _defer_rerender(self):
+    def _defer_rerender(self, element: Element):
         """
         Rerender on the next event loop iteration.
         Idempotent.
         """
+        if element not in self._rerender_wanted:
+            self._rerender_wanted.append(element)
         if not self._rerender_called_soon and not self._is_rerendering:
             asyncio.get_event_loop().call_soon(self._rerender_callback)
             self._rerender_called_soon = True
-        self._rerender_wanted = True
 
 
     def _request_rerender(self, components: list[Element], newstate):
@@ -255,7 +256,7 @@ class App(object):
         Call the RenderEngine to immediately render the widget tree.
         """
         self._is_rerendering = True
-        self._rerender_wanted = False
+        self._rerender_wanted.clear()
 
         del newstate #TODO?
         start_time = time.process_time()
@@ -270,11 +271,11 @@ class App(object):
                          render_timing.count(), 1000 * render_timing.mean(), 1000 * render_timing.max())
         self._first_render = False
 
-        if self._inspector_component is not None and not all(isinstance(comp, inspector.InspectorElement) for comp in components):
-            self._inspector_component._refresh()
+        if self._inspector_component is not None and not any(hasattr(comp, "__edifice_inspector_element")  for comp in components):
+            self._inspector_component.force_refresh()
 
         self._is_rerendering = False
-        if self._rerender_wanted and not self._rerender_called_soon:
+        if len(self._rerender_wanted) > 0 and not self._rerender_called_soon:
             asyncio.get_event_loop().call_soon(self._rerender_callback)
 
 
@@ -375,8 +376,12 @@ class App(object):
                     self._inspector_component = None
 
                 self._inspector_component = inspector.Inspector(
-                    self._render_engine._component_tree, self._root,
-                    refresh=(lambda: (self._render_engine._component_tree, self._root)))
+                    refresh=(lambda: (
+                        self._render_engine._component_tree,
+                        self._root,
+                        self._render_engine._hook_state,
+                    ))
+                )
                 icon_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), "inspector/icon.png")
                 component = Window(title="Element Inspector", on_close=cleanup, icon=icon_path)(self._inspector_component)
                 component._edifice_internal_parent = None

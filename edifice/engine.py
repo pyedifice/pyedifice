@@ -160,7 +160,7 @@ class _RenderContext(object):
             self.engine._hook_state_setted.add(element)
             app = self.engine._app
             assert app is not None
-            app._defer_rerender()
+            app._defer_rerender(element)
 
         return (hook.state, setter)
 
@@ -357,9 +357,6 @@ class RenderEngine(object):
         """
         The _component_tree maps an Element to its children.
         """
-        # TODO the type of _component_tree should be dict[Element, list[Element]].
-        # The type which I have set here causes type errors, and I'm pretty
-        # sure that's because there are bugs.
         self._widget_tree : dict[Element, _WidgetTree] = {}
         """
         Map of an Element to its rendered widget tree.
@@ -568,7 +565,7 @@ class RenderEngine(object):
         if (component._should_update(newprops, {})
             or len(component._edifice_internal_references) > 0
             or component in self._hook_state_setted
-            ):
+        ):
             render_context.mark_props_change(component, newprops)
             rerendered_obj = self._render(component, render_context)
             render_context.mark_qt_rerender(rerendered_obj.component, True)
@@ -804,7 +801,8 @@ class RenderEngine(object):
                         hook.state = updater
                 if state0 != hook.state:
                     # State changed so we need to re-render this component.
-                    components_.append(element)
+                    if element not in components_:
+                        components_.append(element)
                 hook.updaters.clear()
 
         all_commands: list[_CommandType] = []
