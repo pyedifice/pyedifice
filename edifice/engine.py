@@ -69,9 +69,6 @@ class _RenderContext(object):
             callback(*args, **kwargs)
 
     def mark_props_change(self, component: Element, newprops: PropsDict):
-        d = dict(newprops._items)
-        if "children" not in d:
-            d["children"] = []
         if component not in self.component_to_old_props:
             self.component_to_old_props[component] = component.props
         component._props = newprops._d
