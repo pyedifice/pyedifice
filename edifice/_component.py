@@ -314,8 +314,6 @@ class Element:
 
     _render_changes_context: dict | None = None
     _render_unwind_context: dict | None = None
-    _edifice_internal_parent: tp.Optional["Element"] = None
-    # TODO Delete _edifice_internal_parent
     _controller: ControllerProtocol | None = None
     _edifice_internal_references: set[Reference] | None = None
 
