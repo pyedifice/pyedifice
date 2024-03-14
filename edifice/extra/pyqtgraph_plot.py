@@ -5,11 +5,24 @@ from ..engine import _CommandType
 # Import PySide6 or PyQt6 before importing pyqtgraph so that pyqtgraph detects the same
 from ..qt import QT_VERSION
 if QT_VERSION == "PyQt6" and not tp.TYPE_CHECKING:
-    pass
+    from PyQt6.QtGui import QMouseEvent
+    from PyQt6.QtCore import QMetaObject
 else:
-    pass
+    from PySide6.QtGui import QMouseEvent
+    from PySide6.QtCore import QMetaObject, QPointF
 
 import pyqtgraph as pg
+
+# class CustomPlotWidget(pg.PlotWidget):
+#     def __init__(self, *args, **kargs):
+#         super().__init__(*args, **kargs)
+#         self._on_mouse_move: tp.Callable[[QMouseEvent], None] | None = None
+#         # self.scene().sigMouseMoved.connect(self._mouse_move)
+#
+#     # def mouseMoveEvent(self, ev:QMouseEvent):
+#     #     super().mouseMoveEvent(ev)
+#     #     if self._on_mouse_move is not None:
+#     #         self._on_mouse_move(ev)
 
 class PyQtPlot(QtWidgetElement):
     """
@@ -51,17 +64,24 @@ class PyQtPlot(QtWidgetElement):
             Edifice will call
             `clear() <https://pyqtgraph.readthedocs.io/en/latest/api_reference/graphicsItems/plotitem.html#pyqtgraph.PlotItem.clear>`_
             before calling :code:`plot_fun`.
+        on_plot_mouse_move:
+            Handler for mouse move
+            `QMouseEvent <https://doc.qt.io/qtforpython/PySide6/QtGui/QMouseEvent.html>`_.
     """
 
     def __init__(
         self,
         plot_fun: tp.Callable[[pg.PlotItem], None],
+        # on_plot_mouse_move: tp.Callable[[QMouseEvent], None] | None = None,
+        on_plot_mouse_move: tp.Callable[[QPointF], None] | None = None,
         **kwargs
     ):
         self._register_props({
             "plot_fun": plot_fun,
+            "on_plot_mouse_move": on_plot_mouse_move,
         })
         super().__init__(**kwargs)
+        self._mouse_moved_connection : QMetaObject.Connection | None = None
 
     def _qt_update_commands(self, children, newprops, newstate):
         if self.underlying is None:
@@ -73,12 +93,22 @@ class PyQtPlot(QtWidgetElement):
         commands = super()._qt_update_commands_super(children, newprops, newstate, self.underlying)
 
         if "plot_fun" in newprops:
-            plot_fun = tp.cast(tp.Callable[[pg.PlotItem], None], self.props.plot_fun)
+            plot_fun = tp.cast(tp.Callable[[pg.PlotItem], None], newprops.plot_fun)
             plot_widget = tp.cast(pg.PlotWidget, self.underlying)
             plot_item = tp.cast(pg.PlotItem, plot_widget.getPlotItem())
             def _update_plot():
                 plot_item.clear()
                 plot_fun(plot_item)
             commands.append(_CommandType(_update_plot))
+        if "on_plot_mouse_move" in newprops:
+            plot_widget = tp.cast(pg.PlotWidget, self.underlying)
+            # plot_widget._on_mouse_move = newprops.on_plot_mouse_move
+            if self._mouse_moved_connection is not None:
+                plot_widget.sigSceneMouseMoved.disconnect(self._mouse_moved_connection)
+                self._mouse_moved_connection = None
+            if newprops.on_plot_mouse_move is not None:
+                # self._mouse_moved_connection = plot_widget.sigSceneMouseMoved.connect(newprops.on_plot_mouse_move)
+                self._mouse_moved_connection = plot_widget.scene().sigMouseMoved.connect(newprops.on_plot_mouse_move)
+            # scene = plot_widget.sceneObj()
 
         return commands
