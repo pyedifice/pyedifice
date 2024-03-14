@@ -384,7 +384,6 @@ class App(object):
                 )
                 icon_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), "inspector/icon.png")
                 component = Window(title="Element Inspector", on_close=cleanup, icon=icon_path)(self._inspector_component)
-                component._edifice_internal_parent = None
                 self._request_rerender([component], {})
         t = loop.create_task(first_render())
 

@@ -23,7 +23,7 @@ class _RenderContext(object):
     """
     __slots__ = ("need_qt_command_reissue", "component_to_old_props",
                  "force_refresh", "component_tree", "widget_tree", "enqueued_deletions",
-                 "trackers", "_callback_queue", "component_parent",
+                 "trackers", "_callback_queue",
                  "engine",
                  "current_element",
                  )
@@ -54,7 +54,6 @@ class _RenderContext(object):
         self.enqueued_deletions: list[Element] = []
 
         self._callback_queue = []
-        self.component_parent: Element | None = None
 
         self.trackers = []
 
@@ -315,7 +314,6 @@ class RenderEngine(object):
         Map of an Element to its rendered widget tree.
         """
         self._root = root
-        self._root._edifice_internal_parent = None
         self._app = app
 
         self._hook_state: defaultdict[Element, list[_HookState]] = defaultdict(list)
@@ -653,12 +651,9 @@ class RenderEngine(object):
                 "(alternatively, the register_props decorator will also correctly initialize the component)"
             )
         component._controller = self._app
-        component._edifice_internal_parent = render_context.component_parent
-        render_context.component_parent = component
 
         if isinstance(component, QtWidgetElement):
             ret = self._render_base_component(component, render_context)
-            render_context.component_parent = component._edifice_internal_parent
             return ret
 
         # Before the render, set the hooks indices to 0.
@@ -708,7 +703,6 @@ class RenderEngine(object):
 
         render_context.schedule_callback(component._did_render)
 
-        render_context.component_parent = component._edifice_internal_parent
         return render_context.widget_tree[component]
 
     def gen_qt_commands(
@@ -773,7 +767,6 @@ class RenderEngine(object):
             render_context = _RenderContext(self)
             local_state.render_context = render_context
 
-            render_context.component_parent = component._edifice_internal_parent
             widget_tree = self._render(component, render_context)
 
             # Generate the update commands from the widget trees
