@@ -314,14 +314,12 @@ class Element:
 
     _render_changes_context: dict | None = None
     _render_unwind_context: dict | None = None
-    _ignored_variables: set[tp.Text] | None = None
     _edifice_internal_parent: tp.Optional["Element"] = None
     # TODO Delete _edifice_internal_parent
     _controller: ControllerProtocol | None = None
     _edifice_internal_references: set[Reference] | None = None
 
     def __init__(self):
-        super().__setattr__("_ignored_variables", set())
         super().__setattr__("_edifice_internal_references", set())
         self._props: dict[str, tp.Any] = {"children": []}
         # Ensure we only construct this element once
