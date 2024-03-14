@@ -4,7 +4,6 @@ import unittest
 import edifice.app as app
 from edifice import Window
 import edifice.base_components as base_components
-import edifice.state as state
 import edifice._component as component
 
 from edifice.qt import QT_VERSION
