@@ -7,12 +7,12 @@ from edifice.inspector import inspector
 class ElementB(edifice.Element):
 
     def __init__(self, a, b, c):
+        super().__init__()
         self._register_props({
             "a": a,
             "b": b,
             "c": c,
         })
-        super().__init__()
         self.state = 0
 
     def _render_element(self):

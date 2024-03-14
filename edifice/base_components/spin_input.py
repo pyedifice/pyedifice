@@ -94,6 +94,7 @@ class SpinInput(QtWidgetElement):
         text_to_value : tp.Callable[[str], int | tp.Literal[QValidator.State.Intermediate] | tp.Literal[QValidator.State.Invalid]] | None = None,
         **kwargs
     ):
+        super().__init__(**kwargs)
         self._register_props({
             "value": value,
             "min_value": min_value,
@@ -102,8 +103,7 @@ class SpinInput(QtWidgetElement):
             "value_to_text": value_to_text,
             "text_to_value": text_to_value,
         })
-        self._register_props(kwargs)
-        super().__init__(**kwargs)
+        # self._register_props(kwargs)
         self._on_change_connected = False
 
     def _initialize(self):

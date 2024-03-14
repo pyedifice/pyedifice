@@ -58,10 +58,10 @@ class PyQtPlot(QtWidgetElement):
         plot_fun: tp.Callable[[pg.PlotItem], None],
         **kwargs
     ):
+        super().__init__(**kwargs)
         self._register_props({
             "plot_fun": plot_fun,
         })
-        super().__init__(**kwargs)
 
     def _qt_update_commands(self, children, newprops, newstate):
         if self.underlying is None:

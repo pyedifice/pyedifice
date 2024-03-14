@@ -136,11 +136,11 @@ class TestReference(unittest.TestCase):
 class _TestElementInner(Element):
 
     def __init__(self, prop_a):
+        super().__init__()
         self._register_props({
             "prop_a": prop_a,
         })
         self.state_a = "A"
-        super().__init__()
 
     def _render_element(self):
         return base_components.View()(
@@ -163,10 +163,10 @@ class _TestElementOuter(Element):
     """
 
     def __init__(self):
+        super().__init__()
         self.state_a = "A"
         self.state_b = "B"
         self.state_c = "C"
-        super().__init__()
 
     def _render_element(self):
         return base_components.View()(
@@ -374,11 +374,11 @@ class RenderTestCase(unittest.TestCase):
         class TestCompInner(Element):
 
             def __init__(self, val):
+                super().__init__()
                 self._register_props({
                     "val": val,
                 })
                 self.count = 0
-                super().__init__()
 
             def _render_element(self):
                 self.count += 1
@@ -406,10 +406,10 @@ class RenderTestCase(unittest.TestCase):
         class TestCompInner1(Element):
 
             def __init__(self, val):
+                super().__init__()
                 self._register_props({
                     "val": val,
                 })
-                super().__init__()
                 self.count = 0
                 self.success_count = 0
 
@@ -421,10 +421,10 @@ class RenderTestCase(unittest.TestCase):
         class TestCompInner2(Element):
 
             def __init__(self, val):
+                super().__init__()
                 self._register_props({
                     "val": val,
                 })
-                super().__init__()
                 self.count = 0
                 self.success_count = 0
 
@@ -451,17 +451,6 @@ class RenderTestCase(unittest.TestCase):
         self.assertEqual(inner_comp2.count, 1)
         self.assertEqual(inner_comp2.props.val, 8)
 
-        test_comp.value = 3
-        try:
-            app._request_rerender([test_comp])
-        except AssertionError:
-            pass
-        inner_comp1, inner_comp2 = app._component_tree[app._component_tree[test_comp][0]]
-        self.assertEqual(inner_comp1.props.val, 4)
-        self.assertEqual(inner_comp2.count, 2)
-        self.assertEqual(inner_comp2.success_count, 1)
-        self.assertEqual(inner_comp2.props.val, 8)
-
 
 class RefreshClassTestCase(unittest.TestCase):
 
@@ -469,10 +458,10 @@ class RefreshClassTestCase(unittest.TestCase):
         class OldInnerClass(Element):
 
             def __init__(self, val):
+                super().__init__()
                 self._register_props({
                     "val": val,
                 })
-                super().__init__()
                 self.count = 0
                 self._will_unmount = unittest.mock.MagicMock()
 
@@ -483,10 +472,10 @@ class RefreshClassTestCase(unittest.TestCase):
         class NewInnerClass(Element):
 
             def __init__(self, val):
+                super().__init__()
                 self._register_props({
                     "val": val,
                 })
-                super().__init__()
                 self.count = 0
 
             def _render_element(self):
@@ -558,10 +547,10 @@ class RefreshClassTestCase(unittest.TestCase):
         class OldInnerClass(Element):
 
             def __init__(self, val):
+                super().__init__()
                 self._register_props({
                     "val": val,
                 })
-                super().__init__()
                 self.count = 0
                 self._will_unmount = unittest.mock.MagicMock()
 
@@ -572,10 +561,10 @@ class RefreshClassTestCase(unittest.TestCase):
         class NewInnerClass(Element):
 
             def __init__(self, val):
+                super().__init__()
                 self._register_props({
                     "val": val,
                 })
-                super().__init__()
                 self.count = 0
 
             def _render_element(self):

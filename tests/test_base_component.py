@@ -166,8 +166,7 @@ class WidgetTreeTestCase(unittest.TestCase):
         button = base_components.Button(title=button_str, on_click=on_click)
         button_tree = engine._WidgetTree(button, [])
         eng = engine.RenderEngine(button)
-        with engine._storage_manager() as manager:
-            commands = eng.gen_qt_commands(button, MockRenderContext(manager, eng))
+        commands = eng.gen_qt_commands(button, MockRenderContext(eng))
         qt_button = button.underlying
         assert qt_button is not None
         style = qt_button.style()
@@ -210,8 +209,7 @@ class WidgetTreeTestCase(unittest.TestCase):
         rotation = 45
         icon = base_components.Icon(name="play", size=15, color=color, rotation=rotation)
         eng = engine.RenderEngine(icon)
-        with engine._storage_manager() as manager:
-            commands = eng.gen_qt_commands(icon, MockRenderContext(manager, eng))
+        commands = eng.gen_qt_commands(icon, MockRenderContext(eng))
 
         render_img_args = (str(ICONS / "font-awesome" / "solid" / "play.svg"),
                            size, color, rotation)
@@ -248,15 +246,13 @@ class WidgetTreeTestCase(unittest.TestCase):
         eng =  engine.RenderEngine(view)
 
         def label_tree(label):
-            with engine._storage_manager() as manager:
-                return eng.gen_qt_commands(label, MockRenderContext(manager, eng))
+            return eng.gen_qt_commands(label, MockRenderContext(eng))
 
         label1_commands = label_tree(label1)
         label2_commands = label_tree(label2)
-        with engine._storage_manager() as manager:
-            context = MockRenderContext(manager, eng)
-            context.widget_tree[view] = engine._WidgetTree(view, [label1])
-            commands = eng.gen_qt_commands(view, context)
+        context = MockRenderContext(eng)
+        context.widget_tree[view] = engine._WidgetTree(view, [label1])
+        commands = eng.gen_qt_commands(view, context)
 
         label1.underlying.font().pointSize()
 
@@ -279,10 +275,9 @@ class WidgetTreeTestCase(unittest.TestCase):
             _CommandType(view._add_child, 0, label1.underlying)]
 
         self.assertCountEqual(commands, commands_expected)
-        with engine._storage_manager() as manager:
-            context = MockRenderContext(manager, eng)
-            context.widget_tree[view] = engine._WidgetTree(view, [label1, label2])
-            commands = eng.gen_qt_commands(view, context)
+        context = MockRenderContext(eng)
+        context.widget_tree[view] = engine._WidgetTree(view, [label1, label2])
+        commands = eng.gen_qt_commands(view, context)
         commands_expected = label1_commands + label2_commands + [
             _CommandType(view.underlying.setStyleSheet, "QWidget#%s{}" % id(view)),
             _CommandType(view.underlying.setProperty, "css_class", []),
@@ -303,10 +298,9 @@ class WidgetTreeTestCase(unittest.TestCase):
         self.assertCountEqual(commands, commands_expected)
 
         inner_view = base_components.View()
-        with engine._storage_manager() as manager:
-            context = MockRenderContext(manager, eng)
-            context.widget_tree[view] = engine._WidgetTree(view, [label2, inner_view])
-            commands = eng.gen_qt_commands(view, context)
+        context = MockRenderContext(eng)
+        context.widget_tree[view] = engine._WidgetTree(view, [label2, inner_view])
+        commands = eng.gen_qt_commands(view, context)
         commands_expected = label2_commands + [
                 _CommandType(view.underlying.setStyleSheet, "QWidget#%s{}" % id(view)),
                 _CommandType(view.underlying.setProperty, "css_class", []),

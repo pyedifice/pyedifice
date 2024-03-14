@@ -85,13 +85,14 @@ class TableGridView(QtWidgetElement):
             column_minwidth : list[int] = [],
             **kwargs,
         ):
+        super().__init__(**kwargs)
         self._register_props({
             "row_stretch": row_stretch,
             "column_stretch": column_stretch,
             "row_minheight": row_minheight,
             "column_minwidth": column_minwidth,
         })
-        self._register_props(kwargs)
+        # self._register_props(kwargs)
         self.underlying = None
         self._old_children: dict[QtWidgetElement, tuple[int,int]] = {}
         """Like _LinearView._widget_children"""
@@ -100,7 +101,6 @@ class TableGridView(QtWidgetElement):
         self._column_stretch = column_stretch
         self._row_minheight = row_minheight
         self._column_minwidth = column_minwidth
-        super().__init__(**kwargs)
 
     def row(self) -> Element:
         """

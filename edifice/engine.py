@@ -1,7 +1,6 @@
 import asyncio
 from collections.abc import Callable, Coroutine, Iterator
 from collections import defaultdict
-import contextlib
 import inspect
 import logging
 import typing as tp
@@ -15,44 +14,6 @@ from ._component import (
 logger = logging.getLogger("Edifice")
 _T_use_state = tp.TypeVar("_T_use_state")
 
-class _ChangeManager(object):
-    __slots__ = ("changes",)
-
-    def __init__(self):
-        self.changes = []
-
-    def set(self, obj, key, value):
-        old_value = None
-        if hasattr(obj, key):
-            old_value = getattr(obj, key)
-        self.changes.append((obj, key, hasattr(obj, key), old_value, value))
-        setattr(obj, key, value)
-
-    def unwind(self):
-        logger.warning("Encountered error while rendering. Unwinding changes.")
-        for obj, key, had_key, old_value, _ in reversed(self.changes):
-            if had_key:
-                logger.info("Resetting %s.%s to %s", obj, key, old_value)
-                setattr(obj, key, old_value)
-            else:
-                try:
-                    delattr(obj, key)
-                except AttributeError:
-                    logger.warning(
-                        "Error while unwinding changes: Unable to delete %s from %s. "
-                        "Setting to None instead",
-                        key, obj.__class__.__name__)
-                    setattr(obj, key, None)
-
-@contextlib.contextmanager
-def _storage_manager() -> Iterator[_ChangeManager]:
-    changes = _ChangeManager()
-    try:
-        yield changes
-    except Exception as e:
-        changes.unwind()
-        raise e
-
 class _RenderContext(object):
     """
     Encapsulates various state that's needed for rendering.
@@ -60,7 +21,7 @@ class _RenderContext(object):
     One _RenderContext is created when a render begins, and it is destroyed
     at the end of the render.
     """
-    __slots__ = ("storage_manager", "need_qt_command_reissue", "component_to_old_props",
+    __slots__ = ("need_qt_command_reissue", "component_to_old_props",
                  "force_refresh", "component_tree", "widget_tree", "enqueued_deletions",
                  "trackers", "_callback_queue", "component_parent",
                  "engine",
@@ -74,12 +35,10 @@ class _RenderContext(object):
     # https://peps.python.org/pep-0526/#class-and-instance-variable-annotations
     def __init__(
         self,
-        storage_manager: _ChangeManager,
         engine: "RenderEngine",
         force_refresh: bool =False,
     ):
         self.engine = engine
-        self.storage_manager: _ChangeManager = storage_manager
         self.need_qt_command_reissue = {}
         self.component_to_old_props = {}
         self.force_refresh = force_refresh
@@ -110,24 +69,18 @@ class _RenderContext(object):
         for callback, args, kwargs in self._callback_queue:
             callback(*args, **kwargs)
 
-    def mark_props_change(self, component, newprops, new_component=False):
+    def mark_props_change(self, component: Element, newprops: PropsDict):
         d = dict(newprops._items)
         if "children" not in d:
             d["children"] = []
         if component not in self.component_to_old_props:
-            if new_component:
-                self.component_to_old_props[component] = PropsDict({})
-            else:
-                self.component_to_old_props[component] = component.props
-        self.set(component, "_props", d)
+            self.component_to_old_props[component] = component.props
+        component._props = newprops._d
 
     def get_old_props(self, component):
         if component in self.component_to_old_props:
             return self.component_to_old_props[component]
         return PropsDict({})
-
-    def set(self, obj, k, v):
-        self.storage_manager.set(obj, k, v)
 
     def mark_qt_rerender(self, component: QtWidgetElement, need_rerender: bool):
         self.need_qt_command_reissue[component] = need_rerender
@@ -550,19 +503,20 @@ class RenderEngine(object):
         new_component: Element,
         render_context: _RenderContext
     ) -> _WidgetTree:
-        # This function is called whenever we want to update old component
-        # to have props of new_component.
+        # new_component is a new rendering of old component, so update
+        # old component to have props of new_component.
+        # The new_component will be discarded.
         assert component._edifice_internal_references is not None
         assert new_component._edifice_internal_references is not None
         newprops = new_component.props
-        render_context.set(component, "_edifice_internal_references",
-                           component._edifice_internal_references | new_component._edifice_internal_references)
+        # TODO are we leaking memory by holding onto the old references?
+        component._edifice_internal_references.update(new_component._edifice_internal_references)
         # component needs re-rendering if
         #  1) props changed
         #  2) state changed
         #  3) it has any pending _hook_state updates
         #  4) it has any references
-        if (component._should_update(newprops, {})
+        if (component._should_update(newprops)
             or len(component._edifice_internal_references) > 0
             or component in self._hook_state_setted
         ):
@@ -691,7 +645,7 @@ class RenderEngine(object):
         try:
             assert component._edifice_internal_references is not None
             for ref in component._edifice_internal_references:
-                render_context.set(ref, "_value", component)
+                ref._value = component
         except TypeError:
             raise ValueError(
                 f"{component.__class__} is not correctly initialized. "
@@ -815,34 +769,34 @@ class RenderEngine(object):
         for component in components_:
 
             commands: list[_CommandType] = []
-            with _storage_manager() as storage_manager:
-                render_context = _RenderContext(storage_manager, self)
-                local_state.render_context = render_context
 
-                render_context.component_parent = component._edifice_internal_parent
-                widget_tree = self._render(component, render_context)
+            render_context = _RenderContext(self)
+            local_state.render_context = render_context
 
-                # Generate the update commands from the widget trees
-                commands.extend(self.gen_qt_commands(widget_tree.component, render_context))
+            render_context.component_parent = component._edifice_internal_parent
+            widget_tree = self._render(component, render_context)
 
-                # Update the stored component trees and widget trees
-                self._component_tree.update(render_context.component_tree)
-                self._widget_tree.update(render_context.widget_tree)
+            # Generate the update commands from the widget trees
+            commands.extend(self.gen_qt_commands(widget_tree.component, render_context))
 
-                # Delete components that should be deleted (and call the respective unmounts)
-                for component_delete in render_context.enqueued_deletions:
-                    self._delete_component(component_delete, True)
+            # Update the stored component trees and widget trees
+            self._component_tree.update(render_context.component_tree)
+            self._widget_tree.update(render_context.widget_tree)
 
-                # This is the phase of the render when the commands run.
-                for command in commands:
-                    try:
-                        command.fn(*command.args, **command.kwargs)
-                    except Exception as ex:
-                        logger.exception("Exception while running command:\n"
-                                        + str(command) + "\n"
-                                        + str(ex) + "\n")
-                render_context.run_callbacks()
-                all_commands.extend(commands)
+            # Delete components that should be deleted (and call the respective unmounts)
+            for component_delete in render_context.enqueued_deletions:
+                self._delete_component(component_delete, True)
+
+            # This is the phase of the render when the commands run.
+            for command in commands:
+                try:
+                    command.fn(*command.args, **command.kwargs)
+                except Exception as ex:
+                    logger.exception("Exception while running command:\n"
+                                    + str(command) + "\n"
+                                    + str(ex) + "\n")
+            render_context.run_callbacks()
+            all_commands.extend(commands)
 
         # after render, call the use_effect setup functions.
         # we want to guarantee that elements are fully rendered before

@@ -71,10 +71,10 @@ class GroupBox(QtWidgetElement):
     """
 
     def __init__(self, title):
+        super().__init__()
         self._register_props({
             "title": title,
         })
-        super().__init__()
 
     def _initialize(self):
         self.underlying = QtWidgets.QGroupBox(self.props.title)
@@ -149,6 +149,7 @@ class Icon(QtWidgetElement):
         rotation: float = 0,
         **kwargs,
     ):
+        super().__init__(**kwargs)
         self._register_props({
             "name": name,
             "size": size,
@@ -158,7 +159,6 @@ class Icon(QtWidgetElement):
             "rotation": rotation,
         })
         self._register_props(kwargs)
-        super().__init__(**kwargs)
 
     def _initialize(self):
         self.underlying = QtWidgets.QLabel("")
@@ -211,9 +211,9 @@ class Button(QtWidgetElement):
     """
 
     def __init__(self, title: tp.Any = "", **kwargs):
+        super().__init__(**kwargs)
         self._register_props({"title": title})
         self._register_props(kwargs)
-        super().__init__(**kwargs)
         self._connected = False
 
     def _initialize(self):
@@ -281,7 +281,9 @@ class IconButton(Button):
         sub_collection="solid",
         color=(0, 0, 0, 255),
         rotation=0,
-        **kwargs):
+        **kwargs,
+    ):
+        super().__init__(**kwargs)
         self._register_props({
             "name": name,
             "size": size,
@@ -291,7 +293,6 @@ class IconButton(Button):
             "rotation": rotation,
         })
         self._register_props(kwargs)
-        super().__init__(**kwargs)
 
 
     def _qt_update_commands(
@@ -348,6 +349,7 @@ class Label(QtWidgetElement):
         link_open: bool = False,
         **kwargs,
     ):
+        super().__init__(**kwargs)
         self._register_props({
             "text": text,
             "selectable": selectable,
@@ -356,7 +358,6 @@ class Label(QtWidgetElement):
             "link_open": link_open,
         })
         self._register_props(kwargs)
-        super().__init__(**kwargs)
 
     def _initialize(self):
         self.underlying = QtWidgets.QLabel(str(self.props.text))
@@ -421,11 +422,11 @@ class ImageSvg(QtWidgetElement):
             containing the serialized XML representation of an SVG file.
     """
     def __init__(self, src: str | QtCore.QByteArray, **kwargs):
+        super().__init__(**kwargs)
         self._register_props({
             "src": src,
         })
         self._register_props(kwargs)
-        super().__init__(**kwargs)
 
     def _initialize(self):
         self.underlying = QtSvgWidgets.QSvgWidget()
@@ -519,6 +520,7 @@ class TextInput(QtWidgetElement):
         # completer: tp.Optional[Completer] = None,
         **kwargs
     ):
+        super().__init__(**kwargs)
         self._register_props({
             "text": text,
             "placeholder_text": placeholder_text,
@@ -526,7 +528,6 @@ class TextInput(QtWidgetElement):
             "on_edit_finish": on_edit_finish,
         })
         self._register_props(kwargs)
-        super().__init__(**kwargs)
         self._on_change_connected = False
         self._editing_finished_connected = False
 
@@ -630,6 +631,7 @@ class Dropdown(QtWidgetElement):
         on_select: tp.Optional[tp.Callable[[tp.Text], None | tp.Awaitable[None]]] = None,
         **kwargs
     ):
+        super().__init__(**kwargs)
         self._register_props({
             "selection": selection,
             "text": text,
@@ -639,7 +641,6 @@ class Dropdown(QtWidgetElement):
             "on_select": on_select,
         })
         self._register_props(kwargs)
-        super().__init__(**kwargs)
         self._on_change_connected = False
         self._on_select_connected = False
         if not editable and on_change is not None and on_select is None:
@@ -740,13 +741,13 @@ class RadioButton(QtWidgetElement):
         on_change: tp.Callable[[bool], None | tp.Awaitable[None]] = (lambda checked: None),
         **kwargs,
      ):
+        super().__init__(**kwargs)
         self._register_props({
             "checked": checked,
             "text": text,
             "on_change": on_change,
         })
         self._register_props(kwargs)
-        super().__init__(**kwargs)
         self._connected = False
 
     def _initialize(self):
@@ -816,13 +817,13 @@ class CheckBox(QtWidgetElement):
         on_change: tp.Callable[[bool], None | tp.Awaitable[None]] = (lambda checked: None),
         **kwargs,
     ):
+        super().__init__(**kwargs)
         self._register_props({
             "checked": checked,
             "text": text,
             "on_change": on_change,
         })
         self._register_props(kwargs)
-        super().__init__(**kwargs)
         self._connected = False
 
     def _initialize(self):
@@ -910,6 +911,7 @@ class Slider(QtWidgetElement):
         on_change: tp.Callable[[int], None | tp.Awaitable[None]] | None = None,
         **kwargs,
     ):
+        super().__init__(**kwargs)
         self._register_props({
             "value": value,
             "min_value": min_value,
@@ -918,7 +920,6 @@ class Slider(QtWidgetElement):
             "on_change": on_change,
         })
         self._register_props(kwargs)
-        super().__init__(**kwargs)
         self._connected = False
 
     def _initialize(self, orientation):
@@ -1100,9 +1101,13 @@ class View(_LinearView):
             to position themselves relevative to their parent.
     """
 
-    def __init__(self, layout: tp.Text = "column", **kwargs):
-        self._register_props({"layout": layout})
+    def __init__(
+        self,
+        layout: tp.Literal["row", "column", "none"] = "column",
+        **kwargs,
+    ):
         super().__init__(**kwargs)
+        self._register_props({"layout": layout})
 
     def _delete_child(self, i, old_child: QtWidgetElement):
         # assert self.underlying_layout is not None
@@ -1226,13 +1231,13 @@ class Window(View):
         on_close: tp.Optional[tp.Callable[[QtGui.QCloseEvent], None | tp.Awaitable[None]]] = None,
         **kwargs,
     ):
+        super().__init__(**kwargs)
         self._register_props({
             "title": title,
             "icon": icon,
             "menu": menu,
             "on_close": on_close,
         })
-        super().__init__(**kwargs)
 
         self._menu_bar = None
         self._on_close: tp.Optional[tp.Callable[[QtGui.QCloseEvent], None | tp.Awaitable[None]]] = None
@@ -1310,11 +1315,11 @@ class ScrollView(_LinearView):
     """
 
     def __init__(self, layout="column", **kwargs):
+        super().__init__(**kwargs)
         self._register_props({
             "layout": layout,
         })
-        self._register_props(kwargs)
-        super().__init__(**kwargs)
+        # self._register_props(kwargs)
 
     def _delete_child(self, i, old_child: QtWidgetElement):
         if self.underlying_layout is None:
@@ -1493,12 +1498,12 @@ class GridView(QtWidgetElement):
     """
 
     def __init__(self, layout="", key_to_code=None, **kwargs):
+        super().__init__(**kwargs)
         self._register_props({
             "layout": layout,
             "key_to_code": key_to_code,
         })
-        self._register_props(kwargs)
-        super().__init__(**kwargs)
+        # self._register_props(kwargs)
         self._previously_rendered = None
 
     def _initialize(self):
@@ -1555,11 +1560,11 @@ class TabView(_LinearView):
     """
 
     def __init__(self, labels=None, **kwargs):
+        super().__init__(**kwargs)
         self._register_props({
             "labels": labels,
         })
-        self._register_props(kwargs)
-        super().__init__(**kwargs)
+        # self._register_props(kwargs)
 
     def _delete_child(self, i, old_child):
         assert type(self.underlying) == QtWidgets.QTabWidget
@@ -1774,6 +1779,7 @@ class ProgressBar(QtWidgetElement):
         orientation: QtCore.Qt.Orientation = QtCore.Qt.Orientation.Horizontal,
         **kwargs,
     ):
+        super().__init__(**kwargs)
         self._register_props({
             "value": value,
             "min_value": min_value,
@@ -1781,8 +1787,7 @@ class ProgressBar(QtWidgetElement):
             "orientation": orientation,
             "format": format,
         })
-        self._register_props(kwargs)
-        super().__init__(**kwargs)
+        # self._register_props(kwargs)
         self._connected = False
 
     def _initialize(self, orientation):

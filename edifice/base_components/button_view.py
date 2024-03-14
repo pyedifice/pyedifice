@@ -57,17 +57,16 @@ class ButtonView(View):
             Use either this or :code:`on_click`, not both.
     """
     def __init__(self,
-            layout: tp.Literal["row", "column", "none"] | None = "row",
-            on_trigger: tp.Callable[[QKeyEvent], None] | tp.Callable[[QMouseEvent], None] | None = None,
-            **kwargs):
+        layout: tp.Literal["row", "column", "none"] = "row",
+        on_trigger: tp.Callable[[QKeyEvent], None] | tp.Callable[[QMouseEvent], None] | None = None,
+        **kwargs
+    ):
+        super().__init__(layout, **kwargs)
         self._register_props({
             "layout": layout,
             "on_trigger": on_trigger,
         })
-        self._register_props(kwargs)
-        if layout is None:
-            layout = "none"
-        super().__init__(layout, **kwargs)
+        # self._register_props(kwargs)
 
     def _initialize(self):
         self.underlying = _PushButton()
