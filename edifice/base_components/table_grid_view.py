@@ -25,7 +25,6 @@ class _TableGridViewRow(QtWidgetElement):
         self,
         children: list[_WidgetTree],
         newprops : PropsDict,
-        newstate,
     ) -> list[_CommandType]:
         # This element has no Qt underlying so it has nothing to do except store
         # the children of the row.
@@ -161,7 +160,6 @@ class TableGridView(QtWidgetElement):
         self,
         widget_trees: dict[Element, _WidgetTree],
         newprops,
-        newstate
     ):
         if self.underlying is None:
             self._initialize()
@@ -208,7 +206,7 @@ class TableGridView(QtWidgetElement):
         if "column_minwidth" in newprops:
             commands.append(_CommandType(self._set_column_minwidth, newprops["column_minwidth"]))
 
-        commands.extend(super()._qt_update_commands_super(widget_trees, newprops, newstate, self.underlying, self.underlying_layout))
+        commands.extend(super()._qt_update_commands_super(widget_trees, newprops, self.underlying, self.underlying_layout))
 
         return commands
 

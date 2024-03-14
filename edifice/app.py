@@ -237,7 +237,7 @@ class App(object):
 
     def _rerender_callback(self):
         self._rerender_called_soon = False
-        self._request_rerender(self._rerender_wanted[:], {})
+        self._request_rerender(self._rerender_wanted[:])
 
     def _defer_rerender(self, element: Element):
         """
@@ -251,14 +251,13 @@ class App(object):
             self._rerender_called_soon = True
 
 
-    def _request_rerender(self, components: list[Element], newstate):
+    def _request_rerender(self, components: list[Element]):
         """
         Call the RenderEngine to immediately render the widget tree.
         """
         self._is_rerendering = True
         self._rerender_wanted.clear()
 
-        del newstate #TODO?
         start_time = time.process_time()
 
         self._render_engine._request_rerender(components)
@@ -321,7 +320,7 @@ class App(object):
             parent_widget.layout().add_widget(edifice_widgets[1])
 
         """
-        self._request_rerender([self._root], {})
+        self._request_rerender([self._root])
         exportlist = self._render_engine._widget_tree[self._root]
         if isinstance(exportlist.component, ExportList):
             widgets = []
@@ -369,7 +368,7 @@ class App(object):
         yield loop
 
         async def first_render():
-            self._request_rerender([self._root], {})
+            self._request_rerender([self._root])
             if self._inspector:
                 logger.info("Running inspector")
                 def cleanup(e):
@@ -384,7 +383,7 @@ class App(object):
                 )
                 icon_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), "inspector/icon.png")
                 component = Window(title="Element Inspector", on_close=cleanup, icon=icon_path)(self._inspector_component)
-                self._request_rerender([component], {})
+                self._request_rerender([component])
         t = loop.create_task(first_render())
 
         self._app_close_event = asyncio.Event()

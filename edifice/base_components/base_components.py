@@ -84,7 +84,6 @@ class GroupBox(QtWidgetElement):
         self,
         widget_trees: dict[Element, _WidgetTree],
         newprops,
-        newstate
     ):
         children = _get_widget_children(widget_trees, self)
         if self.underlying is None:
@@ -92,7 +91,7 @@ class GroupBox(QtWidgetElement):
         assert self.underlying is not None
         if len(children) != 1:
             raise ValueError("GroupBox expects exactly 1 child, got %s" % len(children))
-        commands = super()._qt_update_commands_super(widget_trees, newprops, newstate, self.underlying)
+        commands = super()._qt_update_commands_super(widget_trees, newprops, self.underlying)
         child_underlying = children[0].underlying
         assert child_underlying is not None
         widget = tp.cast(QtWidgets.QGroupBox, self.underlying)
@@ -174,14 +173,13 @@ class Icon(QtWidgetElement):
         self,
         widget_trees: dict[Element, _WidgetTree],
         newprops,
-        newstate
     ):
         if self.underlying is None:
             self._initialize()
 
         self._set_size(self.props.size, self.props.size)
         assert self.underlying is not None
-        commands = super()._qt_update_commands_super(widget_trees, newprops, newstate, self.underlying)
+        commands = super()._qt_update_commands_super(widget_trees, newprops, self.underlying)
         icon_path = str(ICONS / self.props.collection / self.props.sub_collection / (self.props.name + ".svg"))
 
         if "name" in newprops or "size" in newprops or "collection" in newprops or "sub_collection" in newprops or "color" in newprops or "rotation" in newprops:
@@ -224,14 +222,13 @@ class Button(QtWidgetElement):
         self,
         widget_trees: dict[Element, _WidgetTree],
         newprops,
-        newstate
     ):
         if self.underlying is None:
             self._initialize()
         assert self.underlying is not None
         size = self.underlying.font().pointSize()
         self._set_size(size * len(self.props.title), size, lambda size: (size * len(self.props.title), size))
-        commands = super()._qt_update_commands_super(widget_trees, newprops, newstate, self.underlying)
+        commands = super()._qt_update_commands_super(widget_trees, newprops, self.underlying)
         widget = tp.cast(QtWidgets.QPushButton, self.underlying)
         for prop in newprops:
             if prop == "title":
@@ -299,9 +296,8 @@ class IconButton(Button):
         self,
         widget_trees: dict[Element, _WidgetTree],
         newprops,
-        newstate
     ):
-        commands = super()._qt_update_commands(widget_trees, newprops, newstate)
+        commands = super()._qt_update_commands(widget_trees, newprops)
         icon_path = str(ICONS / self.props.collection / self.props.sub_collection / (self.props.name + ".svg"))
 
         assert self.underlying is not None
@@ -367,7 +363,6 @@ class Label(QtWidgetElement):
         self,
         widget_trees: dict[Element, _WidgetTree],
         newprops,
-        newstate
     ):
         if self.underlying is None:
             self._initialize()
@@ -381,7 +376,7 @@ class Label(QtWidgetElement):
         # https://stackoverflow.com/questions/48665788/qlabels-getting-clipped-off-at-the-end/48665900#48665900
 
         widget = tp.cast(QtWidgets.QLabel, self.underlying)
-        commands = super()._qt_update_commands_super(widget_trees, newprops, newstate, self.underlying, None)
+        commands = super()._qt_update_commands_super(widget_trees, newprops, self.underlying, None)
         for prop in newprops:
             if prop == "text":
                 commands.append(_CommandType(widget.setText, str(newprops[prop])))
@@ -436,13 +431,12 @@ class ImageSvg(QtWidgetElement):
         self,
         widget_trees: dict[Element, _WidgetTree],
         newprops,
-        newstate
     ):
         if self.underlying is None:
             self._initialize()
         assert self.underlying is not None
         widget = tp.cast(QtSvgWidgets.QSvgWidget, self.underlying)
-        commands = super()._qt_update_commands_super(widget_trees, newprops, newstate, self.underlying, None)
+        commands = super()._qt_update_commands_super(widget_trees, newprops, self.underlying, None)
         for prop in newprops:
             if prop == "src":
                 commands.append(_CommandType(widget.load, self.props.src))
@@ -572,14 +566,13 @@ class TextInput(QtWidgetElement):
         self,
         widget_trees: dict[Element, _WidgetTree],
         newprops,
-        newstate
     ):
         if self.underlying is None:
             self._initialize()
         assert self.underlying is not None
         widget = tp.cast(QtWidgets.QLineEdit, self.underlying)
 
-        commands = super()._qt_update_commands_super(widget_trees, newprops, newstate, self.underlying)
+        commands = super()._qt_update_commands_super(widget_trees, newprops, self.underlying)
         if "text" in newprops:
             commands.append(_CommandType(widget.setText, str(newprops.text)))
             # This setCursorPosition is needed because otherwise the cursor will
@@ -685,14 +678,13 @@ class Dropdown(QtWidgetElement):
         self,
         widget_trees: dict[Element, _WidgetTree],
         newprops,
-        newstate
     ):
         if self.underlying is None:
             self._initialize()
         assert self.underlying is not None
         widget = tp.cast(QtWidgets.QComboBox, self.underlying)
 
-        commands = super()._qt_update_commands_super(widget_trees, newprops, newstate, self.underlying)
+        commands = super()._qt_update_commands_super(widget_trees, newprops, self.underlying)
         commands.append(_CommandType(widget.setEditable, self.props.editable))
         if "options" in newprops:
             commands.extend([
@@ -770,14 +762,13 @@ class RadioButton(QtWidgetElement):
         self,
         widget_trees: dict[Element, _WidgetTree],
         newprops,
-        newstate
     ):
         if self.underlying is None:
             self._initialize()
         assert self.underlying is not None
         widget = tp.cast(QtWidgets.QRadioButton, self.underlying)
 
-        commands = super()._qt_update_commands_super(widget_trees, newprops, newstate, self.underlying)
+        commands = super()._qt_update_commands_super(widget_trees, newprops, self.underlying)
         commands.append(_CommandType(widget.setChecked, self.props.checked))
         for prop in newprops:
             if prop == "on_change":
@@ -850,14 +841,13 @@ class CheckBox(QtWidgetElement):
         self,
         widget_trees: dict[Element, _WidgetTree],
         newprops,
-        newstate
     ):
         if self.underlying is None:
             self._initialize()
         assert self.underlying is not None
         widget = tp.cast(QtWidgets.QCheckBox, self.underlying)
 
-        commands = super()._qt_update_commands_super(widget_trees, newprops, newstate, self.underlying)
+        commands = super()._qt_update_commands_super(widget_trees, newprops, self.underlying)
         for prop in newprops:
             if prop == "on_change":
                 commands.append(_CommandType(self._set_on_change, newprops[prop]))
@@ -949,14 +939,13 @@ class Slider(QtWidgetElement):
         self,
         widget_trees: dict[Element, _WidgetTree],
         newprops,
-        newstate
     ):
         if self.underlying is None:
             self._initialize(newprops.orientation)
         assert self.underlying is not None
         widget = tp.cast(QtWidgets.QSlider, self.underlying)
 
-        commands = super()._qt_update_commands_super(widget_trees, newprops, newstate, self.underlying)
+        commands = super()._qt_update_commands_super(widget_trees, newprops, self.underlying)
         if "min_value" in newprops:
             commands.append(_CommandType(widget.setMinimum, newprops.min_value))
         if "max_value" in newprops:
@@ -1179,7 +1168,6 @@ class View(_LinearView):
         self,
         widget_trees: dict[Element, _WidgetTree],
         newprops,
-        newstate
     ):
         if self.underlying is None:
             self._initialize()
@@ -1192,13 +1180,13 @@ class View(_LinearView):
         # https://doc.qt.io/qtforpython-6/PySide6/QtCore/QObject.html#detailed-description
         # “The parent takes ownership of the object; i.e., it will automatically delete its children in its destructor.”
         commands.extend(self._recompute_children(children))
-        commands.extend(self._qt_stateless_commands(widget_trees, newprops, newstate))
+        commands.extend(self._qt_stateless_commands(widget_trees, newprops))
         return commands
 
-    def _qt_stateless_commands(self, widget_trees: dict[Element, _WidgetTree], newprops, newstate):
+    def _qt_stateless_commands(self, widget_trees: dict[Element, _WidgetTree], newprops):
         # This stateless render command is used to test rendering
         assert self.underlying is not None
-        commands = super()._qt_update_commands_super(widget_trees, newprops, newstate, self.underlying, self.underlying_layout)
+        commands = super()._qt_update_commands_super(widget_trees, newprops, self.underlying, self.underlying_layout)
         return commands
 
 class Window(View):
@@ -1265,7 +1253,6 @@ class Window(View):
         self,
         widget_trees: dict[Element, _WidgetTree],
         newprops,
-        newstate
     ):
 
         if self.underlying is None:
@@ -1274,7 +1261,7 @@ class Window(View):
             self.underlying.closeEvent = self._handle_close
             self.underlying.show()
 
-        commands: list[_CommandType] = super()._qt_update_commands(widget_trees, newprops, newstate)
+        commands: list[_CommandType] = super()._qt_update_commands(widget_trees, newprops)
 
         if "title" in newprops:
             commands.append(_CommandType(self.underlying.setWindowTitle, newprops.title))
@@ -1362,14 +1349,13 @@ class ScrollView(_LinearView):
         self,
         widget_trees: dict[Element, _WidgetTree],
         newprops,
-        newstate
     ):
         if self.underlying is None:
             self._initialize()
         assert self.underlying is not None
         children = _get_widget_children(widget_trees, self)
         commands = self._recompute_children(children)
-        commands.extend(super()._qt_update_commands_super(widget_trees, newprops, newstate, self.underlying, self.underlying_layout))
+        commands.extend(super()._qt_update_commands_super(widget_trees, newprops, self.underlying, self.underlying_layout))
         return commands
 
 def npones(num_rows, num_cols):
@@ -1522,7 +1508,6 @@ class GridView(QtWidgetElement):
         self,
         widget_trees: dict[Element, _WidgetTree],
         newprops,
-        newstate
     ):
         children = _get_widget_children(widget_trees, self)
         if self.underlying is None:
@@ -1540,7 +1525,7 @@ class GridView(QtWidgetElement):
             for child, y, x, dy, dx in grid_spec:
                 commands.append(_CommandType(self.underlying_layout.addWidget, child.underlying, y, x, dy, dx))
             self._previously_rendered = grid_spec
-        commands.extend(super()._qt_update_commands_super(widget_trees, newprops, newstate, self.underlying, None))
+        commands.extend(super()._qt_update_commands_super(widget_trees, newprops, self.underlying, None))
         return commands
 
 
@@ -1586,7 +1571,6 @@ class TabView(_LinearView):
         self,
         widget_trees: dict[Element, _WidgetTree],
         newprops,
-        newstate
     ):
         children = _get_widget_children(widget_trees, self)
         if len(children) != len(self.props.labels):
@@ -1595,7 +1579,7 @@ class TabView(_LinearView):
             self._initialize()
         assert self.underlying is not None
         commands = self._recompute_children(children)
-        commands.extend(super()._qt_update_commands_super(widget_trees, newprops, newstate, self.underlying, None))
+        commands.extend(super()._qt_update_commands_super(widget_trees, newprops, self.underlying, None))
         return commands
 
 
@@ -1643,11 +1627,10 @@ class CustomWidget(QtWidgetElement):
         self,
         widget_trees: dict[Element, _WidgetTree],
         newprops: PropsDict,
-        newstate
     ):
         if self.underlying is None:
             self.underlying = self.create_widget()
-        commands = super()._qt_update_commands_super(widget_trees, newprops, newstate, self.underlying, None)
+        commands = super()._qt_update_commands_super(widget_trees, newprops, self.underlying, None)
         commands.append(_CommandType(self.paint, self.underlying, newprops))
         return commands
 
@@ -1664,7 +1647,6 @@ class ExportList(QtWidgetElement):
         self,
         widget_trees: dict[Element, _WidgetTree],
         newprops,
-        newstate
     ):
         return []
 
@@ -1799,14 +1781,13 @@ class ProgressBar(QtWidgetElement):
         self,
         widget_trees: dict[Element, _WidgetTree],
         newprops,
-        newstate
     ):
         if self.underlying is None:
             self._initialize(newprops.orientation)
         assert self.underlying is not None
         widget = tp.cast(QtWidgets.QProgressBar, self.underlying)
 
-        commands = super()._qt_update_commands_super(widget_trees, newprops, newstate, self.underlying)
+        commands = super()._qt_update_commands_super(widget_trees, newprops, self.underlying)
         if "orientation" in newprops:
             commands.append(_CommandType(widget.setOrientation, newprops.orientation))
         if "min_value" in newprops:

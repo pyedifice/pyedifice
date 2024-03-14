@@ -418,16 +418,15 @@ class Element:
     def _should_update(self, newprops: PropsDict) -> bool:
         """Determines if the Element should rerender upon receiving new props and state.
 
-        The arguments, :code:`newprops` and :code:`newstate`, reflect the
-        props and state that change: they
-        may be a subset of the props and the state. When this function is called,
-        all props and state of this Element are the old values, so you can compare
-        :code:`self.props` to :code:`newprops` and :code`self` to :code:`newstate`
+        The :code:`newprops` reflect the
+        props that change: they
+        may be a subset of the props. When this function is called,
+        all props of this Element are the old values, so you can compare
+        :code:`self.props` to :code:`newprops`
         to determine changes.
 
         Args:
             newprops: the new set of props
-            newstate: the new set of state
         Returns:
             Whether or not the Element should be rerendered.
         """
@@ -1206,7 +1205,6 @@ class QtWidgetElement(Element):
         self,
         widget_trees: dict[Element, "_WidgetTree"],
         newprops : PropsDict,
-        newstate,
     ) -> list[_CommandType]:
         raise NotImplementedError
 
@@ -1216,7 +1214,6 @@ class QtWidgetElement(Element):
         # We must pass all of the widget_trees because some elements
         # like TableGridView need to know the children of the children.
         newprops : PropsDict,
-        newstate,
         underlying: QtWidgets.QWidget,
         underlying_layout: QtWidgets.QLayout | None = None
     ) -> list[_CommandType]:

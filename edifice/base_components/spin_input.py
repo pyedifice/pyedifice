@@ -126,14 +126,13 @@ class SpinInput(QtWidgetElement):
         self,
         widget_trees: dict[Element, _WidgetTree],
         newprops,
-        newstate
     ):
         if self.underlying is None:
             self._initialize()
         assert self.underlying is not None
         widget = tp.cast(_SpinBox, self.underlying)
 
-        commands = super()._qt_update_commands_super(widget_trees, newprops, newstate, self.underlying)
+        commands = super()._qt_update_commands_super(widget_trees, newprops, self.underlying)
 
         if "value_to_text" in newprops:
             commands.append(_CommandType(setattr, widget, "_textFromValue", newprops.value_to_text))
