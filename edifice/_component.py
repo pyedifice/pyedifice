@@ -218,7 +218,7 @@ class Reference(object):
     """
 
     def __init__(self):
-        self._value = None
+        self._value: Element | None = None
 
     def __bool__(self) -> bool:
         return self._value is not None
@@ -323,8 +323,7 @@ class Element:
     def __init__(self):
         super().__setattr__("_ignored_variables", set())
         super().__setattr__("_edifice_internal_references", set())
-        if not hasattr(self, "_props"):
-            self._props = {"children": []}
+        self._props: dict[str, tp.Any] = {"children": []}
         # Ensure we only construct this element once
         assert getattr(self, "_initialized", False) is False
         self._initialized = True
@@ -365,8 +364,6 @@ class Element:
         Args:
             props: a dictionary representing the props to register.
         """
-        if not hasattr(self, "_props"):
-            self._props = {"children": []}
         self._props.update(props)
 
     def set_key(self: Self, key: tp.Text) -> Self:
@@ -422,88 +419,7 @@ class Element:
         """The props of this Element."""
         return PropsDict(self._props)
 
-    @contextlib.contextmanager
-    def _render_changes(self, ignored_variables: tp.Optional[tp.Sequence[tp.Text]] = None) -> Iterator[None]:
-        """Context manager for managing changes to state.
-
-        This context manager does two things:
-
-        - Make a group of assignments to state atomically: if an exception occurs,
-          all changes will be rolled back.
-        - Renders changes to the state upon successful completion.
-
-        Note that this context manager will not keep track of changes to mutable objects.
-
-        Args:
-            ignored_variables: an optional sequence of variables for the manager to ignore.
-                               These changes will not be reverted upon exception.
-        """
-        entered = False
-        ignored: set[tp.Text] = set(ignored_variables) if ignored_variables else set()
-        exception_raised = False
-        if self._render_changes_context is None:
-            super().__setattr__("_render_changes_context", {})
-            super().__setattr__("_render_unwind_context", {})
-            super().__setattr__("_ignored_variables", ignored)
-            entered = True
-        try:
-            yield
-        except Exception as e:
-            exception_raised = True
-            raise e
-        finally:
-            if entered:
-                changes_context = self._render_changes_context
-                unwind_context = self._render_unwind_context
-                assert changes_context is not None
-                assert unwind_context is not None
-                super().__setattr__("_render_changes_context", None)
-                super().__setattr__("_render_unwind_context", None)
-                super().__setattr__("_ignored_variables", set())
-                for k, v in unwind_context.items():
-                    super().__setattr__(k, v)
-                if not exception_raised:
-                    self._set_state(**changes_context)
-
-    def __setattr__(self, k, v) -> None:
-        changes_context = self._render_changes_context
-        ignored_variables = self._ignored_variables
-        if changes_context is not None and k not in ignored_variables:
-            unwind_context = self._render_unwind_context
-            assert unwind_context is not None
-            if k not in unwind_context:
-                unwind_context[k] = super().__getattribute__(k)
-            changes_context[k] = v
-        super().__setattr__(k, v)
-
-    def _set_state(self, **kwargs):
-        """Set state and render changes.
-
-        The keywords are the names of the state attributes of the class, e.g.
-        for the state :code:`self.mystate`, you call :code:`set_state(mystate=2)`.
-
-        At the end of this call, all changes will be rendered.
-        All changes are guaranteed to appear atomically: upon exception,
-        no changes to state will occur.
-        """
-        should_update = self._should_update(PropsDict({}), kwargs)
-        old_vals = {}
-        try:
-            for s in kwargs:
-                if not hasattr(self, s):
-                    raise KeyError
-                old_val = super().__getattribute__(s)
-                old_vals[s] = old_val
-                super().__setattr__(s, kwargs[s])
-            if should_update:
-                assert self._controller is not None
-                self._controller._request_rerender([self], kwargs)
-        except Exception as e:
-            for s in old_vals:
-                super().__setattr__(s, old_vals[s])
-            raise e
-
-    def _should_update(self, newprops: PropsDict, newstate: tp.Mapping[tp.Text, tp.Any]) -> bool:
+    def _should_update(self, newprops: PropsDict) -> bool:
         """Determines if the Element should rerender upon receiving new props and state.
 
         The arguments, :code:`newprops` and :code:`newstate`, reflect the
@@ -528,13 +444,6 @@ class Element:
                     return True
             else:
             # If the prop is not in the old props, then we rerender.
-                return True
-
-
-        # for backward compatibility, we have to check for changes to state.
-        for k,v in newstate.items():
-            v2 = getattr(self, k, None)
-            if v2 is None or v2 != v:
                 return True
 
         return False
@@ -704,12 +613,12 @@ def component(f: Callable[tp.Concatenate[C,P], None]) -> Callable[P,Element]:
 
         @wraps(f)
         def __init__(self, *args: P.args, **kwargs: P.kwargs):
+            super().__init__()
             name_to_val = defaults.copy()
             name_to_val.update(filter(not_ignored, zip(varnames, args, strict=False)))
             name_to_val.update(((k, v) for (k, v) in kwargs.items() if k[0] != "_"))
             name_to_val["children"] = name_to_val.get("children") or []
             self._register_props(name_to_val)
-            super().__init__()
 
         def _render_element(self):
             props: dict[str, tp.Any] = self.props._d
@@ -936,6 +845,7 @@ class QtWidgetElement(Element):
         on_mouse_move: tp.Optional[tp.Callable[[QtGui.QMouseEvent], None | tp.Awaitable[None]]] = None,
         on_drop: tp.Optional[tp.Callable[[QtGui.QDragEnterEvent | QtGui.QDragMoveEvent | QtGui.QDragLeaveEvent | QtGui.QDropEvent], None]] = None,
     ):
+        super().__init__()
         self._register_props({
             "style": style,
             "tool_tip": tool_tip,
@@ -955,7 +865,6 @@ class QtWidgetElement(Element):
             "on_mouse_move": on_mouse_move,
             "on_drop": on_drop,
         })
-        super().__init__()
         self._height = 0
         self._width = 0
         self._top = 0

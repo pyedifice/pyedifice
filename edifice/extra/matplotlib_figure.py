@@ -48,11 +48,11 @@ class MatplotlibFigure(QtWidgetElement):
         on_figure_mouse_move: tp.Callable[[MouseEvent], None] | None = None,
         **kwargs
     ):
+        super().__init__(**kwargs)
         self._register_props({
             "plot_fun": plot_fun,
             "on_figure_mouse_move": on_figure_mouse_move,
         })
-        super().__init__(**kwargs)
         self.underlying : FigureCanvasQTAgg | None =  None
         self.subplots : Axes | None = None
         self.current_plot_fun : tp.Callable[[Axes], None] | None = None

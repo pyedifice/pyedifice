@@ -23,10 +23,10 @@ def Value(self, value):
 class MockElement(component.Element):
 
     def __init__(self, recursion_level):
+        super().__init__()
         self._register_props({
             "recursion_level": recursion_level,
         })
-        super().__init__()
         self.will_unmount = unittest.mock.MagicMock()
         self._did_mount = unittest.mock.MagicMock()
         self._did_render = unittest.mock.MagicMock()
@@ -67,84 +67,7 @@ class MockBrokenElement(component.Element):
         self._controller = MockController()
 
 
-class StorageManagerTestCase(unittest.TestCase):
-
-    def test_record(self):
-        class A(object):
-            value = 0
-        obj = A()
-        with engine._storage_manager() as storage_manager:
-            storage_manager.set(obj, "value", 1)
-            self.assertEqual(obj.value, 1)
-        self.assertEqual(obj.value, 1)
-
-    def test_record(self):
-        class A(object):
-            value = 0
-        obj = A()
-        try:
-            with engine._storage_manager() as storage_manager:
-                storage_manager.set(obj, "value", 1)
-                self.assertEqual(obj.value, 1)
-                raise ValueError
-        except ValueError:
-            pass
-        self.assertEqual(obj.value, 0)
-
 class ElementTestCase(unittest.TestCase):
-
-    def test_render_changes(self):
-        a = OtherMockElement()
-        a.foo = 1
-        a.bar = 2
-        with a._render_changes():
-            a.foo = 3
-            self.assertEqual(a.foo, 3)
-            a.bar = 0
-        self.assertEqual(a.foo, 3)
-        self.assertEqual(a.bar, 0)
-        a._controller._request_rerender.assert_called_once()
-        a._controller._request_rerender.reset_mock()
-        try:
-            with a._render_changes():
-                a.bar = 1
-                self.assertEqual(a.bar, 1)
-                a.foo = 1 / 0
-        except ZeroDivisionError:
-            pass
-        self.assertEqual(a.foo, 3)
-        self.assertEqual(a.bar, 0)
-        a._controller._request_rerender.assert_not_called()
-
-    def test_state_change_unwind(self):
-        a = MockBrokenElement()
-        a.foo = 1
-        a.bar = 2
-
-        exception_thrown = False
-        try:
-            with a._render_changes():
-                a.foo = 3
-                self.assertEqual(a.foo, 3)
-                a.bar = 0
-        except ValueError as e:
-            if str(e) == "I am broken":
-                exception_thrown = True
-
-        self.assertTrue(exception_thrown)
-        self.assertEqual(a.foo, 1)
-        self.assertEqual(a.bar, 2)
-
-        exception_thrown = False
-        try:
-            a._set_state(foo=3, bar=0)
-        except ValueError as e:
-            if str(e) == "I am broken":
-                exception_thrown = True
-
-        self.assertTrue(exception_thrown)
-        self.assertEqual(a.foo, 1)
-        self.assertEqual(a.bar, 2)
 
     def test_render_view_replacement(self):
         """

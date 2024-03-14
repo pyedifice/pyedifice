@@ -91,12 +91,12 @@ class Image(QtWidgetElement):
         aspect_ratio_mode: None | QtCore.Qt.AspectRatioMode = None,
         **kwargs
     ):
+        super().__init__(**kwargs)
         self._register_props({
             "src": src,
             "aspect_ratio_mode": aspect_ratio_mode,
         })
-        self._register_props(kwargs)
-        super().__init__(**kwargs)
+        # self._register_props(kwargs)
         self.underlying : _ScaledLabel | None = None
 
     def _initialize(self):

@@ -146,8 +146,8 @@ class FlowView(_LinearView):
     """
 
     def __init__(self, **kwargs):
-        self._register_props(kwargs)
         super().__init__(**kwargs)
+        # self._register_props(kwargs)
         self.underlying = None
 
     def _delete_child(self, i, old_child: QtWidgetElement):
