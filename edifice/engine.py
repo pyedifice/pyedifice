@@ -724,7 +724,7 @@ class RenderEngine(object):
             k: v for k, v in element.props._items
                 if k not in old_props or old_props[k] != v
         })
-        commands.extend(element._qt_update_commands(render_context.widget_tree, new_props, {}))
+        commands.extend(element._qt_update_commands(render_context.widget_tree, new_props))
         return commands
 
     def _request_rerender(self, components: list[Element]) -> RenderResult:

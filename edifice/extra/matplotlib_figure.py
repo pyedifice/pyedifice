@@ -58,7 +58,7 @@ class MatplotlibFigure(QtWidgetElement):
         self.current_plot_fun : tp.Callable[[Axes], None] | None = None
         self.on_mouse_move_connect_id : int | None = None
 
-    def _qt_update_commands(self, children, newprops, newstate):
+    def _qt_update_commands(self, children, newprops):
         if self.underlying is None:
             # Default to maximum figsize https://matplotlib.org/stable/api/figure_api.html#matplotlib.figure.figaspect
             # Constrain the Figure by putting it in a smaller View, it will resize itself correctly.
@@ -67,7 +67,7 @@ class MatplotlibFigure(QtWidgetElement):
         assert self.underlying is not None
         assert self.subplots is not None
 
-        commands = super()._qt_update_commands_super(children, newprops, newstate, self.underlying, None)
+        commands = super()._qt_update_commands_super(children, newprops, self.underlying, None)
 
         if "plot_fun" in newprops:
             def _command_plot_fun(self):

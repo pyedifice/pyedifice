@@ -107,13 +107,12 @@ class Image(QtWidgetElement):
         self,
         widget_trees: dict[Element, _WidgetTree],
         newprops,
-        newstate
     ):
         if self.underlying is None:
             self._initialize()
         assert self.underlying is not None
 
-        commands = super()._qt_update_commands_super(widget_trees, newprops, newstate, self.underlying, None)
+        commands = super()._qt_update_commands_super(widget_trees, newprops, self.underlying, None)
         if "src" in newprops:
             commands.append(_CommandType(self.underlying._setPixmap, _image_descriptor_to_pixmap(newprops.src)))
         if "aspect_ratio_mode" in newprops:

@@ -189,12 +189,11 @@ class FlowView(_LinearView):
         self,
         widget_trees: dict[Element, _WidgetTree],
         newprops,
-        newstate
     ):
         if self.underlying is None:
             self._initialize()
         assert self.underlying is not None
         children = _get_widget_children(widget_trees, self)
         commands = self._recompute_children(children)
-        commands.extend(super()._qt_update_commands_super(widget_trees, newprops, newstate, self.underlying, self.underlying_layout))
+        commands.extend(super()._qt_update_commands_super(widget_trees, newprops, self.underlying, self.underlying_layout))
         return commands

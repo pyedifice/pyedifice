@@ -109,12 +109,11 @@ class ButtonView(View):
         self,
         widget_trees: dict[Element, _WidgetTree],
         newprops,
-        newstate
     ):
         if self.underlying is None:
             self._initialize()
         assert self.underlying is not None
-        commands = super()._qt_update_commands(widget_trees, newprops, newstate)
+        commands = super()._qt_update_commands(widget_trees, newprops)
         for prop in newprops:
             if prop == "on_trigger":
                 commands.append(_CommandType(self._set_on_trigger, self.underlying, newprops.on_trigger))
