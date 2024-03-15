@@ -521,6 +521,9 @@ class Element:
         """
         raise NotImplementedError
 
+    def _delete_cleanup(self):
+        pass
+
 P = tp.ParamSpec("P")
 C = tp.TypeVar("C", bound=Element)
 
@@ -1283,6 +1286,11 @@ class QtWidgetElement(Element):
                 else:
                     commands.append(_CommandType(underlying.setContextMenuPolicy, QtCore.Qt.ContextMenuPolicy.DefaultContextMenu))
         return commands
+
+    def _delete_cleanup(self):
+        super()._delete_cleanup()
+        if self.underlying is not None:
+            self.underlying.deleteLater()
 
 class _WidgetTree(object):
     """
