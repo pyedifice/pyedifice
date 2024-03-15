@@ -1053,6 +1053,10 @@ class _LinearView(QtWidgetElement):
         self._widget_children = children_new
         return commands
 
+    def _delete_cleanup(self):
+        super()._delete_cleanup()
+        self._widget_children = []
+
     def _add_child(self, i, child_component: QtWidgets.QWidget):
         raise NotImplementedError
     def _delete_child(self, i, old_child: QtWidgetElement):
@@ -1104,8 +1108,6 @@ class View(_LinearView):
 
         # https://doc.qt.io/qtforpython-6/PySide6/QtCore/QObject.html#detailed-description
         # “The parent takes ownership of the object; i.e., it will automatically delete its children in its destructor.”
-        # I think that sometimes when we try to delete a widget, it has already
-        # been deleted by its parent. So we can't just fail if the delete fails.
 
         if self.underlying_layout is not None:
             if (child_node := self.underlying_layout.takeAt(i)) is None:
@@ -1188,6 +1190,12 @@ class View(_LinearView):
         assert self.underlying is not None
         commands = super()._qt_update_commands_super(widget_trees, newprops, self.underlying, self.underlying_layout)
         return commands
+
+    def _delete_cleanup(self):
+        super()._delete_cleanup()
+        if self.underlying_layout is not None:
+            self.underlying_layout = None
+        self._widget_children = []
 
 class Window(View):
     """
