@@ -4,6 +4,14 @@
 Release Notes
 =============
 
+0.4.4
+-----
+Released: 2024-03-16
+
+* Inspector is working now with :func:`use_state`.
+* Delete :code:`StateManager` and :code:`StateValue`.
+* Delete all state rollback features.
+
 0.4.3
 -----
 Released: 2024-03-06
