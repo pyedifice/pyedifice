@@ -392,7 +392,6 @@ class RenderEngine(object):
         assert component._edifice_internal_references is not None
         for ref in component._edifice_internal_references:
             ref._value = None
-        component._will_unmount()
         del self._component_tree[component]
         del self._widget_tree[component]
 
@@ -625,7 +624,6 @@ class RenderEngine(object):
             widgettree = _WidgetTree(component, [c.component for c in rendered_children])
             render_context.widget_tree[component] = widgettree
             render_context.mark_qt_rerender(component, True)
-            render_context.schedule_callback(component._did_mount)
             return widgettree
 
         # Figure out which children can be re-used
@@ -692,15 +690,11 @@ class RenderEngine(object):
         if old_rendering is not None and elements_match(old_rendering[0], sub_component):
             render_context.widget_tree[component] = self._update_old_component(
                 old_rendering[0], sub_component, render_context)
-            render_context.schedule_callback(component._did_update)
         else:
             if old_rendering is not None:
                 render_context.enqueued_deletions.extend(old_rendering)
-            render_context.schedule_callback(component._did_mount)
             render_context.component_tree[component] = [sub_component]
             render_context.widget_tree[component] = self._render(sub_component, render_context)
-
-        render_context.schedule_callback(component._did_render)
 
         return render_context.widget_tree[component]
 
