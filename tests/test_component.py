@@ -20,34 +20,6 @@ def Value(self, value):
     self.value = value
     base_components.View()
 
-class MockElement(component.Element):
-
-    def __init__(self, recursion_level):
-        super().__init__()
-        self._register_props({
-            "recursion_level": recursion_level,
-        })
-        self.will_unmount = unittest.mock.MagicMock()
-        self._did_mount = unittest.mock.MagicMock()
-        self._did_render = unittest.mock.MagicMock()
-
-    def _render_element(self):
-        if self.props.recursion_level == 1:
-            return base_components.Label("Test")
-        else:
-            return base_components.View()(
-                MockElement(self.props.recursion_level + 1)
-            )
-
-class ElementLifeCycleTestCase(unittest.TestCase):
-
-    def test_mount_and_dismount(self):
-        component = MockElement(0)
-        app = engine.RenderEngine(component)
-        app._request_rerender([component])
-        component._did_mount.assert_called_once()
-        component._did_render.assert_called_once()
-
 
 class OtherMockElement(component.Element):
 

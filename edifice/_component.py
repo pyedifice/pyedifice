@@ -447,38 +447,6 @@ class Element:
 
         return False
 
-    def _did_mount(self):
-        pass
-        """Callback function that is called when the Element mounts for the first time.
-
-        Override if you need to do something after the Element mounts
-        (e.g. start a timer).
-        """
-
-    def _did_update(self):
-        pass
-        """Callback function that is called whenever the Element updates.
-
-        *This is not called after the first render.*
-        Override if you need to do something after every render except the first.
-        """
-
-    def _did_render(self):
-        pass
-        """Callback function that is called whenever the Element renders.
-
-        It will be called on both renders and updates.
-        Override if you need to do something after every render.
-        """
-
-    def _will_unmount(self):
-        pass
-        """Callback function that is called when the Element will unmount.
-
-        Override if you need to clean up some state, e.g. stop a timer,
-        close a file.
-        """
-
     def __call__(self, *args):
         children = []
         for a in args:
