@@ -344,14 +344,12 @@ class RenderEngine(object):
                     return False
         return True
 
-    def _delete_component(self, component: Element, recursive: bool) -> list[_CommandType]:
-        commands: list[_CommandType] = []
-
+    def _delete_component(self, component: Element, recursive: bool):
         # Delete component from render trees
         sub_components = self._component_tree[component]
         if recursive:
             for sub_comp in sub_components:
-                commands.extend(self._delete_component(sub_comp, recursive))
+                self._delete_component(sub_comp, recursive)
             # Node deletion
 
         # Clean up use_effect for the component
@@ -365,7 +363,6 @@ class RenderEngine(object):
                     except Exception:
                         pass
             del self._hook_effect[component]
-
         # Clean up use_async for the component
         if component in self._hook_async:
             for hook in self._hook_async[component]:
@@ -383,11 +380,11 @@ class RenderEngine(object):
                 # If there are no running tasks, then we can delete this
                 # HookAsync object immediately.
                 del self._hook_async[component]
-
         # Clean up use_state for the component
         if component in self._hook_state:
             del self._hook_state[component]
         self._hook_state_setted.discard(component)
+
 
         # Clean up component references
         # Do this after use_effect cleanup, so that the cleanup function
@@ -395,14 +392,9 @@ class RenderEngine(object):
         assert component._edifice_internal_references is not None
         for ref in component._edifice_internal_references:
             ref._value = None
-
         component._will_unmount()
-
         del self._component_tree[component]
         del self._widget_tree[component]
-
-        commands.append(_CommandType(component._delete_cleanup))
-        return commands
 
     def _refresh_by_class(self, classes) -> None:
         # This refresh is done only for a hot reload. It refreshes all
@@ -783,7 +775,7 @@ class RenderEngine(object):
 
             # Delete components that should be deleted (and call the respective unmounts)
             for component_delete in render_context.enqueued_deletions:
-                commands.extend(self._delete_component(component_delete, True))
+                self._delete_component(component_delete, True)
 
             # This is the phase of the render when the commands run.
             for command in commands:
