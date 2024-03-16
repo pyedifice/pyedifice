@@ -520,6 +520,8 @@ class RenderEngine(object):
             render_context.mark_qt_rerender(rerendered_obj.component, True)
             return rerendered_obj
 
+        # TODO So _should_update returned False but then we call
+        # mark_props_change? What does mark_props_change mean then?
         render_context.mark_props_change(component, newprops)
         return self._widget_tree[component]
 
