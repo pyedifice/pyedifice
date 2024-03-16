@@ -431,6 +431,10 @@ class Element:
             Whether or not the Element should be rerendered.
         """
 
+        # TODO if an Element has children, then _should_update will always
+        # return True, because the children will always be different, because
+        # _recycle_children hasn't been called yet. Is that correct behavior?
+
         for k,v in newprops._items:
             if k in self.props:
             # If the prop is in the old props, then we check if it's changed.
