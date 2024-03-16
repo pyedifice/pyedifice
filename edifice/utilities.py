@@ -2,45 +2,9 @@ import typing as tp
 
 from .qt import QT_VERSION
 if QT_VERSION == "PyQt6" and not tp.TYPE_CHECKING:
-    from PyQt6.QtCore import QTimer
     from PyQt6 import QtWidgets
 else:
-    from PySide6.QtCore import QTimer
     from PySide6 import QtWidgets
-
-
-# TODO Delete Timer
-class Timer(object):
-    """DEPRECATED use use_async instead. A Timer for calling a function periodically.
-
-    The function passed in the constructor will be called
-    every :code:`time_in_ms` milliseconds after the Timer is started,
-    until the Timer is stopped.
-
-    Args:
-        function: the function that will be called periodically
-    """
-
-    def __init__(self, function: tp.Callable[[], tp.Any]):
-        self._timer = QTimer()
-        self._timer.timeout.connect(function)
-        self._started = False
-
-    def start(self, time_in_ms: int):
-        """Starts the timer.
-
-        Args:
-            time_in_ms: time interval for calling the function.
-        """
-        if not self._started:
-            self._timer.start(time_in_ms)
-        self._started = True
-
-    def stop(self):
-        """Stops the timer."""
-        if self._started:
-            self._timer.stop()
-            self._started = False
 
 
 def alert(message: tp.Text, choices: tp.Optional[tp.Sequence[tp.Text]] = None) -> tp.Optional[int]:
