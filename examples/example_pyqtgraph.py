@@ -28,6 +28,8 @@ def Component(self):
     x_min, x_min_set = ed.use_state(-10.0)
 
     def plot_fn(plot_item:pg.PlotItem):
+        plot_item.setMouseEnabled(x=False, y=False)
+        plot_item.hideButtons()
         grad = QtGui.QLinearGradient(0, -1.0, 0, 1.0)
         grad.setColorAt(0.0, pg.mkColor((127,127,127,0)))
         grad.setColorAt(0.8, pg.mkColor((127,127,127,100)))

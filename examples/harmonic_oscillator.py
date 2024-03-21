@@ -46,6 +46,8 @@ def Oscillator(self):
     dt = 0.03
 
     def plot(plot_item:pg.PlotItem):
+        plot_item.setMouseEnabled(x=False, y=False)
+        plot_item.hideButtons()
         plot_item.plot(time_range, calculate_harmonic_motion(time_range))
 
     plot_fun, plot_fun_set = ed.use_state((lambda figure: plot(figure),))

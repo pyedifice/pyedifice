@@ -25,21 +25,32 @@ class PyQtPlot(QtWidgetElement):
 
     Example::
 
-            import numpy as np
-            from edifice import View, component
-            from edifice.extra import PyQtPlot
-            import pyqtgraph as pg
+        import numpy as np
+        from edifice import View, component
+        from edifice.extra import PyQtPlot
+        import pyqtgraph as pg
 
-            @component
-            def Component(self):
+        @component
+        def Component(self):
 
-                def plot_fun(plot_item: pg.PlotItem):
-                    xs = np.linspace(-10, 10, 100)
-                    ys = np.sin(xs)
-                    plot_item.plot(x=xs, y=ys)
+            def plot_fun(plot_item: pg.PlotItem):
+                xs = np.linspace(-10, 10, 100)
+                ys = np.sin(xs)
+                plot_item.plot(x=xs, y=ys)
 
-                with View():
-                    PyQtPlot(plot_fun=plot_fun)
+            PyQtPlot(plot_fun=plot_fun)
+
+
+    If you want a non-interactive plot that doesn’t respond to the mouse,
+    you can disable mouse interaction with the plot by setting properties
+    on the `PlotItem <https://pyqtgraph.readthedocs.io/en/latest/api_reference/graphicsItems/plotitem.html>`_.
+
+    Example::
+
+        def plot_fun(plot_item: pg.PlotItem):
+            plot_item.setMouseEnabled(x=False, y=False)
+            plot_item.hideButtons()
+            ...
 
     Args:
         plot_fun:
@@ -66,10 +77,6 @@ class PyQtPlot(QtWidgetElement):
     def _qt_update_commands(self, children, newprops):
         if self.underlying is None:
             self.underlying = pg.PlotWidget()
-            # Disable mouse interaction
-            # https://pyqtgraph.readthedocs.io/en/latest/api_reference/graphicsItems/viewbox.html#pyqtgraph.ViewBox.setMouseEnabled
-            self.underlying.setMouseEnabled(x=False, y=False)
-            self.underlying.hideButtons()
 
         commands = super()._qt_update_commands_super(children, newprops, self.underlying)
 
