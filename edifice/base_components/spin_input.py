@@ -103,24 +103,15 @@ class SpinInput(QtWidgetElement):
             "value_to_text": value_to_text,
             "text_to_value": text_to_value,
         })
-        # self._register_props(kwargs)
-        self._on_change_connected = False
 
     def _initialize(self):
         self.underlying = _SpinBox()
         self.underlying.setObjectName(str(id(self)))
+        self.underlying.valueChanged.connect(self._on_change_handler)
 
-    def _set_on_change(self, on_change):
-        assert self.underlying is not None
-        widget = tp.cast(_SpinBox, self.underlying)
-        if self._on_change_connected:
-            widget.valueChanged.disconnect()
-        if on_change is not None:
-            def on_change_fun(value):
-                if value != self.props.value:
-                    return _ensure_future(on_change)(value)
-            widget.valueChanged.connect(on_change_fun)
-            self._on_change_connected = True
+    def _on_change_handler(self, value:int):
+        if self.props.on_change is not None:
+            return _ensure_future(self.props.on_change)(value)
 
     def _qt_update_commands(
         self,
@@ -142,8 +133,6 @@ class SpinInput(QtWidgetElement):
             commands.append(_CommandType(widget.setMinimum, newprops.min_value))
         if "max_value" in newprops:
             commands.append(_CommandType(widget.setMaximum, newprops.max_value))
-        if "on_change" in newprops:
-            commands.append(_CommandType(self._set_on_change, newprops.on_change))
         if "value" in newprops:
             commands.append(_CommandType(widget.setValue, newprops.value))
         return commands

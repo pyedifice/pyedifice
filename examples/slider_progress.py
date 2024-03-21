@@ -33,10 +33,13 @@ def MyComponent(self):
 
     y, y_set = use_state(0)
 
+    def second_slider(value:int):
+        x_set(value)
+
     with View(layout="column"):
 
         Slider(x, min_value=0, max_value=100, on_change=x_set)
-        Slider(x, min_value=0, max_value=100, on_move=x_set)
+        Slider(x, min_value=0, max_value=100, on_change=second_slider)
         ProgressBar(
             x,
             min_value=0,

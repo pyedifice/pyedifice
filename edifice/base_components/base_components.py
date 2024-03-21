@@ -1,7 +1,5 @@
-import asyncio
 import functools
 import importlib.resources
-import inspect
 import logging
 import re
 import typing as tp
@@ -495,13 +493,9 @@ class TextInput(QtWidgetElement):
             text as long as the line edit is empty.”
             See `placeHolderText <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QLineEdit.html#PySide6.QtWidgets.PySide6.QtWidgets.QLineEdit.placeholderText>`_
         on_change:
-            Callback for when the value of the text input changes.
-            The callback is passed the changed
-            value of the text.
-        on_edit:
             Event handler for when the value of the text input changes, but
-            only when the user is editing the text, not when the text is changed
-            programmatically.
+            only when the user is editing the text, not when the text prop
+            changes.
         on_edit_finish:
             Callback for the
             `editingFinished <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QLineEdit.html#PySide6.QtWidgets.PySide6.QtWidgets.QLineEdit.editingFinished>`_
@@ -514,7 +508,6 @@ class TextInput(QtWidgetElement):
         text: str = "",
         placeholder_text: str | None = None,
         on_change: tp.Optional[tp.Callable[[tp.Text], None | tp.Awaitable[None]]] = None,
-        on_edit: tp.Optional[tp.Callable[[tp.Text], None | tp.Awaitable[None]]] = None,
         on_edit_finish: tp.Optional[tp.Callable[[], None | tp.Awaitable[None]]] = None,
         # completer: tp.Optional[Completer] = None,
         **kwargs
@@ -524,50 +517,25 @@ class TextInput(QtWidgetElement):
             "text": text,
             "placeholder_text": placeholder_text,
             "on_change": on_change,
-            "on_edit": on_edit,
             "on_edit_finish": on_edit_finish,
         })
         self._register_props(kwargs)
-        self._on_change_connected = False
-        self._on_edit: tp.Optional[tp.Callable[[tp.Text], None | tp.Awaitable[None]]] = None
-        self._editing_finished_connected = False
 
     def _initialize(self):
         self.underlying = QtWidgets.QLineEdit()
         size = self.underlying.font().pointSize()
         self._set_size(size * len(self.props.text), size)
         self.underlying.setObjectName(str(id(self)))
-        self.underlying.textEdited.connect(self._on_edit_handler)
+        self.underlying.textEdited.connect(self._on_change_handler)
+        self.underlying.editingFinished.connect(self._on_edit_finish)
 
-    def _set_on_change(self, on_change):
-        assert self.underlying is not None
-        widget = tp.cast(QtWidgets.QLineEdit, self.underlying)
-        if self._on_change_connected:
-            widget.textChanged.disconnect()
-        if on_change is not None:
-            def on_change_fun(text):
-                if text != self.props.text:
-                    return _ensure_future(on_change)(text)
-            widget.textChanged.connect(on_change_fun)
-            self._on_change_connected = True
+    def _on_change_handler(self, text:str):
+        if self.props.on_change is not None:
+            _ensure_future(self.props.on_change)(text)
 
-    def _set_on_edit_finish(self, on_edit_finish):
-        assert self.underlying is not None
-        widget = tp.cast(QtWidgets.QLineEdit, self.underlying)
-        if self._editing_finished_connected:
-            widget.editingFinished.disconnect()
-        if on_edit_finish is not None:
-            def on_edit_finish_fun():
-                return _ensure_future(on_edit_finish)()
-            widget.editingFinished.connect(on_edit_finish_fun)
-            self._editing_finished_connected = True
-
-    def _on_edit_handler(self, text:str):
-        if self._on_edit is not None:
-            _ensure_future(self._on_edit)(text)
-
-    def _set_on_edit(self, on_edit):
-        self._on_edit = on_edit
+    def _on_edit_finish(self):
+        if self.props.on_edit_finish is not None:
+            _ensure_future(self.props.on_edit_finish)()
 
     # def _set_completer(self, completer):
     #     if completer:
@@ -593,14 +561,6 @@ class TextInput(QtWidgetElement):
             # This setCursorPosition is needed because otherwise the cursor will
             # jump to the end of the text after the setText.
             commands.append(_CommandType(widget.setCursorPosition, widget.cursorPosition()))
-        if "on_change" in newprops:
-            commands.append(_CommandType(self._set_on_change, newprops.on_change))
-        if "on_edit" in newprops:
-            commands.append(_CommandType(self._set_on_edit, newprops.on_edit))
-        if "on_edit_finish" in newprops:
-            commands.append(_CommandType(self._set_on_edit_finish, newprops.on_edit_finish))
-    #         elif prop == "completer":
-    #             commands.append((self._set_completer, newprops[prop]))
         if "placeholder_text" in newprops:
             commands.append(_CommandType(widget.setPlaceholderText, newprops.placeholder_text))
         return commands
@@ -618,13 +578,19 @@ class Dropdown(QtWidgetElement):
        Dropdown on the right.
 
     Args:
-        selection: Current selection text of the text input.
-        text: Initial text of the text input.
-        options: Options to select from.
-        editable: True if the text input should be editable.
+        selection:
+            Current selection text of the text input.
+        text:
+            Initial text of the text input.
+        options:
+            Options to select from.
+        editable:
+            True if the text input should be editable.
         on_change:
-            Callback for the value of the text input changes. The callback is passed the changed
+            Callback for the value of the text input changes.
+            The callback is passed the changed
             value of the text.
+            This event is only raised when :code:`editable=True`.
         on_select:
             Callback for when the selection changes.
             The callback is passed the new value of the text.
@@ -651,14 +617,12 @@ class Dropdown(QtWidgetElement):
             "on_select": on_select,
         })
         self._register_props(kwargs)
-        self._on_change_connected = False
-        self._on_select_connected = False
-        if not editable and on_change is not None and on_select is None:
-            raise ValueError("Uneditable dropdowns do not emit change events. Use the on_select event handler.")
 
     def _initialize(self):
         self.underlying = QtWidgets.QComboBox()
         self.underlying.setObjectName(str(id(self)))
+        self.underlying.editTextChanged.connect(self._on_change)
+        self.underlying.textActivated.connect(self._on_select)
 
     # TODO
     # def _set_completer(self, completer):
@@ -669,27 +633,25 @@ class Dropdown(QtWidgetElement):
     #     else:
     #         self.underlying.setCompleter(None)
 
-    def _set_on_change(self, on_change):
-        assert self.underlying is not None
-        widget = tp.cast(QtWidgets.QComboBox, self.underlying)
-        if self._on_change_connected:
-            widget.editTextChanged.disconnect()
-        if on_change is not None:
-            def on_change_fun(text):
-                return _ensure_future(on_change)(text)
-            widget.editTextChanged.connect(on_change_fun)
-            self._on_change_connected = True
+    def _on_change(self, text):
+        if self.props.on_change is not None:
+            return _ensure_future(self.props.on_change)(text)
 
-    def _set_on_select(self, on_select):
-        assert self.underlying is not None
+    def _on_select(self, text):
+        if self.props.on_select is not None:
+            return _ensure_future(self.props.on_select)(text)
+
+    def _set_edit_text(self, text: str):
         widget = tp.cast(QtWidgets.QComboBox, self.underlying)
-        if self._on_select_connected:
-            widget.textActivated.disconnect()
-        if on_select is not None:
-            def on_select_fun(text):
-                return _ensure_future(on_select)(text)
-            widget.textActivated.connect(on_select_fun)
-            self._on_select_connected = True
+        widget.blockSignals(True)
+        widget.setEditText(text)
+        widget.blockSignals(False)
+
+    def _set_current_text(self, text: str):
+        widget = tp.cast(QtWidgets.QComboBox, self.underlying)
+        widget.blockSignals(True)
+        widget.setCurrentText(text)
+        widget.blockSignals(False)
 
     def _qt_update_commands(
         self,
@@ -708,17 +670,12 @@ class Dropdown(QtWidgetElement):
                 _CommandType(widget.clear),
                 _CommandType(widget.addItems, newprops.options),
             ])
-        for prop in newprops:
-            if prop == "on_change":
-                commands.append(_CommandType(self._set_on_change, newprops[prop]))
-            elif prop == "on_select":
-                commands.append(_CommandType(self._set_on_select, newprops[prop]))
-            elif prop == "text":
-                commands.append(_CommandType(widget.setEditText, newprops[prop]))
-            elif prop == "selection":
-                commands.append(_CommandType(widget.setCurrentText, newprops[prop]))
-            # elif prop == "completer":
-            #     commands.append(_CommandType(self._set_completer, newprops[prop]))
+        if "text" in newprops:
+            commands.append(_CommandType(self._set_edit_text, newprops.text))
+        if "selection" in newprops:
+            commands.append(_CommandType(self._set_current_text, newprops.selection))
+        # elif prop == "completer":
+        #     commands.append(_CommandType(self._set_completer, newprops[prop]))
         return commands
 
 
@@ -738,16 +695,20 @@ class RadioButton(QtWidgetElement):
     only one may be selected at a time.
 
     Args:
-        checked: whether or not the checkbox is checked initially
-        text: text for the label of the checkbox
-        on_change: callback for when the check box state changes.
-            The callback receives the new state of the check box as an argument.
+        checked:
+            Whether or not the RadioButton is checked.
+        text:
+            Text for the label of the RadioButton.
+        on_change:
+            Event handler for when the checked value changes, but
+            only when the user checks or unchecks, not when the checked prop
+            changes.
     """
 
     def __init__(self,
         checked: bool = False,
-        text: tp.Any = "",
-        on_change: tp.Callable[[bool], None | tp.Awaitable[None]] = (lambda checked: None),
+        text: str = "",
+        on_change: tp.Callable[[bool], None | tp.Awaitable[None]] | None = None,
         **kwargs,
      ):
         super().__init__(**kwargs)
@@ -757,23 +718,23 @@ class RadioButton(QtWidgetElement):
             "on_change": on_change,
         })
         self._register_props(kwargs)
-        self._connected = False
 
     def _initialize(self):
         self.underlying = QtWidgets.QRadioButton(str(self.props.text))
         size = self.underlying.font().pointSize()
         self._set_size(size * len(self.props.text), size)
         self.underlying.setObjectName(str(id(self)))
+        self.underlying.toggled.connect(self._on_change)
 
-    def _set_on_change(self, on_change):
-        assert self.underlying is not None
+    def _on_change(self, checked):
+        if self.props.on_change is not None:
+            return _ensure_future(self.props.on_change)(checked)
+
+    def _set_checked(self, checked: bool):
         widget = tp.cast(QtWidgets.QRadioButton, self.underlying)
-        def on_change_fun(checked):
-            return _ensure_future(on_change)(checked)
-        if self._connected:
-            widget.toggled.disconnect()
-        widget.toggled.connect(on_change_fun)
-        self._connected = True
+        widget.blockSignals(True)
+        widget.setChecked(checked)
+        widget.blockSignals(False)
 
     def _qt_update_commands(
         self,
@@ -786,12 +747,10 @@ class RadioButton(QtWidgetElement):
         widget = tp.cast(QtWidgets.QRadioButton, self.underlying)
 
         commands = super()._qt_update_commands_super(widget_trees, newprops, self.underlying)
-        commands.append(_CommandType(widget.setChecked, self.props.checked))
-        for prop in newprops:
-            if prop == "on_change":
-                commands.append(_CommandType(self._set_on_change, newprops[prop]))
-            elif prop == "text":
-                commands.append(_CommandType(widget.setText, str(newprops[prop])))
+        if "checked" in newprops:
+            commands.append(_CommandType(self._set_checked, newprops.checked))
+        if "text" in newprops:
+            commands.append(_CommandType(widget.setText, str(newprops.text)))
         return commands
 
 
@@ -813,16 +772,20 @@ class CheckBox(QtWidgetElement):
     with the new check state.
 
     Args:
-        checked: whether or not the checkbox is checked initially
-        text: text for the label of the checkbox
-        on_change: callback for when the check box state changes.
-        The callback receives the new state of the check box as an argument.
+        checked:
+            Whether or not the CheckBox is checked.
+        text:
+            Text for the label of the CheckBox.
+        on_change:
+            Event handler for when the checked value changes, but
+            only when the user checks or unchecks, not when the checked prop
+            changes.
     """
 
     def __init__(self,
         checked: bool = False,
-        text: tp.Any = "",
-        on_change: tp.Callable[[bool], None | tp.Awaitable[None]] = (lambda checked: None),
+        text: str = "",
+        on_change: tp.Callable[[bool], None | tp.Awaitable[None]] | None = None,
         **kwargs,
     ):
         super().__init__(**kwargs)
@@ -832,27 +795,24 @@ class CheckBox(QtWidgetElement):
             "on_change": on_change,
         })
         self._register_props(kwargs)
-        self._connected = False
 
     def _initialize(self):
         self.underlying = QtWidgets.QCheckBox(str(self.props.text))
         size = self.underlying.font().pointSize()
         self._set_size(size * len(self.props.text), size)
         self.underlying.setObjectName(str(id(self)))
+        self.underlying.stateChanged.connect(self._on_change)
 
-    def _set_on_change(self, on_change):
-        assert self.underlying is not None
+    def _on_change(self, checked):
+        if self.props.on_change is not None:
+            return _ensure_future(self.props.on_change)(checked)
+
+    def _set_checked(self, checked: bool):
         widget = tp.cast(QtWidgets.QCheckBox, self.underlying)
-
-        # Qt passes an int instead of a QtCore.Qt.CheckState
-        # https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QCheckBox.html#PySide6.QtWidgets.PySide6.QtWidgets.QCheckBox.stateChanged
-        def on_change_fun(check_state: int):
-            checked = True if check_state == 2 else False
-            return _ensure_future(on_change)(checked)
-        if self._connected:
-            widget.stateChanged.disconnect()
-        widget.stateChanged.connect(on_change_fun)
-        self._connected = True
+        widget.blockSignals(True)
+        check_state = QtCore.Qt.CheckState.Checked if checked else QtCore.Qt.CheckState.Unchecked
+        widget.setCheckState(check_state)
+        widget.blockSignals(False)
 
     def _qt_update_commands(
         self,
@@ -865,16 +825,11 @@ class CheckBox(QtWidgetElement):
         widget = tp.cast(QtWidgets.QCheckBox, self.underlying)
 
         commands = super()._qt_update_commands_super(widget_trees, newprops, self.underlying)
-        for prop in newprops:
-            if prop == "on_change":
-                commands.append(_CommandType(self._set_on_change, newprops[prop]))
-            elif prop == "text":
-                commands.append(_CommandType(widget.setText, str(newprops[prop])))
-            elif prop == "checked":
-                check_state = QtCore.Qt.CheckState.Checked if newprops[prop] else QtCore.Qt.CheckState.Unchecked
-                commands.append(_CommandType(widget.setCheckState, check_state))
+        if "text" in newprops:
+            commands.append(_CommandType(widget.setText, str(newprops.text)))
+        if "checked" in newprops:
+            commands.append(_CommandType(self._set_checked, newprops.checked))
         return commands
-
 
 class Slider(QtWidgetElement):
     """Slider bar widget.
@@ -906,12 +861,9 @@ class Slider(QtWidgetElement):
             either :code:`Horizontal` or :code:`Vertical`.
             See `Orientation <https://doc.qt.io/qtforpython-6/PySide6/QtCore/Qt.html#PySide6.QtCore.PySide6.QtCore.Qt.Orientation>`_.
         on_change:
-            Event handler for when the value of the slider changes.
-        on_move:
             Event handler for when the value of the slider changes,
-            but only when the slider is being move by the user, not
-            when the value is changed programmatically. Good for avoiding
-            feedback loops.
+            but only when the slider is being move by the user,
+            not when the value prop changes.
     """
 
     def __init__(
@@ -921,7 +873,6 @@ class Slider(QtWidgetElement):
         max_value: int = 100,
         orientation: QtCore.Qt.Orientation = QtCore.Qt.Orientation.Horizontal,
         on_change: tp.Callable[[int], None | tp.Awaitable[None]] | None = None,
-        on_move: tp.Callable[[int], None | tp.Awaitable[None]] | None = None,
         **kwargs,
     ):
         super().__init__(**kwargs)
@@ -931,12 +882,10 @@ class Slider(QtWidgetElement):
             "max_value": max_value,
             "orientation": orientation,
             "on_change": on_change,
-            "on_move": on_move,
         })
         self._register_props(kwargs)
         self._connected = False
         self._on_change: tp.Optional[tp.Callable[[int], None | tp.Awaitable[None]]] = None
-        self._on_move : tp.Optional[tp.Callable[[int], None | tp.Awaitable[None]]] = None
 
     def _initialize(self, orientation):
         self.underlying = QtWidgets.QSlider(orientation)
@@ -949,7 +898,6 @@ class Slider(QtWidgetElement):
 
         self.underlying.setObjectName(str(id(self)))
         self.underlying.valueChanged.connect(self._on_change_handle)
-        self.underlying.sliderMoved.connect(self._on_move_handle)
 
     def _on_change_handle(self, position:int) -> None:
         if self._on_change is not None:
@@ -957,23 +905,12 @@ class Slider(QtWidgetElement):
 
     def _set_on_change(self, on_change):
         self._on_change = on_change
-        # assert self.underlying is not None
-        # widget = tp.cast(QtWidgets.QSlider, self.underlying)
-        # if self._connected:
-        #     widget.valueChanged.disconnect()
-        #     self._connected = False
-        # if on_change is not None:
-        #     def on_change_fun(value):
-        #         return _ensure_future(on_change)(value)
-        #     widget.valueChanged.connect(on_change_fun)
-        #     self._connected = True
 
-    def _on_move_handle(self, position:int) -> None:
-        if self._on_move is not None:
-            _ensure_future(self._on_move)(position)
-
-    def _set_on_move(self, on_move):
-        self._on_move = on_move
+    def _set_value(self, value:int):
+        widget = tp.cast(QtWidgets.QSlider, self.underlying)
+        widget.blockSignals(True)
+        widget.setValue(value)
+        widget.blockSignals(False)
 
     def _qt_update_commands(
         self,
@@ -991,11 +928,9 @@ class Slider(QtWidgetElement):
         if "max_value" in newprops:
             commands.append(_CommandType(widget.setMaximum, newprops.max_value))
         if "value" in newprops:
-            commands.append(_CommandType(widget.setValue, newprops.value))
+            commands.append(_CommandType(self._set_value, newprops.value))
         if "on_change" in newprops:
             commands.append(_CommandType(self._set_on_change, newprops.on_change))
-        if "on_move" in newprops:
-            commands.append(_CommandType(self._set_on_move, newprops.on_move))
         return commands
 
 
