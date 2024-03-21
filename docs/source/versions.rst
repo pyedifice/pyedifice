@@ -4,6 +4,15 @@
 Release Notes
 =============
 
+0.4.5
+-----
+Released: 2024-03-21
+
+* New props
+  * :class:`Slider` :code:`on_move`
+  * :class:`TextInput` :code:`on_edit`
+* :class:`extra.PyQtPlot` instructions for disabling mouse interaction.
+
 0.4.4
 -----
 Released: 2024-03-16
