@@ -498,6 +498,10 @@ class TextInput(QtWidgetElement):
             Callback for when the value of the text input changes.
             The callback is passed the changed
             value of the text.
+        on_edit:
+            Event handler for when the value of the text input changes, but
+            only when the user is editing the text, not when the text is changed
+            programmatically.
         on_edit_finish:
             Callback for the
             `editingFinished <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QLineEdit.html#PySide6.QtWidgets.PySide6.QtWidgets.QLineEdit.editingFinished>`_
@@ -510,6 +514,7 @@ class TextInput(QtWidgetElement):
         text: str = "",
         placeholder_text: str | None = None,
         on_change: tp.Optional[tp.Callable[[tp.Text], None | tp.Awaitable[None]]] = None,
+        on_edit: tp.Optional[tp.Callable[[tp.Text], None | tp.Awaitable[None]]] = None,
         on_edit_finish: tp.Optional[tp.Callable[[], None | tp.Awaitable[None]]] = None,
         # completer: tp.Optional[Completer] = None,
         **kwargs
@@ -519,10 +524,12 @@ class TextInput(QtWidgetElement):
             "text": text,
             "placeholder_text": placeholder_text,
             "on_change": on_change,
+            "on_edit": on_edit,
             "on_edit_finish": on_edit_finish,
         })
         self._register_props(kwargs)
         self._on_change_connected = False
+        self._on_edit: tp.Optional[tp.Callable[[tp.Text], None | tp.Awaitable[None]]] = None
         self._editing_finished_connected = False
 
     def _initialize(self):
@@ -530,6 +537,7 @@ class TextInput(QtWidgetElement):
         size = self.underlying.font().pointSize()
         self._set_size(size * len(self.props.text), size)
         self.underlying.setObjectName(str(id(self)))
+        self.underlying.textEdited.connect(self._on_edit_handler)
 
     def _set_on_change(self, on_change):
         assert self.underlying is not None
@@ -553,6 +561,13 @@ class TextInput(QtWidgetElement):
                 return _ensure_future(on_edit_finish)()
             widget.editingFinished.connect(on_edit_finish_fun)
             self._editing_finished_connected = True
+
+    def _on_edit_handler(self, text:str):
+        if self._on_edit is not None:
+            _ensure_future(self._on_edit)(text)
+
+    def _set_on_edit(self, on_edit):
+        self._on_edit = on_edit
 
     # def _set_completer(self, completer):
     #     if completer:
@@ -580,6 +595,8 @@ class TextInput(QtWidgetElement):
             commands.append(_CommandType(widget.setCursorPosition, widget.cursorPosition()))
         if "on_change" in newprops:
             commands.append(_CommandType(self._set_on_change, newprops.on_change))
+        if "on_edit" in newprops:
+            commands.append(_CommandType(self._set_on_edit, newprops.on_edit))
         if "on_edit_finish" in newprops:
             commands.append(_CommandType(self._set_on_edit_finish, newprops.on_edit_finish))
     #         elif prop == "completer":
@@ -888,8 +905,13 @@ class Slider(QtWidgetElement):
             The orientation of the slider,
             either :code:`Horizontal` or :code:`Vertical`.
             See `Orientation <https://doc.qt.io/qtforpython-6/PySide6/QtCore/Qt.html#PySide6.QtCore.PySide6.QtCore.Qt.Orientation>`_.
-        on_change: callback for when the slider value changes.
-            The callback receives the new value of the slider as an argument.
+        on_change:
+            Event handler for when the value of the slider changes.
+        on_move:
+            Event handler for when the value of the slider changes,
+            but only when the slider is being move by the user, not
+            when the value is changed programmatically. Good for avoiding
+            feedback loops.
     """
 
     def __init__(
@@ -899,6 +921,7 @@ class Slider(QtWidgetElement):
         max_value: int = 100,
         orientation: QtCore.Qt.Orientation = QtCore.Qt.Orientation.Horizontal,
         on_change: tp.Callable[[int], None | tp.Awaitable[None]] | None = None,
+        on_move: tp.Callable[[int], None | tp.Awaitable[None]] | None = None,
         **kwargs,
     ):
         super().__init__(**kwargs)
@@ -908,9 +931,12 @@ class Slider(QtWidgetElement):
             "max_value": max_value,
             "orientation": orientation,
             "on_change": on_change,
+            "on_move": on_move,
         })
         self._register_props(kwargs)
         self._connected = False
+        self._on_change: tp.Optional[tp.Callable[[int], None | tp.Awaitable[None]]] = None
+        self._on_move : tp.Optional[tp.Callable[[int], None | tp.Awaitable[None]]] = None
 
     def _initialize(self, orientation):
         self.underlying = QtWidgets.QSlider(orientation)
@@ -922,18 +948,32 @@ class Slider(QtWidgetElement):
         #     self._set_size(size * len(self.props.text), size)
 
         self.underlying.setObjectName(str(id(self)))
+        self.underlying.valueChanged.connect(self._on_change_handle)
+        self.underlying.sliderMoved.connect(self._on_move_handle)
+
+    def _on_change_handle(self, position:int) -> None:
+        if self._on_change is not None:
+            self._on_change(position)
 
     def _set_on_change(self, on_change):
-        assert self.underlying is not None
-        widget = tp.cast(QtWidgets.QSlider, self.underlying)
-        if self._connected:
-            widget.valueChanged.disconnect()
-            self._connected = False
-        if on_change is not None:
-            def on_change_fun(value):
-                return _ensure_future(on_change)(value)
-            widget.valueChanged.connect(on_change_fun)
-            self._connected = True
+        self._on_change = on_change
+        # assert self.underlying is not None
+        # widget = tp.cast(QtWidgets.QSlider, self.underlying)
+        # if self._connected:
+        #     widget.valueChanged.disconnect()
+        #     self._connected = False
+        # if on_change is not None:
+        #     def on_change_fun(value):
+        #         return _ensure_future(on_change)(value)
+        #     widget.valueChanged.connect(on_change_fun)
+        #     self._connected = True
+
+    def _on_move_handle(self, position:int) -> None:
+        if self._on_move is not None:
+            _ensure_future(self._on_move)(position)
+
+    def _set_on_move(self, on_move):
+        self._on_move = on_move
 
     def _qt_update_commands(
         self,
@@ -954,6 +994,8 @@ class Slider(QtWidgetElement):
             commands.append(_CommandType(widget.setValue, newprops.value))
         if "on_change" in newprops:
             commands.append(_CommandType(self._set_on_change, newprops.on_change))
+        if "on_move" in newprops:
+            commands.append(_CommandType(self._set_on_move, newprops.on_move))
         return commands
 
 

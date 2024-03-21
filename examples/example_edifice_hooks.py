@@ -17,7 +17,7 @@ def MyApp(self):
 
     with View(layout="column"):
         Label("Hello world: " + text)
-        TextInput(text, on_change=text_set)
+        TextInput(text, on_edit=text_set)
         with View(layout="row"):
             Label("Bonjour")
 

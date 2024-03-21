@@ -36,6 +36,7 @@ def MyComponent(self):
     with View(layout="column"):
 
         Slider(x, min_value=0, max_value=100, on_change=x_set)
+        Slider(x, min_value=0, max_value=100, on_move=x_set)
         ProgressBar(
             x,
             min_value=0,
