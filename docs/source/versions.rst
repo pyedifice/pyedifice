@@ -4,6 +4,21 @@
 Release Notes
 =============
 
+0.5.0
+-----
+Released: 2024-03-21
+
+* Change event handler props called only on UI interaction.
+
+  On general principle:
+  Widget value change event handler prop functions should only be called when the
+  Widget value changed due to a user interaction, not because the value
+  prop changed.
+
+* Delete props
+  * :class:`Slider` :code:`on_move`
+  * :class:`TextInput` :code:`on_edit`
+
 0.4.5
 -----
 Released: 2024-03-21
