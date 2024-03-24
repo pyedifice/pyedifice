@@ -21,7 +21,8 @@ def use_state(initial_state:_T_use_state) -> tuple[
     the render for this component.
 
     The **setter function** will, when called, set the **state value** before
-    the next render.
+    the next render. If the new **state value** is not :code:`__eq__` to the
+    old **state value**, then the component will be re-rendered.
 
     Example::
 
