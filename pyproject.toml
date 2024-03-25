@@ -37,7 +37,8 @@ pandas = ">= 1.2.0" # for examples/financial_charts.py
 yfinance = "*" # for examples/financial_charts.py
 
 memray = "*" # for memory profiling
-
+objgraph = "*" # for memory profiling
+xdot = "*" # for memory profiling
 
 [build-system]
 requires = ["poetry-core"]
