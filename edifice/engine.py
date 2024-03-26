@@ -781,10 +781,6 @@ class RenderEngine(object):
             self._component_tree.update(render_context.component_tree)
             self._widget_tree.update(render_context.widget_tree)
 
-            # Delete components that should be deleted (and call the respective unmounts)
-            for component_delete in render_context.enqueued_deletions:
-                self._delete_component(component_delete, True)
-
             # This is the phase of the render when the commands run.
             for command in commands:
                 try:
@@ -795,6 +791,10 @@ class RenderEngine(object):
                                     + str(ex) + "\n")
             render_context.run_callbacks()
             all_commands.extend(commands)
+
+            # Delete components that should be deleted (and call the respective unmounts)
+            for component_delete in render_context.enqueued_deletions:
+                self._delete_component(component_delete, True)
 
         # after render, call the use_effect setup functions.
         # we want to guarantee that elements are fully rendered before
