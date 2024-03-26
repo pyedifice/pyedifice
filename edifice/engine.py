@@ -59,15 +59,6 @@ class _RenderContext(object):
 
         self.current_element = None
 
-    def schedule_callback(self, callback, args=None, kwargs=None):
-        args = args or []
-        kwargs = kwargs or {}
-        self._callback_queue.append((callback, args, kwargs))
-
-    def run_callbacks(self):
-        for callback, args, kwargs in self._callback_queue:
-            callback(*args, **kwargs)
-
     def mark_props_change(self, component: Element, newprops: PropsDict):
         if component not in self.component_to_old_props:
             self.component_to_old_props[component] = component.props
@@ -789,7 +780,6 @@ class RenderEngine(object):
                     logger.exception("Exception while running command:\n"
                                     + str(command) + "\n"
                                     + str(ex) + "\n")
-            render_context.run_callbacks()
             all_commands.extend(commands)
 
             # Delete components that should be deleted (and call the respective unmounts)
