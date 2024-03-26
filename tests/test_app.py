@@ -4,7 +4,7 @@ import unittest
 import edifice.app as app
 from edifice import Window
 import edifice.base_components as base_components
-import edifice._component as component
+from edifice.engine import Element
 
 from edifice.qt import QT_VERSION
 if QT_VERSION == "PyQt6":
@@ -40,7 +40,7 @@ class TimingAvgTestCase(unittest.TestCase):
 class IntegrationTestCase(unittest.TestCase):
 
     def test_export_widgets(self):
-        class TestComp(component.Element):
+        class TestComp(Element):
 
             def __init__(self):
                 super().__init__()
@@ -49,7 +49,7 @@ class IntegrationTestCase(unittest.TestCase):
             def _render_element(self):
                 return base_components.ExportList()(
                     base_components.Label(f"Hello World: {self.text}"),
-                    base_components.TextInput(self.text, on_change=lambda text: self._set_state(text=text))
+                    base_components.TextInput(self.text, on_change=lambda text: setattr(self, "text", text))
                 )
 
         my_app = app.App(TestComp(), create_application=False)

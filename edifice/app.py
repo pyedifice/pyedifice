@@ -19,9 +19,8 @@ else:
 
 from qasync import QEventLoop
 
-from ._component import Element
-from .base_components import Window, QtWidgetElement, ExportList
-from .engine import RenderEngine
+from .base_components import Window, ExportList
+from .engine import RenderEngine, Element, QtWidgetElement
 from .inspector import inspector as inspector_module
 
 logger = _logger_module.logger

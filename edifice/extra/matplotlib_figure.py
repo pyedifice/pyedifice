@@ -1,6 +1,5 @@
 import typing as tp
-from ..base_components import QtWidgetElement
-from ..engine import _CommandType
+from ..base_components.base_components import _CommandType, QtWidgetElement
 
 from ..qt import QT_VERSION
 if QT_VERSION == "PyQt6":

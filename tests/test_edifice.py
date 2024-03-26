@@ -1,7 +1,7 @@
 import unittest
 import unittest.mock
 from edifice import Element, Reference, component, use_ref
-from edifice._component import _CommandType, _dereference_tree, _WidgetTree, QtWidgetElement
+from edifice.engine import _CommandType, _dereference_tree, _WidgetTree, QtWidgetElement
 import edifice.engine as engine
 import edifice.base_components as base_components
 

@@ -1,5 +1,5 @@
 from collections.abc import Awaitable, Callable, Coroutine
-from edifice._component import get_render_context_maybe, _T_use_state, Reference
+from edifice.engine import get_render_context_maybe, _T_use_state, Reference
 from typing import Any, Generic, ParamSpec, cast
 from asyncio import get_event_loop
 
@@ -105,9 +105,9 @@ def use_state(initial_state:_T_use_state) -> tuple[
         2. A **setter function** for setting or updating the state value.
     """
     context = get_render_context_maybe()
-    if context is None:
+    if context is None or context.current_element is None:
         raise ValueError("use_state used outside component")
-    return context.use_state(initial_state)
+    return context.engine.use_state(context.current_element, initial_state)
 
 
 def use_effect(
@@ -171,9 +171,9 @@ def use_effect(
         None
     """
     context = get_render_context_maybe()
-    if context is None:
+    if context is None or context.current_element is None:
         raise ValueError("use_effect used outside component")
-    return context.use_effect(setup, dependencies)
+    return context.engine.use_effect(context.current_element, setup, dependencies)
 
 
 def use_async(
@@ -266,9 +266,9 @@ def use_async(
         A function which can be called to cancel the :code:`fn_coroutine` Task manually.
     """
     context = get_render_context_maybe()
-    if context is None:
+    if context is None or context.current_element is None:
         raise ValueError("use_async used outside component")
-    return context.use_async(fn_coroutine, dependencies)
+    return context.engine.use_async(context.current_element, fn_coroutine, dependencies)
 
 
 def use_ref() -> Reference:

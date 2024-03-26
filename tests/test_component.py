@@ -1,6 +1,5 @@
 import unittest
 import unittest.mock
-import edifice._component as component
 from edifice.app import App, Window
 import edifice.engine as engine
 import edifice.base_components as base_components
@@ -15,13 +14,13 @@ else:
 if QtWidgets.QApplication.instance() is None:
     qapp = QtWidgets.QApplication(["-platform", "offscreen"])
 
-@component.component
+@ed.component
 def Value(self, value):
     self.value = value
     base_components.View()
 
 
-class OtherMockElement(component.Element):
+class OtherMockElement(ed.Element):
 
     def __init__(self):
         super().__init__()
@@ -29,7 +28,7 @@ class OtherMockElement(component.Element):
             _request_rerender = unittest.mock.MagicMock()
         self._controller = MockController()
 
-class MockBrokenElement(component.Element):
+class MockBrokenElement(ed.Element):
 
     def __init__(self):
         super().__init__()
@@ -70,7 +69,7 @@ class MakeElementTestCase(unittest.TestCase):
 
     def test_make_component(self):
 
-        @component.component
+        @ed.component
         def Element1234(self, prop1, prop2):
             Value(1234)
 
@@ -78,7 +77,7 @@ class MakeElementTestCase(unittest.TestCase):
         comp = Element1234(1, 2)
         self.assertEqual(comp.__class__, Element1234)
         self.assertEqual(comp.props._d, {"prop1": 1, "prop2": 2, "children": []})
-        with component.Container() as container:
+        with engine.Container() as container:
             comp._render_element()
         value_component = container.children[0]
         self.assertEqual(value_component.__class__.__name__, "Value")
@@ -88,7 +87,7 @@ class MakeElementTestCase(unittest.TestCase):
 
     def test_make_components(self):
 
-        @component.component
+        @ed.component
         def Element1234(self, prop1, prop2):
             with base_components.View():
                 Value(1337)
@@ -100,7 +99,7 @@ class MakeElementTestCase(unittest.TestCase):
         comp = Element1234(1, 2)
         self.assertEqual(comp.__class__, Element1234)
         self.assertEqual(comp.props._d, {"prop1": 1, "prop2": 2, "children": []})
-        with component.Container() as container:
+        with engine.Container() as container:
             comp._render_element()
         view = container.children[0]
         components = view.children
@@ -114,11 +113,11 @@ class MakeElementTestCase(unittest.TestCase):
 
     def test_make_nested_component(self):
 
-        @component.component
+        @ed.component
         def A(self):
             Value(13)
 
-        @component.component
+        @ed.component
         def Element1234(self, prop1, prop2):
             with A():
                 Value(9)
@@ -127,11 +126,11 @@ class MakeElementTestCase(unittest.TestCase):
         comp = Element1234(1, 2)
         self.assertEqual(comp.__class__, Element1234)
         self.assertEqual(comp.props._d, {"prop1": 1, "prop2": 2, "children": []})
-        with component.Container() as container:
+        with engine.Container() as container:
             comp._render_element()
         root = container.children[0]
         self.assertEqual(root.__class__.__name__, "A")
-        with component.Container() as container:
+        with engine.Container() as container:
             root._render_element()
         nested = container.children[0]
         nested._render_element()
