@@ -391,6 +391,7 @@ class App(object):
         async def app_run():
             await self._app_close_event.wait()
             engine = self._render_engine
+            engine._stop()
             engine._delete_component(self._root, True)
             # At this time, all use_async hook tasks have been cancel()ed.
             # Wait until all the cancelled tasks are done(), then exit.

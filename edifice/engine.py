@@ -1,5 +1,5 @@
 import asyncio
-from collections.abc import Callable, Coroutine, Iterator
+from collections.abc import Callable, Coroutine
 from collections import defaultdict
 import inspect
 import logging
@@ -299,7 +299,7 @@ class RenderEngine(object):
     __slots__ = (
         "_component_tree", "_widget_tree", "_root", "_app",
         "_hook_state", "_hook_state_setted",
-        "_hook_effect", "_hook_async"
+        "_hook_effect", "_hook_async", "_is_stopped",
     )
     def __init__(self, root:Element, app=None):
         self._component_tree : dict[Element, list[Element]] = {}
@@ -329,6 +329,10 @@ class RenderEngine(object):
         self._hook_async: defaultdict[Element, list[_HookAsync]] = defaultdict(list)
         """
         The per-element hooks for use_async().
+        """
+        self._is_stopped: bool = False
+        """
+        Flag determining if the render engine has been stopped.
         """
 
     def is_hook_async_done(self, element: Element) -> bool:
@@ -399,6 +403,9 @@ class RenderEngine(object):
         # This refresh is done only for a hot reload. It refreshes all
         # elements which were defined in a module which was changed
         # on the filesystem.
+
+        if self._is_stopped:
+            return
 
         # Algorithm:
         # 1) Find all old components that's not a child of another component
@@ -707,6 +714,9 @@ class RenderEngine(object):
         Recursively generate the update commands for the widget tree.
         """
         commands : list[_CommandType] = []
+        if self._is_stopped:
+            return commands
+
         children = _get_widget_children(render_context.widget_tree, element)
         for child in children:
             rendered = self.gen_qt_commands(child, render_context)
@@ -724,6 +734,8 @@ class RenderEngine(object):
         return commands
 
     def _request_rerender(self, components: list[Element]) -> RenderResult:
+        if self._is_stopped:
+            return RenderResult([])
 
         components_ = components[:]
         # Before the render, reduce the _hook_state updaters.
@@ -806,3 +818,6 @@ class RenderEngine(object):
 
         # We return all the commands but that's only needed for testing.
         return RenderResult(all_commands)
+
+    def _stop(self) -> None:
+        self._is_stopped = True
