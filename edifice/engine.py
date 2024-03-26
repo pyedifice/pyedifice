@@ -22,7 +22,7 @@ class _RenderContext(object):
     at the end of the render.
     """
     __slots__ = ("need_qt_command_reissue", "component_to_old_props",
-                 "force_refresh", "component_tree", "widget_tree", "enqueued_deletions",
+                 "component_tree", "widget_tree", "enqueued_deletions",
                  "trackers", "_callback_queue",
                  "engine",
                  "current_element",
@@ -36,12 +36,10 @@ class _RenderContext(object):
     def __init__(
         self,
         engine: "RenderEngine",
-        force_refresh: bool =False,
     ):
         self.engine = engine
         self.need_qt_command_reissue = {}
         self.component_to_old_props = {}
-        self.force_refresh = force_refresh
 
         self.component_tree : dict[Element, list[Element]]= {}
         """
