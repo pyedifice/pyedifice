@@ -390,10 +390,20 @@ class App(object):
 
         async def app_run():
             await self._app_close_event.wait()
-            self._render_engine._delete_component(self._root, True)
+            engine = self._render_engine
+            engine.is_stopped = True
+            engine._delete_component(self._root, True)
             # At this time, all use_async hook tasks have been cancel()ed.
             # Wait until all the cancelled tasks are done(), then exit.
-            while len(self._render_engine._hook_async) > 0:
+            while len(engine._hook_async) > 0:
+                # Remove finished components from engine async hooks
+                to_delete = [
+                    component
+                    for component in engine._hook_async
+                    if engine.is_hook_async_done(component)
+                ]
+                for component in to_delete:
+                    del engine._hook_async[component]
                 await asyncio.sleep(0.0)
 
         loop.run_until_complete(app_run())
