@@ -38,10 +38,6 @@ class IntegrationTestCase(unittest.TestCase):
         class TestComp(Element):
             def __init__(self):
                 super().__init__()
-                self.count = 0
-
-            async def handle_click(self, _):
-                self._set_state(count=self.count + 1)
 
             def _render_element(self):
                 print("TestComp instance " + str(id(self)))
@@ -52,10 +48,6 @@ class IntegrationTestCase(unittest.TestCase):
                     }
                 )(
                     *[Label(text=str(i)) for i in range(x)],
-                    Button(
-                        title="Count " + str(self.count),
-                        on_click=self.handle_click
-                    ),
                     Button(
                         title="State " + str(x),
                         on_click=lambda ev: x_setter(x+1)

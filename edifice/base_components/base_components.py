@@ -3,8 +3,7 @@ import importlib.resources
 import logging
 import re
 import typing as tp
-from .._component import _CommandType, PropsDict, Element, QtWidgetElement, _create_qmenu, _CURSORS, _ensure_future
-from ..engine import _WidgetTree, _get_widget_children
+from ..engine import _WidgetTree, _get_widget_children, _CommandType, PropsDict, Element, QtWidgetElement, _create_qmenu, _CURSORS, _ensure_future
 
 from ..qt import QT_VERSION
 

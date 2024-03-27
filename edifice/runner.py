@@ -16,7 +16,7 @@ try:
 except ImportError:
     FSEventsObserver = None
 
-from ._component import Element
+from .engine import Element
 from .app import App
 
 from edifice.qt import QT_VERSION

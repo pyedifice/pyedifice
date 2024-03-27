@@ -7,15 +7,16 @@ import unittest
 import unittest.mock
 import edifice.engine as engine
 import edifice.base_components.base_components as base_components
-from edifice._component import _CommandType
+from edifice.engine import _CommandType
 import edifice.icons
-ICONS = importlib.resources.files(edifice.icons)
 
 from edifice.qt import QT_VERSION
 if QT_VERSION == "PyQt6":
     from PyQt6 import QtCore, QtWidgets, QtGui
 else:
     from PySide6 import QtCore, QtWidgets, QtGui
+
+ICONS = importlib.resources.files(edifice.icons)
 
 if QtWidgets.QApplication.instance() is None:
     app = QtWidgets.QApplication(["-platform", "offscreen"])

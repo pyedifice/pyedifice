@@ -1,6 +1,5 @@
 import typing as tp
-from ..base_components import QtWidgetElement
-from ..engine import _CommandType
+from ..base_components.base_components import _CommandType, QtWidgetElement
 
 # Import PySide6 or PyQt6 before importing pyqtgraph so that pyqtgraph detects the same
 from ..qt import QT_VERSION

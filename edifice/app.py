@@ -19,10 +19,9 @@ else:
 
 from qasync import QEventLoop
 
-from ._component import Element
-from .base_components import Window, QtWidgetElement, ExportList
-from .engine import RenderEngine
-from .inspector import inspector
+from .base_components import Window, ExportList
+from .engine import RenderEngine, Element, QtWidgetElement
+from .inspector import inspector as inspector_module
 
 logger = _logger_module.logger
 
@@ -226,7 +225,7 @@ class App(object):
         self._class_rerender_response_queue = queue.Queue()
 
         self._inspector = inspector
-        self._inspector_component = None
+        self._inspector_component : Element | None = None
 
         self._rerender_called_soon = False
         self._is_rerendering = False
@@ -270,8 +269,8 @@ class App(object):
                          render_timing.count(), 1000 * render_timing.mean(), 1000 * render_timing.max())
         self._first_render = False
 
-        if self._inspector_component is not None and not any(hasattr(comp, "__edifice_inspector_element")  for comp in components):
-            self._inspector_component.force_refresh()
+        if self._inspector_component is not None and not any(hasattr(comp, "__edifice_inspector_element") for comp in components):
+            getattr(self._inspector_component, "force_refresh")()
 
         self._is_rerendering = False
         if len(self._rerender_wanted) > 0 and not self._rerender_called_soon:
@@ -374,7 +373,7 @@ class App(object):
                 def cleanup(e):
                     self._inspector_component = None
 
-                self._inspector_component = inspector.Inspector(
+                self._inspector_component = inspector_module.Inspector(
                     refresh=(lambda: (
                         self._render_engine._component_tree,
                         self._root,

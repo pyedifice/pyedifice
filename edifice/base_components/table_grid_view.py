@@ -7,7 +7,7 @@ if QT_VERSION == "PyQt6" and not TYPE_CHECKING:
 else:
     from PySide6.QtWidgets import QGridLayout, QWidget
 
-from .._component import _CommandType, PropsDict, Element, _get_widget_children, _WidgetTree, QtWidgetElement
+from .base_components import _CommandType, PropsDict, Element, _get_widget_children, _WidgetTree, QtWidgetElement
 
 logger = logging.getLogger("Edifice")
 
