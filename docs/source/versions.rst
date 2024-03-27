@@ -4,6 +4,14 @@
 Release Notes
 =============
 
+0.5.1
+-----
+Released: 2024-03-27
+
+* Big reductions in memory leaking from :func:`use_state` Hook.
+* Bugfix: After :func:`App.stop`, don't run new renders, also don't
+  schedule new :func:`use_async` calls.
+
 0.5.0
 -----
 Released: 2024-03-21
