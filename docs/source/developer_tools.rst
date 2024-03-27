@@ -5,7 +5,7 @@ The declarative nature of Edifice makes it easy for development tools
 to introspect application code.
 
 Dynamic hot-reload
------------------
+------------------
 
 .. figure:: /image/edifice-workflow.gif
 

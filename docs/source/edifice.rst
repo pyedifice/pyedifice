@@ -2,7 +2,6 @@ Edifice Core
 ============
 
 .. automodule:: edifice
-.. automodule:: edifice._component
 
 .. currentmodule:: edifice
 
