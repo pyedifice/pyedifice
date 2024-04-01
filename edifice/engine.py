@@ -1938,6 +1938,10 @@ class RenderEngine(object):
 
         def setter(updater):
             if element not in self._hook_state:
+                # Then the component has been deleted and unmounted.
+                # This might happen if the setter is called during a
+                # a use_async CancelledError handler.
+                # In that case, we don't want to update the state.
                 return
             hook.updaters.append(updater)
             self._hook_state_setted.add(element)
