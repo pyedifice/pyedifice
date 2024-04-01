@@ -1858,7 +1858,7 @@ class RenderEngine(object):
         # Here is the problem.
         # We need to render the child before parent if the child state changed.
         # We need to render the parent before child if the child props changed.
-        # So we do a complete render of each component invividually, and then
+        # So we do a complete render of each component individually, and then
         # we don't have to solve the problem of the order of rendering.
         for component in components_:
 
@@ -1937,6 +1937,8 @@ class RenderEngine(object):
             hook = hooks[h_index]
 
         def setter(updater):
+            if element not in self._hook_state:
+                return
             hook.updaters.append(updater)
             self._hook_state_setted.add(element)
             assert self._app is not None
