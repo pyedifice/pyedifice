@@ -4,6 +4,15 @@
 Release Notes
 =============
 
+0.5.2
+-----
+Released: 2024-04-01
+
+* New Hook :func:`use_effect_final`
+* During :func:`use_async` :code:`CancelledError`, allow calling
+  :func:`use_state` setter functions without causing re-render of an unmounting
+  component.
+
 0.5.1
 -----
 Released: 2024-03-27
