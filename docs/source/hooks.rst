@@ -77,6 +77,7 @@ Hooks
 
    use_state
    use_effect
+   use_effect_final
    use_async
    use_async_call
    use_ref

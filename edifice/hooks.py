@@ -373,3 +373,81 @@ def use_async_call(
         loop.call_soon_threadsafe(cancel)
 
     return callback, cancel_threadsafe
+
+
+def use_effect_final(
+    cleanup: Callable[[], None],
+    dependencies: Any = (),
+):
+    """
+    Side-effect Hook for when a :func:`edifice.component` unmounts.
+
+    This Hook will call the :code:`cleanup` side-effect function with the latest
+    local state from :func:`use_state` Hooks.
+
+    This Hook solves the problem of using :func:`use_effect` with constant
+    deps to run a :code:`cleanup` function when a component unmounts. If the
+    :func:`use_effect` deps are constant so that the :code:`cleanup` function
+    only runs once, then the :code:`cleanup` function will not have a closure
+    on the latest component :code:`use_state` state.
+    This Hook :code:`cleanup` function will always have a closure on the
+    latest component :code:`use_state`.
+
+    The optional :code:`dependencies` argument can be used to trigger the
+    Hook to call the :code:`cleanup` function before the component unmounts.
+
+    Example::
+
+        x, set_x = ed.use_state(0)
+
+        def unmount_cleanup_x():
+            print(f"At unmount, the value of x is {x}")
+
+        use_effect_final(unmount_cleanup_x)
+
+    Debounce
+    --------
+
+    We can use this Hook together with :func:`use_async` to “debounce” an effect
+    which must always finally run when the component unmounts.
+
+    Example::
+
+        x, set_x = ed.use_state(0)
+
+        # We want to save the value of x to a file whenever the value of
+        # x changes. But we don't want to do this too often because it would
+        # lag the GUI responses. Each :func:`use_async` call will cancel prior
+        # awaiting calls. So this will save 1 second after the last change to x.
+
+        async def save_x_debounce():
+            await asyncio.sleep(1.0)
+            save_to_file(x)
+
+        use_async(save_x_debouce, x)
+
+        # And we want to make sure that the final value of x is saved to
+        # the file when the component unmounts.
+
+        use_effect_final(lambda: save_to_file(x))
+
+    """
+    internal_mutable, _ = use_state(cast(list[Callable[[], None]], []))
+
+    # Always re-bind the cleanup function closed on the latest state
+    def bind_cleanup():
+        if len(internal_mutable) == 0:
+            internal_mutable.append(cleanup)
+        else:
+            internal_mutable[0] = cleanup
+
+    use_effect(bind_cleanup, None)
+
+    # This unmount function is called when the component unmounts
+    def unmount():
+        def internal_cleanup():
+            internal_mutable[0]()
+
+        return internal_cleanup
+
+    use_effect(unmount, dependencies)

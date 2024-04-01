@@ -132,7 +132,7 @@ whenever you have many children of the same class.
 from .engine import QtWidgetElement, Element, component, Reference
 from .app import App
 from .utilities import alert, file_dialog, set_trace
-from .hooks import use_state, use_effect, use_async, use_ref, use_async_call
+from .hooks import use_state, use_effect, use_async, use_ref, use_async_call, use_effect_final
 
 from .base_components import (
     Window,
@@ -173,6 +173,7 @@ __all__ = [
     "use_async",
     "use_ref",
     "use_async_call",
+    "use_effect_final",
     "QtWidgetElement",
     "Window",
     "ExportList",
