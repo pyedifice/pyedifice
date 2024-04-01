@@ -196,8 +196,12 @@ def use_async(
             myword, myword_set = use_state("")
 
             async def fetcher():
-                x = await fetch_word_from_the_internet()
-                myword_set(x)
+                try:
+                    x = await fetch_word_from_the_internet()
+                    myword_set(x)
+                except asyncio.CancelledError:
+                    myword_set("Fetch word cancelled")
+                    raise
 
             _cancel_fetcher = use_async(fetcher, 0)
             Label(text=myword)
@@ -205,29 +209,30 @@ def use_async(
     Cancellation
     ============
 
-    If the component is unmounted before the :code:`fn_coroutine` Task completes, then
-    the :code:`fn_coroutine` Task will be cancelled by calling
+    The async :code:`fn_coroutine` Task can be cancelled by Edifice. Edifice will call
     `cancel() <https://docs.python.org/3/library/asyncio-task.html#asyncio.Task.cancel>`_
     on the Task.
     See also
     `Task Cancellation <https://docs.python.org/3/library/asyncio-task.html#task-cancellation>`_.
 
-    If the :code:`dependencies` change before the :code:`fn_coroutine` Task completes, then
-    the :code:`fn_coroutine` Task will be cancelled and then the new
-    :code:`fn_coroutine` Task will
-    be started after the old :code:`fn_coroutine` Task completes.
+    1. If the :code:`dependencies` change before the :code:`fn_coroutine` Task completes, then
+       the :code:`fn_coroutine` Task will be cancelled and then the new
+       :code:`fn_coroutine` Task will
+       be started after the old :code:`fn_coroutine` Task completes.
+    2. The :code:`use_async` Hook returns a function which can be called to
+       cancel the :code:`fn_coroutine` Task manually. In the example above,
+       the :code:`_cancel_fetcher()` function can be called to cancel the fetcher.
+    3. If the component is unmounted before the :code:`fn_coroutine` Task completes, then
+       the :code:`fn_coroutine` Task will be cancelled.
 
-    Write your :code:`fn_coroutine` function in such a way that it
-    cleans itself up after exceptions.
-    Make sure that the :code:`fn_coroutine` function
-    does not try to do anything with this component after an
-    :code:`asyncio.CancelledError`
-    is raised, because this component may at that time
-    already have been unmounted.
+    Write your async :code:`fn_coroutine` function in such a way that it
+    cleans itself up after exceptions. If you catch a :code:`CancelledError`
+    then always re-raise it.
 
-    The :code:`use_async` Hook returns a function which can be called to
-    cancel the :code:`fn_coroutine` Task manually. In the example above,
-    the :code:`_cancel_fetcher()` function can be called to cancel the fetcher.
+    You may call a :func:`use_state` setter during
+    a :code:`CancelledError` exception. If the :code:`fn_coroutine` Task was
+    cancelled because the component is being unmounted, then the
+    :func:`use_state` setter will have no effect.
 
     Timers
     ======
