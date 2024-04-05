@@ -49,3 +49,7 @@ line-length = 120
 [tool.pyright]
 include = ["edifice"]
 exclude = ["**/__pycache__"]
+
+classifiers = [
+  'Topic :: Software Development :: User Interfaces',
+]
