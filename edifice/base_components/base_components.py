@@ -872,6 +872,8 @@ class Slider(QtWidgetElement):
         max_value: int = 100,
         orientation: QtCore.Qt.Orientation = QtCore.Qt.Orientation.Horizontal,
         on_change: tp.Callable[[int], None | tp.Awaitable[None]] | None = None,
+        *,
+        ignore_scrolling: bool = True,
         **kwargs,
     ):
         super().__init__(**kwargs)
@@ -881,6 +883,7 @@ class Slider(QtWidgetElement):
             "max_value": max_value,
             "orientation": orientation,
             "on_change": on_change,
+            "ignore_scrolling": ignore_scrolling,
         })
         self._register_props(kwargs)
         self._connected = False
@@ -897,6 +900,8 @@ class Slider(QtWidgetElement):
 
         self.underlying.setObjectName(str(id(self)))
         self.underlying.valueChanged.connect(self._on_change_handle)
+        if "ignore_scrolling" in self.props and self.props.ignore_scrolling:
+            self.underlying.wheelEvent = lambda e: e.ignore() 
 
     def _on_change_handle(self, position:int) -> None:
         if self._on_change is not None:
