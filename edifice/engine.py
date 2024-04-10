@@ -11,6 +11,7 @@ import typing as tp
 from typing_extensions import Self
 
 from .qt import QT_VERSION
+
 if QT_VERSION == "PyQt6" and not tp.TYPE_CHECKING:
     from PyQt6 import QtCore, QtWidgets, QtGui
 else:
@@ -23,24 +24,30 @@ P = tp.ParamSpec("P")
 
 StyleType = tp.Optional[tp.Union[tp.Mapping[tp.Text, tp.Any], tp.Sequence[tp.Mapping[tp.Text, tp.Any]]]]
 
+
 def _dict_to_style(d, prefix="QWidget"):
     d = d or {}
     stylesheet = prefix + "{%s}" % (";".join("%s: %s" % (k, v) for (k, v) in d.items()))
     return stylesheet
+
 
 # TODO
 # https://stackoverflow.com/questions/37278647/fire-and-forget-python-async-await/37345564#37345564
 # “Replace asyncio.ensure_future with asyncio.create_task everywhere if you're
 # using Python >= 3.7 It's a newer, nicer way to spawn tasks.”
 
+
 def _ensure_future(fn):
     # Ensures future if fn is a coroutine, otherwise don't modify fn
     if inspect.iscoroutinefunction(fn):
+
         @functools.wraps(fn)
         def wrapper(*args, **kwargs):
             return asyncio.ensure_future(fn(*args, **kwargs))
+
         return wrapper
     return fn
+
 
 class _CommandType:
     def __init__(self, fn: Callable[P, tp.Any], *args: P.args, **kwargs: P.kwargs):
@@ -77,11 +84,13 @@ class _CommandType:
     def __hash__(self):
         return (self.fn, *self.args, *self.kwargs.items()).__hash__()
 
+
 _T_use_state = tp.TypeVar("_T_use_state")
 
 """
 Deferred function call. A tuple with a Callable, and all of the values of its arguments.
 """
+
 
 class PropsDict(object):
     """An immutable dictionary for storing props.
@@ -101,6 +110,7 @@ class PropsDict(object):
     .. autoproperty:: _keys
     .. autoproperty:: _items
     """
+
     __slots__ = ("_d",)
 
     def __init__(self, dictionary: tp.Mapping[tp.Text, tp.Any]):
@@ -231,14 +241,19 @@ class Reference(object):
     def __call__(self) -> tp.Optional["Element"]:
         return self._value
 
+
 T = tp.TypeVar("T")
+
 
 class ControllerProtocol(tp.Protocol):
     """Protocol for App"""
+
     def _request_rerender(self, components: Iterable["Element"], kwargs: dict[str, tp.Any]):
         pass
+
     def _defer_rerender(self, components: list["Element"]):
         pass
+
     def stop(self):
         pass
 
@@ -248,6 +263,7 @@ class _Tracker:
     During a render, track the current element and the children being
     added to the current element.
     """
+
     children: list["Element"]
 
     def __init__(self, component: "Element"):
@@ -267,6 +283,7 @@ class _Tracker:
             children |= find_components(child) - {child}
         return [child for child in self.children if child not in children]
 
+
 class _RenderContext(object):
     """
     Encapsulates various state that's needed for rendering.
@@ -274,16 +291,23 @@ class _RenderContext(object):
     One _RenderContext is created when a render begins, and it is destroyed
     at the end of the render.
     """
-    __slots__ = ("need_qt_command_reissue", "component_to_old_props",
-                 "component_tree", "widget_tree", "enqueued_deletions",
-                 "trackers", "_callback_queue",
-                 "engine",
-                 "current_element",
-                 )
+
+    __slots__ = (
+        "need_qt_command_reissue",
+        "component_to_old_props",
+        "component_tree",
+        "widget_tree",
+        "enqueued_deletions",
+        "trackers",
+        "_callback_queue",
+        "engine",
+        "current_element",
+    )
     trackers: list[_Tracker]
     """Stack of _Tracker"""
     current_element: "Element | None"
     """The Element currently being rendered."""
+
     # I guess static scope typing of instance members is normal in Python?
     # https://peps.python.org/pep-0526/#class-and-instance-variable-annotations
     def __init__(
@@ -294,7 +318,7 @@ class _RenderContext(object):
         self.need_qt_command_reissue = {}
         self.component_to_old_props = {}
 
-        self.component_tree : dict[Element, list[Element]]= {}
+        self.component_tree: dict[Element, list[Element]] = {}
         """
         Map of a component to its children.
         """
@@ -326,13 +350,17 @@ class _RenderContext(object):
     def need_rerender(self, component: "QtWidgetElement"):
         return self.need_qt_command_reissue.get(component, False)
 
+
 local_state = threading.local()
+
 
 def get_render_context() -> _RenderContext:
     return getattr(local_state, "render_context")
 
+
 def get_render_context_maybe() -> _RenderContext | None:
     return getattr(local_state, "render_context", None)
+
 
 class Element:
     """The base class for Edifice Elements.
@@ -471,14 +499,14 @@ class Element:
         # return True, because the children will always be different, because
         # _recycle_children hasn't been called yet. Is that correct behavior?
 
-        for k,v in newprops._items:
+        for k, v in newprops._items:
             if k in self.props:
-            # If the prop is in the old props, then we check if it's changed.
+                # If the prop is in the old props, then we check if it's changed.
                 v2 = self.props._get(k)
                 if v2 != v:
                     return True
             else:
-            # If the prop is not in the old props, then we rerender.
+                # If the prop is not in the old props, then we rerender.
                 return True
 
         return False
@@ -499,13 +527,11 @@ class Element:
     def _tags(self):
         classname = self.__class__.__name__
         return [
-            f"<{classname} id=0x%x %s>" % (
-                id(self),
-                " ".join("%s=%s" % (p, val) for (p, val) in self.props._items if p != "children")),
+            f"<{classname} id=0x%x %s>"
+            % (id(self), " ".join("%s=%s" % (p, val) for (p, val) in self.props._items if p != "children")),
             "</%s>" % (classname),
-            f"<{classname} id=0x%x %s />" % (
-                id(self),
-                " ".join("%s=%s" % (p, val) for (p, val) in self.props._items if p != "children")),
+            f"<{classname} id=0x%x %s />"
+            % (id(self), " ".join("%s=%s" % (p, val) for (p, val) in self.props._items if p != "children")),
         ]
 
     def __str__(self):
@@ -529,13 +555,16 @@ class Element:
         """
         raise NotImplementedError
 
+
 P = tp.ParamSpec("P")
 C = tp.TypeVar("C", bound=Element)
+
 
 def not_ignored(arg: tuple[str, tp.Any]) -> bool:
     return arg[0][0] != "_"
 
-def component(f: Callable[tp.Concatenate[C,P], None]) -> Callable[P,Element]:
+
+def component(f: Callable[tp.Concatenate[C, P], None]) -> Callable[P, Element]:
     """Decorator turning a render function of **props** into an :class:`Element`.
 
     The component will be re-rendered when its **props** are not :code:`__eq__`
@@ -606,14 +635,9 @@ def component(f: Callable[tp.Concatenate[C,P], None]) -> Callable[P,Element]:
     """
     varnames = f.__code__.co_varnames[1:]
     signature = inspect.signature(f).parameters
-    defaults = {
-        k: v.default
-        for k, v in signature.items()
-        if v.default is not inspect.Parameter.empty and k[0] != "_"
-    }
+    defaults = {k: v.default for k, v in signature.items() if v.default is not inspect.Parameter.empty and k[0] != "_"}
 
     class ComponentElement(Element):
-
         @functools.wraps(f)
         def __init__(self, *args: P.args, **kwargs: P.kwargs):
             super().__init__()
@@ -630,13 +654,15 @@ def component(f: Callable[tp.Concatenate[C,P], None]) -> Callable[P,Element]:
                 del params["children"]
             # We cannot type this because PropsDict forgets the types
             # call the render function
-            f(self, **params) # type: ignore[reportGeneralTypeIssues]
+            f(self, **params)  # type: ignore[reportGeneralTypeIssues]
 
         def __repr__(self):
             return f.__name__
+
     ComponentElement.__name__ = f.__name__
     comp = tp.cast(Callable[P, Element], ComponentElement)
     return comp
+
 
 def find_components(el: Element | list[Element]) -> set[Element]:
     match el:
@@ -650,12 +676,14 @@ def find_components(el: Element | list[Element]) -> set[Element]:
                 # in list[Element] to be a list[Element], so why recurse?
             return elements
 
+
 @component
 def Container(self):
     pass
 
 
 ContextMenuType = tp.Mapping[tp.Text, tp.Union[None, tp.Callable[[], tp.Any], "ContextMenuType"]]
+
 
 def _create_qmenu(menu: ContextMenuType, parent, title: tp.Optional[tp.Text] = None):
     widget = QtWidgets.QMenu(parent)
@@ -671,6 +699,7 @@ def _create_qmenu(menu: ContextMenuType, parent, title: tp.Optional[tp.Text] = N
         else:
             widget.addAction(key, value)
     return widget
+
 
 _CURSORS = {
     "default": QtCore.Qt.CursorShape.ArrowCursor,
@@ -697,6 +726,7 @@ def _css_to_number(a):
     if a.endswith("px"):
         return float(a[:-2])
     return float(a)
+
 
 class QtWidgetElement(Element):
     """Base Qt Widget.
@@ -846,33 +876,37 @@ class QtWidgetElement(Element):
         on_mouse_enter: tp.Optional[tp.Callable[[QtGui.QMouseEvent], None | tp.Awaitable[None]]] = None,
         on_mouse_leave: tp.Optional[tp.Callable[[QtGui.QMouseEvent], None | tp.Awaitable[None]]] = None,
         on_mouse_move: tp.Optional[tp.Callable[[QtGui.QMouseEvent], None | tp.Awaitable[None]]] = None,
-        on_drop: tp.Optional[tp.Callable[[QtGui.QDragEnterEvent | QtGui.QDragMoveEvent | QtGui.QDragLeaveEvent | QtGui.QDropEvent], None]] = None,
+        on_drop: tp.Optional[
+            tp.Callable[[QtGui.QDragEnterEvent | QtGui.QDragMoveEvent | QtGui.QDragLeaveEvent | QtGui.QDropEvent], None]
+        ] = None,
     ):
         super().__init__()
-        self._register_props({
-            "style": style,
-            "tool_tip": tool_tip,
-            "cursor": cursor,
-            "context_menu": context_menu,
-            "css_class": css_class,
-            "size_policy": size_policy,
-            "focus_policy": focus_policy,
-            "enabled": enabled,
-            "on_click": on_click,
-            "on_key_down": on_key_down,
-            "on_key_up": on_key_up,
-            "on_mouse_down": on_mouse_down,
-            "on_mouse_up": on_mouse_up,
-            "on_mouse_enter": on_mouse_enter,
-            "on_mouse_leave": on_mouse_leave,
-            "on_mouse_move": on_mouse_move,
-            "on_drop": on_drop,
-        })
+        self._register_props(
+            {
+                "style": style,
+                "tool_tip": tool_tip,
+                "cursor": cursor,
+                "context_menu": context_menu,
+                "css_class": css_class,
+                "size_policy": size_policy,
+                "focus_policy": focus_policy,
+                "enabled": enabled,
+                "on_click": on_click,
+                "on_key_down": on_key_down,
+                "on_key_up": on_key_up,
+                "on_mouse_down": on_mouse_down,
+                "on_mouse_up": on_mouse_up,
+                "on_mouse_enter": on_mouse_enter,
+                "on_mouse_leave": on_mouse_leave,
+                "on_mouse_move": on_mouse_move,
+                "on_drop": on_drop,
+            }
+        )
         self._height = 0
         self._width = 0
         self._top = 0
         self._left = 0
-        self._size_from_font = None # TODO _size_from_font is unused
+        self._size_from_font = None  # TODO _size_from_font is unused
         self._on_click = None
         self._on_key_down = None
         self._default_on_key_down = None
@@ -883,7 +917,9 @@ class QtWidgetElement(Element):
         self._on_mouse_down = None
         self._on_mouse_up = None
         self._on_mouse_move = None
-        self._on_drop: tp.Optional[tp.Callable[[QtGui.QDragEnterEvent | QtGui.QDragMoveEvent | QtGui.QDragLeaveEvent | QtGui.QDropEvent], None]] = None
+        self._on_drop: tp.Optional[
+            tp.Callable[[QtGui.QDragEnterEvent | QtGui.QDragMoveEvent | QtGui.QDragLeaveEvent | QtGui.QDropEvent], None]
+        ] = None
         self._default_mouse_press_event = None
         self._default_mouse_release_event = None
         self._default_mouse_move_event = None
@@ -921,7 +957,6 @@ class QtWidgetElement(Element):
             return max(max(0, child.component._width + child.component._left) for child in children)
         except ValueError:
             return 0
-
 
     def _get_height(self, children):
         # TODO this function is unreferenced
@@ -1046,10 +1081,13 @@ class QtWidgetElement(Element):
             self._on_mouse_move = None
             self.underlying.mouseMoveEvent = self._default_mouse_move_event
 
-    def _set_on_drop(self, underlying: QtWidgets.QWidget,
-        on_drop: tp.Optional[tp.Callable[[QtGui.QDragEnterEvent | QtGui.QDragMoveEvent | QtGui.QDragLeaveEvent | QtGui.QDropEvent], None]]
+    def _set_on_drop(
+        self,
+        underlying: QtWidgets.QWidget,
+        on_drop: tp.Optional[
+            tp.Callable[[QtGui.QDragEnterEvent | QtGui.QDragMoveEvent | QtGui.QDragLeaveEvent | QtGui.QDropEvent], None]
+        ],
     ):
-
         assert self.underlying is not None
 
         # Store the QWidget's default virtual event handler methods
@@ -1065,10 +1103,10 @@ class QtWidgetElement(Element):
         if on_drop is not None:
             self._on_drop = on_drop
             self.underlying.setAcceptDrops(True)
-            self.underlying.dragEnterEvent = self._on_drop # type: ignore
-            self.underlying.dragMoveEvent = self._on_drop # type: ignore
-            self.underlying.dragLeaveEvent = self._on_drop # type: ignore
-            self.underlying.dropEvent = self._on_drop # type: ignore
+            self.underlying.dragEnterEvent = self._on_drop  # type: ignore
+            self.underlying.dragMoveEvent = self._on_drop  # type: ignore
+            self.underlying.dragLeaveEvent = self._on_drop  # type: ignore
+            self.underlying.dropEvent = self._on_drop  # type: ignore
         else:
             self._on_drop = None
             self.underlying.setAcceptDrops(False)
@@ -1083,7 +1121,7 @@ class QtWidgetElement(Element):
 
         if underlying_layout is not None:
             set_margin = False
-            new_margin=[0, 0, 0, 0]
+            new_margin = [0, 0, 0, 0]
             if "margin" in style:
                 new_margin = [int(_css_to_number(style["margin"]))] * 4
                 style.pop("margin")
@@ -1124,7 +1162,11 @@ class QtWidgetElement(Element):
                 style.pop("align")
 
             if set_margin:
-                commands.append(_CommandType(underlying_layout.setContentsMargins, new_margin[0], new_margin[1], new_margin[2], new_margin[3]))
+                commands.append(
+                    _CommandType(
+                        underlying_layout.setContentsMargins, new_margin[0], new_margin[1], new_margin[2], new_margin[3]
+                    )
+                )
             if set_align:
                 commands.append(_CommandType(underlying_layout.setAlignment, set_align))
         else:
@@ -1147,7 +1189,6 @@ class QtWidgetElement(Element):
                 style.pop("align")
                 if set_align is not None:
                     style["qproperty-alignment"] = set_align
-
 
         if "font-size" in style:
             font_size = _css_to_number(style["font-size"])
@@ -1191,7 +1232,7 @@ class QtWidgetElement(Element):
             commands.append(_CommandType(self.underlying.move, move_coords[0], move_coords[1]))
 
         assert self.underlying is not None
-        css_string = _dict_to_style(style,  "QWidget#" + str(id(self)))
+        css_string = _dict_to_style(style, "QWidget#" + str(id(self)))
         commands.append(_CommandType(self.underlying.setStyleSheet, css_string))
         return commands
 
@@ -1212,7 +1253,7 @@ class QtWidgetElement(Element):
     def _qt_update_commands(
         self,
         widget_trees: dict[Element, "_WidgetTree"],
-        newprops : PropsDict,
+        newprops: PropsDict,
     ) -> list[_CommandType]:
         raise NotImplementedError
 
@@ -1221,9 +1262,9 @@ class QtWidgetElement(Element):
         widget_trees: dict[Element, "_WidgetTree"],
         # We must pass all of the widget_trees because some elements
         # like TableGridView need to know the children of the children.
-        newprops : PropsDict,
+        newprops: PropsDict,
         underlying: QtWidgets.QWidget,
-        underlying_layout: QtWidgets.QLayout | None = None
+        underlying_layout: QtWidgets.QLayout | None = None,
     ) -> list[_CommandType]:
         commands: list[_CommandType] = []
         for prop in newprops:
@@ -1275,10 +1316,12 @@ class QtWidgetElement(Element):
                 if css_class is None:
                     css_class = []
                 commands.append(_CommandType(underlying.setProperty, "css_class", css_class))
-                commands.extend([
-                    _CommandType(underlying.style().unpolish, underlying),
-                    _CommandType(underlying.style().polish, underlying)
-                ])
+                commands.extend(
+                    [
+                        _CommandType(underlying.style().unpolish, underlying),
+                        _CommandType(underlying.style().polish, underlying),
+                    ]
+                )
             elif prop == "cursor":
                 cursor = self.props.cursor or ("default" if self.props.on_click is None else "pointer")
                 commands.append(_CommandType(underlying.setCursor, _CURSORS[cursor]))
@@ -1286,26 +1329,34 @@ class QtWidgetElement(Element):
                 if self._context_menu_connected:
                     underlying.customContextMenuRequested.disconnect()
                 if self.props.context_menu is not None:
-                    commands.append(_CommandType(underlying.setContextMenuPolicy, QtCore.Qt.ContextMenuPolicy.CustomContextMenu))
+                    commands.append(
+                        _CommandType(underlying.setContextMenuPolicy, QtCore.Qt.ContextMenuPolicy.CustomContextMenu)
+                    )
                     commands.append(_CommandType(self._set_context_menu, underlying))
                 else:
-                    commands.append(_CommandType(underlying.setContextMenuPolicy, QtCore.Qt.ContextMenuPolicy.DefaultContextMenu))
+                    commands.append(
+                        _CommandType(underlying.setContextMenuPolicy, QtCore.Qt.ContextMenuPolicy.DefaultContextMenu)
+                    )
         return commands
+
 
 class _WidgetTree(object):
     """
     A QtWidgetElement and its QtWidgetElement children.
     """
+
     __slots__ = ("component", "children")
 
     def __init__(self, component: QtWidgetElement, children: list[QtWidgetElement]):
         self.component: QtWidgetElement = component
         self.children: list[QtWidgetElement] = children
 
+
 def _get_widget_children(widget_trees: dict[Element, _WidgetTree], element: QtWidgetElement) -> list[QtWidgetElement]:
     if (w := widget_trees.get(element, None)) is not None:
         return w.children
     return []
+
 
 def _dereference_tree(widget_trees: dict[Element, _WidgetTree], widget_tree: _WidgetTree, address: list[int]):
     """
@@ -1314,6 +1365,7 @@ def _dereference_tree(widget_trees: dict[Element, _WidgetTree], widget_tree: _Wi
     for index in address:
         widget_tree = widget_trees[widget_tree.children[index]]
     return widget_tree
+
 
 def print_tree(widget_trees: dict[Element, _WidgetTree], element: Element, indent=0):
     t = widget_trees[element]
@@ -1327,7 +1379,6 @@ def print_tree(widget_trees: dict[Element, _WidgetTree], element: Element, inden
         print("  " * indent + tags[2])
 
 
-
 class RenderResult(object):
     """Encapsulates the results of a render.
 
@@ -1339,12 +1390,14 @@ class RenderResult(object):
         self,
         commands: list[_CommandType],
     ):
-        self.commands : list[_CommandType] = commands
+        self.commands: list[_CommandType] = commands
+
 
 @dataclass
 class _HookState:
     state: tp.Any
     updaters: list[tp.Callable[[tp.Any], tp.Any]]
+
 
 @dataclass
 class _HookEffect:
@@ -1355,13 +1408,14 @@ class _HookEffect:
     """
     dependencies: tp.Any
 
+
 @dataclass
 class _HookAsync:
     task: asyncio.Task[tp.Any] | None
     """
     The currently executing async effect task.
     """
-    queue: list[tp.Callable[[], Coroutine[None,None,None]]]
+    queue: list[tp.Callable[[], Coroutine[None, None, None]]]
     """
     The queue of waiting async effect tasks. Max length 1.
     """
@@ -1369,6 +1423,7 @@ class _HookAsync:
     """
     The dependencies of use_async().
     """
+
 
 def elements_match(a: Element, b: Element) -> bool:
     """
@@ -1381,27 +1436,34 @@ def elements_match(a: Element, b: Element) -> bool:
     # True if the class __name__ is different?)
     return (
         (a.__class__ == b.__class__)
-        and
-        (a.__class__.__name__ == b.__class__.__name__)
-        and
-        (getattr(a, "_key", None) == getattr(b, "_key", None))
+        and (a.__class__.__name__ == b.__class__.__name__)
+        and (getattr(a, "_key", None) == getattr(b, "_key", None))
     )
+
 
 class RenderEngine(object):
     """
     One RenderEngine instance persists across the life of the App.
     """
+
     __slots__ = (
-        "_component_tree", "_widget_tree", "_root", "_app",
-        "_hook_state", "_hook_state_setted",
-        "_hook_effect", "_hook_async", "is_stopped",
+        "_component_tree",
+        "_widget_tree",
+        "_root",
+        "_app",
+        "_hook_state",
+        "_hook_state_setted",
+        "_hook_effect",
+        "_hook_async",
+        "is_stopped",
     )
-    def __init__(self, root:Element, app=None):
-        self._component_tree : dict[Element, list[Element]] = {}
+
+    def __init__(self, root: Element, app=None):
+        self._component_tree: dict[Element, list[Element]] = {}
         """
         The _component_tree maps an Element to its children.
         """
-        self._widget_tree : dict[Element, _WidgetTree] = {}
+        self._widget_tree: dict[Element, _WidgetTree] = {}
         """
         Map of an Element to its rendered widget tree.
         """
@@ -1473,6 +1535,7 @@ class RenderEngine(object):
                         if component in self._hook_async:
                             if self.is_hook_async_done(component):
                                 del self._hook_async[component]
+
                     hook.task.add_done_callback(done_callback)
                     hook.task.cancel()
             if self.is_hook_async_done(component):
@@ -1483,7 +1546,6 @@ class RenderEngine(object):
         if component in self._hook_state:
             del self._hook_state[component]
         self._hook_state_setted.discard(component)
-
 
         # Clean up component references
         # Do this after use_effect cleanup, so that the cleanup function
@@ -1509,8 +1571,9 @@ class RenderEngine(object):
         components_to_replace = []
         # classes should be only ComponentElement, because only ComponentElement can change in user code.
         old_components = [cls for cls, _ in classes]
+
         def traverse(comp, parent):
-            if comp.__class__ in old_components and parent is not None: # We can't replace the unparented root
+            if comp.__class__ in old_components and parent is not None:  # We can't replace the unparented root
                 new_component_class = [new_cls for old_cls, new_cls in classes if old_cls == comp.__class__][0]
                 if new_component_class is None:
                     raise ValueError("Error after updating code: cannot find class %s" % comp.__class__)
@@ -1530,20 +1593,21 @@ class RenderEngine(object):
             parameters = list(inspect.signature(new_comp_class.__init__).parameters.items())
 
             try:
-                kwargs = {k: old_comp.props[k] for k, v in parameters[1:]
-                          if v.default is inspect.Parameter.empty and k[0] != "_"
-                          and k != "kwargs"}
-                          # We don't actually need all the kwargs, just enough
-                          # to construct new_comp_class.
-                          # The other kwargs will be set with _props.update.
+                kwargs = {
+                    k: old_comp.props[k]
+                    for k, v in parameters[1:]
+                    if v.default is inspect.Parameter.empty and k[0] != "_" and k != "kwargs"
+                }
+            # We don't actually need all the kwargs, just enough
+            # to construct new_comp_class.
+            # The other kwargs will be set with _props.update.
             except KeyError:
                 k = None
                 for k, _ in parameters[1:]:
                     if k not in old_comp.props:
                         break
                 raise ValueError(
-                    f"Error while reloading {old_comp}: "
-                    f"New class expects prop ({k}) not present in old class"
+                    f"Error while reloading {old_comp}: " f"New class expects prop ({k}) not present in old class"
                 )
             parts[3] = new_comp_class(**kwargs)
             parts[3]._props.update(old_comp._props)
@@ -1554,36 +1618,39 @@ class RenderEngine(object):
 
         backup = {}
         for old_comp, _, parent_comp, new_comp in components_to_replace:
-                backup[parent_comp] = list(parent_comp.children)
-                for i, comp in enumerate(parent_comp.children):
-                    if comp is old_comp:
-                        parent_comp._props["children"][i] = new_comp
-                        # Move the hook states to the new component.
-                        # We want to be careful that the hooks don't have
-                        # any references to the old component, especially
-                        # function closures. I think this code is okay.
-                        #
-                        # During the effect functions and the async coroutine, usually
-                        # what happens is that some use_state setters are called,
-                        # and those use_state setters would be closures on the
-                        # state which was moved, not references to the old_comp.
-                        #
-                        # Because this is only during hot-reload, so only during
-                        # development, it's not catastrophic if some references
-                        # to old_comp are retained and cause bugs.
-                        if old_comp in self._hook_state:
-                            self._hook_state[new_comp] = self._hook_state[old_comp]
-                            del self._hook_state[old_comp]
-                        if old_comp in self._hook_effect:
-                            self._hook_effect[new_comp] = self._hook_effect[old_comp]
-                            del self._hook_effect[old_comp]
-                        if old_comp in self._hook_async:
-                            self._hook_async[new_comp] = self._hook_async[old_comp]
-                            del self._hook_async[old_comp]
+            backup[parent_comp] = list(parent_comp.children)
+            for i, comp in enumerate(parent_comp.children):
+                if comp is old_comp:
+                    parent_comp._props["children"][i] = new_comp
+                    # Move the hook states to the new component.
+                    # We want to be careful that the hooks don't have
+                    # any references to the old component, especially
+                    # function closures. I think this code is okay.
+                    #
+                    # During the effect functions and the async coroutine, usually
+                    # what happens is that some use_state setters are called,
+                    # and those use_state setters would be closures on the
+                    # state which was moved, not references to the old_comp.
+                    #
+                    # Because this is only during hot-reload, so only during
+                    # development, it's not catastrophic if some references
+                    # to old_comp are retained and cause bugs.
+                    if old_comp in self._hook_state:
+                        self._hook_state[new_comp] = self._hook_state[old_comp]
+                        del self._hook_state[old_comp]
+                    if old_comp in self._hook_effect:
+                        self._hook_effect[new_comp] = self._hook_effect[old_comp]
+                        del self._hook_effect[old_comp]
+                    if old_comp in self._hook_async:
+                        self._hook_async[new_comp] = self._hook_async[old_comp]
+                        del self._hook_async[old_comp]
 
         # 5) call _render for all new component parents
         try:
-            logger.info("Rerendering parents of: %s", [new_comp_class.__name__ for _, new_comp_class, _, _ in components_to_replace])
+            logger.info(
+                "Rerendering parents of: %s",
+                [new_comp_class.__name__ for _, new_comp_class, _, _ in components_to_replace],
+            )
             logger.info("Rerendering: %s", [parent for _, _, parent, _ in components_to_replace])
             self._request_rerender([parent_comp for _, _, parent_comp, _ in components_to_replace])
         except Exception as e:
@@ -1592,12 +1659,8 @@ class RenderEngine(object):
                 parent_comp._props["children"] = backup_val
             raise e
 
-
     def _update_old_component(
-        self,
-        component: Element,
-        new_component: Element,
-        render_context: _RenderContext
+        self, component: Element, new_component: Element, render_context: _RenderContext
     ) -> _WidgetTree:
         # new_component is a new rendering of old component, so update
         # old component to have props of new_component.
@@ -1612,7 +1675,8 @@ class RenderEngine(object):
         #  2) state changed
         #  3) it has any pending _hook_state updates
         #  4) it has any references
-        if (component._should_update(newprops)
+        if (
+            component._should_update(newprops)
             or len(component._edifice_internal_references) > 0
             or component in self._hook_state_setted
         ):
@@ -1626,11 +1690,7 @@ class RenderEngine(object):
         render_context.mark_props_change(component, newprops)
         return self._widget_tree[component]
 
-    def _recycle_children(
-        self,
-        component: QtWidgetElement,
-        render_context: _RenderContext
-    ) -> list[Element]:
+    def _recycle_children(self, component: QtWidgetElement, render_context: _RenderContext) -> list[Element]:
         # Children diffing and reconciliation
         #
         # Returns element children, which contains all the future children of the component:
@@ -1638,8 +1698,8 @@ class RenderEngine(object):
         #
         # Returns children widget trees, cached or newly rendered.
 
-        children_old_bykey : dict[str, Element] = dict()
-        children_new_bykey : dict[str, Element] = dict()
+        children_old_bykey: dict[str, Element] = dict()
+        children_new_bykey: dict[str, Element] = dict()
 
         children_old_ = self._component_tree[component]
 
@@ -1668,8 +1728,9 @@ class RenderEngine(object):
         while i_new < len(children_new):
             child_new = children_new[i_new]
             if (key := getattr(child_new, "_key", None)) is not None:
-                if ((child_old_bykey := children_old_bykey.get(key, None)) is not None
-                    and elements_match(child_old_bykey, child_new)):
+                if (child_old_bykey := children_old_bykey.get(key, None)) is not None and elements_match(
+                    child_old_bykey, child_new
+                ):
                     # then we have a match for reusing the old child
                     self._update_old_component(child_old_bykey, child_new, render_context)
                     children_new[i_new] = child_old_bykey
@@ -1782,16 +1843,18 @@ class RenderEngine(object):
                 sub_component = container.children[0]
             else:
                 newline = "\n"
-                message = dedent(f"""\
+                message = dedent(
+                    f"""\
                     A @component must render as exactly one Element.
-                    Element {component} renders as {len(container.children)} elements.""") \
-                    + newline.join([child.__str__() for child in container.children])
+                    Element {component} renders as {len(container.children)} elements."""
+                ) + newline.join([child.__str__() for child in container.children])
                 raise ValueError(message)
         old_rendering: list[Element] | None = self._component_tree.get(component, None)
 
         if old_rendering is not None and elements_match(old_rendering[0], sub_component):
             render_context.widget_tree[component] = self._update_old_component(
-                old_rendering[0], sub_component, render_context)
+                old_rendering[0], sub_component, render_context
+            )
         else:
             if old_rendering is not None:
                 render_context.enqueued_deletions.extend(old_rendering)
@@ -1800,15 +1863,11 @@ class RenderEngine(object):
 
         return render_context.widget_tree[component]
 
-    def gen_qt_commands(
-        self,
-        element: QtWidgetElement,
-        render_context: _RenderContext
-    ) -> list[_CommandType]:
+    def gen_qt_commands(self, element: QtWidgetElement, render_context: _RenderContext) -> list[_CommandType]:
         """
         Recursively generate the update commands for the widget tree.
         """
-        commands : list[_CommandType] = []
+        commands: list[_CommandType] = []
         if self.is_stopped:
             return commands
 
@@ -1821,10 +1880,7 @@ class RenderEngine(object):
             return commands
 
         old_props = render_context.get_old_props(element)
-        new_props = PropsDict({
-            k: v for k, v in element.props._items
-                if k not in old_props or old_props[k] != v
-        })
+        new_props = PropsDict({k: v for k, v in element.props._items if k not in old_props or old_props[k] != v})
         commands.extend(element._qt_update_commands(render_context.widget_tree, new_props))
         return commands
 
@@ -1861,7 +1917,6 @@ class RenderEngine(object):
         # So we do a complete render of each component individually, and then
         # we don't have to solve the problem of the order of rendering.
         for component in components_:
-
             commands: list[_CommandType] = []
 
             render_context = _RenderContext(self)
@@ -1881,9 +1936,7 @@ class RenderEngine(object):
                 try:
                     command.fn(*command.args, **command.kwargs)
                 except Exception as ex:
-                    logger.exception("Exception while running command:\n"
-                                    + str(command) + "\n"
-                                    + str(ex) + "\n")
+                    logger.exception("Exception while running command:\n" + str(command) + "\n" + str(ex) + "\n")
             all_commands.extend(commands)
 
             # Delete components that should be deleted (and call the respective unmounts)
@@ -1914,15 +1967,10 @@ class RenderEngine(object):
         return RenderResult(all_commands)
 
     def use_state(
-        self,
-        element:Element,
-        initial_state:_T_use_state
+        self, element: Element, initial_state: _T_use_state
     ) -> tuple[
-        _T_use_state, # current value
-        tp.Callable[ # updater
-            [_T_use_state | tp.Callable[[_T_use_state],_T_use_state]],
-            None
-        ]
+        _T_use_state,  # current value
+        tp.Callable[[_T_use_state | tp.Callable[[_T_use_state], _T_use_state]], None],  # updater
     ]:
         hooks = self._hook_state[element]
 
@@ -1984,7 +2032,6 @@ class RenderEngine(object):
         fn_coroutine: tp.Callable[[], Coroutine[None, None, None]],
         dependencies: tp.Any,
     ) -> Callable[[], None]:
-
         hooks = self._hook_async[element]
         h_index = element._hook_async_index
         element._hook_async_index += 1
@@ -2045,6 +2092,7 @@ class RenderEngine(object):
                         task = asyncio.create_task(hook.queue.pop(0)())
                         hook.task = task
                         task.add_done_callback(done_callback)
+
                 hook.task.add_done_callback(done_callback)
 
             def cancel():
@@ -2066,4 +2114,3 @@ class RenderEngine(object):
                     hook.queue.clear()
 
             return cancel
-

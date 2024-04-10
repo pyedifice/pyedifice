@@ -2,6 +2,7 @@ from typing import TYPE_CHECKING
 import logging
 
 from ..qt import QT_VERSION
+
 if QT_VERSION == "PyQt6" and not TYPE_CHECKING:
     from PyQt6.QtWidgets import QGridLayout, QWidget
 else:
@@ -10,6 +11,7 @@ else:
 from .base_components import _CommandType, PropsDict, Element, _get_widget_children, _WidgetTree, QtWidgetElement
 
 logger = logging.getLogger("Edifice")
+
 
 class _TableGridViewRow(QtWidgetElement):
     """
@@ -24,12 +26,13 @@ class _TableGridViewRow(QtWidgetElement):
     def _qt_update_commands(
         self,
         children: list[_WidgetTree],
-        newprops : PropsDict,
+        newprops: PropsDict,
     ) -> list[_CommandType]:
         # This element has no Qt underlying so it has nothing to do except store
         # the children of the row.
         # The _qt_update_commands for TableGridView will render the children.
         return []
+
 
 class TableGridView(QtWidgetElement):
     """Table-style grid layout displays its children as aligned rows of columns.
@@ -77,23 +80,25 @@ class TableGridView(QtWidgetElement):
     """
 
     def __init__(
-            self,
-            row_stretch : list[int] = [],
-            column_stretch : list[int] = [],
-            row_minheight : list[int] = [],
-            column_minwidth : list[int] = [],
-            **kwargs,
-        ):
+        self,
+        row_stretch: list[int] = [],
+        column_stretch: list[int] = [],
+        row_minheight: list[int] = [],
+        column_minwidth: list[int] = [],
+        **kwargs,
+    ):
         super().__init__(**kwargs)
-        self._register_props({
-            "row_stretch": row_stretch,
-            "column_stretch": column_stretch,
-            "row_minheight": row_minheight,
-            "column_minwidth": column_minwidth,
-        })
+        self._register_props(
+            {
+                "row_stretch": row_stretch,
+                "column_stretch": column_stretch,
+                "row_minheight": row_minheight,
+                "column_minwidth": column_minwidth,
+            }
+        )
         # self._register_props(kwargs)
         self.underlying = None
-        self._old_children: dict[QtWidgetElement, tuple[int,int]] = {}
+        self._old_children: dict[QtWidgetElement, tuple[int, int]] = {}
         """Like _LinearView._widget_children"""
 
         self._row_stretch = row_stretch
@@ -121,7 +126,7 @@ class TableGridView(QtWidgetElement):
         while self.underlying_layout.takeAt(0) is not None:
             pass
 
-    def _add_child(self, child_component: QtWidgetElement, row:int, column:int):
+    def _add_child(self, child_component: QtWidgetElement, row: int, column: int):
         # https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGridLayout.html#PySide6.QtWidgets.PySide6.QtWidgets.QGridLayout.addWidget
         assert child_component.underlying is not None
         self.underlying_layout.addWidget(child_component.underlying, row, column)
@@ -134,25 +139,25 @@ class TableGridView(QtWidgetElement):
         if len(self._column_minwidth) > column:
             self.underlying_layout.setColumnMinimumWidth(column, self._column_minwidth[column])
 
-    def _delete_child(self, child_component: QtWidgetElement, row:int, column:int):
+    def _delete_child(self, child_component: QtWidgetElement, row: int, column: int):
         if self.underlying_layout is None:
             logger.warning("_delete_child No underlying_layout " + str(self))
         else:
             if (layoutitem := self.underlying_layout.itemAtPosition(row, column)) is None:
-                logger.warning("_delete_child itemAtPosition failed " + str((row,column)) + " " + str(self))
+                logger.warning("_delete_child itemAtPosition failed " + str((row, column)) + " " + str(self))
             else:
                 if (w := layoutitem.widget()) is None:
-                    logger.warning("_delete_child widget is None " + str((row,column)) + " " + str(self))
+                    logger.warning("_delete_child widget is None " + str((row, column)) + " " + str(self))
                 else:
                     w.deleteLater()
                 self.underlying_layout.removeItem(layoutitem)
 
-    def _soft_delete_child(self, child_component: QtWidgetElement, row:int, column:int):
+    def _soft_delete_child(self, child_component: QtWidgetElement, row: int, column: int):
         if self.underlying_layout is None:
             logger.warning("_delete_child No underlying_layout " + str(self))
         else:
             if (layoutitem := self.underlying_layout.itemAtPosition(row, column)) is None:
-                logger.warning("_delete_child itemAtPosition failed " + str((row,column)) + " " + str(self))
+                logger.warning("_delete_child itemAtPosition failed " + str((row, column)) + " " + str(self))
             else:
                 self.underlying_layout.removeItem(layoutitem)
 
@@ -173,26 +178,26 @@ class TableGridView(QtWidgetElement):
         # the TableGridView.
 
         children = _get_widget_children(widget_trees, self)
-        new_children: dict[QtWidgetElement, tuple[int,int]] = {}
+        new_children: dict[QtWidgetElement, tuple[int, int]] = {}
         children_of_rows: list[QtWidgetElement] = list()
-        for row,c in enumerate(children):
+        for row, c in enumerate(children):
             children_of_row = _get_widget_children(widget_trees, c)
             children_of_rows.extend(children_of_row)
-            for col,child in enumerate(children_of_row):
-                new_children[child] = (row,col)
+            for col, child in enumerate(children_of_row):
+                new_children[child] = (row, col)
 
         old_deletions = self._old_children.items() - new_children.items()
         new_additions = new_children.items() - self._old_children.items()
 
         commands: list[_CommandType] = []
 
-        for w,(row,column) in old_deletions:
+        for w, (row, column) in old_deletions:
             if w in new_children:
                 commands.append(_CommandType(self._soft_delete_child, w, row, column))
             else:
                 commands.append(_CommandType(self._delete_child, w, row, column))
 
-        for w,(row,column) in new_additions:
+        for w, (row, column) in new_additions:
             commands.append(_CommandType(self._add_child, w, row, column))
 
         self._old_children = new_children
@@ -206,26 +211,28 @@ class TableGridView(QtWidgetElement):
         if "column_minwidth" in newprops:
             commands.append(_CommandType(self._set_column_minwidth, newprops["column_minwidth"]))
 
-        commands.extend(super()._qt_update_commands_super(widget_trees, newprops, self.underlying, self.underlying_layout))
+        commands.extend(
+            super()._qt_update_commands_super(widget_trees, newprops, self.underlying, self.underlying_layout)
+        )
 
         return commands
 
     def _set_row_stretch(self, row_stretch):
         self._row_stretch = row_stretch
-        for i,stretch in enumerate(row_stretch[:self.underlying_layout.rowCount()]):
+        for i, stretch in enumerate(row_stretch[: self.underlying_layout.rowCount()]):
             self.underlying_layout.setRowStretch(i, stretch)
 
     def _set_column_stretch(self, column_stretch):
         self._column_stretch = column_stretch
-        for i,stretch in enumerate(column_stretch[:self.underlying_layout.columnCount()]):
+        for i, stretch in enumerate(column_stretch[: self.underlying_layout.columnCount()]):
             self.underlying_layout.setColumnStretch(i, stretch)
 
     def _set_row_minheight(self, row_minheight):
         self._row_minheight = row_minheight
-        for i,minheight in enumerate(row_minheight[:self.underlying_layout.rowCount()]):
+        for i, minheight in enumerate(row_minheight[: self.underlying_layout.rowCount()]):
             self.underlying_layout.setRowMinimumHeight(i, minheight)
 
     def _set_column_minwidth(self, column_minwidth):
         self._column_minwidth = column_minwidth
-        for i,minwidth in enumerate(column_minwidth[:self.underlying_layout.columnCount()]):
+        for i, minwidth in enumerate(column_minwidth[: self.underlying_layout.columnCount()]):
             self.underlying_layout.setColumnMinimumWidth(i, minwidth)

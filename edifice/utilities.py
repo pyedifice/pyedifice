@@ -1,6 +1,7 @@
 import typing as tp
 
 from .qt import QT_VERSION
+
 if QT_VERSION == "PyQt6" and not tp.TYPE_CHECKING:
     from PyQt6 import QtWidgets
 else:
@@ -24,8 +25,7 @@ def alert(message: tp.Text, choices: tp.Optional[tp.Sequence[tp.Text]] = None) -
     buttons = []
     if choices is not None:
         for choice in choices:
-            buttons.append(msgbox.addButton(
-                choice, QtWidgets.QMessageBox.ButtonRole.ActionRole))
+            buttons.append(msgbox.addButton(choice, QtWidgets.QMessageBox.ButtonRole.ActionRole))
     msgbox.exec()
     clicked_button = msgbox.clickedButton()
     for i, button in enumerate(buttons):
@@ -34,9 +34,9 @@ def alert(message: tp.Text, choices: tp.Optional[tp.Sequence[tp.Text]] = None) -
     return None
 
 
-def file_dialog(caption: tp.Text = "",
-                directory: tp.Text = "",
-                file_filter: tp.Optional[tp.Sequence[tp.Text]] = None) -> tp.Optional[tp.Text]:
+def file_dialog(
+    caption: tp.Text = "", directory: tp.Text = "", file_filter: tp.Optional[tp.Sequence[tp.Text]] = None
+) -> tp.Optional[tp.Text]:
     """Displays a file choice dialog.
 
     Args:
@@ -62,10 +62,12 @@ def file_dialog(caption: tp.Text = "",
 
 
 def set_trace():
-    '''Set a tracepoint in the Python debugger that works with Qt'''
+    """Set a tracepoint in the Python debugger that works with Qt"""
     import pdb
+
     if QT_VERSION == "PyQt6":
         from PyQt6.QtCore import pyqtRemoveInputHook
+
         pyqtRemoveInputHook()
     pdb.set_trace()
     # # set up the debugger

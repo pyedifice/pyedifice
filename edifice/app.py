@@ -12,9 +12,11 @@ from .qt import QT_VERSION
 
 if QT_VERSION == "PyQt6" and not tp.TYPE_CHECKING:
     from PyQt6 import QtCore, QtWidgets
+
     os.environ["QT_API"] = "pyqt6"
 else:
     from PySide6 import QtCore, QtWidgets
+
     os.environ["QT_API"] = "pyside6"
 
 from qasync import QEventLoop
@@ -33,7 +35,6 @@ BOLD_SEQ = "\033[1m"
 
 
 class _TimingAvg(object):
-
     def __init__(self):
         self.total_time = 0
         self.total_count = 0
@@ -56,7 +57,6 @@ class _TimingAvg(object):
 
 
 class _RateLimitedLogger(object):
-
     def __init__(self, gap):
         self._last_log_time = 0
         self._gap = gap
@@ -150,12 +150,13 @@ class App(object):
             If you do not provide one, it will be created for you.
     """
 
-    def __init__(self,
-            root_element: Element,
-            inspector: bool = False,
-            create_application: bool = True,
-            application_name: str | None = None,
-            qapplication: QtWidgets.QApplication | None = None,
+    def __init__(
+        self,
+        root_element: Element,
+        inspector: bool = False,
+        create_application: bool = True,
+        application_name: str | None = None,
+        qapplication: QtWidgets.QApplication | None = None,
     ):
         if qapplication is None:
             if create_application:
@@ -166,9 +167,9 @@ class App(object):
             else:
                 self.app = tp.cast(QtWidgets.QApplication, QtWidgets.QApplication.instance())
         else:
-            self.app : QtWidgets.QApplication = qapplication
+            self.app: QtWidgets.QApplication = qapplication
 
-        self._root : Element = root_element
+        self._root: Element = root_element
         self._render_engine = RenderEngine(self._root, self)
         self._logger = _RateLimitedLogger(1)
         self._render_timing = _TimingAvg()
@@ -191,15 +192,21 @@ class App(object):
                             etype, evalue, tb = sys.exc_info()
                             stack_trace = traceback.extract_tb(tb)
                             module_path = os.path.dirname(__file__)
-                            user_stack_trace = [frame for frame in stack_trace if not frame.filename.startswith(module_path)]
+                            user_stack_trace = [
+                                frame for frame in stack_trace if not frame.filename.startswith(module_path)
+                            ]
 
                             formatted_trace = traceback.format_list(stack_trace)
                             formatted_user_trace = traceback.format_list(user_stack_trace)
+
                             def should_bold(line, frame):
                                 if frame.filename.startswith(module_path):
                                     return line
                                 return BOLD_SEQ + line + RESET_SEQ
-                            formatted_trace = [should_bold(line, frame) for line, frame in zip(formatted_trace, stack_trace)]
+
+                            formatted_trace = [
+                                should_bold(line, frame) for line, frame in zip(formatted_trace, stack_trace)
+                            ]
 
                             print("Traceback (most recent call last):")
                             for line in formatted_trace:
@@ -225,11 +232,11 @@ class App(object):
         self._class_rerender_response_queue = queue.Queue()
 
         self._inspector = inspector
-        self._inspector_component : Element | None = None
+        self._inspector_component: Element | None = None
 
         self._rerender_called_soon = False
         self._is_rerendering = False
-        self._rerender_wanted : list[Element] = []
+        self._rerender_wanted: list[Element] = []
 
     def __hash__(self):
         return id(self)
@@ -249,7 +256,6 @@ class App(object):
             asyncio.get_event_loop().call_soon(self._rerender_callback)
             self._rerender_called_soon = True
 
-
     def _request_rerender(self, components: list[Element]):
         """
         Call the RenderEngine to immediately render the widget tree.
@@ -265,17 +271,22 @@ class App(object):
         if not self._first_render:
             render_timing = self._render_timing
             render_timing.update(end_time - start_time)
-            self._logger.info("Rendered %d times, with average render time of %.2f ms and worst render time of %.2f ms",
-                         render_timing.count(), 1000 * render_timing.mean(), 1000 * render_timing.max())
+            self._logger.info(
+                "Rendered %d times, with average render time of %.2f ms and worst render time of %.2f ms",
+                render_timing.count(),
+                1000 * render_timing.mean(),
+                1000 * render_timing.max(),
+            )
         self._first_render = False
 
-        if self._inspector_component is not None and not any(hasattr(comp, "__edifice_inspector_element") for comp in components):
+        if self._inspector_component is not None and not any(
+            hasattr(comp, "__edifice_inspector_element") for comp in components
+        ):
             getattr(self._inspector_component, "force_refresh")()
 
         self._is_rerendering = False
         if len(self._rerender_wanted) > 0 and not self._rerender_called_soon:
             asyncio.get_event_loop().call_soon(self._rerender_callback)
-
 
     def set_stylesheet(self, stylesheet: str) -> "App":
         """Adds a global stylesheet for the app.
@@ -370,19 +381,25 @@ class App(object):
             self._request_rerender([self._root])
             if self._inspector:
                 logger.info("Running inspector")
+
                 def cleanup(e):
                     self._inspector_component = None
 
                 self._inspector_component = inspector_module.Inspector(
-                    refresh=(lambda: (
-                        self._render_engine._component_tree,
-                        self._root,
-                        self._render_engine._hook_state,
-                    ))
+                    refresh=(
+                        lambda: (
+                            self._render_engine._component_tree,
+                            self._root,
+                            self._render_engine._hook_state,
+                        )
+                    )
                 )
                 icon_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), "inspector/icon.png")
-                component = Window(title="Element Inspector", on_close=cleanup, icon=icon_path)(self._inspector_component)
+                component = Window(title="Element Inspector", on_close=cleanup, icon=icon_path)(
+                    self._inspector_component
+                )
                 self._request_rerender([component])
+
         t = loop.create_task(first_render())
 
         self._app_close_event = asyncio.Event()
@@ -396,11 +413,7 @@ class App(object):
             # Wait until all the cancelled tasks are done(), then exit.
             while len(engine._hook_async) > 0:
                 # Remove finished components from engine async hooks
-                to_delete = [
-                    component
-                    for component in engine._hook_async
-                    if engine.is_hook_async_done(component)
-                ]
+                to_delete = [component for component in engine._hook_async if engine.is_hook_async_done(component)]
                 for component in to_delete:
                     del engine._hook_async[component]
                 await asyncio.sleep(0.0)

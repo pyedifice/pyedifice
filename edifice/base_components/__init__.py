@@ -39,10 +39,26 @@ Finally, the :class:`Button<edifice.Button>` and :class:`TextInput<edifice.TextI
 components allow you to collect input from the user.
 """
 from .base_components import (
-    QtWidgetElement, Window, ExportList, View, ScrollView, TabView,
-    GridView, Label, ImageSvg, Icon, IconButton, Button,
-    TextInput, CheckBox, RadioButton, Slider, ProgressBar, Dropdown,
-    CustomWidget, GroupBox,
+    QtWidgetElement,
+    Window,
+    ExportList,
+    View,
+    ScrollView,
+    TabView,
+    GridView,
+    Label,
+    ImageSvg,
+    Icon,
+    IconButton,
+    Button,
+    TextInput,
+    CheckBox,
+    RadioButton,
+    Slider,
+    ProgressBar,
+    Dropdown,
+    CustomWidget,
+    GroupBox,
 )
 from .button_view import ButtonView
 from .flow_view import FlowView

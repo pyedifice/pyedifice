@@ -1,6 +1,7 @@
 import typing as tp
 
 from ..qt import QT_VERSION
+
 if QT_VERSION == "PyQt6" and not tp.TYPE_CHECKING:
     import PyQt6.QtCore as QtCore
     import PyQt6.QtGui as QtGui
@@ -12,6 +13,7 @@ else:
 
 from .base_components import QtWidgetElement, _image_descriptor_to_pixmap, _CommandType, Element, _WidgetTree
 
+
 class _ScaledLabel(QtWidgets.QLabel):
     """
     https://stackoverflow.com/questions/72188903/pyside6-how-do-i-resize-a-qlabel-without-loosing-the-size-aspect-ratio
@@ -19,8 +21,8 @@ class _ScaledLabel(QtWidgets.QLabel):
 
     def __init__(self, *args, **kwargs):
         QtWidgets.QLabel.__init__(self)
-        self._pixmap : QtGui.QPixmap | None = None
-        self._aspect_ratio_mode : QtCore.Qt.AspectRatioMode | None = None
+        self._pixmap: QtGui.QPixmap | None = None
+        self._aspect_ratio_mode: QtCore.Qt.AspectRatioMode | None = None
         self._rescale()
 
     def resizeEvent(self, event):
@@ -32,19 +34,21 @@ class _ScaledLabel(QtWidgets.QLabel):
                 case None:
                     self.setPixmap(self._pixmap)
                 case aspect_ratio_mode:
-                    self.setPixmap(self._pixmap.scaled(
-                        self.frameSize(),
-                        aspect_ratio_mode,
-                        QtCore.Qt.TransformationMode.SmoothTransformation,
-                        ))
+                    self.setPixmap(
+                        self._pixmap.scaled(
+                            self.frameSize(),
+                            aspect_ratio_mode,
+                            QtCore.Qt.TransformationMode.SmoothTransformation,
+                        )
+                    )
 
-    def _setPixmap(self, pixmap : QtGui.QPixmap):
+    def _setPixmap(self, pixmap: QtGui.QPixmap):
         if not pixmap:
             return
         self._pixmap = pixmap
         self._rescale()
 
-    def _setAspectRatioMode(self, aspect_ratio_mode : QtCore.Qt.AspectRatioMode | None):
+    def _setAspectRatioMode(self, aspect_ratio_mode: QtCore.Qt.AspectRatioMode | None):
         self._aspect_ratio_mode = aspect_ratio_mode
         self._rescale()
 
@@ -89,15 +93,17 @@ class Image(QtWidgetElement):
         self,
         src: str | QtGui.QImage | QtGui.QPixmap,
         aspect_ratio_mode: None | QtCore.Qt.AspectRatioMode = None,
-        **kwargs
+        **kwargs,
     ):
         super().__init__(**kwargs)
-        self._register_props({
-            "src": src,
-            "aspect_ratio_mode": aspect_ratio_mode,
-        })
+        self._register_props(
+            {
+                "src": src,
+                "aspect_ratio_mode": aspect_ratio_mode,
+            }
+        )
         # self._register_props(kwargs)
-        self.underlying : _ScaledLabel | None = None
+        self.underlying: _ScaledLabel | None = None
 
     def _initialize(self):
         self.underlying = _ScaledLabel()
