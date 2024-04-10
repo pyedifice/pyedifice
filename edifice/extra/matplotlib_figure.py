@@ -2,6 +2,7 @@ import typing as tp
 from ..base_components.base_components import _CommandType, QtWidgetElement
 
 from ..qt import QT_VERSION
+
 if QT_VERSION == "PyQt6":
     pass
 else:
@@ -11,6 +12,7 @@ from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg
 from matplotlib.backend_bases import MouseEvent
 from matplotlib.figure import Figure
 from matplotlib.axes import Axes
+
 
 class MatplotlibFigure(QtWidgetElement):
     """
@@ -45,23 +47,25 @@ class MatplotlibFigure(QtWidgetElement):
         self,
         plot_fun: tp.Callable[[Axes], None],
         on_figure_mouse_move: tp.Callable[[MouseEvent], None] | None = None,
-        **kwargs
+        **kwargs,
     ):
         super().__init__(**kwargs)
-        self._register_props({
-            "plot_fun": plot_fun,
-            "on_figure_mouse_move": on_figure_mouse_move,
-        })
-        self.underlying : FigureCanvasQTAgg | None =  None
-        self.subplots : Axes | None = None
-        self.current_plot_fun : tp.Callable[[Axes], None] | None = None
-        self.on_mouse_move_connect_id : int | None = None
+        self._register_props(
+            {
+                "plot_fun": plot_fun,
+                "on_figure_mouse_move": on_figure_mouse_move,
+            }
+        )
+        self.underlying: FigureCanvasQTAgg | None = None
+        self.subplots: Axes | None = None
+        self.current_plot_fun: tp.Callable[[Axes], None] | None = None
+        self.on_mouse_move_connect_id: int | None = None
 
     def _qt_update_commands(self, children, newprops):
         if self.underlying is None:
             # Default to maximum figsize https://matplotlib.org/stable/api/figure_api.html#matplotlib.figure.figaspect
             # Constrain the Figure by putting it in a smaller View, it will resize itself correctly.
-            self.underlying = FigureCanvasQTAgg(Figure(figsize=(16.0,16.0)))
+            self.underlying = FigureCanvasQTAgg(Figure(figsize=(16.0, 16.0)))
             self.subplots = self.underlying.figure.subplots()
         assert self.underlying is not None
         assert self.subplots is not None
@@ -69,6 +73,7 @@ class MatplotlibFigure(QtWidgetElement):
         commands = super()._qt_update_commands_super(children, newprops, self.underlying, None)
 
         if "plot_fun" in newprops:
+
             def _command_plot_fun(self):
                 self.current_plot_fun = tp.cast(tp.Callable[[Axes], None], self.props.plot_fun)
                 self.subplots.clear()
@@ -76,14 +81,19 @@ class MatplotlibFigure(QtWidgetElement):
                 self.underlying.draw()
                 # alternately we could do draw_idle() here, but I don't think it's
                 # any better and it messes up the mouse events.
+
             commands.append(_CommandType(_command_plot_fun, self))
         if "on_figure_mouse_move" in newprops:
+
             def _command_mouse_move(self):
                 if self.on_mouse_move_connect_id is not None:
                     self.underlying.mpl_disconnect(self.on_mouse_move_connect_id)
-                if newprops['on_figure_mouse_move'] is not None:
-                    self.on_mouse_move_connect_id = self.underlying.mpl_connect('motion_notify_event', newprops['on_figure_mouse_move'])
+                if newprops["on_figure_mouse_move"] is not None:
+                    self.on_mouse_move_connect_id = self.underlying.mpl_connect(
+                        "motion_notify_event", newprops["on_figure_mouse_move"]
+                    )
                 else:
                     self.on_mouse_move_connect_id = None
+
             commands.append(_CommandType(_command_mouse_move, self))
         return commands

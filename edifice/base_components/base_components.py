@@ -3,11 +3,22 @@ import importlib.resources
 import logging
 import re
 import typing as tp
-from ..engine import _WidgetTree, _get_widget_children, _CommandType, PropsDict, Element, QtWidgetElement, _create_qmenu, _CURSORS, _ensure_future
+from ..engine import (
+    _WidgetTree,
+    _get_widget_children,
+    _CommandType,
+    PropsDict,
+    Element,
+    QtWidgetElement,
+    _create_qmenu,
+    _CURSORS,
+    _ensure_future,
+)
 
 from ..qt import QT_VERSION
 
 import edifice.icons
+
 ICONS = importlib.resources.files(edifice.icons)
 
 if QT_VERSION == "PyQt6" and not tp.TYPE_CHECKING:
@@ -21,9 +32,11 @@ P = tp.ParamSpec("P")
 
 RGBAType = tp.Tuple[int, int, int, int]
 
+
 @functools.lru_cache(30)
 def _get_image(path) -> QtGui.QPixmap:
     return QtGui.QPixmap(path)
+
 
 def _image_descriptor_to_pixmap(inp: str | QtGui.QImage | QtGui.QPixmap) -> QtGui.QPixmap:
     if isinstance(inp, str):
@@ -32,6 +45,7 @@ def _image_descriptor_to_pixmap(inp: str | QtGui.QImage | QtGui.QPixmap) -> QtGu
         return QtGui.QPixmap.fromImage(inp)
     elif isinstance(inp, QtGui.QPixmap):
         return inp
+
 
 @functools.lru_cache(100)
 def _get_svg_image_raw(icon_path, size):
@@ -69,9 +83,11 @@ class GroupBox(QtWidgetElement):
 
     def __init__(self, title):
         super().__init__()
-        self._register_props({
-            "title": title,
-        })
+        self._register_props(
+            {
+                "title": title,
+            }
+        )
 
     def _initialize(self):
         self.underlying = QtWidgets.QGroupBox(self.props.title)
@@ -95,6 +111,7 @@ class GroupBox(QtWidgetElement):
         commands.append(_CommandType(child_underlying.setParent, self.underlying))
         commands.append(_CommandType(widget.setTitle, self.props.title))
         return commands
+
 
 class Icon(QtWidgetElement):
     """Display an Icon.
@@ -146,14 +163,16 @@ class Icon(QtWidgetElement):
         **kwargs,
     ):
         super().__init__(**kwargs)
-        self._register_props({
-            "name": name,
-            "size": size,
-            "collection": collection,
-            "sub_collection": sub_collection,
-            "color": color,
-            "rotation": rotation,
-        })
+        self._register_props(
+            {
+                "name": name,
+                "size": size,
+                "collection": collection,
+                "sub_collection": sub_collection,
+                "color": color,
+                "rotation": rotation,
+            }
+        )
         self._register_props(kwargs)
 
     def _initialize(self):
@@ -179,8 +198,17 @@ class Icon(QtWidgetElement):
         commands = super()._qt_update_commands_super(widget_trees, newprops, self.underlying)
         icon_path = str(ICONS / self.props.collection / self.props.sub_collection / (self.props.name + ".svg"))
 
-        if "name" in newprops or "size" in newprops or "collection" in newprops or "sub_collection" in newprops or "color" in newprops or "rotation" in newprops:
-            commands.append(_CommandType(self._render_image, icon_path, self.props.size, self.props.color, self.props.rotation))
+        if (
+            "name" in newprops
+            or "size" in newprops
+            or "collection" in newprops
+            or "sub_collection" in newprops
+            or "color" in newprops
+            or "rotation" in newprops
+        ):
+            commands.append(
+                _CommandType(self._render_image, icon_path, self.props.size, self.props.color, self.props.rotation)
+            )
 
         return commands
 
@@ -212,7 +240,7 @@ class Button(QtWidgetElement):
         self._connected = False
 
     def _initialize(self):
-        self.underlying =  QtWidgets.QPushButton(str(self.props.title))
+        self.underlying = QtWidgets.QPushButton(str(self.props.title))
         self.underlying.setObjectName(str(id(self)))
 
     def _qt_update_commands(
@@ -268,7 +296,8 @@ class IconButton(Button):
         rotation: an angle (in degrees) for the icon rotation
     """
 
-    def __init__(self,
+    def __init__(
+        self,
         name,
         size=10,
         collection="font-awesome",
@@ -278,16 +307,17 @@ class IconButton(Button):
         **kwargs,
     ):
         super().__init__(**kwargs)
-        self._register_props({
-            "name": name,
-            "size": size,
-            "collection": collection,
-            "sub_collection": sub_collection,
-            "color": color,
-            "rotation": rotation,
-        })
+        self._register_props(
+            {
+                "name": name,
+                "size": size,
+                "collection": collection,
+                "sub_collection": sub_collection,
+                "color": color,
+                "rotation": rotation,
+            }
+        )
         self._register_props(kwargs)
-
 
     def _qt_update_commands(
         self,
@@ -299,8 +329,11 @@ class IconButton(Button):
 
         assert self.underlying is not None
         size = self.underlying.font().pointSize()
-        self._set_size(self.props.size + 3 + size * len(self.props.title), size,
-                       lambda size: (self.props.size + 3 + size * len(self.props.title), size))
+        self._set_size(
+            self.props.size + 3 + size * len(self.props.title),
+            size,
+            lambda size: (self.props.size + 3 + size * len(self.props.title), size),
+        )
 
         def render_image(icon_path, size, color, rotation):
             pixmap = _get_svg_image(icon_path, size, color=color, rotation=rotation)
@@ -308,8 +341,17 @@ class IconButton(Button):
             widget = tp.cast(QtWidgets.QPushButton, self.underlying)
             widget.setIcon(QtGui.QIcon(pixmap))
 
-        if "name" in newprops or "size" in newprops or "collection" in newprops or "sub_collection" in newprops or "color" in newprops or "rotation" in newprops:
-            commands.append(_CommandType(render_image, icon_path, self.props.size, self.props.color, self.props.rotation))
+        if (
+            "name" in newprops
+            or "size" in newprops
+            or "collection" in newprops
+            or "sub_collection" in newprops
+            or "color" in newprops
+            or "rotation" in newprops
+        ):
+            commands.append(
+                _CommandType(render_image, icon_path, self.props.size, self.props.color, self.props.rotation)
+            )
 
         return commands
 
@@ -334,7 +376,8 @@ class Label(QtWidgetElement):
         editable: whether the content of the label can be edited. Defaults to False.
     """
 
-    def __init__(self,
+    def __init__(
+        self,
         text: tp.Any = "",
         selectable: bool = False,
         editable: bool = False,
@@ -343,13 +386,15 @@ class Label(QtWidgetElement):
         **kwargs,
     ):
         super().__init__(**kwargs)
-        self._register_props({
-            "text": text,
-            "selectable": selectable,
-            "editable": editable,
-            "word_wrap": word_wrap,
-            "link_open": link_open,
-        })
+        self._register_props(
+            {
+                "text": text,
+                "selectable": selectable,
+                "editable": editable,
+                "word_wrap": word_wrap,
+                "link_open": link_open,
+            }
+        )
         self._register_props(kwargs)
 
     def _initialize(self):
@@ -386,7 +431,10 @@ class Label(QtWidgetElement):
                 change_cursor = False
                 if self.props.selectable:
                     change_cursor = True
-                    interaction_flags = (QtCore.Qt.TextInteractionFlag.TextSelectableByMouse | QtCore.Qt.TextInteractionFlag.TextSelectableByKeyboard)
+                    interaction_flags = (
+                        QtCore.Qt.TextInteractionFlag.TextSelectableByMouse
+                        | QtCore.Qt.TextInteractionFlag.TextSelectableByKeyboard
+                    )
                 if self.props.editable:
                     change_cursor = True
                     # PyQt5 doesn't support bitwise or with ints
@@ -413,11 +461,14 @@ class ImageSvg(QtWidgetElement):
             Either a path to an SVG image file, or a :code:`QByteArray`
             containing the serialized XML representation of an SVG file.
     """
+
     def __init__(self, src: str | QtCore.QByteArray, **kwargs):
         super().__init__(**kwargs)
-        self._register_props({
-            "src": src,
-        })
+        self._register_props(
+            {
+                "src": src,
+            }
+        )
         self._register_props(kwargs)
 
     def _initialize(self):
@@ -439,6 +490,7 @@ class ImageSvg(QtWidgetElement):
                 commands.append(_CommandType(widget.load, self.props.src))
         return commands
 
+
 # TODO
 # It seems to me that the type for Completer should be
 #
@@ -452,10 +504,11 @@ class Completer(object):
     # """
     # Parameters for a `QCompleter <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QCompleter.html>`_.
     # """
-    def __init__(self,
+    def __init__(
+        self,
         options,
         # TODO In PySide6, there is no longer an options, instead its a model.
-        mode : str = "popup"
+        mode: str = "popup",
         # TODO Should mode be this type instead? https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QCompleter.html#PySide6.QtWidgets.PySide6.QtWidgets.QCompleter.CompletionMode
     ):
         self.options = options
@@ -501,23 +554,27 @@ class TextInput(QtWidgetElement):
             event, when the Return or Enter key is pressed, or if the line edit
             loses focus and its contents have changed
     """
-    #TODO Note that you can set an optional Completer, giving the dropdown for completion.
 
-    def __init__(self,
+    # TODO Note that you can set an optional Completer, giving the dropdown for completion.
+
+    def __init__(
+        self,
         text: str = "",
         placeholder_text: str | None = None,
         on_change: tp.Optional[tp.Callable[[tp.Text], None | tp.Awaitable[None]]] = None,
         on_edit_finish: tp.Optional[tp.Callable[[], None | tp.Awaitable[None]]] = None,
         # completer: tp.Optional[Completer] = None,
-        **kwargs
+        **kwargs,
     ):
         super().__init__(**kwargs)
-        self._register_props({
-            "text": text,
-            "placeholder_text": placeholder_text,
-            "on_change": on_change,
-            "on_edit_finish": on_edit_finish,
-        })
+        self._register_props(
+            {
+                "text": text,
+                "placeholder_text": placeholder_text,
+                "on_change": on_change,
+                "on_edit_finish": on_edit_finish,
+            }
+        )
         self._register_props(kwargs)
 
     def _initialize(self):
@@ -528,7 +585,7 @@ class TextInput(QtWidgetElement):
         self.underlying.textEdited.connect(self._on_change_handler)
         self.underlying.editingFinished.connect(self._on_edit_finish)
 
-    def _on_change_handler(self, text:str):
+    def _on_change_handler(self, text: str):
         if self.props.on_change is not None:
             _ensure_future(self.props.on_change)(text)
 
@@ -595,7 +652,8 @@ class Dropdown(QtWidgetElement):
             The callback is passed the new value of the text.
     """
 
-    def __init__(self,
+    def __init__(
+        self,
         selection: tp.Text = "",
         text: tp.Text = "",
         options: tp.Optional[tp.Sequence[tp.Text]] = None,
@@ -604,17 +662,19 @@ class Dropdown(QtWidgetElement):
         # completer: tp.Optional[Completer] = None,
         on_change: tp.Optional[tp.Callable[[tp.Text], None | tp.Awaitable[None]]] = None,
         on_select: tp.Optional[tp.Callable[[tp.Text], None | tp.Awaitable[None]]] = None,
-        **kwargs
+        **kwargs,
     ):
         super().__init__(**kwargs)
-        self._register_props({
-            "selection": selection,
-            "text": text,
-            "options": options,
-            "editable": editable,
-            "on_change": on_change,
-            "on_select": on_select,
-        })
+        self._register_props(
+            {
+                "selection": selection,
+                "text": text,
+                "options": options,
+                "editable": editable,
+                "on_change": on_change,
+                "on_select": on_select,
+            }
+        )
         self._register_props(kwargs)
 
     def _initialize(self):
@@ -665,10 +725,12 @@ class Dropdown(QtWidgetElement):
         commands = super()._qt_update_commands_super(widget_trees, newprops, self.underlying)
         commands.append(_CommandType(widget.setEditable, self.props.editable))
         if "options" in newprops:
-            commands.extend([
-                _CommandType(widget.clear),
-                _CommandType(widget.addItems, newprops.options),
-            ])
+            commands.extend(
+                [
+                    _CommandType(widget.clear),
+                    _CommandType(widget.addItems, newprops.options),
+                ]
+            )
         if "text" in newprops:
             commands.append(_CommandType(self._set_edit_text, newprops.text))
         if "selection" in newprops:
@@ -704,18 +766,21 @@ class RadioButton(QtWidgetElement):
             changes.
     """
 
-    def __init__(self,
+    def __init__(
+        self,
         checked: bool = False,
         text: str = "",
         on_change: tp.Callable[[bool], None | tp.Awaitable[None]] | None = None,
         **kwargs,
-     ):
+    ):
         super().__init__(**kwargs)
-        self._register_props({
-            "checked": checked,
-            "text": text,
-            "on_change": on_change,
-        })
+        self._register_props(
+            {
+                "checked": checked,
+                "text": text,
+                "on_change": on_change,
+            }
+        )
         self._register_props(kwargs)
 
     def _initialize(self):
@@ -781,18 +846,21 @@ class CheckBox(QtWidgetElement):
             changes.
     """
 
-    def __init__(self,
+    def __init__(
+        self,
         checked: bool = False,
         text: str = "",
         on_change: tp.Callable[[bool], None | tp.Awaitable[None]] | None = None,
         **kwargs,
     ):
         super().__init__(**kwargs)
-        self._register_props({
-            "checked": checked,
-            "text": text,
-            "on_change": on_change,
-        })
+        self._register_props(
+            {
+                "checked": checked,
+                "text": text,
+                "on_change": on_change,
+            }
+        )
         self._register_props(kwargs)
 
     def _initialize(self):
@@ -829,6 +897,7 @@ class CheckBox(QtWidgetElement):
         if "checked" in newprops:
             commands.append(_CommandType(self._set_checked, newprops.checked))
         return commands
+
 
 class Slider(QtWidgetElement):
     """Slider bar widget.
@@ -877,14 +946,16 @@ class Slider(QtWidgetElement):
         **kwargs,
     ):
         super().__init__(**kwargs)
-        self._register_props({
-            "value": value,
-            "min_value": min_value,
-            "max_value": max_value,
-            "orientation": orientation,
-            "on_change": on_change,
-            "ignore_scrolling": ignore_scrolling,
-        })
+        self._register_props(
+            {
+                "value": value,
+                "min_value": min_value,
+                "max_value": max_value,
+                "orientation": orientation,
+                "on_change": on_change,
+                "ignore_scrolling": ignore_scrolling,
+            }
+        )
         self._register_props(kwargs)
         self._connected = False
         self._on_change: tp.Optional[tp.Callable[[int], None | tp.Awaitable[None]]] = None
@@ -901,16 +972,16 @@ class Slider(QtWidgetElement):
         self.underlying.setObjectName(str(id(self)))
         self.underlying.valueChanged.connect(self._on_change_handle)
         if "ignore_scrolling" in self.props and self.props.ignore_scrolling:
-            self.underlying.wheelEvent = lambda e: e.ignore() 
+            self.underlying.wheelEvent = lambda e: e.ignore()
 
-    def _on_change_handle(self, position:int) -> None:
+    def _on_change_handle(self, position: int) -> None:
         if self._on_change is not None:
             self._on_change(position)
 
     def _set_on_change(self, on_change):
         self._on_change = on_change
 
-    def _set_value(self, value:int):
+    def _set_value(self, value: int):
         widget = tp.cast(QtWidgets.QSlider, self.underlying)
         widget.blockSignals(True)
         widget.setValue(value)
@@ -939,7 +1010,6 @@ class Slider(QtWidgetElement):
 
 
 class _LinearView(QtWidgetElement):
-
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self._widget_children: list[QtWidgetElement] = []
@@ -963,26 +1033,25 @@ class _LinearView(QtWidgetElement):
         # In reverse order for speed because popping from the end of a list is
         # faster than popping from the beginning of a list?
 
-
-		# First we delete old children that are not in the right position.
+        # First we delete old children that are not in the right position.
         # We do this in two cases:
         # 1. If the first new child is the same as the first old child
         # 2. Else we hope the last new child is the same as the last old child
 
-		# Case 1: If the first new child is the same as the first old child.
+        # Case 1: If the first new child is the same as the first old child.
         # Then we iterate forward pairwise and hope that we get a lot of
         # matches between old and new children so we can reuse them
         # instead of deleting them.
         #
         # Note: QLayout.takeAt will decrement the indices of all greater children.
-        if len(children_new)>0 and len(self._widget_children)>0 and children_new[0] is self._widget_children[0]:
-            i_new=0
-            i_old=0
+        if len(children_new) > 0 and len(self._widget_children) > 0 and children_new[0] is self._widget_children[0]:
+            i_new = 0
+            i_old = 0
             for child_old in self._widget_children:
-                if i_new<len(children_new) and child_old is children_new[i_new]:
+                if i_new < len(children_new) and child_old is children_new[i_new]:
                     # old child is in the same position as new child
                     children_old_positioned_reverse.append(child_old)
-                    i_old+=1
+                    i_old += 1
                 else:
                     # old child is out of position
                     if child_old in children_new:
@@ -991,21 +1060,21 @@ class _LinearView(QtWidgetElement):
                     else:
                         # child will be deleted
                         commands.append(_CommandType(self._delete_child, i_old, child_old))
-                i_new+=1
+                i_new += 1
 
             r = list(reversed(children_old_positioned_reverse))
             children_old_positioned_reverse = r
 
-		# Case 2:
+        # Case 2:
         # Then we iterate backwards pairwise and hope that we get a lot of
         # matches between old and new children so we can reuse them
         # instead of deleting them.
         # This will likely be true if the last old child is the same as the
         # last new child.
         else:
-            i_new = len(children_new)-1
+            i_new = len(children_new) - 1
             for i_old, child_old in reversed(list(enumerate(self._widget_children))):
-                if i_new>0 and child_old is children_new[i_new]:
+                if i_new > 0 and child_old is children_new[i_new]:
                     # old child is in the same position as new child
                     children_old_positioned_reverse.append(child_old)
                 else:
@@ -1016,7 +1085,7 @@ class _LinearView(QtWidgetElement):
                     else:
                         # child will be deleted
                         commands.append(_CommandType(self._delete_child, i_old, child_old))
-                i_new-=1
+                i_new -= 1
 
         # Now we have deleted all the old children that are not in the right position.
         # Add in the missing new children.
@@ -1029,18 +1098,20 @@ class _LinearView(QtWidgetElement):
                 assert child_new.underlying is not None
                 commands.append(_CommandType(self._add_child, i, child_new.underlying))
 
-		# assert sanity check that we used all the old children.
-        assert len(children_old_positioned_reverse)==0
+        # assert sanity check that we used all the old children.
+        assert len(children_old_positioned_reverse) == 0
         self._widget_children = children_new
         return commands
 
     def _add_child(self, i, child_component: QtWidgets.QWidget):
         raise NotImplementedError
+
     def _delete_child(self, i, old_child: QtWidgetElement):
         """
         Delete the child from the layout.
         """
         raise NotImplementedError
+
     def _soft_delete_child(self, i, old_child: QtWidgetElement):
         """
         Take the child out of the layout, but don't delete it. It will be
@@ -1100,7 +1171,6 @@ class View(_LinearView):
             # Then this is a fixed-position View
             assert old_child.underlying is not None
             old_child.underlying.setParent(None)
-
 
     def _soft_delete_child(self, i, old_child: QtWidgetElement):
         if self.underlying_layout is not None:
@@ -1170,6 +1240,7 @@ class View(_LinearView):
         commands = super()._qt_update_commands_super(widget_trees, newprops, self.underlying, self.underlying_layout)
         return commands
 
+
 class Window(View):
     """
     The root :class:`View` element of an :class:`App` which runs in an
@@ -1195,18 +1266,20 @@ class Window(View):
     def __init__(
         self,
         title: str = "Edifice Application",
-        icon:tp.Optional[tp.Union[tp.Text, tp.Sequence]] = None,
-        menu = None,
+        icon: tp.Optional[tp.Union[tp.Text, tp.Sequence]] = None,
+        menu=None,
         on_close: tp.Optional[tp.Callable[[QtGui.QCloseEvent], None | tp.Awaitable[None]]] = None,
         **kwargs,
     ):
         super().__init__(**kwargs)
-        self._register_props({
-            "title": title,
-            "icon": icon,
-            "menu": menu,
-            "on_close": on_close,
-        })
+        self._register_props(
+            {
+                "title": title,
+                "icon": icon,
+                "menu": menu,
+                "on_close": on_close,
+            }
+        )
 
         self._menu_bar = None
         self._on_close: tp.Optional[tp.Callable[[QtGui.QCloseEvent], None | tp.Awaitable[None]]] = None
@@ -1215,7 +1288,7 @@ class Window(View):
         self._on_close = on_close
 
     def _handle_close(self, event: QtGui.QCloseEvent):
-        event.ignore() # Don't kill the app yet, instead stop the app after the children are unmounted.
+        event.ignore()  # Don't kill the app yet, instead stop the app after the children are unmounted.
         if self._on_close:
             _ensure_future(self._on_close)(event)
         if self._controller is not None:
@@ -1226,8 +1299,7 @@ class Window(View):
         menu_bar.setParent(self.underlying)
         for menu_title, menu in menus.items():
             if not isinstance(menu, dict):
-                raise ValueError(
-                    "Menu must be a dict of dicts (each of which describes a submenu)")
+                raise ValueError("Menu must be a dict of dicts (each of which describes a submenu)")
             menu_bar.addMenu(_create_qmenu(menu, menu_title))
 
     def _qt_update_commands(
@@ -1235,7 +1307,6 @@ class Window(View):
         widget_trees: dict[Element, _WidgetTree],
         newprops,
     ):
-
         if self.underlying is None:
             super()._initialize()
             assert isinstance(self.underlying, QtWidgets.QWidget)
@@ -1258,7 +1329,6 @@ class Window(View):
             commands.append(_CommandType(self._attach_menubar, self._menu_bar, newprops.menu))
 
         return commands
-
 
 
 class ScrollView(_LinearView):
@@ -1284,9 +1354,11 @@ class ScrollView(_LinearView):
 
     def __init__(self, layout="column", **kwargs):
         super().__init__(**kwargs)
-        self._register_props({
-            "layout": layout,
-        })
+        self._register_props(
+            {
+                "layout": layout,
+            }
+        )
         # self._register_props(kwargs)
 
     def _delete_child(self, i, old_child: QtWidgetElement):
@@ -1336,8 +1408,11 @@ class ScrollView(_LinearView):
         assert self.underlying is not None
         children = _get_widget_children(widget_trees, self)
         commands = self._recompute_children(children)
-        commands.extend(super()._qt_update_commands_super(widget_trees, newprops, self.underlying, self.underlying_layout))
+        commands.extend(
+            super()._qt_update_commands_super(widget_trees, newprops, self.underlying, self.underlying_layout)
+        )
         return commands
+
 
 def npones(num_rows, num_cols):
     """
@@ -1345,11 +1420,13 @@ def npones(num_rows, num_cols):
     """
     return [[1 for _ in range(num_cols)] for _ in range(num_rows)]
 
+
 def npany(arr):
     """
     List replacement for numpy.any()
     """
     return any([any(x) for x in arr])
+
 
 def set_slice2(arr, x0, x1, y0, y1, val):
     """
@@ -1359,18 +1436,20 @@ def set_slice2(arr, x0, x1, y0, y1, val):
         for y in range(y0, y1):
             arr[x][y] = val
 
+
 def npargmax(arr):
     """
     List replacement for numpy.argmax(). Returns the indices of the maximum values.
     """
-    i,j = 0,0
+    i, j = 0, 0
     max_val = arr[0][0]
     for x in range(len(arr)):
         for y in range(len(arr[x])):
             if arr[x][y] > max_val:
                 max_val = arr[x][y]
-                i,j = x,y
-    return i,j
+                i, j = x, y
+    return i, j
+
 
 def _layout_str_to_grid_spec(layout):
     """Parses layout to return a grid spec.
@@ -1466,10 +1545,12 @@ class GridView(QtWidgetElement):
 
     def __init__(self, layout="", key_to_code=None, **kwargs):
         super().__init__(**kwargs)
-        self._register_props({
-            "layout": layout,
-            "key_to_code": key_to_code,
-        })
+        self._register_props(
+            {
+                "layout": layout,
+                "key_to_code": key_to_code,
+            }
+        )
         # self._register_props(kwargs)
         self._previously_rendered = None
 
@@ -1527,9 +1608,11 @@ class TabView(_LinearView):
 
     def __init__(self, labels=None, **kwargs):
         super().__init__(**kwargs)
-        self._register_props({
-            "labels": labels,
-        })
+        self._register_props(
+            {
+                "labels": labels,
+            }
+        )
         # self._register_props(kwargs)
 
     def _delete_child(self, i, old_child):
@@ -1632,7 +1715,6 @@ class ExportList(QtWidgetElement):
         return []
 
 
-
 ### TODO: Tables are not well tested
 
 # class Table(QtWidgetElement):
@@ -1703,6 +1785,7 @@ class ExportList(QtWidgetElement):
 #             self._already_rendered[child.component] = True
 #         return commands
 
+
 class ProgressBar(QtWidgetElement):
     """Progress bar widget.
 
@@ -1743,13 +1826,15 @@ class ProgressBar(QtWidgetElement):
         **kwargs,
     ):
         super().__init__(**kwargs)
-        self._register_props({
-            "value": value,
-            "min_value": min_value,
-            "max_value": max_value,
-            "orientation": orientation,
-            "format": format,
-        })
+        self._register_props(
+            {
+                "value": value,
+                "min_value": min_value,
+                "max_value": max_value,
+                "orientation": orientation,
+                "format": format,
+            }
+        )
         # self._register_props(kwargs)
         self._connected = False
 

@@ -1,6 +1,7 @@
 import typing as tp
 
 from ..qt import QT_VERSION
+
 if tp.TYPE_CHECKING:
     from PySide6.QtCore import QSize, Qt
     from PySide6.QtGui import QKeyEvent, QMouseEvent
@@ -17,6 +18,7 @@ else:
 
 from .base_components import View, _CommandType, QtWidgetElement, Element, _WidgetTree
 
+
 class _PushButton(QPushButton):
     def __init__(self):
         super().__init__()
@@ -24,10 +26,13 @@ class _PushButton(QPushButton):
     # https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QLayout.html#detailed-description
     def sizeHint(self) -> QSize:
         return self.layout().sizeHint()
+
     def hasHeightForWidth(self) -> bool:
         return self.layout().hasHeightForWidth()
+
     def heightForWidth(self, width: int) -> int:
         return self.layout().heightForWidth(width)
+
     def minimumSizeHint(self) -> QSize:
         return self.layout().totalMinimumSize()
 
@@ -56,16 +61,20 @@ class ButtonView(View):
             the Spacebar or Enter key. Event type is either :code:`QMouseEvent` or :code:`QKeyEvent`.
             Use either this or :code:`on_click`, not both.
     """
-    def __init__(self,
+
+    def __init__(
+        self,
         layout: tp.Literal["row", "column", "none"] = "row",
         on_trigger: tp.Callable[[QKeyEvent], None] | tp.Callable[[QMouseEvent], None] | None = None,
-        **kwargs
+        **kwargs,
     ):
         super().__init__(layout, **kwargs)
-        self._register_props({
-            "layout": layout,
-            "on_trigger": on_trigger,
-        })
+        self._register_props(
+            {
+                "layout": layout,
+                "on_trigger": on_trigger,
+            }
+        )
         # self._register_props(kwargs)
 
     def _initialize(self):
@@ -95,13 +104,16 @@ class ButtonView(View):
 
     def _set_on_trigger(self, underlying, on_trigger):
         if on_trigger is not None:
-            def on_click(ev:QMouseEvent):
+
+            def on_click(ev: QMouseEvent):
                 on_trigger(ev)
-            def on_key(ev:QKeyEvent):
+
+            def on_key(ev: QKeyEvent):
                 if ev.key() == Qt.Key.Key_Enter or ev.key() == Qt.Key.Key_Return or ev.key() == Qt.Key.Key_Space:
                     on_trigger(ev)
                 else:
                     ev.ignore()
+
             self._set_on_click(underlying, on_click)
             self._set_on_key_up(underlying, on_key)
 

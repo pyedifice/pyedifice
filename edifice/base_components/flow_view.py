@@ -25,6 +25,7 @@ from .base_components import _LinearView, QtWidgetElement, Element, _WidgetTree,
 
 logger = logging.getLogger("Edifice")
 
+
 class FlowLayout(QLayout):
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -64,7 +65,7 @@ class FlowLayout(QLayout):
     #
     # This is crazy, but maybe we won’t do a lot of inserting into the middle
     # of a large FlowLayout?
-    def insertWidget(self, index, w:QWidget):
+    def insertWidget(self, index, w: QWidget):
         stack = []
         while len(self._item_list) > index:
             w_ = self._item_list[-1].widget()
@@ -169,7 +170,6 @@ class FlowView(_LinearView):
             if self.underlying_layout.takeAt(i) is None:
                 logger.warning("_soft_delete_child takeAt failed " + str(i) + " " + str(self))
 
-
     def _add_child(self, i, child_component):
         self.underlying_layout.insertWidget(i, child_component)
 
@@ -195,5 +195,7 @@ class FlowView(_LinearView):
         assert self.underlying is not None
         children = _get_widget_children(widget_trees, self)
         commands = self._recompute_children(children)
-        commands.extend(super()._qt_update_commands_super(widget_trees, newprops, self.underlying, self.underlying_layout))
+        commands.extend(
+            super()._qt_update_commands_super(widget_trees, newprops, self.underlying, self.underlying_layout)
+        )
         return commands

@@ -3,12 +3,13 @@ from edifice.engine import get_render_context_maybe, _T_use_state, Reference
 from typing import Any, Generic, ParamSpec, cast
 from asyncio import get_event_loop
 
-def use_state(initial_state:_T_use_state) -> tuple[
-    _T_use_state, # current value
-    Callable[ # updater
-        [_T_use_state | Callable[[_T_use_state],_T_use_state]],
-        None
-    ]]:
+
+def use_state(
+    initial_state: _T_use_state,
+) -> tuple[
+    _T_use_state,  # current value
+    Callable[[_T_use_state | Callable[[_T_use_state], _T_use_state]], None],  # updater
+]:
     """
     Persistent mutable state Hook inside a :func:`edifice.component` function.
 
@@ -295,7 +296,7 @@ class _AsyncCommand(Generic[_P_async]):
 
 
 def use_async_call(
-    fn_coroutine: Callable[_P_async, Awaitable[None]]
+    fn_coroutine: Callable[_P_async, Awaitable[None]],
 ) -> tuple[Callable[_P_async, None], Callable[[], None]]:
     """
     Hook to call an async function from a non-async context.

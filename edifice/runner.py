@@ -11,6 +11,7 @@ from typing import TYPE_CHECKING
 
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
+
 try:
     from watchdog.observers.fsevents import FSEventsObserver
 except ImportError:
@@ -20,6 +21,7 @@ from .engine import Element
 from .app import App
 
 from edifice.qt import QT_VERSION
+
 if QT_VERSION == "PyQt6" and not TYPE_CHECKING:
     from PyQt6 import QtCore
 else:
@@ -29,6 +31,7 @@ logger = logging.getLogger("Edifice")
 
 MODULE_CLASS_CACHE = {}
 
+
 def _file_to_module_name():
     d = {}
     for name, module in sys.modules.items():
@@ -36,10 +39,12 @@ def _file_to_module_name():
             d[os.path.abspath(module.__file__)] = name
     return d
 
+
 def _module_to_components(module):
     """
     Get all user Elements which are defined in this module (not imported).
     """
+
     def pred(x):
         # What we actually want for this predicate is that is should be true if x is
         # a subclass of ComponentElement which is defined in the passed-in module,
@@ -56,10 +61,8 @@ def _module_to_components(module):
         # in the passed-in module will also be reloaded.
         return (
             inspect.isclass(x)
-            and
-            issubclass(x, Element)
-            and
-            (x.__module__ == module.__name__ or x.__module__ == Element.__module__)
+            and issubclass(x, Element)
+            and (x.__module__ == module.__name__ or x.__module__ == Element.__module__)
         )
 
     return inspect.getmembers(
@@ -67,17 +70,18 @@ def _module_to_components(module):
         pred,
     )
 
+
 def _reload(module):
     return importlib.reload(module)
+
 
 def _message_app(app, src_path, components_list):
     # Alert the main QThread about the change
     app._class_rerender_queue.put_nowait((src_path, components_list))
     logger.info("Detected change in %s.", src_path)
-    app.app.postEvent(
-        app._event_receiver,
-        QtCore.QEvent(QtCore.QEvent.Type(app._file_change_rerender_event_type)))
+    app.app.postEvent(app._event_receiver, QtCore.QEvent(QtCore.QEvent.Type(app._file_change_rerender_event_type)))
     return app._class_rerender_response_queue.get()
+
 
 def _reload_components(module):
     if module in MODULE_CLASS_CACHE:
@@ -115,11 +119,15 @@ def runner():
     parser = argparse.ArgumentParser(description="Edifice app runner.")
     parser.add_argument("main_file", help="Main file containing app")
     parser.add_argument("root_component", help="The root component, should be in main file")
-    parser.add_argument("--inspect", action="store_true",
-                        dest="inspect", help="Whether to turn on inspector", default=False)
     parser.add_argument(
-        "--dir", dest="directory", default=None,
-        help="Directory to watch for changes. By default, the directory containing main_file")
+        "--inspect", action="store_true", dest="inspect", help="Whether to turn on inspector", default=False
+    )
+    parser.add_argument(
+        "--dir",
+        dest="directory",
+        default=None,
+        help="Directory to watch for changes. By default, the directory containing main_file",
+    )
 
     args = parser.parse_args()
 
@@ -136,7 +144,6 @@ def runner():
     app = App(root_component(), inspector=bool(args.inspect))
 
     class EventHandler(FileSystemEventHandler):
-
         def __init__(self, *args, **kwargs):
             super().__init__(*args, **kwargs)
             self.seen_files = {}
@@ -144,8 +151,9 @@ def runner():
         def on_modified(self, event):
             if FSEventsObserver is not None and isinstance(observer, FSEventsObserver) and event.is_directory:
                 # For Macs (which use FSEvents), FSEvents only reports directory changes
-                files_in_dir = [os.path.join(event.src_path, f) for f in os.listdir(event.src_path)
-                                if f.endswith(".py")]
+                files_in_dir = [
+                    os.path.join(event.src_path, f) for f in os.listdir(event.src_path) if f.endswith(".py")
+                ]
                 if not files_in_dir:
                     return
                 src_path = max(files_in_dir, key=os.path.getmtime)
@@ -189,6 +197,7 @@ def runner():
 
     observer.stop()
     observer.join()
+
 
 if __name__ == "__main__":
     runner()

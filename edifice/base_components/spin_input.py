@@ -1,6 +1,7 @@
 import typing as tp
 
 from ..qt import QT_VERSION
+
 if QT_VERSION == "PyQt6" and not tp.TYPE_CHECKING:
     from PyQt6.QtGui import QValidator
     from PyQt6.QtWidgets import QSpinBox
@@ -10,13 +11,16 @@ else:
 
 from .base_components import QtWidgetElement, _CommandType, _ensure_future, Element, _WidgetTree
 
+
 class _SpinBox(QSpinBox):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self._textFromValue : tp.Callable[[int], str] | None = None
-        self._valueFromText : tp.Callable[[str], int | tp.Literal[QValidator.State.Intermediate] | tp.Literal[QValidator.State.Invalid]] | None = None
+        self._textFromValue: tp.Callable[[int], str] | None = None
+        self._valueFromText: tp.Callable[
+            [str], int | tp.Literal[QValidator.State.Intermediate] | tp.Literal[QValidator.State.Invalid]
+        ] | None = None
 
-    def textFromValue(self, val:int) -> str:
+    def textFromValue(self, val: int) -> str:
         if self._textFromValue is not None:
             return self._textFromValue(val)
         else:
@@ -26,9 +30,9 @@ class _SpinBox(QSpinBox):
         if self._valueFromText is not None:
             match self._valueFromText(text):
                 case QValidator.State.Intermediate:
-                    return 0 # unreachable case
+                    return 0  # unreachable case
                 case QValidator.State.Invalid:
-                    return 0 # unreachable case
+                    return 0  # unreachable case
                 case val:
                     return val
         else:
@@ -45,6 +49,7 @@ class _SpinBox(QSpinBox):
                     return QValidator.State.Acceptable
         else:
             return super().validate(input, pos)
+
 
 class SpinInput(QtWidgetElement):
     """Widget for a one-line text input value with up/down buttons.
@@ -83,33 +88,40 @@ class SpinInput(QtWidgetElement):
 
             See `QValidator.State <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QValidator.html#PySide6.QtGui.PySide6.QtGui.QValidator.State>`_.
     """
-    #TODO Note that you can set an optional Completer, giving the dropdown for completion.
 
-    def __init__(self,
+    # TODO Note that you can set an optional Completer, giving the dropdown for completion.
+
+    def __init__(
+        self,
         value: int = 0,
         min_value: int = 0,
         max_value: int = 100,
         on_change: tp.Callable[[int], None | tp.Awaitable[None]] | None = None,
-        value_to_text : tp.Callable[[int], str] | None = None,
-        text_to_value : tp.Callable[[str], int | tp.Literal[QValidator.State.Intermediate] | tp.Literal[QValidator.State.Invalid]] | None = None,
-        **kwargs
+        value_to_text: tp.Callable[[int], str] | None = None,
+        text_to_value: tp.Callable[
+            [str], int | tp.Literal[QValidator.State.Intermediate] | tp.Literal[QValidator.State.Invalid]
+        ]
+        | None = None,
+        **kwargs,
     ):
         super().__init__(**kwargs)
-        self._register_props({
-            "value": value,
-            "min_value": min_value,
-            "max_value": max_value,
-            "on_change": on_change,
-            "value_to_text": value_to_text,
-            "text_to_value": text_to_value,
-        })
+        self._register_props(
+            {
+                "value": value,
+                "min_value": min_value,
+                "max_value": max_value,
+                "on_change": on_change,
+                "value_to_text": value_to_text,
+                "text_to_value": text_to_value,
+            }
+        )
 
     def _initialize(self):
         self.underlying = _SpinBox()
         self.underlying.setObjectName(str(id(self)))
         self.underlying.valueChanged.connect(self._on_change_handler)
 
-    def _on_change_handler(self, value:int):
+    def _on_change_handler(self, value: int):
         if self.props.on_change is not None:
             return _ensure_future(self.props.on_change)(value)
 

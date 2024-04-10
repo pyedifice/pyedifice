@@ -3,12 +3,14 @@ from ..base_components.base_components import _CommandType, QtWidgetElement
 
 # Import PySide6 or PyQt6 before importing pyqtgraph so that pyqtgraph detects the same
 from ..qt import QT_VERSION
+
 if QT_VERSION == "PyQt6" and not tp.TYPE_CHECKING:
     pass
 else:
     pass
 
 import pyqtgraph as pg
+
 
 class PyQtPlot(QtWidgetElement):
     """
@@ -73,15 +75,13 @@ class PyQtPlot(QtWidgetElement):
             before calling :code:`plot_fun`.
     """
 
-    def __init__(
-        self,
-        plot_fun: tp.Callable[[pg.PlotItem], None],
-        **kwargs
-    ):
+    def __init__(self, plot_fun: tp.Callable[[pg.PlotItem], None], **kwargs):
         super().__init__(**kwargs)
-        self._register_props({
-            "plot_fun": plot_fun,
-        })
+        self._register_props(
+            {
+                "plot_fun": plot_fun,
+            }
+        )
 
     def _qt_update_commands(self, children, newprops):
         if self.underlying is None:
@@ -93,9 +93,11 @@ class PyQtPlot(QtWidgetElement):
             plot_fun = tp.cast(tp.Callable[[pg.PlotItem], None], self.props.plot_fun)
             plot_widget = tp.cast(pg.PlotWidget, self.underlying)
             plot_item = tp.cast(pg.PlotItem, plot_widget.getPlotItem())
+
             def _update_plot():
                 plot_item.clear()
                 plot_fun(plot_item)
+
             commands.append(_CommandType(_update_plot))
 
         return commands
