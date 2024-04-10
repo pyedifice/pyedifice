@@ -638,6 +638,8 @@ def component(f: Callable[tp.Concatenate[C, P], None]) -> Callable[P, Element]:
     defaults = {k: v.default for k, v in signature.items() if v.default is not inspect.Parameter.empty and k[0] != "_"}
 
     class ComponentElement(Element):
+        _edifice_original = f
+
         @functools.wraps(f)
         def __init__(self, *args: P.args, **kwargs: P.kwargs):
             super().__init__()
