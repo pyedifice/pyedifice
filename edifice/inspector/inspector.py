@@ -125,10 +125,13 @@ def ElementView(
     refresh_trigger: bool,  # force a refresh when this changes
 ):
     setattr(self, "__edifice_inspector_element", True)
-    module = inspect.getmodule(component.__class__)
+    cls = component.__class__
+    if value := getattr(cls, "_edifice_original", None):
+        cls = value
+    module = inspect.getmodule(cls)
     lineno = None
     try:
-        lineno = inspect.getsourcelines(component.__class__)[1]
+        lineno = inspect.getsourcelines(cls)[1]
     except Exception:
         pass
     heading_style = {"font-size": "16px", "margin": 10, "margin-bottom": 0}
