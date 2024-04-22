@@ -87,6 +87,8 @@ class SpinInput(QtWidgetElement):
             * :code:`QValidator.State.Invalid` if the text is invalid.
 
             See `QValidator.State <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QValidator.html#PySide6.QtGui.PySide6.QtGui.QValidator.State>`_.
+        enable_mouse_scroll:
+            Whether mouse scroll events should be able to change the value.
     """
 
     # TODO Note that you can set an optional Completer, giving the dropdown for completion.
@@ -102,6 +104,7 @@ class SpinInput(QtWidgetElement):
             [str], int | tp.Literal[QValidator.State.Intermediate] | tp.Literal[QValidator.State.Invalid]
         ]
         | None = None,
+        enable_mouse_scroll: bool = True,
         **kwargs,
     ):
         super().__init__(**kwargs)
@@ -113,6 +116,7 @@ class SpinInput(QtWidgetElement):
                 "on_change": on_change,
                 "value_to_text": value_to_text,
                 "text_to_value": text_to_value,
+                "enable_mouse_scroll": enable_mouse_scroll,
             }
         )
 
@@ -120,6 +124,8 @@ class SpinInput(QtWidgetElement):
         self.underlying = _SpinBox()
         self.underlying.setObjectName(str(id(self)))
         self.underlying.valueChanged.connect(self._on_change_handler)
+        if "enable_mouse_scroll" in self.props and not self.props.enable_mouse_scroll:
+            self.underlying.wheelEvent = lambda event: event.ignore()
 
     def _on_change_handler(self, value: int):
         if self.props.on_change is not None:

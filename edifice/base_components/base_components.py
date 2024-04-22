@@ -932,6 +932,8 @@ class Slider(QtWidgetElement):
             Event handler for when the value of the slider changes,
             but only when the slider is being move by the user,
             not when the value prop changes.
+        enable_mouse_scroll:
+            Whether mouse scroll events should be able to change the value.
     """
 
     def __init__(
@@ -942,7 +944,7 @@ class Slider(QtWidgetElement):
         orientation: QtCore.Qt.Orientation = QtCore.Qt.Orientation.Horizontal,
         on_change: tp.Callable[[int], None | tp.Awaitable[None]] | None = None,
         *,
-        ignore_scrolling: bool = True,
+        enable_mouse_scroll: bool = True,
         **kwargs,
     ):
         super().__init__(**kwargs)
@@ -953,7 +955,7 @@ class Slider(QtWidgetElement):
                 "max_value": max_value,
                 "orientation": orientation,
                 "on_change": on_change,
-                "ignore_scrolling": ignore_scrolling,
+                "enable_mouse_scroll": enable_mouse_scroll,
             }
         )
         self._register_props(kwargs)
@@ -971,7 +973,7 @@ class Slider(QtWidgetElement):
 
         self.underlying.setObjectName(str(id(self)))
         self.underlying.valueChanged.connect(self._on_change_handle)
-        if "ignore_scrolling" in self.props and self.props.ignore_scrolling:
+        if "enable_mouse_scroll" in self.props and not self.props.enable_mouse_scroll:
             self.underlying.wheelEvent = lambda e: e.ignore()
 
     def _on_change_handle(self, position: int) -> None:
