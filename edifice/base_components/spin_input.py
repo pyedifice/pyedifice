@@ -52,7 +52,7 @@ class _SpinBox(QSpinBox):
 
 
 class SpinInput(QtWidgetElement):
-    """Widget for a one-line text input value with up/down buttons.
+    """Widget for a :code:`int` input value with up/down buttons.
 
     Allows the user to choose a value by clicking the up/down buttons or
     pressing up/down on the keyboard to increase/decrease the value currently
@@ -125,6 +125,12 @@ class SpinInput(QtWidgetElement):
         if self.props.on_change is not None:
             return _ensure_future(self.props.on_change)(value)
 
+    def _set_value(self, value: int):
+        widget = tp.cast(_SpinBox, self.underlying)
+        widget.blockSignals(True)
+        widget.setValue(value)
+        widget.blockSignals(False)
+
     def _qt_update_commands(
         self,
         widget_trees: dict[Element, _WidgetTree],
@@ -146,5 +152,5 @@ class SpinInput(QtWidgetElement):
         if "max_value" in newprops:
             commands.append(_CommandType(widget.setMaximum, newprops.max_value))
         if "value" in newprops:
-            commands.append(_CommandType(widget.setValue, newprops.value))
+            commands.append(_CommandType(self._set_value, newprops.value))
         return commands
