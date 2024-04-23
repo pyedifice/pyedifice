@@ -857,6 +857,10 @@ class QtWidgetElement(Element):
                                 proposed_files_set([])
 
             Note that the handler function cannot not be a coroutine.
+        on_resize:
+            Callback for `resize events <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.resizeEvent>`_.
+            Takes a `QResizeEvent <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QResizeEvent.html>`_
+            as argument.
 
     """
 
@@ -881,6 +885,7 @@ class QtWidgetElement(Element):
         on_drop: tp.Optional[
             tp.Callable[[QtGui.QDragEnterEvent | QtGui.QDragMoveEvent | QtGui.QDragLeaveEvent | QtGui.QDropEvent], None]
         ] = None,
+        on_resize: tp.Optional[tp.Callable[[QtGui.QResizeEvent], None | tp.Awaitable[None]]] = None,
     ):
         super().__init__()
         self._register_props(
@@ -902,6 +907,7 @@ class QtWidgetElement(Element):
                 "on_mouse_leave": on_mouse_leave,
                 "on_mouse_move": on_mouse_move,
                 "on_drop": on_drop,
+                "on_resize": on_resize,
             }
         )
         self._height = 0
@@ -922,6 +928,7 @@ class QtWidgetElement(Element):
         self._on_drop: tp.Optional[
             tp.Callable[[QtGui.QDragEnterEvent | QtGui.QDragMoveEvent | QtGui.QDragLeaveEvent | QtGui.QDropEvent], None]
         ] = None
+        self._on_resize: tp.Optional[tp.Callable[[QtGui.QResizeEvent], None]] = None
         self._default_mouse_press_event = None
         self._default_mouse_release_event = None
         self._default_mouse_move_event = None
@@ -1112,6 +1119,19 @@ class QtWidgetElement(Element):
         else:
             self._on_drop = None
             self.underlying.setAcceptDrops(False)
+
+    def _resizeEvent(self, event: QtGui.QResizeEvent):
+        if self._on_resize is not None:
+            self._on_resize(event)
+
+    def _set_on_resize(self, on_resize: tp.Optional[tp.Callable[[QtGui.QResizeEvent], None]]):
+        assert self.underlying is not None
+        if on_resize is not None:
+            self._on_resize = _ensure_future(on_resize)
+            self.underlying.resizeEvent = self._resizeEvent
+        else:
+            self._on_resize = None
+            self.underlying.resizeEvent = lambda event: None
 
     def _gen_styling_commands(
         self,
@@ -1310,6 +1330,8 @@ class QtWidgetElement(Element):
                 commands.append(_CommandType(self._set_on_mouse_move, underlying, newprops.on_mouse_move))
             elif prop == "on_drop":
                 commands.append(_CommandType(self._set_on_drop, underlying, newprops.on_drop))
+            elif prop == "on_resize":
+                commands.append(_CommandType(self._set_on_resize, newprops.on_resize))
             elif prop == "tool_tip":
                 if newprops.tool_tip is not None:
                     commands.append(_CommandType(underlying.setToolTip, newprops.tool_tip))

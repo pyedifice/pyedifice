@@ -190,7 +190,8 @@ class WidgetTreeTestCase(unittest.TestCase):
              _CommandType(button._set_on_mouse_move, qt_button, None),
              _CommandType(button._set_on_drop, qt_button, None),
              _CommandType(qt_button.setContextMenuPolicy, QtCore.Qt.ContextMenuPolicy.DefaultContextMenu),
-             _CommandType(qt_button.setCursor, QtCore.Qt.CursorShape.PointingHandCursor)
+             _CommandType(qt_button.setCursor, QtCore.Qt.CursorShape.PointingHandCursor),
+             _CommandType(button._set_on_resize, None)
             ])
 
     def test_view_layout(self):
@@ -237,6 +238,7 @@ class WidgetTreeTestCase(unittest.TestCase):
              _CommandType(icon._set_on_mouse_move, icon.underlying, None),
              _CommandType(icon._set_on_click, icon.underlying, None),
              _CommandType(icon._set_on_drop, icon.underlying, None),
+             _CommandType(icon._set_on_resize, None),
             ])
         icon._render_image(*render_img_args)
 
@@ -273,7 +275,9 @@ class WidgetTreeTestCase(unittest.TestCase):
             _CommandType(view._set_on_mouse_move, view.underlying, None),
             _CommandType(view._set_on_click, view.underlying, None),
             _CommandType(view._set_on_drop, view.underlying, None),
-            _CommandType(view._add_child, 0, label1.underlying)]
+            _CommandType(view._add_child, 0, label1.underlying),
+            _CommandType(view._set_on_resize, None),
+        ]
 
         self.assertCountEqual(commands, commands_expected)
         context = MockRenderContext(eng)
@@ -295,7 +299,9 @@ class WidgetTreeTestCase(unittest.TestCase):
             _CommandType(view._set_on_mouse_move, view.underlying, None),
             _CommandType(view._set_on_click, view.underlying, None),
             _CommandType(view._set_on_drop, view.underlying, None),
-            _CommandType(view._add_child, 1, label2.underlying)]
+            _CommandType(view._add_child, 1, label2.underlying),
+            _CommandType(view._set_on_resize, None),
+        ]
         self.assertCountEqual(commands, commands_expected)
 
         inner_view = base_components.View()
@@ -318,6 +324,7 @@ class WidgetTreeTestCase(unittest.TestCase):
                 _CommandType(view._set_on_mouse_move, view.underlying, None),
                 _CommandType(view._set_on_click, view.underlying, None),
                 _CommandType(view._set_on_drop, view.underlying, None),
+                _CommandType(view._set_on_resize, None),
                 _CommandType(inner_view.underlying.setStyleSheet, "QWidget#%s{}" % id(inner_view)),
                 _CommandType(inner_view.underlying.setProperty, "css_class", []),
                 _CommandType(inner_view.underlying.style().unpolish, inner_view.underlying),
@@ -333,6 +340,7 @@ class WidgetTreeTestCase(unittest.TestCase):
                 _CommandType(inner_view._set_on_mouse_move, inner_view.underlying, None),
                 _CommandType(inner_view._set_on_click, inner_view.underlying, None),
                 _CommandType(inner_view._set_on_drop, inner_view.underlying, None),
+                _CommandType(inner_view._set_on_resize, None),
                 _CommandType(view._soft_delete_child, 1, label2),
                 _CommandType(view._delete_child, 0, label1),
                 _CommandType(view._add_child, 0, label2.underlying),
