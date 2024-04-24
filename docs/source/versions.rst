@@ -9,7 +9,8 @@ Release Notes
 Released: 2024-04-22
 
 * :class:`SpinInput` don't fire on_change when prop value changes.
-* :code:`enable_mouse_scroll` prop for :class:`SpinInput`, :class:`Slider`
+* :code:`enable_mouse_scroll` prop for :class:`SpinInput`, :class:`Slider`.
+* Inspector bugfix correct source locations for :code`@component`.
 
 0.5.2
 -----
