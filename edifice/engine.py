@@ -49,10 +49,10 @@ def _ensure_future(fn):
     return fn
 
 
-class _CommandType:
+class CommandType:
     def __init__(self, fn: Callable[P, tp.Any], *args: P.args, **kwargs: P.kwargs):
         # The return value of fn is ignored and should thus return None. However, in
-        # order to test with equality on the _CommandTypes we need to allow fn to return
+        # order to test with equality on the CommandTypes we need to allow fn to return
         # Any value to not allocate wrapper functions ignoring the return value.
         self.fn = fn
         self.args = args
@@ -65,7 +65,7 @@ class _CommandType:
         return f"{self.fn.__repr__()}(*{self.args.__repr__()},**{self.kwargs.__repr__()})"
 
     def __eq__(self, other):
-        if not isinstance(other, _CommandType):
+        if not isinstance(other, CommandType):
             return False
         if self.fn != other.fn:
             return False
@@ -1139,7 +1139,7 @@ class QtWidgetElement(Element):
         underlying: QtWidgets.QWidget | None,
         underlying_layout: QtWidgets.QLayout | None = None,
     ):
-        commands: list[_CommandType] = []
+        commands: list[CommandType] = []
 
         if underlying_layout is not None:
             set_margin = False
@@ -1185,12 +1185,12 @@ class QtWidgetElement(Element):
 
             if set_margin:
                 commands.append(
-                    _CommandType(
+                    CommandType(
                         underlying_layout.setContentsMargins, new_margin[0], new_margin[1], new_margin[2], new_margin[3]
                     )
                 )
             if set_align:
-                commands.append(_CommandType(underlying_layout.setAlignment, set_align))
+                commands.append(CommandType(underlying_layout.setAlignment, set_align))
         else:
             if "align" in style:
                 if style["align"] == "left":
@@ -1251,11 +1251,11 @@ class QtWidgetElement(Element):
 
         if set_move:
             assert self.underlying is not None
-            commands.append(_CommandType(self.underlying.move, move_coords[0], move_coords[1]))
+            commands.append(CommandType(self.underlying.move, move_coords[0], move_coords[1]))
 
         assert self.underlying is not None
         css_string = _dict_to_style(style, "QWidget#" + str(id(self)))
-        commands.append(_CommandType(self.underlying.setStyleSheet, css_string))
+        commands.append(CommandType(self.underlying.setStyleSheet, css_string))
         return commands
 
     def _set_context_menu(self, underlying: QtWidgets.QWidget):
@@ -1276,7 +1276,7 @@ class QtWidgetElement(Element):
         self,
         widget_trees: dict[Element, "_WidgetTree"],
         newprops: PropsDict,
-    ) -> list[_CommandType]:
+    ) -> list[CommandType]:
         raise NotImplementedError
 
     def _qt_update_commands_super(
@@ -1287,8 +1287,8 @@ class QtWidgetElement(Element):
         newprops: PropsDict,
         underlying: QtWidgets.QWidget,
         underlying_layout: QtWidgets.QLayout | None = None,
-    ) -> list[_CommandType]:
-        commands: list[_CommandType] = []
+    ) -> list[CommandType]:
+        commands: list[CommandType] = []
         for prop in newprops:
             if prop == "style":
                 style = newprops[prop] or {}
@@ -1303,63 +1303,63 @@ class QtWidgetElement(Element):
                 commands.extend(self._gen_styling_commands(style, underlying, underlying_layout))
             elif prop == "size_policy":
                 if newprops.size_policy is not None:
-                    commands.append(_CommandType(underlying.setSizePolicy, newprops.size_policy))
+                    commands.append(CommandType(underlying.setSizePolicy, newprops.size_policy))
             elif prop == "focus_policy":
                 if newprops.focus_policy is not None:
-                    commands.append(_CommandType(underlying.setFocusPolicy, newprops.focus_policy))
+                    commands.append(CommandType(underlying.setFocusPolicy, newprops.focus_policy))
             elif prop == "enabled":
                 if newprops.enabled is not None:
-                    commands.append(_CommandType(underlying.setEnabled, newprops.enabled))
+                    commands.append(CommandType(underlying.setEnabled, newprops.enabled))
             elif prop == "on_click":
-                commands.append(_CommandType(self._set_on_click, underlying, newprops.on_click))
+                commands.append(CommandType(self._set_on_click, underlying, newprops.on_click))
                 if newprops.on_click is not None and self.props.cursor is not None:
-                    commands.append(_CommandType(underlying.setCursor, QtCore.Qt.CursorShape.PointingHandCursor))
+                    commands.append(CommandType(underlying.setCursor, QtCore.Qt.CursorShape.PointingHandCursor))
             elif prop == "on_key_down":
-                commands.append(_CommandType(self._set_on_key_down, underlying, newprops.on_key_down))
+                commands.append(CommandType(self._set_on_key_down, underlying, newprops.on_key_down))
             elif prop == "on_key_up":
-                commands.append(_CommandType(self._set_on_key_up, underlying, newprops.on_key_up))
+                commands.append(CommandType(self._set_on_key_up, underlying, newprops.on_key_up))
             elif prop == "on_mouse_down":
-                commands.append(_CommandType(self._set_on_mouse_down, underlying, newprops.on_mouse_down))
+                commands.append(CommandType(self._set_on_mouse_down, underlying, newprops.on_mouse_down))
             elif prop == "on_mouse_up":
-                commands.append(_CommandType(self._set_on_mouse_up, underlying, newprops.on_mouse_up))
+                commands.append(CommandType(self._set_on_mouse_up, underlying, newprops.on_mouse_up))
             elif prop == "on_mouse_enter":
-                commands.append(_CommandType(self._set_on_mouse_enter, underlying, newprops.on_mouse_enter))
+                commands.append(CommandType(self._set_on_mouse_enter, underlying, newprops.on_mouse_enter))
             elif prop == "on_mouse_leave":
-                commands.append(_CommandType(self._set_on_mouse_leave, underlying, newprops.on_mouse_leave))
+                commands.append(CommandType(self._set_on_mouse_leave, underlying, newprops.on_mouse_leave))
             elif prop == "on_mouse_move":
-                commands.append(_CommandType(self._set_on_mouse_move, underlying, newprops.on_mouse_move))
+                commands.append(CommandType(self._set_on_mouse_move, underlying, newprops.on_mouse_move))
             elif prop == "on_drop":
-                commands.append(_CommandType(self._set_on_drop, underlying, newprops.on_drop))
+                commands.append(CommandType(self._set_on_drop, underlying, newprops.on_drop))
             elif prop == "on_resize":
-                commands.append(_CommandType(self._set_on_resize, newprops.on_resize))
+                commands.append(CommandType(self._set_on_resize, newprops.on_resize))
             elif prop == "tool_tip":
                 if newprops.tool_tip is not None:
-                    commands.append(_CommandType(underlying.setToolTip, newprops.tool_tip))
+                    commands.append(CommandType(underlying.setToolTip, newprops.tool_tip))
             elif prop == "css_class":
                 css_class = newprops.css_class
                 if css_class is None:
                     css_class = []
-                commands.append(_CommandType(underlying.setProperty, "css_class", css_class))
+                commands.append(CommandType(underlying.setProperty, "css_class", css_class))
                 commands.extend(
                     [
-                        _CommandType(underlying.style().unpolish, underlying),
-                        _CommandType(underlying.style().polish, underlying),
+                        CommandType(underlying.style().unpolish, underlying),
+                        CommandType(underlying.style().polish, underlying),
                     ]
                 )
             elif prop == "cursor":
                 cursor = self.props.cursor or ("default" if self.props.on_click is None else "pointer")
-                commands.append(_CommandType(underlying.setCursor, _CURSORS[cursor]))
+                commands.append(CommandType(underlying.setCursor, _CURSORS[cursor]))
             elif prop == "context_menu":
                 if self._context_menu_connected:
                     underlying.customContextMenuRequested.disconnect()
                 if self.props.context_menu is not None:
                     commands.append(
-                        _CommandType(underlying.setContextMenuPolicy, QtCore.Qt.ContextMenuPolicy.CustomContextMenu)
+                        CommandType(underlying.setContextMenuPolicy, QtCore.Qt.ContextMenuPolicy.CustomContextMenu)
                     )
-                    commands.append(_CommandType(self._set_context_menu, underlying))
+                    commands.append(CommandType(self._set_context_menu, underlying))
                 else:
                     commands.append(
-                        _CommandType(underlying.setContextMenuPolicy, QtCore.Qt.ContextMenuPolicy.DefaultContextMenu)
+                        CommandType(underlying.setContextMenuPolicy, QtCore.Qt.ContextMenuPolicy.DefaultContextMenu)
                     )
         return commands
 
@@ -1412,9 +1412,9 @@ class RenderResult(object):
 
     def __init__(
         self,
-        commands: list[_CommandType],
+        commands: list[CommandType],
     ):
-        self.commands: list[_CommandType] = commands
+        self.commands: list[CommandType] = commands
 
 
 @dataclass
@@ -1887,11 +1887,11 @@ class RenderEngine(object):
 
         return render_context.widget_tree[component]
 
-    def gen_qt_commands(self, element: QtWidgetElement, render_context: _RenderContext) -> list[_CommandType]:
+    def gen_qt_commands(self, element: QtWidgetElement, render_context: _RenderContext) -> list[CommandType]:
         """
         Recursively generate the update commands for the widget tree.
         """
-        commands: list[_CommandType] = []
+        commands: list[CommandType] = []
         if self.is_stopped:
             return commands
 
@@ -1933,7 +1933,7 @@ class RenderEngine(object):
                         components_.append(element)
                 hook.updaters.clear()
 
-        all_commands: list[_CommandType] = []
+        all_commands: list[CommandType] = []
 
         # Here is the problem.
         # We need to render the child before parent if the child state changed.
@@ -1941,7 +1941,7 @@ class RenderEngine(object):
         # So we do a complete render of each component individually, and then
         # we don't have to solve the problem of the order of rendering.
         for component in components_:
-            commands: list[_CommandType] = []
+            commands: list[CommandType] = []
 
             render_context = _RenderContext(self)
             local_state.render_context = render_context

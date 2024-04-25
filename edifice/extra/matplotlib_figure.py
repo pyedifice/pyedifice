@@ -1,5 +1,5 @@
 import typing as tp
-from ..base_components.base_components import _CommandType, QtWidgetElement
+from ..base_components.base_components import CommandType, QtWidgetElement
 
 from ..qt import QT_VERSION
 
@@ -82,7 +82,7 @@ class MatplotlibFigure(QtWidgetElement):
                 # alternately we could do draw_idle() here, but I don't think it's
                 # any better and it messes up the mouse events.
 
-            commands.append(_CommandType(_command_plot_fun, self))
+            commands.append(CommandType(_command_plot_fun, self))
         if "on_figure_mouse_move" in newprops:
 
             def _command_mouse_move(self):
@@ -95,5 +95,5 @@ class MatplotlibFigure(QtWidgetElement):
                 else:
                     self.on_mouse_move_connect_id = None
 
-            commands.append(_CommandType(_command_mouse_move, self))
+            commands.append(CommandType(_command_mouse_move, self))
         return commands
