@@ -8,7 +8,7 @@ if QT_VERSION == "PyQt6" and not TYPE_CHECKING:
 else:
     from PySide6.QtWidgets import QGridLayout, QWidget
 
-from .base_components import _CommandType, PropsDict, Element, _get_widget_children, _WidgetTree, QtWidgetElement
+from .base_components import CommandType, PropsDict, Element, _get_widget_children, _WidgetTree, QtWidgetElement
 
 logger = logging.getLogger("Edifice")
 
@@ -27,7 +27,7 @@ class _TableGridViewRow(QtWidgetElement):
         self,
         children: list[_WidgetTree],
         newprops: PropsDict,
-    ) -> list[_CommandType]:
+    ) -> list[CommandType]:
         # This element has no Qt underlying so it has nothing to do except store
         # the children of the row.
         # The _qt_update_commands for TableGridView will render the children.
@@ -189,27 +189,27 @@ class TableGridView(QtWidgetElement):
         old_deletions = self._old_children.items() - new_children.items()
         new_additions = new_children.items() - self._old_children.items()
 
-        commands: list[_CommandType] = []
+        commands: list[CommandType] = []
 
         for w, (row, column) in old_deletions:
             if w in new_children:
-                commands.append(_CommandType(self._soft_delete_child, w, row, column))
+                commands.append(CommandType(self._soft_delete_child, w, row, column))
             else:
-                commands.append(_CommandType(self._delete_child, w, row, column))
+                commands.append(CommandType(self._delete_child, w, row, column))
 
         for w, (row, column) in new_additions:
-            commands.append(_CommandType(self._add_child, w, row, column))
+            commands.append(CommandType(self._add_child, w, row, column))
 
         self._old_children = new_children
 
         if "row_stretch" in newprops:
-            commands.append(_CommandType(self._set_row_stretch, newprops["row_stretch"]))
+            commands.append(CommandType(self._set_row_stretch, newprops["row_stretch"]))
         if "column_stretch" in newprops:
-            commands.append(_CommandType(self._set_column_stretch, newprops["column_stretch"]))
+            commands.append(CommandType(self._set_column_stretch, newprops["column_stretch"]))
         if "row_minheight" in newprops:
-            commands.append(_CommandType(self._set_row_minheight, newprops["row_minheight"]))
+            commands.append(CommandType(self._set_row_minheight, newprops["row_minheight"]))
         if "column_minwidth" in newprops:
-            commands.append(_CommandType(self._set_column_minwidth, newprops["column_minwidth"]))
+            commands.append(CommandType(self._set_column_minwidth, newprops["column_minwidth"]))
 
         commands.extend(
             super()._qt_update_commands_super(widget_trees, newprops, self.underlying, self.underlying_layout)

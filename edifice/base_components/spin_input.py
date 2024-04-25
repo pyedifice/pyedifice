@@ -9,7 +9,7 @@ else:
     from PySide6.QtGui import QValidator
     from PySide6.QtWidgets import QSpinBox
 
-from .base_components import QtWidgetElement, _CommandType, _ensure_future, Element, _WidgetTree
+from .base_components import QtWidgetElement, CommandType, _ensure_future, Element, _WidgetTree
 
 
 class _SpinBox(QSpinBox):
@@ -150,13 +150,13 @@ class SpinInput(QtWidgetElement):
         commands = super()._qt_update_commands_super(widget_trees, newprops, self.underlying)
 
         if "value_to_text" in newprops:
-            commands.append(_CommandType(setattr, widget, "_textFromValue", newprops.value_to_text))
+            commands.append(CommandType(setattr, widget, "_textFromValue", newprops.value_to_text))
         if "text_to_value" in newprops:
-            commands.append(_CommandType(setattr, widget, "_valueFromText", newprops.text_to_value))
+            commands.append(CommandType(setattr, widget, "_valueFromText", newprops.text_to_value))
         if "min_value" in newprops:
-            commands.append(_CommandType(widget.setMinimum, newprops.min_value))
+            commands.append(CommandType(widget.setMinimum, newprops.min_value))
         if "max_value" in newprops:
-            commands.append(_CommandType(widget.setMaximum, newprops.max_value))
+            commands.append(CommandType(widget.setMaximum, newprops.max_value))
         if "value" in newprops:
-            commands.append(_CommandType(self._set_value, newprops.value))
+            commands.append(CommandType(self._set_value, newprops.value))
         return commands

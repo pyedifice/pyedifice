@@ -1,5 +1,5 @@
 import typing as tp
-from ..base_components.base_components import _CommandType, QtWidgetElement
+from ..base_components.base_components import CommandType, QtWidgetElement
 
 # Import PySide6 or PyQt6 before importing pyqtgraph so that pyqtgraph detects the same
 from ..qt import QT_VERSION
@@ -98,6 +98,6 @@ class PyQtPlot(QtWidgetElement):
                 plot_item.clear()
                 plot_fun(plot_item)
 
-            commands.append(_CommandType(_update_plot))
+            commands.append(CommandType(_update_plot))
 
         return commands

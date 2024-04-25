@@ -6,7 +6,7 @@ import typing as tp
 from ..engine import (
     _WidgetTree,
     _get_widget_children,
-    _CommandType,
+    CommandType,
     PropsDict,
     Element,
     QtWidgetElement,
@@ -108,8 +108,8 @@ class GroupBox(QtWidgetElement):
         child_underlying = children[0].underlying
         assert child_underlying is not None
         widget = tp.cast(QtWidgets.QGroupBox, self.underlying)
-        commands.append(_CommandType(child_underlying.setParent, self.underlying))
-        commands.append(_CommandType(widget.setTitle, self.props.title))
+        commands.append(CommandType(child_underlying.setParent, self.underlying))
+        commands.append(CommandType(widget.setTitle, self.props.title))
         return commands
 
 
@@ -207,7 +207,7 @@ class Icon(QtWidgetElement):
             or "rotation" in newprops
         ):
             commands.append(
-                _CommandType(self._render_image, icon_path, self.props.size, self.props.color, self.props.rotation)
+                CommandType(self._render_image, icon_path, self.props.size, self.props.color, self.props.rotation)
             )
 
         return commands
@@ -257,7 +257,7 @@ class Button(QtWidgetElement):
         widget = tp.cast(QtWidgets.QPushButton, self.underlying)
         for prop in newprops:
             if prop == "title":
-                commands.append(_CommandType(widget.setText, str(newprops.title)))
+                commands.append(CommandType(widget.setText, str(newprops.title)))
 
         return commands
 
@@ -350,7 +350,7 @@ class IconButton(Button):
             or "rotation" in newprops
         ):
             commands.append(
-                _CommandType(render_image, icon_path, self.props.size, self.props.color, self.props.rotation)
+                CommandType(render_image, icon_path, self.props.size, self.props.color, self.props.rotation)
             )
 
         return commands
@@ -421,11 +421,11 @@ class Label(QtWidgetElement):
         commands = super()._qt_update_commands_super(widget_trees, newprops, self.underlying, None)
         for prop in newprops:
             if prop == "text":
-                commands.append(_CommandType(widget.setText, str(newprops[prop])))
+                commands.append(CommandType(widget.setText, str(newprops[prop])))
             elif prop == "word_wrap":
-                commands.append(_CommandType(widget.setWordWrap, self.props.word_wrap))
+                commands.append(CommandType(widget.setWordWrap, self.props.word_wrap))
             elif prop == "link_open":
-                commands.append(_CommandType(widget.setOpenExternalLinks, self.props.link_open))
+                commands.append(CommandType(widget.setOpenExternalLinks, self.props.link_open))
             elif prop == "selectable" or prop == "editable":
                 interaction_flags = 0
                 change_cursor = False
@@ -444,9 +444,9 @@ class Label(QtWidgetElement):
                     else:
                         interaction_flags = QtCore.Qt.TextInteractionFlag.TextEditable
                 if change_cursor and self.props.cursor is None:
-                    commands.append(_CommandType(widget.setCursor, _CURSORS["text"]))
+                    commands.append(CommandType(widget.setCursor, _CURSORS["text"]))
                 if interaction_flags:
-                    commands.append(_CommandType(widget.setTextInteractionFlags, interaction_flags))
+                    commands.append(CommandType(widget.setTextInteractionFlags, interaction_flags))
         return commands
 
 
@@ -487,7 +487,7 @@ class ImageSvg(QtWidgetElement):
         commands = super()._qt_update_commands_super(widget_trees, newprops, self.underlying, None)
         for prop in newprops:
             if prop == "src":
-                commands.append(_CommandType(widget.load, self.props.src))
+                commands.append(CommandType(widget.load, self.props.src))
         return commands
 
 
@@ -613,12 +613,12 @@ class TextInput(QtWidgetElement):
 
         commands = super()._qt_update_commands_super(widget_trees, newprops, self.underlying)
         if "text" in newprops:
-            commands.append(_CommandType(widget.setText, str(newprops.text)))
+            commands.append(CommandType(widget.setText, str(newprops.text)))
             # This setCursorPosition is needed because otherwise the cursor will
             # jump to the end of the text after the setText.
-            commands.append(_CommandType(widget.setCursorPosition, widget.cursorPosition()))
+            commands.append(CommandType(widget.setCursorPosition, widget.cursorPosition()))
         if "placeholder_text" in newprops:
-            commands.append(_CommandType(widget.setPlaceholderText, newprops.placeholder_text))
+            commands.append(CommandType(widget.setPlaceholderText, newprops.placeholder_text))
         return commands
 
 
@@ -723,20 +723,20 @@ class Dropdown(QtWidgetElement):
         widget = tp.cast(QtWidgets.QComboBox, self.underlying)
 
         commands = super()._qt_update_commands_super(widget_trees, newprops, self.underlying)
-        commands.append(_CommandType(widget.setEditable, self.props.editable))
+        commands.append(CommandType(widget.setEditable, self.props.editable))
         if "options" in newprops:
             commands.extend(
                 [
-                    _CommandType(widget.clear),
-                    _CommandType(widget.addItems, newprops.options),
+                    CommandType(widget.clear),
+                    CommandType(widget.addItems, newprops.options),
                 ]
             )
         if "text" in newprops:
-            commands.append(_CommandType(self._set_edit_text, newprops.text))
+            commands.append(CommandType(self._set_edit_text, newprops.text))
         if "selection" in newprops:
-            commands.append(_CommandType(self._set_current_text, newprops.selection))
+            commands.append(CommandType(self._set_current_text, newprops.selection))
         # elif prop == "completer":
-        #     commands.append(_CommandType(self._set_completer, newprops[prop]))
+        #     commands.append(CommandType(self._set_completer, newprops[prop]))
         return commands
 
 
@@ -812,9 +812,9 @@ class RadioButton(QtWidgetElement):
 
         commands = super()._qt_update_commands_super(widget_trees, newprops, self.underlying)
         if "checked" in newprops:
-            commands.append(_CommandType(self._set_checked, newprops.checked))
+            commands.append(CommandType(self._set_checked, newprops.checked))
         if "text" in newprops:
-            commands.append(_CommandType(widget.setText, str(newprops.text)))
+            commands.append(CommandType(widget.setText, str(newprops.text)))
         return commands
 
 
@@ -893,9 +893,9 @@ class CheckBox(QtWidgetElement):
 
         commands = super()._qt_update_commands_super(widget_trees, newprops, self.underlying)
         if "text" in newprops:
-            commands.append(_CommandType(widget.setText, str(newprops.text)))
+            commands.append(CommandType(widget.setText, str(newprops.text)))
         if "checked" in newprops:
-            commands.append(_CommandType(self._set_checked, newprops.checked))
+            commands.append(CommandType(self._set_checked, newprops.checked))
         return commands
 
 
@@ -1001,13 +1001,13 @@ class Slider(QtWidgetElement):
 
         commands = super()._qt_update_commands_super(widget_trees, newprops, self.underlying)
         if "min_value" in newprops:
-            commands.append(_CommandType(widget.setMinimum, newprops.min_value))
+            commands.append(CommandType(widget.setMinimum, newprops.min_value))
         if "max_value" in newprops:
-            commands.append(_CommandType(widget.setMaximum, newprops.max_value))
+            commands.append(CommandType(widget.setMaximum, newprops.max_value))
         if "value" in newprops:
-            commands.append(_CommandType(self._set_value, newprops.value))
+            commands.append(CommandType(self._set_value, newprops.value))
         if "on_change" in newprops:
-            commands.append(_CommandType(self._set_on_change, newprops.on_change))
+            commands.append(CommandType(self._set_on_change, newprops.on_change))
         return commands
 
 
@@ -1028,7 +1028,7 @@ class _LinearView(QtWidgetElement):
 
         children_new = children
 
-        commands: list[_CommandType] = []
+        commands: list[CommandType] = []
 
         children_old_positioned_reverse: list[QtWidgetElement] = []
         # old children in the same position as new children.
@@ -1058,10 +1058,10 @@ class _LinearView(QtWidgetElement):
                     # old child is out of position
                     if child_old in children_new:
                         # child will be added back in later
-                        commands.append(_CommandType(self._soft_delete_child, i_old, child_old))
+                        commands.append(CommandType(self._soft_delete_child, i_old, child_old))
                     else:
                         # child will be deleted
-                        commands.append(_CommandType(self._delete_child, i_old, child_old))
+                        commands.append(CommandType(self._delete_child, i_old, child_old))
                 i_new += 1
 
             r = list(reversed(children_old_positioned_reverse))
@@ -1083,10 +1083,10 @@ class _LinearView(QtWidgetElement):
                     # old child is out of position
                     if child_old in children_new:
                         # child will be added back in later
-                        commands.append(_CommandType(self._soft_delete_child, i_old, child_old))
+                        commands.append(CommandType(self._soft_delete_child, i_old, child_old))
                     else:
                         # child will be deleted
-                        commands.append(_CommandType(self._delete_child, i_old, child_old))
+                        commands.append(CommandType(self._delete_child, i_old, child_old))
                 i_new -= 1
 
         # Now we have deleted all the old children that are not in the right position.
@@ -1098,7 +1098,7 @@ class _LinearView(QtWidgetElement):
             else:
                 assert isinstance(child_new, QtWidgetElement)
                 assert child_new.underlying is not None
-                commands.append(_CommandType(self._add_child, i, child_new.underlying))
+                commands.append(CommandType(self._add_child, i, child_new.underlying))
 
         # assert sanity check that we used all the old children.
         assert len(children_old_positioned_reverse) == 0
@@ -1315,20 +1315,20 @@ class Window(View):
             self.underlying.closeEvent = self._handle_close
             self.underlying.show()
 
-        commands: list[_CommandType] = super()._qt_update_commands(widget_trees, newprops)
+        commands: list[CommandType] = super()._qt_update_commands(widget_trees, newprops)
 
         if "title" in newprops:
-            commands.append(_CommandType(self.underlying.setWindowTitle, newprops.title))
+            commands.append(CommandType(self.underlying.setWindowTitle, newprops.title))
         if "on_close" in newprops:
-            commands.append(_CommandType(self._set_on_close, newprops.on_close))
+            commands.append(CommandType(self._set_on_close, newprops.on_close))
         if "icon" in newprops and newprops.icon:
             pixmap = _image_descriptor_to_pixmap(newprops.icon)
-            commands.append(_CommandType(self.underlying.setWindowIcon, QtGui.QIcon(pixmap)))
+            commands.append(CommandType(self.underlying.setWindowIcon, QtGui.QIcon(pixmap)))
         if "menu" in newprops and newprops.menu:
             if self._menu_bar is not None:
                 self._menu_bar.setParent(None)
             self._menu_bar = QtWidgets.QMenuBar()
-            commands.append(_CommandType(self._attach_menubar, self._menu_bar, newprops.menu))
+            commands.append(CommandType(self._attach_menubar, self._menu_bar, newprops.menu))
 
         return commands
 
@@ -1583,11 +1583,11 @@ class GridView(QtWidgetElement):
         else:
             code_to_child = {self.props.key_to_code[c._key]: c for c in children}
         grid_spec = [(code_to_child[cell[0]],) + cell[1:] for cell in grid_spec if cell[0] not in " _"]
-        commands: list[_CommandType] = []
+        commands: list[CommandType] = []
         if grid_spec != self._previously_rendered:
-            commands.append(_CommandType(self._clear))
+            commands.append(CommandType(self._clear))
             for child, y, x, dy, dx in grid_spec:
-                commands.append(_CommandType(self.underlying_layout.addWidget, child.underlying, y, x, dy, dx))
+                commands.append(CommandType(self.underlying_layout.addWidget, child.underlying, y, x, dy, dx))
             self._previously_rendered = grid_spec
         commands.extend(super()._qt_update_commands_super(widget_trees, newprops, self.underlying, None))
         return commands
@@ -1697,7 +1697,7 @@ class CustomWidget(QtWidgetElement):
         if self.underlying is None:
             self.underlying = self.create_widget()
         commands = super()._qt_update_commands_super(widget_trees, newprops, self.underlying, None)
-        commands.append(_CommandType(self.paint, self.underlying, newprops))
+        commands.append(CommandType(self.paint, self.underlying, newprops))
         return commands
 
 
@@ -1749,21 +1749,21 @@ class ExportList(QtWidgetElement):
 #
 #         for prop in newprops:
 #             if prop == "rows":
-#                 commands.append(_CommandType(widget.setRowCount, newprops[prop]))
+#                 commands.append(CommandType(widget.setRowCount, newprops[prop]))
 #             elif prop == "columns":
-#                 commands.append(_CommandType(widget.setColumnCount, newprops[prop]))
+#                 commands.append(CommandType(widget.setColumnCount, newprops[prop]))
 #             elif prop == "alternating_row_colors":
-#                 commands.append(_CommandType(widget.setAlternatingRowColors, newprops[prop]))
+#                 commands.append(CommandType(widget.setAlternatingRowColors, newprops[prop]))
 #             elif prop == "row_headers":
 #                 if newprops[prop] is not None:
-#                     commands.append(_CommandType(widget.setVerticalHeaderLabels, list(map(str, newprops[prop]))))
+#                     commands.append(CommandType(widget.setVerticalHeaderLabels, list(map(str, newprops[prop]))))
 #                 else:
-#                     commands.append(_CommandType(widget.setVerticalHeaderLabels, list(map(str, range(newprops.rows)))))
+#                     commands.append(CommandType(widget.setVerticalHeaderLabels, list(map(str, range(newprops.rows)))))
 #             elif prop == "column_headers":
 #                 if newprops[prop] is not None:
-#                     commands.append(_CommandType(widget.setHorizontalHeaderLabels, list(map(str, newprops[prop]))))
+#                     commands.append(CommandType(widget.setHorizontalHeaderLabels, list(map(str, newprops[prop]))))
 #                 else:
-#                     commands.append(_CommandType(widget.setHorizontalHeaderLabels, list(map(str, range(newprops.columns)))))
+#                     commands.append(CommandType(widget.setHorizontalHeaderLabels, list(map(str, range(newprops.columns)))))
 #
 #         new_children = set()
 #         for child in children:
@@ -1777,13 +1777,13 @@ class ExportList(QtWidgetElement):
 #             if old_child not in new_children:
 #                 for j, el in enumerate(old_child.children):
 #                     if el:
-#                         commands.append(_CommandType(widget.setCellWidget, i, j, QtWidgets.QWidget()))
+#                         commands.append(CommandType(widget.setCellWidget, i, j, QtWidgets.QWidget()))
 #
 #         self._widget_children = [child.component for child in children]
 #         for i, child in enumerate(children):
 #             if child.component not in self._already_rendered:
 #                 for j, el in enumerate(child.children):
-#                     commands.append(_CommandType(widget.setCellWidget, i, j, el.component.underlying))
+#                     commands.append(CommandType(widget.setCellWidget, i, j, el.component.underlying))
 #             self._already_rendered[child.component] = True
 #         return commands
 
@@ -1857,13 +1857,13 @@ class ProgressBar(QtWidgetElement):
 
         commands = super()._qt_update_commands_super(widget_trees, newprops, self.underlying)
         if "orientation" in newprops:
-            commands.append(_CommandType(widget.setOrientation, newprops.orientation))
+            commands.append(CommandType(widget.setOrientation, newprops.orientation))
         if "min_value" in newprops:
-            commands.append(_CommandType(widget.setMinimum, newprops.min_value))
+            commands.append(CommandType(widget.setMinimum, newprops.min_value))
         if "max_value" in newprops:
-            commands.append(_CommandType(widget.setMaximum, newprops.max_value))
+            commands.append(CommandType(widget.setMaximum, newprops.max_value))
         if "format" in newprops:
-            commands.append(_CommandType(widget.setFormat, newprops.format))
+            commands.append(CommandType(widget.setFormat, newprops.format))
         if "value" in newprops:
-            commands.append(_CommandType(widget.setValue, newprops.value))
+            commands.append(CommandType(widget.setValue, newprops.value))
         return commands
