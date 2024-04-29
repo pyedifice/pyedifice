@@ -4,6 +4,12 @@
 Release Notes
 =============
 
+0.5.5
+-----
+Released: 2024-04-30
+
+* bugfix :class:`QtWidgetElement` :code:`on_resize` event handler prop.
+
 0.5.4
 -----
 Released: 2024-04-29
