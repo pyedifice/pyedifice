@@ -650,6 +650,8 @@ class Dropdown(QtWidgetElement):
         on_select:
             Callback for when the selection changes.
             The callback is passed the new value of the text.
+        enable_mouse_scroll:
+            Whether mouse scroll events should be able to change the value.
     """
 
     def __init__(
@@ -662,6 +664,7 @@ class Dropdown(QtWidgetElement):
         # completer: tp.Optional[Completer] = None,
         on_change: tp.Optional[tp.Callable[[tp.Text], None | tp.Awaitable[None]]] = None,
         on_select: tp.Optional[tp.Callable[[tp.Text], None | tp.Awaitable[None]]] = None,
+        enable_mouse_scroll: bool = True,
         **kwargs,
     ):
         super().__init__(**kwargs)
@@ -673,6 +676,7 @@ class Dropdown(QtWidgetElement):
                 "editable": editable,
                 "on_change": on_change,
                 "on_select": on_select,
+                "enable_mouse_scroll": enable_mouse_scroll,
             }
         )
         self._register_props(kwargs)
@@ -682,6 +686,8 @@ class Dropdown(QtWidgetElement):
         self.underlying.setObjectName(str(id(self)))
         self.underlying.editTextChanged.connect(self._on_change)
         self.underlying.textActivated.connect(self._on_select)
+        if "enable_mouse_scroll" in self.props and not self.props.enable_mouse_scroll:
+            self.underlying.wheelEvent = lambda e: e.ignore()
 
     # TODO
     # def _set_completer(self, completer):
