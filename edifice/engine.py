@@ -938,6 +938,7 @@ class QtWidgetElement(Element):
         self._default_drag_move_event = None
         self._default_drag_leave_event = None
         self._default_drop_event = None
+        self._default_resize_event = None
 
         self._context_menu = None
         self._context_menu_connected = False
@@ -1126,12 +1127,17 @@ class QtWidgetElement(Element):
 
     def _set_on_resize(self, on_resize: tp.Optional[tp.Callable[[QtGui.QResizeEvent], None]]):
         assert self.underlying is not None
+
+        # Store the QWidget's default virtual event handler method one time
+        if self._default_resize_event is None:
+            self._default_resize_event = self.underlying.resizeEvent
+
         if on_resize is not None:
             self._on_resize = _ensure_future(on_resize)
             self.underlying.resizeEvent = self._resizeEvent
         else:
             self._on_resize = None
-            self.underlying.resizeEvent = lambda event: None
+            self.underlying.resizeEvent = self._default_resize_event
 
     def _gen_styling_commands(
         self,
