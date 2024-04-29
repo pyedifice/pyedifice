@@ -4,6 +4,14 @@
 Release Notes
 =============
 
+0.5.4
+-----
+Released: 2024-04-29
+
+* :class:`CommandType` non-private for writing custom :class:`QtWidgetElement` classes.
+* :class:`QtWidgetElement` :code:`on_resize` event handler prop.
+* :code:`enable_mouse_scroll` prop for :class:`Dropdown`.
+
 0.5.3
 -----
 Released: 2024-04-22
