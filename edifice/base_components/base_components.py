@@ -1689,7 +1689,7 @@ class CustomWidget(QtWidgetElement):
     def __init__(self):
         super().__init__()
 
-    def create_widget(self):
+    def create_widget(self) -> QtWidgets.QWidget:
         raise NotImplementedError
 
     def paint(self, widget, newprops):
