@@ -23,7 +23,10 @@ def Main(self):
 
     with ed.Window():
         ed.Label("Hello")
-        ed.Label("World")
+        ed.Label(
+            text= "World",
+            selectable=True,
+        )
         ed.Dropdown(
             options=["Option 1", "Option 2", "Option 3"],
             selection="Option 1",
@@ -39,6 +42,8 @@ def Main(self):
                     "min-height": 100,
                     "border": "1px solid black",
                     "font-size": "20px",
+                    "font-family": "Courier New",
+                    "font-style": "italic",
                 }
             )
             ed.Button("Exclaim text", on_click=lambda _: mltext_set("!" + mltext + "!"))

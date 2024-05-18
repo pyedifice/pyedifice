@@ -7,9 +7,13 @@ In web development, HTML would represent the content structure,
 while CSS represents the formatting of the presentation.
 
 Edfice supports `Qt widget styling <https://doc.qt.io/qtforpython-6/overviews/stylesheet-syntax.html>`_.
-The **style prop** of Edifice base :class:`Element <edifice.Element>` allows you to set the style for that component.
-It is either a dictionary or a list of dictionaries, in which case the dictionaries are merged from left to right.
-The keys of the dictionary are the supported style name, and the values are the value of that style name.
+
+The **style prop** of Edifice base :class:`Element <edifice.Element>` allows
+you to set the style for that component.
+It is either a dictionary or a list of dictionaries, in which case the
+dictionaries are merged from left to right.
+The keys of the dictionary are the supported style name, and the values
+are the value of that style name.
 
 For example, if you want to make a label with *10px* margins, with *red* text
 in a *16pt* font on a *beige* *semi-transparent* background::
@@ -37,25 +41,26 @@ font sizes, you can create a common style object encoding shared styles::
         Label("foo", style=[LABEL_STYLE, {"font-size": 8}])
 
 
+All style properties supported by Qt will also work with Edifice.
+See `Qt Stylesheet Reference List of Properties <https://doc.qt.io/qtforpython-6/overviews/stylesheet-reference.html#list-of-properties>`_.
+Note that sometimes Qt styling behaves very differently from CSS styling
+(despite similar syntax and naming)
+and are not necessarily supported by all widgets.
 
 Currently, the following CSS styles are tested to be supported:
 
 - **color**: :code:`"rgba(r, g, b, a)"` or named colors.
 - **font-size**: Font size in points.
 - **font-weight**: A number indicating how bold the font should be.
+- **font-family**: Font family name.
+- **font-style**: Font style, i.e. :code:`"italic"`.
 - **background-color**: :code:`"rgba(r, g, b, a)"` or named colors.
-- **margin**: Margin in pixels. This is equivalent to CSS :code:`padding`. CSS :code:`margin` doesn’t exist in Qt.
-- **margin-left**, **margin-right**, **margin-top**, **margin-bottom**
-- **border**: :code:`"1px solid color"`
-- **border-left**, etc.
+- **margin**: Interior margin in pixels. This is equivalent to CSS :code:`padding`. CSS :code:`margin` doesn’t exist in Qt.
+- **margin-left**, **margin-right**, **margin-top**, **margin-bottom**: Interior margin in pixels.
+- **border**: For example :code:`"1px solid red"`
+- **border-left**, **border-right**, **border-top**, **border-bottom**: For example :code:`"1px solid red"`
 - **height**, **width**: Height/width in pixels.
-- **min-height**, **max-height**, etc.: Min/max height/width in pixels.
+- **min-height**, **max-height**, **min-width**, **max-width**: Min/max height/width in pixels.
 - **align**: One of :code:`"left`, :code:`"right"`, :code:`"top"`, :code:`"bottom"`, :code:`"center"`, :code:`"justify"`.
 - **top**, **left** (but not bottom, right): Pixel offset from a
   :class:`View <edifice.View>` with :code:`layout=None`.
-
-All style properties supported by Qt will also work with Edifice.
-See `Qt Stylesheet Reference List of Properties <https://doc.qt.io/qtforpython-6/overviews/stylesheet-reference.html#list-of-properties>`_.
-Note that sometimes Qt styling behaves very differently from CSS styling
-(despite similar syntax and naming)
-and are not necessarily supported by all widgets.

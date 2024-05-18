@@ -365,20 +365,19 @@ class Label(QtWidgetElement):
     .. figure:: /image/label.png
        :width: 500
 
-    You can render rich text with the
-    `Qt supported HTML subset <https://doc.qt.io/qtforpython-6/overviews/richtext-html-subset.html>`_.
-
     Args:
-        text: the text to display. Can be any Python type; the text prop is converted to a string using str before being displayed
-        word_wrap: enable/disable word wrapping.
-        link_open: whether hyperlinks will open to the operating system. Defaults to False. `PySide6.QtWidgets.PySide6.QtWidgets.QLabel.setOpenExternalLinks <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QLabel.html#PySide6.QtWidgets.PySide6.QtWidgets.QLabel.setOpenExternalLinks>`_
-        selectable: whether the content of the label can be selected. Defaults to False.
-        editable: whether the content of the label can be edited. Defaults to False.
+        text: The text to display. You can render rich text with the
+            `Qt supported HTML subset <https://doc.qt.io/qtforpython-6/overviews/richtext-html-subset.html>`_.
+        word_wrap: Enable/disable word wrapping.
+        link_open: Whether hyperlinks will open to the operating system. Defaults to False.
+            `PySide6.QtWidgets.PySide6.QtWidgets.QLabel.setOpenExternalLinks <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QLabel.html#PySide6.QtWidgets.PySide6.QtWidgets.QLabel.setOpenExternalLinks>`_
+        selectable: Whether the content of the label can be selected. Defaults to False.
+        editable: Whether the content of the label can be edited. Defaults to False.
     """
 
     def __init__(
         self,
-        text: tp.Any = "",
+        text: str = "",
         selectable: bool = False,
         editable: bool = False,
         word_wrap: bool = True,
@@ -398,7 +397,7 @@ class Label(QtWidgetElement):
         self._register_props(kwargs)
 
     def _initialize(self):
-        self.underlying = QtWidgets.QLabel(str(self.props.text))
+        self.underlying = QtWidgets.QLabel(self.props.text)
         self.underlying.setObjectName(str(id(self)))
 
     def _qt_update_commands(
@@ -410,7 +409,7 @@ class Label(QtWidgetElement):
             self._initialize()
         assert self.underlying is not None
         size = self.underlying.font().pointSize()
-        self._set_size(size * len(str(self.props.text)), size, lambda size: (size * len(str(self.props.text)), size))
+        self._set_size(size * len(self.props.text), size, lambda size: (size * len(str(self.props.text)), size))
 
         # TODO
         # If you want the QLabel to fit the text then you must use adjustSize()
@@ -419,34 +418,33 @@ class Label(QtWidgetElement):
 
         widget = tp.cast(QtWidgets.QLabel, self.underlying)
         commands = super()._qt_update_commands_super(widget_trees, newprops, self.underlying, None)
-        for prop in newprops:
-            if prop == "text":
-                commands.append(CommandType(widget.setText, str(newprops[prop])))
-            elif prop == "word_wrap":
-                commands.append(CommandType(widget.setWordWrap, self.props.word_wrap))
-            elif prop == "link_open":
-                commands.append(CommandType(widget.setOpenExternalLinks, self.props.link_open))
-            elif prop == "selectable" or prop == "editable":
-                interaction_flags = 0
-                change_cursor = False
-                if self.props.selectable:
-                    change_cursor = True
-                    interaction_flags = (
-                        QtCore.Qt.TextInteractionFlag.TextSelectableByMouse
-                        | QtCore.Qt.TextInteractionFlag.TextSelectableByKeyboard
-                    )
-                if self.props.editable:
-                    change_cursor = True
-                    # PyQt5 doesn't support bitwise or with ints
-                    # TODO What about PyQt6?
-                    if interaction_flags:
-                        interaction_flags |= QtCore.Qt.TextInteractionFlag.TextEditable
-                    else:
-                        interaction_flags = QtCore.Qt.TextInteractionFlag.TextEditable
-                if change_cursor and self.props.cursor is None:
-                    commands.append(CommandType(widget.setCursor, _CURSORS["text"]))
+        if "text" in newprops:
+            commands.append(CommandType(widget.setText, newprops["text"]))
+        if "word_wrap" in newprops:
+            commands.append(CommandType(widget.setWordWrap, newprops["word_wrap"]))
+        if "link_open" in newprops:
+            commands.append(CommandType(widget.setOpenExternalLinks, newprops["link_open"]))
+        if "selectable" in newprops or "editable" in newprops:
+            interaction_flags = 0
+            change_cursor = False
+            if self.props.selectable:
+                change_cursor = True
+                interaction_flags = (
+                    QtCore.Qt.TextInteractionFlag.TextSelectableByMouse
+                    | QtCore.Qt.TextInteractionFlag.TextSelectableByKeyboard
+                )
+            if self.props.editable:
+                change_cursor = True
+                # PyQt5 doesn't support bitwise or with ints
+                # TODO What about PyQt6?
                 if interaction_flags:
-                    commands.append(CommandType(widget.setTextInteractionFlags, interaction_flags))
+                    interaction_flags |= QtCore.Qt.TextInteractionFlag.TextEditable
+                else:
+                    interaction_flags = QtCore.Qt.TextInteractionFlag.TextEditable
+            if change_cursor and self.props.cursor is None:
+                commands.append(CommandType(widget.setCursor, _CURSORS["text"]))
+            if interaction_flags:
+                commands.append(CommandType(widget.setTextInteractionFlags, interaction_flags))
         return commands
 
 

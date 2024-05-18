@@ -144,8 +144,8 @@ class _TestElementInner(Element):
 
     def _render_element(self):
         return base_components.View()(
-            base_components.Label(self.props.prop_a),
-            base_components.Label(self.state_a),
+            base_components.Label(str(self.props.prop_a)),
+            base_components.Label(str(self.state_a)),
         )
 
 class _TestElementOuter(Element):
@@ -382,7 +382,7 @@ class RenderTestCase(unittest.TestCase):
 
             def _render_element(self):
                 self.count += 1
-                return base_components.Label(self.props.val)
+                return base_components.Label(str(self.props.val))
 
         class TestCompOuter(Element):
             def _render_element(self):
@@ -416,7 +416,7 @@ class RenderTestCase(unittest.TestCase):
             def _render_element(self):
                 self.count += 1
                 self.success_count += 1
-                return base_components.Label(self.props.val)
+                return base_components.Label(str(self.props.val))
 
         class TestCompInner2(Element):
 
@@ -432,7 +432,7 @@ class RenderTestCase(unittest.TestCase):
                 self.count += 1
                 assert self.props.val == 8
                 self.success_count += 1
-                return base_components.Label(self.props.val)
+                return base_components.Label(str(self.props.val))
 
         class TestCompOuter(Element):
             def _render_element(self):
@@ -466,7 +466,7 @@ class RefreshClassTestCase(unittest.TestCase):
 
             def _render_element(self):
                 self.count += 1
-                return base_components.Label(self.props.val)
+                return base_components.Label(str(self.props.val))
 
         class NewInnerClass(Element):
 
@@ -479,7 +479,7 @@ class RefreshClassTestCase(unittest.TestCase):
 
             def _render_element(self):
                 self.count += 1
-                return base_components.Label(self.props.val * 2)
+                return base_components.Label(str(self.props.val * 2))
 
         class OuterClass(Element):
 
@@ -516,12 +516,12 @@ class RefreshClassTestCase(unittest.TestCase):
         @component
         def OldInnerClass(self, val):
             old_inner_render_count[0] += 1
-            base_components.Label(val)
+            base_components.Label(str(val))
 
         @component
         def NewInnerClass(self, val):
             new_inner_render_count[0] += 1
-            base_components.Label(val * 2)
+            base_components.Label(str(val * 2))
 
         @component
         def OuterClass(self):
@@ -553,7 +553,7 @@ class RefreshClassTestCase(unittest.TestCase):
 
             def _render_element(self):
                 self.count += 1
-                return base_components.Label(self.props.val)
+                return base_components.Label(str(self.props.val))
 
         class NewInnerClass(Element):
 
@@ -567,7 +567,7 @@ class RefreshClassTestCase(unittest.TestCase):
             def _render_element(self):
                 self.count += 1
                 assert False
-                return base_components.Label(self.props.val * 2)
+                return base_components.Label(str(self.props.val * 2))
 
         class OuterClass(Element):
 
