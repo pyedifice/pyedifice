@@ -68,4 +68,4 @@ poetry publish
 ```
 
 - `git tag`
-- Publish `docs`
+- Publish [`docs`](docs/)
