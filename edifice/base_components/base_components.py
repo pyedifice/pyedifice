@@ -622,6 +622,81 @@ class TextInput(QtWidgetElement):
         return commands
 
 
+class TextInputMultiline(QtWidgetElement):
+    """Basic widget for a multiline text input.
+
+    * Underlying Qt Widget
+        `QTextEdit <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QTextEdit.html>`_
+
+    Accepts only plain text, not “rich text.”
+
+    Args:
+        text:
+            Initial text.
+        placeholder_text:
+            “Setting this property makes the editor display a grayed-out
+            placeholder text as long as the document() is empty.”
+            See `placeholdertext <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QTextEdit.html#PySide6.QtWidgets.PySide6.QtWidgets.QTextEdit.placeholderText>`_
+        on_change:
+            Event handler for when the value of the text input changes, but
+            only when the user is editing the text, not when the text prop
+            changes.
+    """
+
+    def __init__(
+        self,
+        text: str = "",
+        placeholder_text: str | None = None,
+        on_change: tp.Optional[tp.Callable[[tp.Text], None | tp.Awaitable[None]]] = None,
+        **kwargs,
+    ):
+        super().__init__(**kwargs)
+        self._register_props(
+            {
+                "text": text,
+                "placeholder_text": placeholder_text,
+                "on_change": on_change,
+            }
+        )
+        self._register_props(kwargs)
+
+    def _initialize(self):
+        self.underlying = QtWidgets.QTextEdit()
+        self.underlying.setObjectName(str(id(self)))
+        self.underlying.textChanged.connect(self._on_change_handler)
+        self.underlying.setAcceptRichText(False)
+
+    def _on_change_handler(self):
+        if self.props.on_change is not None:
+            widget = tp.cast(QtWidgets.QTextEdit, self.underlying)
+            _ensure_future(self.props.on_change)(widget.toPlainText())
+
+    def _set_text(self, text: str):
+        widget = tp.cast(QtWidgets.QTextEdit, self.underlying)
+        if widget.toPlainText() == text:
+            return
+        widget.blockSignals(True)
+        widget.setPlainText(text)
+        widget.blockSignals(False)
+
+    def _qt_update_commands(
+        self,
+        widget_trees: dict[Element, _WidgetTree],
+        newprops,
+    ):
+        if self.underlying is None:
+            self._initialize()
+        assert self.underlying is not None
+        widget = tp.cast(QtWidgets.QTextEdit, self.underlying)
+
+        commands = super()._qt_update_commands_super(widget_trees, newprops, self.underlying)
+        if "text" in newprops:
+            commands.append(CommandType(self._set_text, newprops.text))
+        if "placeholder_text" in newprops:
+            commands.append(CommandType(widget.setPlaceholderText, newprops.placeholder_text))
+        return commands
+
+
 class Dropdown(QtWidgetElement):
     """Basic widget for a dropdown menu.
 
