@@ -634,7 +634,7 @@ class TextInputMultiline(QtWidgetElement):
         placeholder_text:
             “Setting this property makes the editor display a grayed-out
             placeholder text as long as the document() is empty.”
-            See `placeholdertext <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QTextEdit.html#PySide6.QtWidgets.PySide6.QtWidgets.QTextEdit.placeholderText>`_
+            See `placeholderText <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QTextEdit.html#PySide6.QtWidgets.QTextEdit.placeholderText>`_.
         on_change:
             Event handler for when the value of the text input changes, but
             only when the user is editing the text, not when the text prop

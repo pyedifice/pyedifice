@@ -4,6 +4,13 @@
 Release Notes
 =============
 
+0.5.6
+-----
+Released: 2024-05-18
+
+* New base element :class:`TextInputMultiline`.
+* :class:`Label` prop text must be type :code:`str`.
+
 0.5.5
 -----
 Released: 2024-04-30
