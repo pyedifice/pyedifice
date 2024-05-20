@@ -4,6 +4,14 @@
 Release Notes
 =============
 
+0.6.0
+-----
+Released: 2024-05-21
+
+* Breaking changes in :class:`Dropdown`.
+    * Option text is not editable.
+    * Option selection is index based, not text-based.
+
 0.5.6
 -----
 Released: 2024-05-18
@@ -62,16 +70,16 @@ Released: 2024-03-21
   prop changed.
 
 * Delete props
-  * :class:`Slider` :code:`on_move`
-  * :class:`TextInput` :code:`on_edit`
+    * :class:`Slider` :code:`on_move`
+    * :class:`TextInput` :code:`on_edit`
 
 0.4.5
 -----
 Released: 2024-03-21
 
 * New props
-  * :class:`Slider` :code:`on_move`
-  * :class:`TextInput` :code:`on_edit`
+    * :class:`Slider` :code:`on_move`
+    * :class:`TextInput` :code:`on_edit`
 * :class:`extra.PyQtPlot` instructions for disabling mouse interaction.
 
 0.4.4
