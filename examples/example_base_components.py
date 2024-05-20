@@ -20,6 +20,9 @@ def Main(self):
 
 
     mltext, mltext_set = ed.use_state("Hello World")
+    ddoptions, ddoptionss_set = ed.use_state(0)
+    ddoptions2, ddoptions2_set = ed.use_state(0)
+    ddoptions3, ddoptions3_set = ed.use_state(0)
 
     with ed.Window():
         ed.Label("Hello")
@@ -27,12 +30,28 @@ def Main(self):
             text= "World",
             selectable=True,
         )
-        ed.Dropdown(
-            options=["Option 1", "Option 2", "Option 3"],
-            selection="Option 1",
-            on_select=lambda x: print(x),
-            enable_mouse_scroll=False,
-        )
+        with ed.View(layout="row"):
+            ed.Dropdown(
+                options=["Option set 1", "Option set 2"],
+                selection=ddoptions,
+                on_select=ddoptionss_set,
+                enable_mouse_scroll=False,
+            )
+            match ddoptions:
+                case 0:
+                    ed.Dropdown(
+                        options=["Option set 1, 1", "Option set 1, 2", "Option set 1, 3"],
+                        selection=ddoptions2,
+                        on_select=ddoptions2_set,
+                        enable_mouse_scroll=False,
+                    )
+                case 1:
+                    ed.Dropdown(
+                        options=["Option set 2, 1", "Option set 2, 2", "Option set 2, 3"],
+                        selection=ddoptions3,
+                        on_select=ddoptions3_set,
+                        enable_mouse_scroll=False,
+                    )
         with ed.View(layout="row", style={"margin": 10}):
             ed.TextInputMultiline(
                 text=mltext,

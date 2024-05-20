@@ -708,35 +708,23 @@ class Dropdown(QtWidgetElement):
 
     Args:
         selection:
-            Current selection text of the text input.
-        text:
-            Initial text of the text input.
+            Current selection index.
         options:
             Options to select from.
-        editable:
-            True if the text input should be editable.
-        on_change:
-            Callback for the value of the text input changes.
-            The callback is passed the changed
-            value of the text.
-            This event is only raised when :code:`editable=True`.
         on_select:
-            Callback for when the selection changes.
-            The callback is passed the new value of the text.
+            Callback for when the selected index changes.
+            The callback is passed the new selected index.
+            This callback is called when the user changes the selection, but not
+            when the selection prop changes.
         enable_mouse_scroll:
-            Whether mouse scroll events should be able to change the value.
+            Whether mouse scroll events should be able to change the selection.
     """
 
     def __init__(
         self,
-        selection: tp.Text = "",
-        text: tp.Text = "",
-        options: tp.Optional[tp.Sequence[tp.Text]] = None,
-        editable: bool = False,
-        # TODO
-        # completer: tp.Optional[Completer] = None,
-        on_change: tp.Optional[tp.Callable[[tp.Text], None | tp.Awaitable[None]]] = None,
-        on_select: tp.Optional[tp.Callable[[tp.Text], None | tp.Awaitable[None]]] = None,
+        selection: int = 0,
+        options: tp.Sequence[str] = [],
+        on_select: tp.Optional[tp.Callable[[int], None | tp.Awaitable[None]]] = None,
         enable_mouse_scroll: bool = True,
         **kwargs,
     ):
@@ -744,10 +732,7 @@ class Dropdown(QtWidgetElement):
         self._register_props(
             {
                 "selection": selection,
-                "text": text,
                 "options": options,
-                "editable": editable,
-                "on_change": on_change,
                 "on_select": on_select,
                 "enable_mouse_scroll": enable_mouse_scroll,
             }
@@ -757,38 +742,29 @@ class Dropdown(QtWidgetElement):
     def _initialize(self):
         self.underlying = QtWidgets.QComboBox()
         self.underlying.setObjectName(str(id(self)))
-        self.underlying.editTextChanged.connect(self._on_change)
-        self.underlying.textActivated.connect(self._on_select)
+        self.underlying.setEditable(False)
+        self.underlying.currentIndexChanged.connect(self._on_select)
         if "enable_mouse_scroll" in self.props and not self.props.enable_mouse_scroll:
             self.underlying.wheelEvent = lambda e: e.ignore()
-
-    # TODO
-    # def _set_completer(self, completer):
-    #     if completer:
-    #         qt_completer = QtWidgets.QCompleter(completer.options)
-    #         qt_completer.setCompletionMode(completer.mode)
-    #         self.underlying.setCompleter(qt_completer)
-    #     else:
-    #         self.underlying.setCompleter(None)
-
-    def _on_change(self, text):
-        if self.props.on_change is not None:
-            return _ensure_future(self.props.on_change)(text)
 
     def _on_select(self, text):
         if self.props.on_select is not None:
             return _ensure_future(self.props.on_select)(text)
 
-    def _set_edit_text(self, text: str):
+    def _set_current_index(self, index: int):
         widget = tp.cast(QtWidgets.QComboBox, self.underlying)
-        widget.blockSignals(True)
-        widget.setEditText(text)
-        widget.blockSignals(False)
+        if index != widget.currentIndex():
+            widget.blockSignals(True)
+            widget.setCurrentIndex(index)
+            widget.blockSignals(False)
 
-    def _set_current_text(self, text: str):
+    def _set_options(self, options: tp.Sequence[str]):
         widget = tp.cast(QtWidgets.QComboBox, self.underlying)
         widget.blockSignals(True)
-        widget.setCurrentText(text)
+        widget.clear()
+        for text in options:
+            widget.addItem(text)
+        widget.setCurrentIndex(self.props.selection)
         widget.blockSignals(False)
 
     def _qt_update_commands(
@@ -799,23 +775,12 @@ class Dropdown(QtWidgetElement):
         if self.underlying is None:
             self._initialize()
         assert self.underlying is not None
-        widget = tp.cast(QtWidgets.QComboBox, self.underlying)
 
         commands = super()._qt_update_commands_super(widget_trees, newprops, self.underlying)
-        commands.append(CommandType(widget.setEditable, self.props.editable))
         if "options" in newprops:
-            commands.extend(
-                [
-                    CommandType(widget.clear),
-                    CommandType(widget.addItems, newprops.options),
-                ]
-            )
-        if "text" in newprops:
-            commands.append(CommandType(self._set_edit_text, newprops.text))
+            commands.append(CommandType(self._set_options, newprops.options))
         if "selection" in newprops:
-            commands.append(CommandType(self._set_current_text, newprops.selection))
-        # elif prop == "completer":
-        #     commands.append(CommandType(self._set_completer, newprops[prop]))
+            commands.append(CommandType(self._set_current_index, newprops.selection))
         return commands
 
 

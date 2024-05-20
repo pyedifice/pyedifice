@@ -370,7 +370,6 @@ class BaseElementsTest(unittest.TestCase):
 
         # TODO
         # completer1 = base_components.Completer(["option1", "option2"])
-        # completer2 = base_components.Completer(["option1", "option2"], "inline")
         self._test_comp(base_components.Window(
             title="title",
             menu={"Playback": context_menu},
@@ -383,12 +382,8 @@ class BaseElementsTest(unittest.TestCase):
         self._test_comp(base_components.Button("play", on_click=lambda e: None))
         self._test_comp(base_components.TextInput("initial_text", on_change=lambda text: None))
         self._test_comp(base_components.Button("play", on_click=lambda e: None))
-        self._test_comp(base_components.Dropdown(selection="Option1", options=["Option1, Option2"], on_select=lambda text: None))
-        self._test_comp(base_components.Dropdown(editable=True, selection="Option1", options=["Option1, Option2"], on_change=lambda text: None))
-        # TODO
-        # self._test_comp(base_components.Dropdown(
-        #     editable=True, selection="Option1", options=["Option1, Option2"],
-        #     completer=completer2, on_change=lambda text: None))
+        self._test_comp(base_components.Dropdown(selection=0, options=["Option1, Option2"], on_select=lambda text: None))
+        self._test_comp(base_components.Dropdown(selection=1, options=["Option1, Option2"], on_select=lambda text: None))
         self._test_comp(base_components.TextInput("initial_text", on_change=lambda text: None))
         # TODO
         # self._test_comp(base_components.TextInput("initial_text", completer=completer1, on_change=lambda text: None))

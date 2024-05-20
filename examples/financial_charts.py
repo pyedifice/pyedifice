@@ -15,7 +15,7 @@ sys.path.insert(0, os.path.join(sys.path[0], '..'))
 from collections import OrderedDict
 import typing as tp
 import edifice as ed
-from edifice import Dropdown, IconButton, Label, ScrollView, Slider, TextInput, View
+from edifice import Dropdown, IconButton, Label, Slider, TextInput, View
 from edifice.extra.matplotlib_figure import MatplotlibFigure
 
 import matplotlib.colors
@@ -37,6 +37,10 @@ def _create_state_for_plot() -> dict[str, tp.Any]:
         "color": "peru",
     }
 
+
+data_types = ["Date", "Close", "Volume"]
+transform_types = ["None", "EMA"]
+
 # We create a component which describes the options for each axis (data source, transform).
 @ed.component
 def AxisDescriptor(
@@ -48,14 +52,17 @@ def AxisDescriptor(
     ):
     data = plot[f"{key}.data"]
     data_type, ticker = data
+    data_type_selection: int = data_types.index(data_type)
     transform = plot[f"{key}.transform"]
     transform_type, param = transform
+    transform_type_selection: int = transform_types.index(transform_type)
+
     # We can use CSS styling. See https://pyedifice.github.io/styling.html
     row_style = {"align": "left", "width": 350}
 
-    def handle_data_type(data_type_text):
+    def handle_data_type(data_type_index: int):
         plot_ = plot.copy()
-        plot_[f"{key}.data"] = (data_type_text, ticker)
+        plot_[f"{key}.data"] = (data_types[data_type_index], ticker)
         plot_change(plot_)
 
     def handle_ticker(ticker_text):
@@ -63,9 +70,9 @@ def AxisDescriptor(
         plot_[f"{key}.data"] = (data_type, ticker_text)
         plot_change(plot_)
 
-    def handle_transform_type(transform_type_text):
+    def handle_transform_type(transform_type_index: int):
         plot_ = plot.copy()
-        plot_[f"{key}.transform"] = (transform_type_text, param)
+        plot_[f"{key}.transform"] = (transform_types[transform_type_index], param)
         plot_change(plot_)
 
     def handle_param(param_val):
@@ -77,8 +84,10 @@ def AxisDescriptor(
     with View(layout="column"):
         with View(layout="row", style=row_style):
             Label(name, style={"width": 100})
-            Dropdown(selection=data_type, options=["Date", "Close", "Volume"],
-                     on_select=handle_data_type
+            Dropdown(
+                selection=data_type_selection,
+                options=data_types,
+                on_select=handle_data_type,
             )
             if data_type != "Date":
                 TextInput( text=ticker, style={"padding": 2},
@@ -87,8 +96,11 @@ def AxisDescriptor(
 
         with View(layout="row", style=row_style):
             Label("Transform:", style={"width": 100})
-            Dropdown(selection=transform_type, options=["None", "EMA"],
-                     on_select=handle_transform_type)
+            Dropdown(
+                selection=transform_type_selection,
+                options=transform_types,
+                on_select=handle_transform_type,
+            )
             if transform_type == "EMA":
                 Label(f"Half Life ({param} days)", style={"width": 120})
             if transform_type == "EMA":
@@ -110,6 +122,10 @@ def add_divider(comp):
         View(style={"height": 0, "border": "1px solid gray"})
 
 
+plot_types = ["scatter", "line"]
+# https://matplotlib.org/stable/api/colors_api.html#exported-colors
+plot_colors = list(matplotlib.colors.CSS4_COLORS.keys())
+
 # Now we make a component to describe the entire plot: the descriptions of both axis,
 # plot type, and color
 @ed.component
@@ -118,17 +134,17 @@ def PlotDescriptor(
         plot: dict[str, tp.Any],
         plot_change: tp.Callable[[dict[str, tp.Any]], None]
     ):
-    plot_type = plot["type"]
-    color = plot["color"]
+    plot_type = plot_types.index(plot["type"])
+    color = plot_colors.index(plot["color"])
 
-    def handle_plot_type(plot_type_text):
+    def handle_plot_type(plot_type_index:int):
         plot_ = plot.copy()
-        plot_["type"] = plot_type_text
+        plot_["type"] = plot_types[plot_type_index]
         plot_change(plot_)
 
-    def handle_color(color_text):
+    def handle_color(color_index:int):
         plot_ = plot.copy()
-        plot_["color"] = color_text
+        plot_["color"] = plot_colors[color_index]
         plot_change(plot_)
 
     with View(layout="row", style={"margin": 5, "align":"left"}):
@@ -138,15 +154,14 @@ def PlotDescriptor(
         with View(layout="column", style={"align": "top", "margin-left": 10}):
             labeled_elem(
                 "Chart type",
-                lambda: Dropdown(selection=plot_type, options=["scatter", "line"],
+                lambda: Dropdown(selection=plot_type, options=plot_types,
                          on_select=handle_plot_type)
             )
             labeled_elem(
                 "Color",
                 lambda: Dropdown(
                     selection=color,
-                    # https://matplotlib.org/stable/api/colors_api.html#exported-colors
-                    options=list(matplotlib.colors.CSS4_COLORS.keys()), # type: ignore
+                    options=plot_colors,
                     on_select=handle_color
                 )
             )
