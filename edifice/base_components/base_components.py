@@ -810,6 +810,10 @@ class Dropdown(QtWidgetElement):
                     CommandType(widget.addItems, newprops.options),
                 ]
             )
+            if widget.currentText() in newprops.options:
+                commands.append(CommandType(self._set_current_text, widget.currentText()))
+            elif len(newprops.options) > 0:
+                commands.append(CommandType(self._set_current_text, newprops.options[0]))
         if "text" in newprops:
             commands.append(CommandType(self._set_edit_text, newprops.text))
         if "selection" in newprops:
