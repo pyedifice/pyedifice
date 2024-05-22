@@ -165,10 +165,10 @@ class SpinInput(QtWidgetElement):
             commands.append(CommandType(setattr, widget, "_textFromValue", newprops.value_to_text))
         if "text_to_value" in newprops:
             commands.append(CommandType(setattr, widget, "_valueFromText", newprops.text_to_value))
-        if "value" in newprops:
-            commands.append(CommandType(self._set_value, newprops.value))
         if "min_value" in newprops:
             commands.append(CommandType(self._set_min_value, newprops.min_value))
         if "max_value" in newprops:
             commands.append(CommandType(self._set_max_value, newprops.max_value))
+        if "value" in newprops:
+            commands.append(CommandType(self._set_value, newprops.value))
         return commands
