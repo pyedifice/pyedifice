@@ -4,6 +4,13 @@
 Release Notes
 =============
 
+0.6.1
+-----
+Released: 2024-05-22
+
+* :class:`SpinInput` bugfix: Block :code:`on_change` signal while setting
+  min and max value.
+
 0.6.0
 -----
 Released: 2024-05-21

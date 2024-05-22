@@ -51,7 +51,7 @@ nix flake show github:pyedifice/pyedifice
 
 - version agreement
    - `pyproject.toml` `version`
-   - `docs/source/version.rst`
+   - `docs/source/versions.rst`
    - `docs/source/conf.py` `release`
 - `nix run .#run_tests`
 
@@ -69,3 +69,4 @@ poetry publish
 
 - `git tag`
 - Publish [`docs`](docs/)
+- Publish [Release](https://github.com/pyedifice/pyedifice/releases)
