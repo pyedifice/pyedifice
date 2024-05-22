@@ -137,6 +137,18 @@ class SpinInput(QtWidgetElement):
         widget.setValue(value)
         widget.blockSignals(False)
 
+    def _set_min_value(self, value: int):
+        widget = tp.cast(_SpinBox, self.underlying)
+        widget.blockSignals(True)
+        widget.setMinimum(value)
+        widget.blockSignals(False)
+
+    def _set_max_value(self, value: int):
+        widget = tp.cast(_SpinBox, self.underlying)
+        widget.blockSignals(True)
+        widget.setMaximum(value)
+        widget.blockSignals(False)
+
     def _qt_update_commands(
         self,
         widget_trees: dict[Element, _WidgetTree],
@@ -153,10 +165,10 @@ class SpinInput(QtWidgetElement):
             commands.append(CommandType(setattr, widget, "_textFromValue", newprops.value_to_text))
         if "text_to_value" in newprops:
             commands.append(CommandType(setattr, widget, "_valueFromText", newprops.text_to_value))
-        if "min_value" in newprops:
-            commands.append(CommandType(widget.setMinimum, newprops.min_value))
-        if "max_value" in newprops:
-            commands.append(CommandType(widget.setMaximum, newprops.max_value))
         if "value" in newprops:
             commands.append(CommandType(self._set_value, newprops.value))
+        if "min_value" in newprops:
+            commands.append(CommandType(self._set_min_value, newprops.min_value))
+        if "max_value" in newprops:
+            commands.append(CommandType(self._set_max_value, newprops.max_value))
         return commands

@@ -23,6 +23,7 @@ def Main(self):
     ddoptions, ddoptionss_set = ed.use_state(0)
     ddoptions2, ddoptions2_set = ed.use_state(0)
     ddoptions3, ddoptions3_set = ed.use_state(0)
+    sival, sival_set = ed.use_state(0)
 
     with ed.Window():
         ed.Label("Hello")
@@ -66,6 +67,15 @@ def Main(self):
                 }
             )
             ed.Button("Exclaim text", on_click=lambda _: mltext_set("!" + mltext + "!"))
+        with ed.View():
+            ed.SpinInput(
+                value=sival,
+                min_value=10,
+                max_value=20,
+                on_change=lambda v: (
+                    sival_set(v)
+                ),
+            )
 
 if __name__ == "__main__":
     ed.App(Main()).start()
