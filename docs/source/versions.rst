@@ -4,6 +4,12 @@
 Release Notes
 =============
 
+0.6.2
+-----
+Released: 2024-05-22
+
+* :class:`SpinInput` bugfix: Set value after min/max.
+
 0.6.1
 -----
 Released: 2024-05-22
