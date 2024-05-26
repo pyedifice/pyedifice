@@ -82,7 +82,11 @@ when the Element state changes.
 As you might expect, you can run this application simply with :code:`python tutorial.py`.
 However, let us take advantage of Edifice's :doc:`dynamic loading capability<developer_tools>`,
 so that we do not have to continually close the app and re-issue the command every time we change something.
-To run the app with dynamic loading, do::
+To run the app with dynamic loading, first install watchdog::
+
+    pip install watchdog
+
+then do::
 
     python -m edifice tutorial.py MyApp
 
