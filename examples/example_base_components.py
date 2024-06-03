@@ -9,10 +9,8 @@ import edifice as ed
 
 from edifice.qt import QT_VERSION
 if QT_VERSION == "PyQt6" and not tp.TYPE_CHECKING:
-    from PyQt6.QtGui import QValidator
     from PyQt6.QtCore import Qt
 else:
-    from PySide6.QtGui import QValidator
     from PySide6.QtCore import Qt
 
 @ed.component
@@ -24,6 +22,8 @@ def Main(self):
     ddoptions2, ddoptions2_set = ed.use_state(0)
     ddoptions3, ddoptions3_set = ed.use_state(0)
     sival, sival_set = ed.use_state(0)
+    radio_value1, radio_value1_set = ed.use_state(tp.cast(tp.Literal["op1", "op2", "op3"], "op1"))
+    radio_value2, radio_value2_set = ed.use_state(tp.cast(tp.Literal["op1", "op2", "op3"], "op1"))
 
     with ed.Window():
         ed.Label("Hello")
@@ -76,6 +76,56 @@ def Main(self):
                     sival_set(v)
                 ),
             )
+        with ed.View(layout="row"):
+            with ed.View():
+                # RadioButtons with the same parent
+                ed.RadioButton(
+                    text="Option 1",
+                    checked=radio_value1 == "op1",
+                    on_change=lambda checked: radio_value1_set("op1") if checked else None,
+                    style = {} if radio_value1 == "op1" else { "color": "grey" },
+                )
+                ed.RadioButton(
+                    text="Option 2",
+                    checked=radio_value1 == "op2",
+                    on_change=lambda checked: radio_value1_set("op2") if checked else None,
+                    style = {} if radio_value1 == "op2" else { "color": "grey" },
+                )
+                ed.RadioButton(
+                    text="Option 3",
+                    checked=radio_value1 == "op3",
+                    on_change=lambda checked :radio_value1_set("op3") if checked else None,
+                    style = {} if radio_value1 == "op3" else { "color": "grey" },
+                )
+            with ed.View():
+                # RadioButtons with different parents
+                with ed.View():
+                    ed.RadioButton(
+                        text="Option 1",
+                        checked=radio_value2 == "op1",
+                        on_change=lambda checked: radio_value2_set("op1") if checked else None,
+                        style={
+                            "color": "" if radio_value2 == "op1" else "grey",
+                        }
+                    )
+                with ed.View():
+                    ed.RadioButton(
+                        text="Option 2",
+                        checked=radio_value2 == "op2",
+                        on_change=lambda checked: radio_value2_set("op2") if checked else None,
+                        style={
+                            "color": "" if radio_value2 == "op2" else "grey",
+                        }
+                    )
+                with ed.View():
+                    ed.RadioButton(
+                        text="Option 3",
+                        checked=radio_value2 == "op3",
+                        on_change=lambda checked: radio_value2_set("op3") if checked else None,
+                        style={
+                            "color": "" if radio_value2 == "op3" else "grey",
+                        }
+                    )
 
 if __name__ == "__main__":
     ed.App(Main()).start()
