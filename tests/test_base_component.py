@@ -387,7 +387,7 @@ class BaseElementsTest(unittest.TestCase):
         self._test_comp(base_components.TextInput("initial_text", on_change=lambda text: None))
         # TODO
         # self._test_comp(base_components.TextInput("initial_text", completer=completer1, on_change=lambda text: None))
-        self._test_comp(base_components.CheckBox(checked=True, text="Test", on_change=lambda checked: None))
+        self._test_comp(edifice.CheckBox(checked=True, text="Test", on_change=lambda checked: None))
         self._test_comp(edifice.RadioButton(checked=True, text="Test", on_change=lambda checked: None))
         self._test_comp(base_components.Slider(value=1, min_value=0, max_value=3, on_change=lambda value: None))
         self._test_comp(base_components.ScrollView(layout="row"))

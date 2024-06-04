@@ -53,7 +53,6 @@ from .base_components import (
     Button,
     TextInput,
     TextInputMultiline,
-    CheckBox,
     Slider,
     ProgressBar,
     Dropdown,
@@ -66,6 +65,7 @@ from .image_aspect import Image
 from .table_grid_view import TableGridView
 from .spin_input import SpinInput
 from .radio_button import RadioButton
+from .check_box import CheckBox
 
 __all__ = [
     "QtWidgetElement",
