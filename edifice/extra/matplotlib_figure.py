@@ -66,7 +66,7 @@ class MatplotlibFigure(QtWidgetElement):
             # Default to maximum figsize https://matplotlib.org/stable/api/figure_api.html#matplotlib.figure.figaspect
             # Constrain the Figure by putting it in a smaller View, it will resize itself correctly.
             self.underlying = FigureCanvasQTAgg(Figure(figsize=(16.0, 16.0)))
-            self.subplots = tp.cast(Axes, self.underlying.figure.subplots()) # TODO is this cast valid?
+            self.subplots = tp.cast(Axes, self.underlying.figure.subplots())  # TODO is this cast valid?
         assert self.underlying is not None
         assert self.subplots is not None
 
