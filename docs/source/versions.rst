@@ -4,6 +4,20 @@
 Release Notes
 =============
 
+0.7.0
+-----
+Released: 2024-06-04
+
+* :class:`RadioButton` fully delarative :code:`checked` prop.
+* :class:`CheckBox` fully delarative :code:`checked` prop.
+
+The state of :class:`RadioButton` and :class:`CheckBox` is now dependent only
+on the :code:`checked` prop.
+
+This means that :class:`RadioButton` “grouping” is now fully independent
+of the parent widget, and only depends on how the :code:`checked` prop
+is calculated.
+
 0.6.2
 -----
 Released: 2024-05-22
