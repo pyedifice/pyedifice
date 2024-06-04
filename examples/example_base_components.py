@@ -24,6 +24,7 @@ def Main(self):
     sival, sival_set = ed.use_state(0)
     radio_value1, radio_value1_set = ed.use_state(tp.cast(tp.Literal["op1", "op2", "op3"], "op1"))
     radio_value2, radio_value2_set = ed.use_state(tp.cast(tp.Literal["op1", "op2", "op3"], "op1"))
+    check_value1, check_value1_set = ed.use_state(True)
 
     with ed.Window():
         ed.Label("Hello")
@@ -126,6 +127,23 @@ def Main(self):
                             "color": "" if radio_value2 == "op3" else "grey",
                         }
                     )
+        with ed.View(layout="row"):
+            ed.CheckBox(
+                checked=True,
+                text="Check Const True",
+            )
+            ed.CheckBox(
+                checked=False,
+                text="Check Const False",
+                style = { "color": "grey" },
+            )
+            ed.CheckBox(
+                checked=check_value1,
+                on_change=lambda checked: check_value1_set(checked),
+                text="Check",
+                style = {} if check_value1 else { "color": "grey" },
+            )
+
 
 if __name__ == "__main__":
     ed.App(Main()).start()
