@@ -143,6 +143,41 @@ def Main(self):
                 text="Check",
                 style = {} if check_value1 else { "color": "grey" },
             )
+        with ed.View(
+            # https://doc.qt.io/qtforpython-6/overviews/stylesheet-customizing.html#the-box-model
+            layout="row",
+            style= {
+                "border": "3px solid black",
+                "background-color": "white",
+                "color": "blue",
+                "padding": 3,
+            }
+        ):
+            ed.Label(
+                text="CONTENT1",
+                style={
+                    "color": "black",
+                    "margin": "10px",
+                    "padding": "20px",
+                    "border": "10px solid brown",
+                    "background-color": "pink",
+                }
+            )
+            with ed.View(
+                style={
+                    "padding": 20,
+                    "border": "10px solid brown",
+                }
+            ):
+                ed.Label(
+                    text="CONTENT2",
+                    style={
+                        "color": "black",
+                        "background-color": "pink",
+                    }
+
+                )
+
 
 
 if __name__ == "__main__":

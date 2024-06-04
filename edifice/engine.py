@@ -1148,28 +1148,62 @@ class QtWidgetElement(Element):
         commands: list[CommandType] = []
 
         if underlying_layout is not None:
-            set_margin = False
-            new_margin = [0, 0, 0, 0]
+            # QLayouts don't observe the Box Model.
+            # https://doc.qt.io/qtforpython-6/overviews/stylesheet-customizing.html#the-box-model
+            #
+            # The "border" style will work.
+            #
+            # The "margin" style will not work.
+            #
+            # The "padding" style will not work, but we can fake it by
+            # using QLayout.setContentsMargins().
+            # https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QLayout.html#PySide6.QtWidgets.QLayout.setContentsMargins
+            #
+            # Also we keep the "margin" style for the QLayout because
+            # that's how PyEdifice has always worked and we don't want to
+            # break backwards compatibility for that yet.
+            set_padding = False
+            new_padding = [0, 0, 0, 0]
             if "margin" in style:
-                new_margin = [int(_css_to_number(style["margin"]))] * 4
+                new_padding = [int(_css_to_number(style["margin"]))] * 4
                 style.pop("margin")
-                set_margin = True
+                set_padding = True
             if "margin-left" in style:
-                new_margin[0] = int(_css_to_number(style["margin-left"]))
+                new_padding[0] = int(_css_to_number(style["margin-left"]))
                 style.pop("margin-left")
-                set_margin = True
+                set_padding = True
             if "margin-right" in style:
-                new_margin[2] = int(_css_to_number(style["margin-right"]))
+                new_padding[2] = int(_css_to_number(style["margin-right"]))
                 style.pop("margin-right")
-                set_margin = True
+                set_padding = True
             if "margin-top" in style:
-                new_margin[1] = int(_css_to_number(style["margin-top"]))
+                new_padding[1] = int(_css_to_number(style["margin-top"]))
                 style.pop("margin-top")
-                set_margin = True
+                set_padding = True
             if "margin-bottom" in style:
-                new_margin[3] = int(_css_to_number(style["margin-bottom"]))
+                new_padding[3] = int(_css_to_number(style["margin-bottom"]))
                 style.pop("margin-bottom")
-                set_margin = True
+                set_padding = True
+            if "padding" in style:
+                new_padding = [int(_css_to_number(style["padding"]))] * 4
+                style.pop("padding")
+                set_padding = True
+            if "padding-left" in style:
+                new_padding[0] = int(_css_to_number(style["padding-left"]))
+                style.pop("padding-left")
+                set_padding = True
+            if "padding-right" in style:
+                new_padding[2] = int(_css_to_number(style["padding-right"]))
+                style.pop("padding-right")
+                set_padding = True
+            if "padding-top" in style:
+                new_padding[1] = int(_css_to_number(style["padding-top"]))
+                style.pop("padding-top")
+                set_padding = True
+            if "padding-bottom" in style:
+                new_padding[3] = int(_css_to_number(style["padding-bottom"]))
+                style.pop("padding-bottom")
+                set_padding = True
 
             set_align = None
             if "align" in style:
@@ -1189,10 +1223,14 @@ class QtWidgetElement(Element):
                     logger.warning("Unknown alignment: %s", style["align"])
                 style.pop("align")
 
-            if set_margin:
+            if set_padding:
                 commands.append(
                     CommandType(
-                        underlying_layout.setContentsMargins, new_margin[0], new_margin[1], new_margin[2], new_margin[3]
+                        underlying_layout.setContentsMargins,
+                        new_padding[0],
+                        new_padding[1],
+                        new_padding[2],
+                        new_padding[3],
                     )
                 )
             if set_align:
