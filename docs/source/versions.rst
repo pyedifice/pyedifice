@@ -4,6 +4,12 @@
 Release Notes
 =============
 
+0.7.1
+-----
+Released: 2024-06-06
+
+* Prop :code:`padding` for :code:`View` layout Elements.
+
 0.7.0
 -----
 Released: 2024-06-04
