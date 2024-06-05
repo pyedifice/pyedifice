@@ -79,6 +79,7 @@ def TodoMVC(self):
     filter, filter_set = use_state("All")
     next_key, next_key_set = use_state(int(0))
     input, input_set = use_state("")
+    complete_all_toggle, complete_all_toggle_set = use_state(False)
 
     def handle_change(text:str):
         input_set(text)
@@ -121,6 +122,7 @@ def TodoMVC(self):
         new_todos = OrderedDict([])
         for key,todo in todos.items():
             new_todos.update([(key, Todo(complete, todo.text, todo.editing))])
+        complete_all_toggle_set(complete)
         todos_set(new_todos)
 
     def clear_completed(ev:QtGui.QMouseEvent):
@@ -141,7 +143,10 @@ def TodoMVC(self):
                 with View(style={"margin-right":10, "width":30},
                 ):
                     if len(todos) > 0:
-                        CheckBox(on_change=set_complete_all)
+                        CheckBox(
+                            checked=complete_all_toggle,
+                            on_change=set_complete_all,
+                        )
                 TextInput(
                     text = input,
                     on_change = handle_change,
