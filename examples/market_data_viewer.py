@@ -11,8 +11,8 @@ import random
 
 stylesheet = dict(
     price_box={
-        "padding-top": 0,
-        "padding": 0,
+        "margin-top": 0,
+        "margin": 0,
         "width": "50px",
         "align": "right",
         "border": "1px solid black",
@@ -20,7 +20,7 @@ stylesheet = dict(
     },
     size_box={
         "color": "rgba(220, 230, 220, 1)", "margin": "0px",
-        "padding": "2px", "top": "0px",
+        "margin": "2px", "top": "0px",
         "align": "right",
         "border-top": "1px solid black",
         "width": "50px",
@@ -29,7 +29,7 @@ stylesheet = dict(
     size_bar={
         "height": "25px",
         "margin-left": "10px",
-        "padding": "2px",
+        "margin": "2px",
         "align": "left",
     },
     play_button={
@@ -61,7 +61,7 @@ def PriceLevel(self, price, size, side, last=False):
         price_box_style["border-bottom"] = "1px solid black"
         size_box_style["border-bottom"] = "1px solid black"
 
-    with ed.View(layout="row", style={"padding": "0px", "width": "360px", "align": "left"}):
+    with ed.View(layout="row", style={"margin": "0px", "width": "360px", "align": "left"}):
         ed.Label(price, style=price_box_style).set_key("price")
         ed.Label(size, style=size_box_style).set_key("size")
         ed.Label("", style=size_bar_style).set_key("vis_size")
@@ -70,7 +70,7 @@ def PriceLevel(self, price, size, side, last=False):
 def Book(self, book):
     sizes = book["sizes"]
     market_price = book["price"]
-    with ed.View(layout="column", style={"margin": "10px", "padding": "0px", "width": 360}):
+    with ed.View(layout="column", style={"margin": "10px", "margin": "0px", "width": 360}):
         for p in range(20, 0, -1):
             PriceLevel(price=p, size=sizes[p],
                         side="bid" if p < market_price else "ask",

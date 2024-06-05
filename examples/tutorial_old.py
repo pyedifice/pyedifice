@@ -30,7 +30,7 @@ class ConversionWidget(ed.Element):
 
         from_label_style = {"width": 170}
         to_label_style = {"margin-left": 20, "width": 200}
-        input_style = {"padding": 2, "width": 120}
+        input_style = {"margin": 2, "width": 120}
         return ed.View(layout="row", style={"margin": 10, "width": 560})(
             Label(f"Measurement in {self.props.from_unit}:", style=from_label_style),
             TextInput(from_text, style=input_style,

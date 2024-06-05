@@ -90,7 +90,7 @@ def AxisDescriptor(
                 on_select=handle_data_type,
             )
             if data_type != "Date":
-                TextInput( text=ticker, style={"padding": 2},
+                TextInput( text=ticker, style={"margin": 2},
                     on_change=handle_ticker
                 )
 

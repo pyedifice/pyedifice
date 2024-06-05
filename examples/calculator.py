@@ -32,7 +32,7 @@ button_style = {"font-size": 20, "color": "white", "height": 46, "width": 60, "b
 digits_style = button_style | {"background-color": "#777777"}
 binary_style = button_style | {"background-color": "#ff9e00", "font-size": 30}
 unary_style = button_style | {"background-color": "#595959"}
-display_style = {"font-size": 50, "height": 70, "color": "white", "width": 240, "align": "right", "padding-right": 10}
+display_style = {"font-size": 50, "height": 70, "color": "white", "width": 240, "align": "right", "margin-right": 10}
 
 @ed.component
 def Calculator(self):
