@@ -60,7 +60,6 @@ Widgets follow the
 - **height**, **width**: Height/width in pixels.
 - **min-height**, **max-height**, **min-width**, **max-width**: Min/max height/width in pixels.
 - **align**: One of :code:`"left`, :code:`"right"`, :code:`"top"`, :code:`"bottom"`, :code:`"center"`, :code:`"justify"`.
-  :class:`View <edifice.View>` with :code:`layout=None`.
 - **top**, **left** (but not bottom, right): Position offset in pixels from a
   :class:`View <edifice.View>` with :code:`layout=None`.
 
