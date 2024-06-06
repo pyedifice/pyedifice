@@ -6,6 +6,11 @@
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
+import os
+import sys
+sys.path.append(os.path.abspath('../..'))
+sys.path.append(os.path.abspath('./image'))
+
 project = 'Edifice'
 release = '0.7.1'
 # Copyright is broken, renders as '1980, David Ding' for some reason
@@ -14,11 +19,6 @@ author = 'David Ding, James D. Brock, Viktor Kronvall'
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
-
-import os
-import sys
-sys.path.append(os.path.abspath('../..'))
-sys.path.append(os.path.abspath('./image'))
 
 extensions = [
 'sphinx.ext.autodoc',
