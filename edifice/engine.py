@@ -767,12 +767,12 @@ class QtWidgetElement(Element):
             Horizontal and vertical resizing policy, of type `QSizePolicy <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QSizePolicy.html>`_
         focus_policy:
             The various policies a widget can have with respect to acquiring keyboard focus, of type
-            `FocusPolicy <https://doc.qt.io/qtforpython-6/PySide6/QtCore/Qt.html#PySide6.QtCore.PySide6.QtCore.Qt.FocusPolicy>`_.
+            `FocusPolicy <https://doc.qt.io/qtforpython-6/PySide6/QtCore/Qt.html#PySide6.QtCore.Qt.FocusPolicy>`_.
 
-            See also `QWidget.focusPolicy <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.PySide6.QtWidgets.QWidget.focusPolicy>`_.
+            See also `QWidget.focusPolicy <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.focusPolicy>`_.
         enabled:
             Whether the widget is
-            `enabled <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.PySide6.QtWidgets.QWidget.enabled>`_.
+            `enabled <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.enabled>`_.
             If not, the widget will be grayed out and not respond to user input.
         on_click:
             Callback for click events (mouse pressed and released). Takes a
@@ -783,7 +783,7 @@ class QtWidgetElement(Element):
             `QKeyEvent <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QKeyEvent.html>`_
             as argument.
             The :code:`key()` method of :code:`QKeyEvent` returns the
-            `Qt.Key <https://doc.qt.io/qtforpython-6/PySide6/QtCore/Qt.html#PySide6.QtCore.PySide6.QtCore.Qt.Key>`_
+            `Qt.Key <https://doc.qt.io/qtforpython-6/PySide6/QtCore/Qt.html#PySide6.QtCore.Qt.Key>`_
             pressed.
             The :code:`text()` method returns the unicode of the key press, taking modifier keys (e.g. Shift)
             into account.
