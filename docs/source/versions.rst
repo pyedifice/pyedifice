@@ -4,6 +4,12 @@
 Release Notes
 =============
 
+0.7.2
+-----
+Released: 2024-06-11
+
+* Bugfix :class:`View` :code:`layout="none"` added children become visible.
+
 0.7.1
 -----
 Released: 2024-06-06
