@@ -1074,6 +1074,10 @@ class View(_LinearView):
         else:
             # Then this is a fixed-position View
             child_component.setParent(self.underlying)
+            # https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.setParent
+            # “The widget becomes invisible as part of changing its parent, even if it was
+            # previously visible. You must call show() to make the widget visible again.”
+            child_component.setVisible(True)
 
     def _initialize(self):
         self.underlying = QtWidgets.QWidget()
