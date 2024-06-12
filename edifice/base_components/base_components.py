@@ -1103,8 +1103,6 @@ class View(_LinearView):
             self.underlying.setLayout(self.underlying_layout)
             self.underlying_layout.setContentsMargins(0, 0, 0, 0)
             self.underlying_layout.setSpacing(0)
-        else:
-            self.underlying.setMinimumSize(100, 100)
 
     def _qt_update_commands(
         self,
