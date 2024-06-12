@@ -4,6 +4,12 @@
 Release Notes
 =============
 
+0.7.3
+-----
+Released: 2024-06-11
+
+* :class:`View` :code:`layout="none"` remove minimum size 100×100.
+
 0.7.2
 -----
 Released: 2024-06-11
