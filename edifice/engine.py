@@ -598,7 +598,7 @@ def component(f: Callable[tp.Concatenate[selfT, P], None]) -> Callable[P, Elemen
     -----------
 
     An :func:`component`’s children can be passed to it as **props**. This allows a
-    :func:`component` to act as a parent container for other :func:`component` s,
+    :func:`component` to act as a parent container for other :class:`Element` s,
     and to render them in a specific layout.
 
     There are two features to accomplish this.

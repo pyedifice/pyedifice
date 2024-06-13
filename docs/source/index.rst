@@ -129,24 +129,6 @@ However, it is easy to interface with Qt, either :ref:`incorporating a Qt Widget
 :doc:`use Qt commands directly<stubs/edifice.Reference>` with an existing Edifice component,
 or :doc:`incorporating Edifice components<stubs/stubs/edifice.App.export_widgets>` in a Qt application.
 
-
-Table of Contents
------------------
-
-.. toctree::
-   :maxdepth: 2
-
-   tutorial
-   examples
-   edifice
-   base_components
-   hooks
-   styling
-   extra
-   utilities
-   developer_tools
-   future
-
 Poetry Build System
 -------------------
 
@@ -190,3 +172,21 @@ Indices and tables
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
+
+Table of Contents
+-----------------
+
+.. toctree::
+   :maxdepth: 2
+
+   tutorial
+   examples
+   edifice
+   base_components
+   hooks
+   styling
+   extra
+   utilities
+   developer_tools
+   versions
+   future
