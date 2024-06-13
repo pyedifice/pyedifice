@@ -13,7 +13,8 @@ Class overview
    :recursive:
    :template: custom-class.rst
 
+   Element
    component
+   child_place
    App
    Reference
-   Element

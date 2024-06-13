@@ -362,6 +362,13 @@ def get_render_context_maybe() -> _RenderContext | None:
     return getattr(local_state, "render_context", None)
 
 
+def child_place(component: "Element") -> None:
+    """
+    Place a child passed through the special :code:`children` **props** into
+    the layout of a parent :func:`component`.
+    """
+    get_render_context().trackers[-1].append_child(component)
+
 class Element:
     """The base class for Edifice Elements.
 
@@ -557,14 +564,13 @@ class Element:
 
 
 P = tp.ParamSpec("P")
-C = tp.TypeVar("C", bound=Element)
+selfT = tp.TypeVar("selfT", bound=Element)
 
 
 def not_ignored(arg: tuple[str, tp.Any]) -> bool:
     return arg[0][0] != "_"
 
-
-def component(f: Callable[tp.Concatenate[C, P], None]) -> Callable[P, Element]:
+def component(f: Callable[tp.Concatenate[selfT, P], None]) -> Callable[P, Element]:
     """Decorator turning a render function of **props** into an :class:`Element`.
 
     The component will be re-rendered when its **props** are not :code:`__eq__`
@@ -581,11 +587,50 @@ def component(f: Callable[tp.Concatenate[C, P], None]) -> Callable[P, Element]:
                 Label(prop2)
                 Label(prop3)
 
-    To declare an :class:`Element` to be the parent of some other
-    :class:`Element` s in the tree, use the parent as a
-    `with statement context manager <https://docs.python.org/3/reference/datamodel.html#context-managers>`_.
+    State
+    -----
 
-    To introduce **state** into a component, use :doc:`Hooks <../hooks>`.
+    The :func:`component` function is a stateless function from **props**
+    to an :class:`Element`.
+    To introduce **state** into a :func:`component`, use :doc:`Hooks <../hooks>`.
+
+    Composition
+    -----------
+
+    An :func:`component`’s children can be passed to it as **props**. This allows a
+    :func:`component` to act as a parent container for other :func:`component` s,
+    and to render them in a specific layout.
+
+    There are two features to accomplish this.
+
+    1. The special :code:`children` **prop** is a list of :class:`Element` s.
+       This special **prop** must always be declared as a **keyword argument**
+       with a default value.
+
+       Do not explicitly pass the :code:`children` **prop** when calling
+       the :func:`component`. The children will be passed implicitly.
+    2. The :func:`child_place` function is used to place the :code:`children`
+       in the parent :func:`component`’s render function.
+
+    With these two features, you can declare how the parent
+    container :func:`component` will render its children.
+
+    Example::
+
+            @component
+            def ContainerComponent(self:Element, children:list[Element]=[]):
+                with View():
+                    for child in children:
+                        with View():
+                            child_place(child)
+
+            with ContainerComponent():
+                Label("First Child")
+                Label("Second Child")
+                Label("Third Child")
+
+    Element initialization is a render side-effect
+    ----------------------------------------------
 
     Each :class:`Element` is actually implemented as the constructor function
     for a Python class. The :class:`Element` constructor function also has
@@ -594,7 +639,7 @@ def component(f: Callable[tp.Concatenate[C, P], None]) -> Callable[P, Element]:
 
     For that reason, you have to be careful about binding Elements to variables
     and passing them around. They will insert themselves at the time they are
-    created. This code will **NOT** declare the intended Element tree, same as the code above::
+    created. This code will **NOT** declare the intended Element tree.
 
         @component
         def MySimpleComp(self, prop1, prop2, prop3):
@@ -625,13 +670,19 @@ def component(f: Callable[tp.Concatenate[C, P], None]) -> Callable[P, Element]:
                 Label(prop2)
                 Label(prop3)
 
-    instead. The difference is, with the decorator, an actual :class:`Element` object is created,
-    which can be viewed, for example, in the inspector. Moreover, you need an :class:`Element` to
-    be able to use Hooks such as :func:`use_state`, since those are bound to an :class:`Element`.
+    instead. The difference is, with the :func:`component` decorator, an
+    actual :class:`Element` object is created,
+    which means that subsequent renders will be skipped if the **props** didn’t change.
+    Also we need an :func:`component` to
+    be able to use Hooks such as :func:`use_state`, because those are bound to
+    an :class:`Element`.
 
     Args:
-        f: the function to wrap. Its first argument must be self.
+        f:
+            The render function to wrap.
+            Its first argument must be :code:`self`.
             Subsequent arguments are **props**.
+
     """
     varnames = f.__code__.co_varnames[1:]
     signature = inspect.signature(f).parameters
@@ -652,8 +703,10 @@ def component(f: Callable[tp.Concatenate[C, P], None]) -> Callable[P, Element]:
         def _render_element(self):
             props: dict[str, tp.Any] = self.props._d
             params = props.copy()
+
             if "children" not in varnames:
                 del params["children"]
+
             # We cannot type this because PropsDict forgets the types
             # call the render function
             f(self, **params)  # type: ignore[reportGeneralTypeIssues]

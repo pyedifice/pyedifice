@@ -145,7 +145,6 @@ Table of Contents
    extra
    utilities
    developer_tools
-   versions
    future
 
 Poetry Build System
