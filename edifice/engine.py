@@ -613,21 +613,19 @@ def component(f: Callable[tp.Concatenate[selfT, P], None]) -> Callable[P, Elemen
        in the parent :func:`component`’s render function.
 
     With these two features, you can declare how the parent
-    container :func:`component` will render its children.
+    container :func:`component` will render its children::
 
-    Example::
+        @component
+        def ContainerComponent(self:Element, children:list[Element]=[]):
+            with View():
+                for child in children:
+                    with View():
+                        child_place(child)
 
-            @component
-            def ContainerComponent(self:Element, children:list[Element]=[]):
-                with View():
-                    for child in children:
-                        with View():
-                            child_place(child)
-
-            with ContainerComponent():
-                Label("First Child")
-                Label("Second Child")
-                Label("Third Child")
+        with ContainerComponent():
+            Label("First Child")
+            Label("Second Child")
+            Label("Third Child")
 
     Element initialization is a render side-effect
     ----------------------------------------------
@@ -639,7 +637,7 @@ def component(f: Callable[tp.Concatenate[selfT, P], None]) -> Callable[P, Elemen
 
     For that reason, you have to be careful about binding Elements to variables
     and passing them around. They will insert themselves at the time they are
-    created. This code will **NOT** declare the intended Element tree.
+    created. This code will **NOT** declare the intended Element tree::
 
         @component
         def MySimpleComp(self, prop1, prop2, prop3):
