@@ -97,6 +97,7 @@
         python = pkgs.python310;
         projectDir = ./.;
         preferWheels = true;
+        # The repo-root is for `nix develop --impure`.
         editablePackageSources = {
           pyedifice = repo-root;
         };

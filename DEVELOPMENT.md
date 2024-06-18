@@ -33,7 +33,7 @@ two development environments:
 
    In this environment the tests should pass.
 
-       poetry install --sync --all-extras --no-root
+       poetry install --sync --all-extras
        poetry shell
        ./run_tests.sh
 
