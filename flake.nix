@@ -79,19 +79,27 @@
       # We can remove poetry2nix-custom with pyqt6-qt6 override when the following PR is merged.
       # https://github.com/nix-community/poetry2nix/pull/1551
       poetry2nix-custom = pkgs.poetry2nix.overrideScope' (p2n_self: p2n_super: {
-        defaultPoetryOverrides = p2n_super.defaultPoetryOverrides.extend(pyself: pysuper: {
+        defaultPoetryOverrides = p2n_super.defaultPoetryOverrides.extend (pyself: pysuper: {
           pyqt6-qt6 = pysuper.pyqt6-qt6.overridePythonAttrs (old: {
-            autoPatchelfIgnoreMissingDeps = old.autoPatchelfIgnoreMissingDeps or [] ++ [
+            autoPatchelfIgnoreMissingDeps = old.autoPatchelfIgnoreMissingDeps or [ ] ++ [
               "libmimerapi.so"
-              ];
+            ];
           });
         });
       });
 
+      repo-root =
+        let
+          env-root = builtins.getEnv "REPO_ROOT";
+        in
+        if env-root != "" then env-root else ./.;
       poetryEnvAttrs = {
         python = pkgs.python310;
         projectDir = ./.;
         preferWheels = true;
+        editablePackageSources = {
+          pyedifice = repo-root;
+        };
       };
     in
     {
