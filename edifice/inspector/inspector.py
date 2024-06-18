@@ -111,7 +111,7 @@ def PropsView(self, props: PropsDict):
                     style={"font-weight": 600, "width": 140},
                 ).render()
                 ed.Label(
-                    props[key],
+                    str(props[key]),
                     selectable=True,
                     style={},
                 ).render()
