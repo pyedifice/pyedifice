@@ -5,27 +5,27 @@ from edifice.inspector import inspector
 
 
 class ElementB(edifice.Element):
-
     def __init__(self, a, b, c):
         super().__init__()
-        self._register_props({
-            "a": a,
-            "b": b,
-            "c": c,
-        })
+        self._register_props(
+            {
+                "a": a,
+                "b": b,
+                "c": c,
+            }
+        )
         self.state = 0
 
     def _render_element(self):
         return edifice.Label("Test")
 
-class ElementA(edifice.Element):
 
+class ElementA(edifice.Element):
     def _render_element(self):
         return ElementB(a=1, b=2, c=3)
 
 
 class InspectorTestCase(unittest.TestCase):
-
     def test_inspector_render(self):
         pass
         # comp_b = ElementB(a=1, b=2, c=3)
@@ -49,3 +49,7 @@ class InspectorTestCase(unittest.TestCase):
         #     collapsed=True, on_click=lambda e: None,
         #     root=object(),
         #     toggle=lambda e: None)._render_element()
+
+
+if __name__ == "__main__":
+    unittest.main()
