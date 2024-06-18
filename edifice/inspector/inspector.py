@@ -138,7 +138,7 @@ def ElementView(
 
     assert module is not None
     with ed.View(layout="column", style={"align": "top", "min-width": 450, "min-height": 450}).render():
-        ed.Label(component.__class__.__name__, selectable=True, style={"font-size": "20px", "margin": 10}).render()
+        ed.Label(cls.__class__.__name__, selectable=True, style={"font-size": "20px", "margin": 10}).render()
         ed.Label(
             "Class defined in " + str(module.__file__) + ":" + str(lineno), selectable=True, style={"margin-left": 10}
         ).render()
