@@ -2,15 +2,12 @@
 # python examples/async.py
 #
 
-import os
-import sys
-# We need this sys.path line for running this example, especially in VSCode debugger.
-sys.path.insert(0, os.path.join(sys.path[0], '..'))
 
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
 import edifice as ed
 from typing import cast, Callable
+
 
 @ed.component
 def ComponentWithAsync(self):
@@ -35,9 +32,9 @@ def ComponentWithAsync(self):
 
     ed.Label(x)
 
+
 @ed.component
 def Main(self):
-
     ##########
 
     checked, set_checked = ed.use_state(False)
@@ -47,7 +44,7 @@ def Main(self):
     a, set_a = ed.use_state(0)
     b, set_b = ed.use_state(0)
 
-    async def _on_change1(v:int):
+    async def _on_change1(v: int):
         """
         Test regular async event handlers.
         """
@@ -59,12 +56,12 @@ def Main(self):
 
     c, set_c = ed.use_state(0)
 
-    async def async_callback1(v:int):
+    async def async_callback1(v: int):
         set_c(v)
 
     callback1, _ = ed.use_async_call(async_callback1)
 
-    async def _on_change2(v:int):
+    async def _on_change2(v: int):
         """
         Test async callbacks from another thread.
         """
@@ -82,6 +79,7 @@ def Main(self):
         Test use_async
         """
         set_e(d)
+
     ed.use_async(_on_change3, d)
 
     ##########
@@ -94,6 +92,7 @@ def Main(self):
                 k_u = k_[:]
                 k_u.insert(0, (0, "Running"))
                 return k_u
+
             return updater
 
         def k_updater_progress(progress, message):
@@ -101,6 +100,7 @@ def Main(self):
                 k_u = k_[:]
                 k_u[0] = (progress, message)
                 return k_u
+
             return updater
 
         def k_updater_cancel():
@@ -108,13 +108,14 @@ def Main(self):
                 k_u = k_[:]
                 k_u[0] = (k_[0][0], "Cancelled")
                 return k_u
+
             return updater
 
         try:
             set_k(k_updater_new())
-            for i in range(1,9):
+            for i in range(1, 9):
                 await asyncio.sleep(0.1)
-                set_k(k_updater_progress(i*10, "Running"))
+                set_k(k_updater_progress(i * 10, "Running"))
             await asyncio.sleep(0.1)
             set_k(k_updater_progress(100, "Finished"))
         except asyncio.CancelledError as e:
@@ -125,9 +126,7 @@ def Main(self):
 
     ##########
 
-
     with ed.View():
-
         with ed.View(
             style={
                 "margin-top": 20,
@@ -198,11 +197,12 @@ def Main(self):
                     ed.Label(text="Start")
                 with ed.ButtonView(
                     on_click=lambda _ev: cancel_k(),
-                    enabled = len(k)>0 and k[0][1] == "Running",
+                    enabled=len(k) > 0 and k[0][1] == "Running",
                 ):
                     ed.Label(text="Cancel")
             for k_ in k:
                 ed.ProgressBar(value=k_[0], format=k_[1])
+
 
 if __name__ == "__main__":
     ed.App(ed.Window(title="Async Example")(Main())).start()

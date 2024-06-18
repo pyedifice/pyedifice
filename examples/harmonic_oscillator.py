@@ -2,9 +2,6 @@
 # python examples/harmonic_oscillator.py
 #
 
-import sys, os
-# We need this sys.path line for running this example, especially in VSCode debugger.
-sys.path.insert(0, os.path.join(sys.path[0], '..'))
 import typing as tp
 import asyncio
 import logging
@@ -22,6 +19,7 @@ logger.setLevel(logging.INFO)
 
 # We create time range once so we don't have to recreate it each plot
 time_range = np.linspace(0, 10, num=200)
+
 
 @ed.component
 def Oscillator(self):
@@ -45,7 +43,7 @@ def Oscillator(self):
     simulation_time, simulation_time_set = ed.use_state(0.0)
     dt = 0.03
 
-    def plot(plot_item:pg.PlotItem):
+    def plot(plot_item: pg.PlotItem):
         plot_item.setMouseEnabled(x=False, y=False)
         plot_item.hideButtons()
         plot_item.plot(time_range, calculate_harmonic_motion(time_range))
@@ -55,7 +53,7 @@ def Oscillator(self):
     def calculate_harmonic_motion(t):
         # Formula for harmonic motion. We use complex numbers because the formula is nicer this way
         # (no special cases)
-        sqrt_expr = np.ones([], dtype=complex) * damping ** 2 - 4 * angular_frequency ** 2
+        sqrt_expr = np.ones([], dtype=complex) * damping**2 - 4 * angular_frequency**2
         complex_phase = (damping - np.sqrt(sqrt_expr)) / 2
         return np.real(np.exp(complex_phase * t))
 
@@ -69,52 +67,49 @@ def Oscillator(self):
     ed.use_async(play_tick, (is_playing, play_trigger))
 
     def freq_slider_change(value):
-        angular_frequency_set(float(value)/20.0)
+        angular_frequency_set(float(value) / 20.0)
         simulation_time_set(0)
         plot_fun_set((lambda figure: plot(figure),))
 
     def damp_slider_change(value):
-        damping_set(float(value)/100.0)
+        damping_set(float(value) / 100.0)
         simulation_time_set(0)
         plot_fun_set((lambda figure: plot(figure),))
 
     with ed.View(layout="row"):
         with ed.View(layout="column", style={"margin": 10}):
             with ed.View(layout="row"):
-                ed.IconButton("pause" if is_playing else "play",
-                                on_click=lambda e: is_playing_set(lambda p: not p))
+                ed.IconButton("pause" if is_playing else "play", on_click=lambda e: is_playing_set(lambda p: not p))
                 ed.Button("Reset", on_click=lambda e: simulation_time_set(0))
             with ed.View():
                 PyQtPlot(plot_fun=plot_fun[0])
             with ed.View(layout="row", style={"margin": 10}):
                 ed.Label("Angular Frequency")
                 ed.Slider(
-                    value=int(angular_frequency*20.0),
-                    min_value=20,
-                    max_value=200,
-                    on_change=freq_slider_change
+                    value=int(angular_frequency * 20.0), min_value=20, max_value=200, on_change=freq_slider_change
                 )
                 ed.Label("Damping Factor")
-                ed.Slider(
-                    value=int(damping*100.0),
-                    min_value=-300,
-                    max_value=0,
-                    on_change=damp_slider_change
-                )
+                ed.Slider(value=int(damping * 100.0), min_value=-300, max_value=0, on_change=damp_slider_change)
 
             # We position the ball and the centroid using absolute positioning.
             # The label and ball offsets are different since we have to take into
             # account the size of the ball
             with ed.View(layout="row", style={"align": "center"}):
                 with ed.View(layout="none", style={"width": 720, "height": 10, "margin-top": 40}):
-                    ed.Icon("bowling-ball", size=20, color=(255, 0, 0, 255),
-                            style={"left": 350 +  200 * calculate_harmonic_motion(simulation_time)})
+                    ed.Icon(
+                        "bowling-ball",
+                        size=20,
+                        color=(255, 0, 0, 255),
+                        style={"left": 350 + 200 * calculate_harmonic_motion(simulation_time)},
+                    )
                     ed.Label("|", style={"left": 356, "font-size": 20, "color": "blue"})
+
 
 @ed.component
 def Main(self):
     with ed.Window("Harmonic Oscillator"):
         Oscillator()
+
 
 if __name__ == "__main__":
     ed.App(Main()).start()

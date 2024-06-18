@@ -2,15 +2,11 @@
 # python examples/example_pyqtgraph.py
 #
 
-import os
-import sys
 import typing as tp
 import numpy as np
 
-# We need this sys.path line for running this example, especially in VSCode debugger.
-sys.path.insert(0, os.path.join(sys.path[0], '..'))
-
 from edifice.qt import QT_VERSION
+
 if QT_VERSION == "PyQt6":
     from PyQt6 import QtGui
 else:
@@ -22,20 +18,20 @@ import pyqtgraph as pg
 
 pg.setConfigOption("antialias", True)
 
+
 @ed.component
 def Component(self):
-
     x_min, x_min_set = ed.use_state(-10.0)
 
-    def plot_fn(plot_item:pg.PlotItem):
+    def plot_fn(plot_item: pg.PlotItem):
         plot_item.setMouseEnabled(x=False, y=False)
         plot_item.hideButtons()
         grad = QtGui.QLinearGradient(0, -1.0, 0, 1.0)
-        grad.setColorAt(0.0, pg.mkColor((127,127,127,0)))
-        grad.setColorAt(0.8, pg.mkColor((127,127,127,100)))
+        grad.setColorAt(0.0, pg.mkColor((127, 127, 127, 0)))
+        grad.setColorAt(0.8, pg.mkColor((127, 127, 127, 100)))
         brush = QtGui.QBrush(grad)
 
-        pen = pg.mkPen(width=2, color=pg.mkColor((255,255,255,255)))
+        pen = pg.mkPen(width=2, color=pg.mkColor((255, 255, 255, 255)))
 
         xs = np.linspace(x_min, x_min + 20.0, 100)
         ys = np.sin(xs)
@@ -53,11 +49,13 @@ def Component(self):
             ed.Label("Increment x_min")
         PyQtPlot(plot_fun=plot_fn)
 
+
 @ed.component
 def Main(self):
     with ed.Window("PyQtPlot Example"):
         with ed.View():
             Component()
+
 
 if __name__ == "__main__":
     ed.App(Main()).start()

@@ -1,22 +1,16 @@
-
-import sys
-import os
 import typing as tp
-# We need this sys.path line for running this example, especially in VSCode debugger.
-sys.path.insert(0, os.path.join(sys.path[0], '..'))
-
 import edifice as ed
 
 from edifice.qt import QT_VERSION
+
 if QT_VERSION == "PyQt6" and not tp.TYPE_CHECKING:
     from PyQt6.QtCore import Qt
 else:
     from PySide6.QtCore import Qt
 
+
 @ed.component
 def Main(self):
-
-
     mltext, mltext_set = ed.use_state("Hello World")
     ddoptions, ddoptionss_set = ed.use_state(0)
     ddoptions2, ddoptions2_set = ed.use_state(0)
@@ -29,7 +23,7 @@ def Main(self):
     with ed.Window():
         ed.Label("Hello")
         ed.Label(
-            text= "World",
+            text="World",
             selectable=True,
         )
         with ed.View(layout="row"):
@@ -65,7 +59,7 @@ def Main(self):
                     "font-size": "20px",
                     "font-family": "Courier New",
                     "font-style": "italic",
-                }
+                },
             )
             ed.Button("Exclaim text", on_click=lambda _: mltext_set("!" + mltext + "!"))
         with ed.View():
@@ -73,9 +67,7 @@ def Main(self):
                 value=sival,
                 min_value=10,
                 max_value=20,
-                on_change=lambda v: (
-                    sival_set(v)
-                ),
+                on_change=lambda v: (sival_set(v)),
             )
         with ed.View(layout="row"):
             with ed.View():
@@ -84,19 +76,19 @@ def Main(self):
                     text="Option 1",
                     checked=radio_value1 == "op1",
                     on_change=lambda checked: radio_value1_set("op1") if checked else None,
-                    style = {} if radio_value1 == "op1" else { "color": "grey" },
+                    style={} if radio_value1 == "op1" else {"color": "grey"},
                 )
                 ed.RadioButton(
                     text="Option 2",
                     checked=radio_value1 == "op2",
                     on_change=lambda checked: radio_value1_set("op2") if checked else None,
-                    style = {} if radio_value1 == "op2" else { "color": "grey" },
+                    style={} if radio_value1 == "op2" else {"color": "grey"},
                 )
                 ed.RadioButton(
                     text="Option 3",
                     checked=radio_value1 == "op3",
-                    on_change=lambda checked :radio_value1_set("op3") if checked else None,
-                    style = {} if radio_value1 == "op3" else { "color": "grey" },
+                    on_change=lambda checked: radio_value1_set("op3") if checked else None,
+                    style={} if radio_value1 == "op3" else {"color": "grey"},
                 )
             with ed.View():
                 # RadioButtons with different parents
@@ -107,7 +99,7 @@ def Main(self):
                         on_change=lambda checked: radio_value2_set("op1") if checked else None,
                         style={
                             "color": "" if radio_value2 == "op1" else "grey",
-                        }
+                        },
                     )
                 with ed.View():
                     ed.RadioButton(
@@ -116,7 +108,7 @@ def Main(self):
                         on_change=lambda checked: radio_value2_set("op2") if checked else None,
                         style={
                             "color": "" if radio_value2 == "op2" else "grey",
-                        }
+                        },
                     )
                 with ed.View():
                     ed.RadioButton(
@@ -125,7 +117,7 @@ def Main(self):
                         on_change=lambda checked: radio_value2_set("op3") if checked else None,
                         style={
                             "color": "" if radio_value2 == "op3" else "grey",
-                        }
+                        },
                     )
         with ed.View(layout="row"):
             ed.CheckBox(
@@ -135,23 +127,23 @@ def Main(self):
             ed.CheckBox(
                 checked=False,
                 text="Check Const False",
-                style = { "color": "grey" },
+                style={"color": "grey"},
             )
             ed.CheckBox(
                 checked=check_value1,
                 on_change=lambda checked: check_value1_set(checked),
                 text="Check",
-                style = {} if check_value1 else { "color": "grey" },
+                style={} if check_value1 else {"color": "grey"},
             )
         with ed.View(
             # https://doc.qt.io/qtforpython-6/overviews/stylesheet-customizing.html#the-box-model
             layout="row",
-            style= {
+            style={
                 "border": "3px solid black",
                 "background-color": "white",
                 "color": "blue",
                 "padding": 3,
-            }
+            },
         ):
             ed.Label(
                 text="CONTENT1",
@@ -161,7 +153,7 @@ def Main(self):
                     "padding": "20px",
                     "border": "10px solid brown",
                     "background-color": "pink",
-                }
+                },
             )
             with ed.View(
                 style={
@@ -174,10 +166,8 @@ def Main(self):
                     style={
                         "color": "black",
                         "background-color": "pink",
-                    }
-
+                    },
                 )
-
 
 
 if __name__ == "__main__":

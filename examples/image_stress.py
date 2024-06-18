@@ -2,15 +2,11 @@
 # python examples/image_stress.py
 #
 
-import os
-import sys
-# We need this sys.path line for running this example, especially in VSCode debugger.
-sys.path.insert(0, os.path.join(sys.path[0], '..'))
-
 import typing as tp
 
 
 from edifice.qt import QT_VERSION
+
 if QT_VERSION == "PyQt6" and not tp.TYPE_CHECKING:
     from PyQt6.QtGui import QDragEnterEvent, QDragLeaveEvent, QDragMoveEvent, QDropEvent
     from PyQt6.QtCore import Qt
@@ -74,7 +70,7 @@ def Component(self):
         if proposed_files != []:
             with ed.FlowView(
                 style={
-                    "align":"top",
+                    "align": "top",
                 },
             ):
                 for file in proposed_files:
@@ -85,11 +81,7 @@ def Component(self):
             with ed.View(
                 layout="column",
             ):
-                ed.CheckBox(
-                    checked=auto_stress,
-                    on_change=auto_stress_set,
-                    text="Rapidly load and unload images"
-                )
+                ed.CheckBox(checked=auto_stress, on_change=auto_stress_set, text="Rapidly load and unload images")
                 ed.Slider(
                     value=max_images,
                     max_value=len(dropped_files),
@@ -100,7 +92,7 @@ def Component(self):
                 )
             with ed.FlowView(
                 style={
-                    "align":"top",
+                    "align": "top",
                 },
             ):
                 for file in dropped_files[:max_images]:
@@ -110,13 +102,14 @@ def Component(self):
                         style={
                             "width": 100,
                             "height": 100,
-                        }
+                        },
                     ).set_key(file)
         else:
             with ed.View():
                 ed.Label(
                     text="DROP IMAGE FILES HERE",
                 )
+
 
 @ed.component
 def Main(self):

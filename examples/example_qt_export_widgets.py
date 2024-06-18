@@ -1,8 +1,3 @@
-import os
-import sys
-# We need this sys.path line for running this example, especially in VSCode debugger.
-sys.path.insert(0, os.path.join(sys.path[0], '..'))
-
 import asyncio
 
 # from PyQt6.QtWidgets import (
@@ -16,6 +11,7 @@ from qasync import QEventLoop
 
 import edifice as ed
 
+
 class MainWindow(QWidget):
     """Main window."""
 
@@ -27,6 +23,7 @@ class MainWindow(QWidget):
         self.lbl_status = QLabel("Unmanaged Label widget", self)
         self.layout().addWidget(self.lbl_status)
 
+
 @ed.component
 def CompoundComponent(self):
     y, y_setter = ed.use_state(0)
@@ -34,6 +31,7 @@ def CompoundComponent(self):
         ed.Label("Compound Component")
         ed.Slider(y, on_change=y_setter)
         ed.Label("Slider value: " + str(y))
+
 
 @ed.component
 def ExportComponents(self):
@@ -43,6 +41,7 @@ def ExportComponents(self):
         ed.Label("Edifice TextInput 1: " + x)
         ed.Label("Edifice TextInput 2: " + x)
         CompoundComponent()
+
 
 if __name__ == "__main__":
     app = QApplication([])
