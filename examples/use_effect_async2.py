@@ -3,7 +3,7 @@
 #
 
 import asyncio as asyncio
-from edifice import App, Window, View, Label, Button, component, TextInput
+from edifice import App, Window, View, component, TextInput
 from edifice.hooks import use_state, use_async
 
 
@@ -16,8 +16,8 @@ def MainComp(self):
         print(x)
 
     use_async(effect, x)
-    with Window():
-        with View():
+    with Window().render():
+        with View().render():
             TextInput(text=x, on_change=x_set)
 
 

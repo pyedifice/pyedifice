@@ -15,12 +15,12 @@ def MyApp(self):
 
     use_async(force, f)
 
-    with View(layout="column"):
-        Label("Hello world: " + text)
-        TextInput(text, on_edit=text_set)
-        with View(layout="row"):
-            Label("Bonjour")
+    with Window().render(), View(layout="column").render():
+        Label("Hello world: " + text).render()
+        TextInput(text, on_edit=text_set).render()
+        with View(layout="row").render():
+            Label("Bonjour").render()
 
 
 if __name__ == "__main__":
-    App(Window()(MyApp())).start()
+    App(MyApp()).start()

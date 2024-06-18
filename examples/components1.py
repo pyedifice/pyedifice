@@ -5,17 +5,17 @@ from contextlib import contextmanager
 
 @contextmanager
 def Example(row: int):
-    with View():
-        Label("asd" + str(row))
+    with View().render():
+        Label("asd" + str(row)).render()
         yield None
-        Label("efg")
+        Label("efg").render()
 
 
 @component
 def Main(self):
-    with Window():
+    with Window().render():
         with Example(42):
-            Label("123")
+            Label("123").render()
 
 
 if __name__ == "__main__":

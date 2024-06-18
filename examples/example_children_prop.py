@@ -14,12 +14,12 @@ def MyComponent(
     with ed.View(
         layout="column",
         style={"align": "top"},
-    ):
+    ).render():
         for child in children:
             with ed.View(
                 style={"background-color": bgcolor, "padding": 10},
-            ):
-                ed.child_place(child)
+            ).render():
+                child.render()
             bgcolor = "blue" if bgcolor == "green" else "green"
 
 
@@ -30,8 +30,8 @@ def Main(self):
     ] = "Callables which take other callables as arguments may indicate that their parameter types are dependent on".split(
         " "
     )
-    with ed.Window():
-        with ed.View(style={"padding": 20}):
+    with ed.Window().render():
+        with ed.View(style={"padding": 20}).render():
             x, x_set = ed.use_state(0)
             ed.Slider(
                 value=x,
@@ -39,10 +39,10 @@ def Main(self):
                 min_value=0,
                 max_value=len(strings),
                 style={"min-width": 200},
-            )
-            with MyComponent():
+            ).render()
+            with MyComponent().render():
                 for i in range(0, x):
-                    ed.Label(text=strings[i])
+                    ed.Label(text=strings[i]).render()
 
 
 if __name__ == "__main__":

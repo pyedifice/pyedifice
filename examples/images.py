@@ -1,5 +1,6 @@
 import typing as tp
 from edifice import App, Window, View, component, Image
+import os
 
 from edifice.qt import QT_VERSION
 
@@ -15,19 +16,19 @@ imgstyle = {"width": "200px", "height": "200px"}
 
 @component
 def MyComponent(self):
-    with View(layout="column"):
-        with View(layout="row"):
-            Image(src=imgpath, style=imgstyle)
-            Image(src=imgpath, aspect_ratio_mode=Qt.AspectRatioMode.IgnoreAspectRatio, style=imgstyle)
-        with View(layout="row"):
-            Image(src=imgpath, aspect_ratio_mode=Qt.AspectRatioMode.KeepAspectRatio, style=imgstyle)
-            Image(src=imgpath, aspect_ratio_mode=Qt.AspectRatioMode.KeepAspectRatioByExpanding, style=imgstyle)
+    with View(layout="column").render():
+        with View(layout="row").render():
+            Image(src=imgpath, style=imgstyle).render()
+            Image(src=imgpath, aspect_ratio_mode=Qt.AspectRatioMode.IgnoreAspectRatio, style=imgstyle).render()
+        with View(layout="row").render():
+            Image(src=imgpath, aspect_ratio_mode=Qt.AspectRatioMode.KeepAspectRatio, style=imgstyle).render()
+            Image(src=imgpath, aspect_ratio_mode=Qt.AspectRatioMode.KeepAspectRatioByExpanding, style=imgstyle).render()
 
 
 @component
 def Main(self):
-    with Window():
-        MyComponent()
+    with Window().render():
+        MyComponent().render()
 
 
 if __name__ == "__main__":

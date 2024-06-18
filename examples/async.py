@@ -6,7 +6,7 @@
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
 import edifice as ed
-from typing import cast, Callable
+from typing import cast
 
 
 @ed.component
@@ -30,7 +30,7 @@ def ComponentWithAsync(self):
 
     ed.use_async(set_label, ())
 
-    ed.Label(x)
+    ed.Label(x).render()
 
 
 @ed.component
@@ -126,7 +126,7 @@ def Main(self):
 
     ##########
 
-    with ed.View():
+    with ed.Window(title="Async Example").render(), ed.View().render():
         with ed.View(
             style={
                 "margin-top": 20,
@@ -135,14 +135,14 @@ def Main(self):
                 "border-top-style": "solid",
                 "border-top-color": "black",
             },
-        ):
-            with ed.View(layout="row"):
+        ).render():
+            with ed.View(layout="row").render():
                 ed.CheckBox(
                     checked=checked,
                     on_change=set_checked,
-                )
+                ).render()
                 if checked:
-                    ComponentWithAsync()
+                    ComponentWithAsync().render()
 
         with ed.View(
             style={
@@ -152,10 +152,10 @@ def Main(self):
                 "border-top-style": "solid",
                 "border-top-color": "black",
             },
-        ):
-            ed.Label(str(a))
-            ed.Label(str(b))
-            ed.Slider(a, min_value=0, max_value=100, on_change=_on_change1)
+        ).render():
+            ed.Label(str(a)).render()
+            ed.Label(str(b)).render()
+            ed.Slider(a, min_value=0, max_value=100, on_change=_on_change1).render()
 
         with ed.View(
             style={
@@ -165,9 +165,9 @@ def Main(self):
                 "border-top-style": "solid",
                 "border-top-color": "black",
             },
-        ):
-            ed.Label(str(c))
-            ed.Slider(c, min_value=0, max_value=100, on_change=_on_change2)
+        ).render():
+            ed.Label(str(c)).render()
+            ed.Slider(c, min_value=0, max_value=100, on_change=_on_change2).render()
 
         with ed.View(
             style={
@@ -177,9 +177,9 @@ def Main(self):
                 "border-top-style": "solid",
                 "border-top-color": "black",
             },
-        ):
-            ed.Label(str(e))
-            ed.Slider(d, min_value=0, max_value=100, on_change=set_d)
+        ).render():
+            ed.Label(str(e)).render()
+            ed.Slider(d, min_value=0, max_value=100, on_change=set_d).render()
 
         with ed.View(
             style={
@@ -189,20 +189,20 @@ def Main(self):
                 "border-top-style": "solid",
                 "border-top-color": "black",
             },
-        ):
-            with ed.View(layout="row"):
+        ).render():
+            with ed.View(layout="row").render():
                 with ed.ButtonView(
                     on_click=lambda _ev: start_k(),
-                ):
-                    ed.Label(text="Start")
+                ).render():
+                    ed.Label(text="Start").render()
                 with ed.ButtonView(
                     on_click=lambda _ev: cancel_k(),
                     enabled=len(k) > 0 and k[0][1] == "Running",
-                ):
-                    ed.Label(text="Cancel")
+                ).render():
+                    ed.Label(text="Cancel").render()
             for k_ in k:
-                ed.ProgressBar(value=k_[0], format=k_[1])
+                ed.ProgressBar(value=k_[0], format=k_[1]).render()
 
 
 if __name__ == "__main__":
-    ed.App(ed.Window(title="Async Example")(Main())).start()
+    ed.App(Main()).start()

@@ -27,20 +27,20 @@ class MainWindow(QWidget):
 @ed.component
 def CompoundComponent(self):
     y, y_setter = ed.use_state(0)
-    with ed.View():
-        ed.Label("Compound Component")
-        ed.Slider(y, on_change=y_setter)
-        ed.Label("Slider value: " + str(y))
+    with ed.View().render():
+        ed.Label("Compound Component").render()
+        ed.Slider(y, on_change=y_setter).render()
+        ed.Label("Slider value: " + str(y)).render()
 
 
 @ed.component
 def ExportComponents(self):
     x, x_setter = ed.use_state("")
-    with ed.ExportList():
-        ed.TextInput(x, on_change=x_setter)
-        ed.Label("Edifice TextInput 1: " + x)
-        ed.Label("Edifice TextInput 2: " + x)
-        CompoundComponent()
+    with ed.ExportList().render():
+        ed.TextInput(x, on_change=x_setter).render()
+        ed.Label("Edifice TextInput 1: " + x).render()
+        ed.Label("Edifice TextInput 2: " + x).render()
+        CompoundComponent().render()
 
 
 if __name__ == "__main__":

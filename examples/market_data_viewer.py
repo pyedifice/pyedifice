@@ -57,19 +57,19 @@ def PriceLevel(self, price, size, side, last=False):
         price_box_style["border-bottom"] = "1px solid black"
         size_box_style["border-bottom"] = "1px solid black"
 
-    with ed.View(layout="row", style={"padding": "0px", "width": "360px", "align": "left"}):
-        ed.Label(price, style=price_box_style).set_key("price")
-        ed.Label(size, style=size_box_style).set_key("size")
-        ed.Label("", style=size_bar_style).set_key("vis_size")
+    with ed.View(layout="row", style={"padding": "0px", "width": "360px", "align": "left"}).render():
+        ed.Label(price, style=price_box_style).set_key("price").render()
+        ed.Label(size, style=size_box_style).set_key("size").render()
+        ed.Label("", style=size_bar_style).set_key("vis_size").render()
 
 
 @ed.component
 def Book(self, book):
     sizes = book["sizes"]
     market_price = book["price"]
-    with ed.View(layout="column", style={"margin": "10px", "padding": "0px", "width": 360}):
+    with ed.View(layout="column", style={"margin": "10px", "padding": "0px", "width": 360}).render():
         for p in range(20, 0, -1):
-            PriceLevel(price=p, size=sizes[p], side="bid" if p < market_price else "ask", last=(p == 1)).set_key(str(p))
+            PriceLevel(price=p, size=sizes[p], side="bid" if p < market_price else "ask", last=(p == 1)).set_key(str(p)).render()
 
 
 book_init = {"price": 10, "sizes": [random.randint(100, 300) for _ in range(21)]}
@@ -96,18 +96,18 @@ def App(self):
     def play(e):
         playing_set(lambda p: not p)
 
-    with ed.Window():
-        with ed.View(layout="column"):
-            with ed.View(layout="row", style={"align": "left", "margin-left": "10px"}).set_key("Controls"):
-                ed.Icon(name="chart-line", size=14).set_key("Icon")
-                ed.Label("Market Data Viewer", style={"margin-left": "5px"}).set_key("Label")
+    with ed.Window().render():
+        with ed.View(layout="column").render():
+            with ed.View(layout="row", style={"align": "left", "margin-left": "10px"}).set_key("Controls").render():
+                ed.Icon(name="chart-line", size=14).set_key("Icon").render()
+                ed.Label("Market Data Viewer", style={"margin-left": "5px"}).set_key("Label").render()
                 ed.IconButton(
                     name="pause" if playing else "play",
                     style=stylesheet["play_button"],
                     size=10,
                     on_click=play,
-                ).set_key("Play")
-            Book(book).set_key("Book")
+                ).set_key("Play").render()
+            Book(book).set_key("Book").render()
 
 
 if __name__ == "__main__":
