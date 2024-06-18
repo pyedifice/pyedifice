@@ -1,18 +1,14 @@
-
 # https://legacy.reactjs.org/docs/composition-vs-inheritance.html#containment
 
-import sys
-import os
 import typing as tp
-# We need this sys.path line for running this example, especially in VSCode debugger.
-sys.path.insert(0, os.path.join(sys.path[0], '..'))
 
 import edifice as ed
+
 
 @ed.component
 def MyComponent(
     self: ed.Element,
-    children:list[ed.Element]=[],
+    children: list[ed.Element] = [],
 ):
     bgcolor = "blue"
     with ed.View(
@@ -26,9 +22,14 @@ def MyComponent(
                 ed.child_place(child)
             bgcolor = "blue" if bgcolor == "green" else "green"
 
+
 @ed.component
 def Main(self):
-    strings: tp.Sequence[str] = "Callables which take other callables as arguments may indicate that their parameter types are dependent on".split(" ")
+    strings: tp.Sequence[
+        str
+    ] = "Callables which take other callables as arguments may indicate that their parameter types are dependent on".split(
+        " "
+    )
     with ed.Window():
         with ed.View(style={"padding": 20}):
             x, x_set = ed.use_state(0)

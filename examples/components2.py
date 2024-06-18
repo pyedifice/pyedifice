@@ -1,9 +1,5 @@
 import asyncio as asyncio
-import sys
-import os
 import signal
-# We need this sys.path line for running this example, especially in VSCode debugger.
-sys.path.insert(0, os.path.join(sys.path[0], '..'))
 from edifice import App, Window, Button, ButtonView, View, Label, Icon, component
 from edifice.hooks import use_state, use_effect
 
@@ -14,15 +10,17 @@ def Main(self):
 
     def setup_print():
         print("print setup")
+
         def cleanup_print():
             print("print cleanup")
+
         return cleanup_print
 
     use_effect(setup_print, x)
 
     with Window():
         with View():
-            with View(style={"margin":30}):
+            with View(style={"margin": 30}):
                 with ButtonView(
                     layout="row",
                     on_click=lambda event: None,
@@ -32,7 +30,7 @@ def Main(self):
                     Label(text="<i>Share the Content<i>")
             Button(
                 title="asd + 1",
-                on_click=lambda ev: x_set(x+1),
+                on_click=lambda ev: x_set(x + 1),
             )
             Label("asd " + str(x))
             for i in range(x):

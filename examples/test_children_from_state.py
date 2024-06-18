@@ -5,14 +5,12 @@ Seems to work fine.
 """
 
 import logging
-import sys
 import os
 import typing as tp
-# We need this sys.path line for running this example, especially in VSCode debugger.
-sys.path.insert(0, os.path.join(sys.path[0], '..'))
 from edifice import App, Window, View, component, Slider, Label, use_state, use_effect, Image, TableGridView
 
 from edifice.qt import QT_VERSION
+
 if QT_VERSION == "PyQt6" and not tp.TYPE_CHECKING:
     from PyQt6.QtCore import Qt
     from PyQt6 import QtWidgets, QtGui, QtCore
@@ -25,12 +23,14 @@ logger.setLevel(logging.INFO)
 
 imgpath = os.path.join(os.path.dirname(__file__), "example_calculator.png")
 
+
 @component
 def MyComponent3(self):
     x, x_set = use_state(0)
     x_minus, x_minus_set = use_state(0)
 
     resize_event, resize_event_set = use_state(tp.cast(QtCore.QSize | None, None))
+
     def handle_resize(event: QtGui.QResizeEvent):
         resize_event_set(event.size())
 
@@ -44,16 +44,17 @@ def MyComponent3(self):
             with tgv.row():
                 with View(layout="row", on_resize=handle_resize).set_key("row3"):
                     for i in range(x_minus, x):
-                        with View(layout="column", style={"align":"center"}).set_key("view"+str(i)):
+                        with View(layout="column", style={"align": "center"}).set_key("view" + str(i)):
                             Label(str(i))
                             Image(
                                 src=imgpath,
                                 aspect_ratio_mode=Qt.AspectRatioMode.KeepAspectRatio,
                                 style={
-                                    "width":15,
+                                    "width": 15,
                                     "height": 15,
-                                }
+                                },
                             )
+
 
 @component
 def MyComponent(self):
@@ -63,22 +64,24 @@ def MyComponent(self):
         Slider(x, min_value=0, max_value=100, on_change=x_set)
         InnerComponent(x)
 
+
 @component
-def InnerComponent(self, x:int):
+def InnerComponent(self, x: int):
     y, y_set = use_state(x)
 
     def y_setter():
         y_set(x)
-        return lambda:None
+        return lambda: None
 
     use_effect(y_setter, x)
 
     with View(layout="row"):
         for i in range(y):
-            ItemComponent(i).set_key("X"+str(i))
+            ItemComponent(i).set_key("X" + str(i))
+
 
 @component
-def ItemComponent(self, i:int):
+def ItemComponent(self, i: int):
     with View():
         Label(str(i))
 
@@ -87,6 +90,7 @@ def ItemComponent(self, i:int):
 def Main(self):
     with Window():
         MyComponent3()
+
 
 if __name__ == "__main__":
     App(Main()).start()

@@ -3,18 +3,17 @@
 #
 
 import asyncio as asyncio
-import sys, os
 from typing import cast, TYPE_CHECKING
-# We need this sys.path line for running this example, especially in VSCode debugger.
-sys.path.insert(0, os.path.join(sys.path[0], '..'))
 
 from edifice.qt import QT_VERSION
+
 if QT_VERSION == "PyQt6" and not TYPE_CHECKING:
     from PySide6.QtWidgets import QLabel
 else:
     from PySide6.QtWidgets import QLabel
 
 from edifice import App, Window, View, Label, Button, component, use_ref, use_effect
+
 
 @component
 def MyComp(self):
@@ -30,6 +29,7 @@ def MyComp(self):
     with Window():
         with View():
             Label("Before").register_ref(ref)
+
 
 if __name__ == "__main__":
     my_app = App(MyComp())

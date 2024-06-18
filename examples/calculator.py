@@ -3,12 +3,10 @@
 #
 
 import logging
-import os, sys
-# We need this sys.path line for running this example, especially in VSCode debugger.
-sys.path.insert(0, os.path.join(sys.path[0], '..'))
 import edifice as ed
 
 from edifice.qt import QT_VERSION
+
 if QT_VERSION == "PyQt6":
     from PyQt6 import QtCore, QtGui
 else:
@@ -33,6 +31,7 @@ digits_style = button_style | {"background-color": "#777777"}
 binary_style = button_style | {"background-color": "#ff9e00", "font-size": 30}
 unary_style = button_style | {"background-color": "#595959"}
 display_style = {"font-size": 50, "height": 70, "color": "white", "width": 240, "align": "right", "padding-right": 10}
+
 
 @ed.component
 def Calculator(self):
@@ -62,6 +61,7 @@ def Calculator(self):
                     display_set(str(digit))
                 else:
                     display_set(display_ + str(digit))
+
         return add_digit
 
     def digit_button(digit, double_width=False):
@@ -91,23 +91,26 @@ def Calculator(self):
         def apply_unary_operand(operator):
             clear_display_set(True)
             display_set("%.4f" % OPERATORS[operator](float(display)))
+
         return ed.Button(symbol, style=unary_style, on_click=lambda e: apply_unary_operand(symbol))
 
-    def key_press(e:QtGui.QKeyEvent):
-        if ord('0') <= e.key() <= ord('9'):
-            make_add_digit(e.key() - ord('0'))(None)
-        elif e.text() in ['+', '-', '*', '/']:
+    def key_press(e: QtGui.QKeyEvent):
+        if ord("0") <= e.key() <= ord("9"):
+            make_add_digit(e.key() - ord("0"))(None)
+        elif e.text() in ["+", "-", "*", "/"]:
             apply_binary_operand(e.text())
         elif e.key() == QtCore.Qt.Key.Key_Return:
             apply_binary_operand("=")
 
     with ed.View(layout="column", style=window_style, on_key_down=key_press):
         ed.Label(display, style=display_style)
-        with ed.GridView(layout="""cs%/
+        with ed.GridView(
+            layout="""cs%/
                                 789*
                                 456-
                                 123+
-                                00.="""):
+                                00.="""
+        ):
             unary_button("AC").set_key("c")
             unary_button("+/-").set_key("s")
             unary_button("%").set_key("%")
@@ -132,10 +135,12 @@ def Calculator(self):
             digit_button(".").set_key(".")
             binary_button("=").set_key("=")
 
+
 @ed.component
 def Main(self):
     with ed.Window(title="Calculator"):
         Calculator()
+
 
 if __name__ == "__main__":
     ed.App(Main()).start()
