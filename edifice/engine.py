@@ -258,15 +258,33 @@ class ControllerProtocol(tp.Protocol):
         pass
 
 
-class _Tracker:
+E = tp.TypeVar("E", bound="Element")
+
+
+class Tracker(tp.Generic[E]):
     """
     During a render, track the current element and the children being
     added to the current element.
     """
 
     children: list["Element"]
+    component: E
 
-    def __init__(self, component: "Element"):
+    def __enter__(self: Self) -> E:
+        ctx = get_render_context()
+        ctx.trackers.append(self)
+        return self.component
+
+    def __exit__(self, *args):
+        ctx = get_render_context()
+        tracker = ctx.trackers.pop()
+        children = tracker.collect()
+        prop = tracker.component._props.get("children", [])
+        for child in children:
+            prop.append(child)
+        tracker.component._props["children"] = prop
+
+    def __init__(self, component: E):
         self.component = component
         self.children = []
 
@@ -303,8 +321,8 @@ class _RenderContext(object):
         "engine",
         "current_element",
     )
-    trackers: list[_Tracker]
-    """Stack of _Tracker"""
+    trackers: list[Tracker]
+    """Stack of Tracker"""
     current_element: "Element | None"
     """The Element currently being rendered."""
 
@@ -362,13 +380,6 @@ def get_render_context_maybe() -> _RenderContext | None:
     return getattr(local_state, "render_context", None)
 
 
-def child_place(component: "Element") -> None:
-    """
-    Place a child passed through the special :code:`children` **props** into
-    the layout of a parent :func:`component`.
-    """
-    get_render_context().trackers[-1].append_child(component)
-
 class Element:
     """The base class for Edifice Elements.
 
@@ -394,12 +405,6 @@ class Element:
         # Ensure we only construct this element once
         assert getattr(self, "_initialized", False) is False
         self._initialized = True
-        ctx = get_render_context_maybe()
-        if ctx is not None:
-            trackers = ctx.trackers
-            if len(trackers) > 0:
-                parent = trackers[-1]
-                parent.append_child(self)
 
         # We don't really need these hook indices to be per-instance state.
         # They are only used during a render.
@@ -410,20 +415,15 @@ class Element:
         self._hook_async_index: int = 0
         """use_async hook index for current render."""
 
-    def __enter__(self: Self) -> Self:
-        ctx = get_render_context()
-        tracker = _Tracker(self)
-        ctx.trackers.append(tracker)
-        return self
-
-    def __exit__(self, *args):
-        ctx = get_render_context()
-        tracker = ctx.trackers.pop()
-        children = tracker.collect()
-        prop = self._props.get("children", [])
-        for child in children:
-            prop.append(child)
-        self._props["children"] = prop
+    def render(self: Self) -> Tracker[Self]:
+        tracker = Tracker(self)
+        ctx = get_render_context_maybe()
+        if ctx is not None:
+            trackers = ctx.trackers
+            if len(trackers) > 0:
+                parent = trackers[-1]
+                parent.append_child(self)
+        return tracker
 
     def _register_props(self, props: tp.Mapping[tp.Text, tp.Any]) -> None:
         """Register props.
@@ -570,6 +570,7 @@ selfT = tp.TypeVar("selfT", bound=Element)
 def not_ignored(arg: tuple[str, tp.Any]) -> bool:
     return arg[0][0] != "_"
 
+
 def component(f: Callable[tp.Concatenate[selfT, P], None]) -> Callable[P, Element]:
     """Decorator turning a render function of **props** into an :class:`Element`.
 
@@ -609,54 +610,40 @@ def component(f: Callable[tp.Concatenate[selfT, P], None]) -> Callable[P, Elemen
 
        Do not explicitly pass the :code:`children` **prop** when calling
        the :func:`component`. The children will be passed implicitly.
-    2. The :func:`child_place` function is used to place the :code:`children`
-       in the parent :func:`component`’s render function.
+    2. The :func:`render()` method is used to place the :code:`children`
+       in the parent :func:`component`’s render function where.
 
+    [TODO]: reword this
     With these two features, you can declare how the parent
     container :func:`component` will render its children::
 
         @component
         def ContainerComponent(self:Element, children:list[Element]=[]):
-            with View():
+            with View().render():
                 for child in children:
-                    with View():
-                        child_place(child)
+                    with View().render():
+                        child.render()
 
-        with ContainerComponent():
-            Label("First Child")
-            Label("Second Child")
-            Label("Third Child")
+        with ContainerComponent().render():
+            Label("First Child").render()
+            Label("Second Child").render()
+            Label("Third Child").render()
 
-    Element initialization is a render side-effect
+    Element rendering
     ----------------------------------------------
 
-    Each :class:`Element` is actually implemented as the constructor function
-    for a Python class. The :class:`Element` constructor function also has
-    the side-effect of inserting itself to the rendered :class:`Element` tree,
-    as a child of the :code:`with` context layout Element.
-
-    For that reason, you have to be careful about binding Elements to variables
-    and passing them around. They will insert themselves at the time they are
-    created. This code will **NOT** declare the intended Element tree::
+    To render an :class:`Element` as a sub-element of another
+    :class:`Element` you must call the `.render()` method, otherwise
+    the :class:`Element` is not included when rendering the widgets
+    to the UI.
 
         @component
         def MySimpleComp(self, prop1, prop2, prop3):
             label3 = Label(prop3)
-            with View():
-                Label(prop1)
-                Label(prop2)
-                label3
-
-    To solve this, defer the construction of the Element with a lambda function.
-    This code will declare the same intended Element tree as the code above::
-
-        @component
-        def MySimpleComp(self, prop1, prop2, prop3):
-            label3 = lambda: Label(prop3)
-            with View():
-                Label(prop1)
-                Label(prop2)
-                label3()
+            with View().render():
+                Label(prop1).render()
+                Label(prop2).render()
+                label3.render()
 
     If these component Elements are render functions, then why couldn’t we just write
     a normal render function with no decorator::
@@ -1944,7 +1931,7 @@ class RenderEngine(object):
         self._hook_state_setted.discard(component)
 
         # Call user provided render function and retrieve old results
-        with Container() as container:
+        with Container().render() as container:
             prev_element = render_context.current_element
             render_context.current_element = component
             sub_component = component._render_element()
