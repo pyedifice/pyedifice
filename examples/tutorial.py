@@ -26,17 +26,17 @@ def ConversionWidget(self, from_unit, to_unit, factor):
     from_label_style = {"width": 170}
     to_label_style = {"margin-left": 60, "width": 200}
     input_style = {"padding": 2, "width": 120}
-    with View(layout="row", style={"margin": 10, "width": 560}):
-        Label(f"Measurement in {self.props.from_unit}:", style=from_label_style)
-        TextInput(current_text, style=input_style, on_change=current_text_set)
-        Label(f"Measurement in {self.props.to_unit}: {to_text}", style=to_label_style)
+    with View(layout="row", style={"margin": 10, "width": 560}).render():
+        Label(f"Measurement in {self.props.from_unit}:", style=from_label_style).render()
+        TextInput(current_text, style=input_style, on_change=current_text_set).render()
+        Label(f"Measurement in {self.props.to_unit}: {to_text}", style=to_label_style).render()
 
 
 @component
 def MyApp(self):
-    with Window(title="Measurement Conversion"):
-        ConversionWidget("meters", "feet", METERS_TO_FEET)
-        ConversionWidget("feet", "meters", 1 / METERS_TO_FEET)
+    with Window(title="Measurement Conversion").render():
+        ConversionWidget("meters", "feet", METERS_TO_FEET).render()
+        ConversionWidget("feet", "meters", 1 / METERS_TO_FEET).render()
 
 
 if __name__ == "__main__":

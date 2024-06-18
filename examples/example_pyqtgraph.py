@@ -2,7 +2,6 @@
 # python examples/example_pyqtgraph.py
 #
 
-import typing as tp
 import numpy as np
 
 from edifice.qt import QT_VERSION
@@ -37,7 +36,7 @@ def Component(self):
         ys = np.sin(xs)
         plot_item.plot(x=xs, y=ys, pen=pen, fillLevel=-1.0, brush=brush)
 
-    with ed.View():
+    with ed.View().render():
         with ed.ButtonView(
             on_trigger=lambda _: x_min_set(x_min + 1.0),
             style={
@@ -45,16 +44,16 @@ def Component(self):
                 "height": "50px",
                 "margin": "10px",
             },
-        ):
-            ed.Label("Increment x_min")
-        PyQtPlot(plot_fun=plot_fn)
+        ).render():
+            ed.Label("Increment x_min").render()
+        PyQtPlot(plot_fun=plot_fn).render()
 
 
 @ed.component
 def Main(self):
-    with ed.Window("PyQtPlot Example"):
-        with ed.View():
-            Component()
+    with ed.Window("PyQtPlot Example").render():
+        with ed.View().render():
+            Component().render()
 
 
 if __name__ == "__main__":

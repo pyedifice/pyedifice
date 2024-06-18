@@ -24,22 +24,22 @@ def myComponent(self):
         new_rows.remove(i)
         set_rows(new_rows)
 
-    with ed.Window():
-        with ed.View(style={"align": "top"}):
-            with ed.View(style={"margin": 10}):
+    with ed.Window().render():
+        with ed.View(style={"align": "top"}).render():
+            with ed.View(style={"margin": 10}).render():
                 with ButtonView(
                     on_click=lambda ev: add_key(),
                     style={"width": 100, "height": 30, "margin": 10},
-                ):
-                    ed.Label(text="Add Row")
+                ).render():
+                    ed.Label(text="Add Row").render()
 
-            with TableGridView() as tgv:
+            with TableGridView().render() as tgv:
                 for rkey in rows:
-                    with tgv.row():
-                        ed.Label(text="Key " + str(rkey) + " Column 0")
-                        ed.Label(text="Key " + str(rkey) + " Column 1")
-                        with ButtonView(on_click=lambda ev, rkey=rkey: del_key(rkey)):
-                            ed.Label(text="Delete Key " + str(rkey))
+                    with tgv.row().render():
+                        ed.Label(text="Key " + str(rkey) + " Column 0").render()
+                        ed.Label(text="Key " + str(rkey) + " Column 1").render()
+                        with ButtonView(on_click=lambda ev, rkey=rkey: del_key(rkey)).render():
+                            ed.Label(text="Delete Key " + str(rkey)).render()
 
 
 if __name__ == "__main__":

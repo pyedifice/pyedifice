@@ -10,14 +10,14 @@ from edifice import App, Window, View, Label, Button, component, use_state
 def UseState1(self):
     show, set_show = use_state(False)
 
-    with Window():
+    with Window().render():
         if show:
-            with View():
-                Button(title="Hide", on_click=lambda ev: set_show(False))
-                TestComp()
+            with View().render():
+                Button(title="Hide", on_click=lambda ev: set_show(False)).render()
+                TestComp().render()
         else:
-            with View():
-                Button(title="Show", on_click=lambda ev: set_show(True))
+            with View().render():
+                Button(title="Show", on_click=lambda ev: set_show(True)).render()
 
 
 @component
@@ -32,12 +32,12 @@ def TestComp(self):
         for i in range(10):
             x_setter(lambda y: y + 1)
 
-    with View(style={"align": "top"}):
-        Button(title="State " + str(x) + " + 1", on_click=handle_click)
-        Button(title="State " + str(x) + " + 10", on_click=click10)
-        Button(title="Exit", on_click=lambda ev: asyncio.get_event_loop().call_soon(my_app.stop))
+    with View(style={"align": "top"}).render():
+        Button(title="State " + str(x) + " + 1", on_click=handle_click).render()
+        Button(title="State " + str(x) + " + 10", on_click=click10).render()
+        Button(title="Exit", on_click=lambda ev: asyncio.get_event_loop().call_soon(my_app.stop)).render()
         for i in range(x):
-            Label(text=str(i))
+            Label(text=str(i)).render()
 
 
 if __name__ == "__main__":

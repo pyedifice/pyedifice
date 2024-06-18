@@ -78,41 +78,41 @@ def AxisDescriptor(
         plot_[f"{key}.transform"] = (transform_type, param_val)
         plot_change(plot_)
 
-    with View(layout="column"):
-        with View(layout="row", style=row_style):
-            Label(name, style={"width": 100})
+    with View(layout="column").render():
+        with View(layout="row", style=row_style).render():
+            Label(name, style={"width": 100}).render()
             Dropdown(
                 selection=data_type_selection,
                 options=data_types,
                 on_select=handle_data_type,
-            )
+            ).render()
             if data_type != "Date":
-                TextInput(text=ticker, style={"padding": 2}, on_change=handle_ticker)
+                TextInput(text=ticker, style={"padding": 2}, on_change=handle_ticker).render()
 
-        with View(layout="row", style=row_style):
-            Label("Transform:", style={"width": 100})
+        with View(layout="row", style=row_style).render():
+            Label("Transform:", style={"width": 100}).render()
             Dropdown(
                 selection=transform_type_selection,
                 options=transform_types,
                 on_select=handle_transform_type,
-            )
+            ).render()
             if transform_type == "EMA":
-                Label(f"Half Life ({param} days)", style={"width": 120})
+                Label(f"Half Life ({param} days)", style={"width": 120}).render()
             if transform_type == "EMA":
-                Slider(value=param, min_value=1, max_value=90, on_change=handle_param)
+                Slider(value=param, min_value=1, max_value=90, on_change=handle_param).render()
 
 
 # We create a shorthand for creating a component with a label
 def labeled_elem(label, comp):
-    with View(layout="row", style={"align": "left"}):
-        Label(label, style={"width": 100})
-        comp()
+    with View(layout="row", style={"align": "left"}).render():
+        Label(label, style={"width": 100}).render()
+        comp().render()
 
 
 def add_divider(comp):
-    with View(layout="column"):
-        comp()
-        View(style={"height": 0, "border": "1px solid gray"})
+    with View(layout="column").render():
+        comp().render()
+        View(style={"height": 0, "border": "1px solid gray"}).render()
 
 
 plot_types = ["scatter", "line"]
@@ -137,11 +137,11 @@ def PlotDescriptor(self, plot: dict[str, tp.Any], plot_change: tp.Callable[[dict
         plot_["color"] = plot_colors[color_index]
         plot_change(plot_)
 
-    with View(layout="row", style={"margin": 5, "align": "left"}):
-        with View(layout="column", style={"align": "top", "width": 400}):
-            AxisDescriptor("x-axis", "xaxis", plot, plot_change)
-            AxisDescriptor("y-axis", "yaxis", plot, plot_change)
-        with View(layout="column", style={"align": "top", "margin-left": 10}):
+    with View(layout="row", style={"margin": 5, "align": "left"}).render():
+        with View(layout="column", style={"align": "top", "width": 400}).render():
+            AxisDescriptor("x-axis", "xaxis", plot, plot_change).render()
+            AxisDescriptor("y-axis", "yaxis", plot, plot_change).render()
+        with View(layout="column", style={"align": "top", "margin-left": 10}).render():
             labeled_elem(
                 "Chart type", lambda: Dropdown(selection=plot_type, options=plot_types, on_select=handle_plot_type)
             )
@@ -198,8 +198,8 @@ def App(self):
             elif plot_type == "scatter":
                 ax.scatter(df.xdata, df.ydata, color=color)
 
-    with View(layout="column", style={"margin": 10, "align": "top"}):
-        with View(layout="column"):
+    with View(layout="column", style={"margin": 10, "align": "top"}).render():
+        with View(layout="column").render():
             for key, plot in plots.items():
 
                 def plot_change(p: dict[str, tp.Any]) -> None:
@@ -211,14 +211,14 @@ def App(self):
             # Edifice comes with Font-Awesome icons for your convenience
             IconButton(name="plus", title="Add Plot", on_click=add_plot)
 
-        with View(style={"height": 500, "margin-top": 10}):
-            MatplotlibFigure(plot_figure)
+        with View(style={"height": 500, "margin-top": 10}).render():
+            MatplotlibFigure(plot_figure).render()
 
 
 @ed.component
 def Main(self):
-    with ed.Window(title="Financial Charts"):
-        App()
+    with ed.Window(title="Financial Charts").render():
+        App().render()
 
 
 # Finally to start the the app, we pass the Element to the edifice.App object
