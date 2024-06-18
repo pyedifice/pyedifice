@@ -6,6 +6,7 @@ import edifice.base_components as base_components
 import edifice as ed
 
 from edifice.qt import QT_VERSION
+
 if QT_VERSION == "PyQt6":
     from PyQt6 import QtWidgets
 else:
@@ -14,32 +15,35 @@ else:
 if QtWidgets.QApplication.instance() is None:
     qapp = QtWidgets.QApplication(["-platform", "offscreen"])
 
+
 @ed.component
 def Value(self, value):
     self.value = value
-    base_components.View()
+    base_components.View().render()
 
 
 class OtherMockElement(ed.Element):
-
     def __init__(self):
         super().__init__()
+
         class MockController(object):
             _request_rerender = unittest.mock.MagicMock()
+
         self._controller = MockController()
 
-class MockBrokenElement(ed.Element):
 
+class MockBrokenElement(ed.Element):
     def __init__(self):
         super().__init__()
+
         class MockController(object):
             def _request_rerender(*args, **kwargs):
                 raise ValueError("I am broken")
+
         self._controller = MockController()
 
 
 class ElementTestCase(unittest.TestCase):
-
     def test_render_view_replacement(self):
         """
         Test that when a View row is replaced by a View column, a new View
@@ -50,34 +54,37 @@ class ElementTestCase(unittest.TestCase):
         def xComponent(self):
             x, x_set = ed.use_state(0)
             if x == 0:
-                with ed.View(layout="row").set_key("row"):
-                    ed.Label("Test")
+                with ed.View(layout="row").set_key("row").render():
+                    ed.Label("Test").render()
                 x_set(1)
             else:
-                with ed.View(layout="column").set_key("column"):
-                    ed.Label("Test")
+                with ed.View(layout="column").set_key("column").render():
+                    ed.Label("Test").render()
 
         root_element = Window()(xComponent())
         app = App(root_element, create_application=False)
         render_engine = engine.RenderEngine(root_element, app)
         _render_results1 = render_engine._request_rerender([root_element])
-        self.assertIsInstance(render_engine._widget_tree[root_element].children[0].underlying_layout, QtWidgets.QHBoxLayout)
+        self.assertIsInstance(
+            render_engine._widget_tree[root_element].children[0].underlying_layout, QtWidgets.QHBoxLayout
+        )
         _render_results2 = render_engine._request_rerender([root_element])
-        self.assertIsInstance(render_engine._widget_tree[root_element].children[0].underlying_layout, QtWidgets.QVBoxLayout)
+        self.assertIsInstance(
+            render_engine._widget_tree[root_element].children[0].underlying_layout, QtWidgets.QVBoxLayout
+        )
+
 
 class MakeElementTestCase(unittest.TestCase):
-
     def test_make_component(self):
-
         @ed.component
         def Element1234(self, prop1, prop2):
-            Value(1234)
+            Value(1234).render()
 
         self.assertEqual(Element1234.__name__, "Element1234")
         comp = Element1234(1, 2)
         self.assertEqual(comp.__class__, Element1234)
         self.assertEqual(comp.props._d, {"prop1": 1, "prop2": 2, "children": []})
-        with engine.Container() as container:
+        with engine.Container().render() as container:
             comp._render_element()
         value_component = container.children[0]
         self.assertEqual(value_component.__class__.__name__, "Value")
@@ -86,20 +93,19 @@ class MakeElementTestCase(unittest.TestCase):
         self.assertEqual(value_component.value, 1234)
 
     def test_make_components(self):
-
         @ed.component
         def Element1234(self, prop1, prop2):
-            with base_components.View():
-                Value(1337)
-                Value(42)
-                Value(69)
-                Value(420)
+            with base_components.View().render():
+                Value(1337).render()
+                Value(42).render()
+                Value(69).render()
+                Value(420).render()
 
         self.assertEqual(Element1234.__name__, "Element1234")
         comp = Element1234(1, 2)
         self.assertEqual(comp.__class__, Element1234)
         self.assertEqual(comp.props._d, {"prop1": 1, "prop2": 2, "children": []})
-        with engine.Container() as container:
+        with engine.Container().render() as container:
             comp._render_element()
         view = container.children[0]
         components = view.children
@@ -112,25 +118,24 @@ class MakeElementTestCase(unittest.TestCase):
         self.assertEqual(values, [1337, 42, 69, 420])
 
     def test_make_nested_component(self):
-
         @ed.component
         def A(self):
-            Value(13)
+            Value(13).render()
 
         @ed.component
         def Element1234(self, prop1, prop2):
-            with A():
-                Value(9)
+            with A().render():
+                Value(9).render()
 
         self.assertEqual(Element1234.__name__, "Element1234")
         comp = Element1234(1, 2)
         self.assertEqual(comp.__class__, Element1234)
         self.assertEqual(comp.props._d, {"prop1": 1, "prop2": 2, "children": []})
-        with engine.Container() as container:
+        with engine.Container().render() as container:
             comp._render_element()
         root = container.children[0]
         self.assertEqual(root.__class__.__name__, "A")
-        with engine.Container() as container:
+        with engine.Container().render() as container:
             root._render_element()
         nested = container.children[0]
         nested._render_element()
@@ -141,3 +146,7 @@ class MakeElementTestCase(unittest.TestCase):
             child._render_element()
         values = [comp.value for comp in children]
         self.assertEqual(values, [9])
+
+
+if __name__ == "__main__":
+    unittest.main()
