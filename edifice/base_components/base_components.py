@@ -863,7 +863,7 @@ class Slider(QtWidgetElement):
 
     def _on_change_handle(self, position: int) -> None:
         if self._on_change is not None:
-            self._on_change(position)
+            _ensure_future(self._on_change)(position)
 
     def _set_on_change(self, on_change):
         self._on_change = on_change
