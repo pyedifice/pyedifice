@@ -262,6 +262,20 @@
               type = "app";
               program = "${script}/bin/edifice-example";
             };
+          example-async-updates =
+            let
+              script = pkgs.writeShellApplication {
+                name = "edifice-example";
+                runtimeInputs = [
+                  (poetry2nix-custom.mkPoetryEnv poetryEnvAttrs)
+                ];
+                text = "cd ${inputs.self.outPath}; python examples/example_async_updates.py";
+              };
+            in
+            {
+              type = "app";
+              program = "${script}/bin/edifice-example";
+            };
           example-todomvc =
             let
               script = pkgs.writeShellApplication {
