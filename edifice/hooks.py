@@ -61,16 +61,17 @@ def use_state(
 
     Do not mutate the state variable. The old state variable must be left
     unmodified so that it can be compared to the new state variable during
-    the next render. If your state variable is a collection, then create
-    a shallow
-    `copy <https://docs.python.org/3/library/copy.html>`_
-    of it to pass to the **setter function**::
+    the next render.
+    Instead create a shallow `copy <https://docs.python.org/3/library/copy.html#copy.copy>`_
+    of the state, modify the copy, then call the **setter function** with the modified copy.
+
+        from copy import copy
 
         def Stateful(self):
             x, x_setter = use_state(cast(list[str], []))
 
             def updater(x_previous):
-                x_new = x_previous[:]
+                x_new = copy(x_previous)
                 x_new.append("Label Text " + str(len(x_previous)))
                 return x_new
 
@@ -87,9 +88,6 @@ def use_state(
     Use the
     `replace() <https://docs.python.org/3/library/dataclasses.html#dataclasses.replace>`_
     function to update the dataclass.
-    To shallow-copy a :code:`list`,
-    `slice the entire list <https://docs.python.org/3/library/copy.html>`_
-    like :code:`list_new = list_old[:]`.
 
     .. warning::
         You can't store a :code:`callable` value in :code:`use_state`,
