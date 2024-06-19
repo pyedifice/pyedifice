@@ -14,7 +14,7 @@ def ElementLabel(self, root: ed.Element, current_selection: ed.Element | None, o
         root.__class__.__name__,
         style={"background-color": SELECTION_COLOR} if root == current_selection else {},
         on_click=lambda _ev: on_click(),
-    )
+    ).render()
 
 
 @ed.component
@@ -93,7 +93,7 @@ def StateView(
                     ed.Label(
                         text=str(s.state),
                         selectable=True,
-                    )
+                    ).render()
 
 
 @ed.component
@@ -182,9 +182,9 @@ def Inspector(
                 current_selection=selected,
                 on_click=lambda: selected_set(root),
                 load_fun=[(lambda child=child: _build_tree(child, recurse_level + 1)) for child in children],
-            )
+            ).render()
         else:
-            ElementLabel(root, current_selection=selected, on_click=lambda: selected_set(root))
+            ElementLabel(root, current_selection=selected, on_click=lambda: selected_set(root)).render()
 
     with ed.View(layout="row").render():
         if component_tree is not None and root_component is not None and hook_state is not None:
