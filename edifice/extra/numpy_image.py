@@ -19,7 +19,12 @@ T_Numpy_Array_co = TypeVar("T_Numpy_Array_co", bound=np.generic, covariant=True)
 
 
 class NumpyArray(Generic[T_Numpy_Array_co]):
-    """Wrapper for using :code:`numpy` arrays as states."""
+    """Wrapper for :code:`numpy` arrays.
+    
+    This wrapper class provides the :code:`__eq__` relation for the wrapped :code:`numpy` array such that if two
+    wrapped arrays are :code:`__eq__`, then one can be substituted for the other. This class may be used as a
+    **prop** or a **state**.
+    """
 
     np_array: npt.NDArray[T_Numpy_Array_co]
 
