@@ -1,2 +1,5 @@
-python -m unittest discover -s tests && EDIFICE_QT_VERSION=PyQt6 python -m unittest discover -s tests
-python -m unittest discover -s tests && EDIFICE_QT_VERSION=PySide6 python -m unittest discover -s tests
+set -euo pipefail
+echo "Test with PySide6"
+python -m unittest discover -s tests
+echo "Test with PyQt6"
+EDIFICE_QT_VERSION=PyQt6 python -m unittest discover -s tests
