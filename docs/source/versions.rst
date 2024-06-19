@@ -9,7 +9,7 @@ Release Notes
 Released: 2024-06-14
 
 * :func:`component` composition with :code:`children` props
-  and :func:`child_place`.
+  and :code:`child_place`.
 
 0.7.3
 -----
