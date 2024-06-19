@@ -60,17 +60,10 @@ class Image(QtWidgetElement):
       `QLabel <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QLabel.html>`_
 
     If you want to display a 3-dimensional :code:`uint8` :code:`numpy` array as an image,
-    then first convert it to a :code:`QImage` using a function like this
-    :code:`NDArray8_to_QImage`.
+    checkout:
 
-    Example::
-
-        from numpy import uint8
-        from numpy.typing import NDArray
-
-        def NDArray8_to_QImage(arr: NDArray[uint8]) -> QImage:
-            height, width, channel = arr.shape
-            return QImage(arr.data, width, height, channel * width, QImage.Format.Format_RGB888)
+    * `<https://pyedifice.github.io/stubs/edifice.extra.NumpyImage.html>`_
+    * `<https://pyedifice.github.io/stubs/edifice.extra.NumpyArray_to_QImage.html>`_
 
     Args:
         src:
