@@ -5,24 +5,24 @@
 	"version": "0.2.0",
 	"configurations": [
 		{
-			"name": "Runner tutorial_old.py",
-			"type": "python",
-			"request": "launch",
-			"module": "edifice",
-			"justMyCode": true,
-			"args": ["examples/tutorial_old.py", "MyApp"]
-		},
-		{
 			"name": "Runner tutorial.py",
-			"type": "python",
+			"type": "debugpy",
 			"request": "launch",
 			"module": "edifice",
 			"justMyCode": true,
 			"args": ["examples/tutorial.py", "MyApp"]
 		},
 		{
-			"name": "Runner inspector calculator.py",
-			"type": "python",
+			"name": "Runner --inspect tutorial.py",
+			"type": "debugpy",
+			"request": "launch",
+			"module": "edifice",
+			"justMyCode": true,
+			"args": ["--inspect", "examples/tutorial.py", "MyApp"]
+		},
+		{
+			"name": "Runner --inspect calculator.py",
+			"type": "debugpy",
 			"request": "launch",
 			"module": "edifice",
 			"justMyCode": true,
@@ -30,7 +30,7 @@
 		},
 		{
 			"name": "Runner financial_charts.py",
-			"type": "python",
+			"type": "debugpy",
 			"request": "launch",
 			"module": "edifice",
 			"justMyCode": true,
