@@ -1446,6 +1446,57 @@ class QtWidgetElement(Element):
         return commands
 
 
+qtT = tp.TypeVar("qtT", bound=QtWidgetElement)
+
+
+def qt_component(
+    f: Callable[
+        tp.Concatenate[qtT, list[str], Callable[[QtWidgets.QWidget, QtWidgets.QLayout | None], list[CommandType]], P],
+        list[CommandType],
+    ],
+) -> Callable[P, QtWidgetElement]:
+    varnames = f.__code__.co_varnames[3:]
+    signature = inspect.signature(f).parameters
+    defaults = {k: v.default for k, v in signature.items() if v.default is not inspect.Parameter.empty and k[0] != "_"}
+
+    class ComponentElement(QtWidgetElement):
+        _edifice_original = f
+
+        @functools.wraps(f)
+        def __init__(self, *args: P.args, **kwargs: P.kwargs):
+            super().__init__()
+            name_to_val = defaults.copy()
+            name_to_val.update(filter(not_ignored, zip(varnames, args, strict=False)))
+            name_to_val.update(((k, v) for (k, v) in kwargs.items() if k[0] != "_"))
+            self._register_props(name_to_val)
+
+        def _qt_update_commands(
+            self,
+            widget_trees: dict[Element, "_WidgetTree"],
+            newprops: PropsDict,
+        ) -> list[CommandType]:
+            props: dict[str, tp.Any] = self.props._d
+            params = props.copy()
+            newkeys = list(newprops._d.keys())
+
+            def super_commands(underlying: QtWidgets.QWidget, layout: QtWidgets.QLayout | None):
+                commands = super(ComponentElement, self)._qt_update_commands_super(
+                    widget_trees, newprops, underlying, layout
+                )
+                return commands
+
+            me = tp.cast(qtT, self)
+            commands = f(me, newkeys, super_commands, **params)
+            return commands
+
+        def __repr__(self):
+            return f.__name__
+
+    ComponentElement.__name__ = f.__name__
+    comp = tp.cast(Callable[P, QtWidgetElement], ComponentElement)
+    return comp
+
+
 class _WidgetTree(object):
     """
     A QtWidgetElement and its QtWidgetElement children.
@@ -1987,7 +2038,12 @@ class RenderEngine(object):
 
         old_props = render_context.get_old_props(element)
         new_props = PropsDict({k: v for k, v in element.props._items if k not in old_props or old_props[k] != v})
+
+        # Call user provided render function and retrieve old results
+        prev_element = render_context.current_element
+        render_context.current_element = element
         commands.extend(element._qt_update_commands(render_context.widget_tree, new_props))
+        render_context.current_element = prev_element
         return commands
 
     def _request_rerender(self, components: list[Element]) -> RenderResult:

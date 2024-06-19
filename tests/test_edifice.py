@@ -1,7 +1,7 @@
 import unittest
 import unittest.mock
 from edifice import Element, Reference, component, use_ref
-from edifice.engine import CommandType, _dereference_tree, _WidgetTree, QtWidgetElement
+from edifice.engine import CommandType, PropsDict, _dereference_tree, _WidgetTree, QtWidgetElement
 import edifice.engine as engine
 import edifice.base_components as base_components
 
@@ -615,7 +615,7 @@ class RefreshClassTestCase(unittest.TestCase):
             base_components.RadioButton(False, "C"),
         ]
         for c in children1:
-            c._initialize()
+            c._qt_update_commands({}, PropsDict({}))
 
         v._widget_children = children1[:]
         new_children = [

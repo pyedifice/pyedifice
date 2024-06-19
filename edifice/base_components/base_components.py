@@ -3,6 +3,8 @@ import importlib.resources
 import logging
 import re
 import typing as tp
+
+from edifice.hooks import use_singleton, use_state
 from ..engine import (
     _WidgetTree,
     _get_widget_children,
@@ -13,6 +15,7 @@ from ..engine import (
     _create_qmenu,
     _CURSORS,
     _ensure_future,
+    qt_component,
 )
 
 from ..qt import QT_VERSION
@@ -356,7 +359,28 @@ class IconButton(Button):
         return commands
 
 
-class Label(QtWidgetElement):
+T = tp.TypeVar("T", bound=QtWidgets.QWidget)
+
+
+def use_underlying(self: QtWidgetElement, construct: tp.Callable[[], T]) -> T:
+    if self.underlying is None:
+        self.underlying = construct()
+    return tp.cast(T, self.underlying)
+
+
+@qt_component
+def Label(
+    self: QtWidgetElement,
+    newprops: list[str],
+    super_commands: tp.Callable[[QtWidgets.QWidget, QtWidgets.QLayout | None], list[CommandType]],
+    text: str = "",
+    selectable: bool = False,
+    editable: bool = False,
+    word_wrap: bool = True,
+    link_open: bool = False,
+    cursor: QtGui.QCursor | QtCore.Qt.CursorShape | QtGui.QPixmap | None = None,
+    **_kwargs: tp.Any,
+) -> list[CommandType]:
     """Basic widget for displaying text.
 
     * Underlying Qt Widget
@@ -375,77 +399,45 @@ class Label(QtWidgetElement):
         editable: Whether the content of the label can be edited. Defaults to False.
     """
 
-    def __init__(
-        self,
-        text: str = "",
-        selectable: bool = False,
-        editable: bool = False,
-        word_wrap: bool = True,
-        link_open: bool = False,
-        **kwargs,
-    ):
-        super().__init__(**kwargs)
-        self._register_props(
-            {
-                "text": text,
-                "selectable": selectable,
-                "editable": editable,
-                "word_wrap": word_wrap,
-                "link_open": link_open,
-            }
-        )
-        self._register_props(kwargs)
+    widget = use_underlying(self, lambda: QtWidgets.QLabel(text))
+    widget.setObjectName(str(id(self)))
+    size = widget.font().pointSize()
+    self._set_size(size * len(text), size, lambda size: (size * len(str(text)), size))
 
-    def _initialize(self):
-        self.underlying = QtWidgets.QLabel(self.props.text)
-        self.underlying.setObjectName(str(id(self)))
+    # TODO
+    # If you want the QLabel to fit the text then you must use adjustSize()
+    # https://github.com/pyedifice/pyedifice/issues/41
+    # https://stackoverflow.com/questions/48665788/qlabels-getting-clipped-off-at-the-end/48665900#48665900
 
-    def _qt_update_commands(
-        self,
-        widget_trees: dict[Element, _WidgetTree],
-        newprops,
-    ):
-        if self.underlying is None:
-            self._initialize()
-        assert self.underlying is not None
-        size = self.underlying.font().pointSize()
-        self._set_size(size * len(self.props.text), size, lambda size: (size * len(str(self.props.text)), size))
-
-        # TODO
-        # If you want the QLabel to fit the text then you must use adjustSize()
-        # https://github.com/pyedifice/pyedifice/issues/41
-        # https://stackoverflow.com/questions/48665788/qlabels-getting-clipped-off-at-the-end/48665900#48665900
-
-        widget = tp.cast(QtWidgets.QLabel, self.underlying)
-        commands = super()._qt_update_commands_super(widget_trees, newprops, self.underlying, None)
-        if "text" in newprops:
-            commands.append(CommandType(widget.setText, newprops["text"]))
-        if "word_wrap" in newprops:
-            commands.append(CommandType(widget.setWordWrap, newprops["word_wrap"]))
-        if "link_open" in newprops:
-            commands.append(CommandType(widget.setOpenExternalLinks, newprops["link_open"]))
-        if "selectable" in newprops or "editable" in newprops:
-            interaction_flags = 0
-            change_cursor = False
-            if self.props.selectable:
-                change_cursor = True
-                interaction_flags = (
-                    QtCore.Qt.TextInteractionFlag.TextSelectableByMouse
-                    | QtCore.Qt.TextInteractionFlag.TextSelectableByKeyboard
-                )
-            if self.props.editable:
-                change_cursor = True
-                # PyQt5 doesn't support bitwise or with ints
-                # TODO What about PyQt6?
-                if interaction_flags:
-                    interaction_flags |= QtCore.Qt.TextInteractionFlag.TextEditable
-                else:
-                    interaction_flags = QtCore.Qt.TextInteractionFlag.TextEditable
-            if change_cursor and self.props.cursor is None:
-                commands.append(CommandType(widget.setCursor, _CURSORS["text"]))
+    commands = super_commands(widget, None)
+    if "text" in newprops:
+        commands.append(CommandType(widget.setText, text))
+    if "word_wrap" in newprops:
+        commands.append(CommandType(widget.setWordWrap, word_wrap))
+    if "link_open" in newprops:
+        commands.append(CommandType(widget.setOpenExternalLinks, link_open))
+    if "selectable" in newprops or "editable" in newprops:
+        interaction_flags = 0
+        change_cursor = False
+        if selectable:
+            change_cursor = True
+            interaction_flags = (
+                QtCore.Qt.TextInteractionFlag.TextSelectableByMouse
+                | QtCore.Qt.TextInteractionFlag.TextSelectableByKeyboard
+            )
+        if editable:
+            change_cursor = True
+            # PyQt5 doesn't support bitwise or with ints
+            # TODO What about PyQt6?
             if interaction_flags:
-                commands.append(CommandType(widget.setTextInteractionFlags, interaction_flags))
-        return commands
+                interaction_flags |= QtCore.Qt.TextInteractionFlag.TextEditable
+            else:
+                interaction_flags = QtCore.Qt.TextInteractionFlag.TextEditable
+        if change_cursor and cursor is None:
+            commands.append(CommandType(widget.setCursor, _CURSORS["text"]))
+        if interaction_flags:
+            commands.append(CommandType(widget.setTextInteractionFlags, interaction_flags))
+    return commands
 
 
 class ImageSvg(QtWidgetElement):

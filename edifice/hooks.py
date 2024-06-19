@@ -1,6 +1,6 @@
 from collections.abc import Awaitable, Callable, Coroutine
 from edifice.engine import get_render_context_maybe, _T_use_state, Reference
-from typing import Any, Generic, ParamSpec, cast
+from typing import Any, Generic, ParamSpec, TypeVar, cast
 from asyncio import get_event_loop
 
 
@@ -372,6 +372,16 @@ def use_async_call(
         loop.call_soon_threadsafe(cancel)
 
     return callback, cancel_threadsafe
+
+
+T = TypeVar("T")
+
+
+def use_singleton(constructor: Callable[[], T]) -> T:
+    internal_mutable, _ = use_state(cast(list[T], []))
+    if len(internal_mutable) == 0:
+        internal_mutable.append(constructor())
+    return internal_mutable[0]
 
 
 def use_effect_final(
