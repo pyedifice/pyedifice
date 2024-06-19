@@ -174,6 +174,10 @@
           # Need LC_ALL for the `make html` command in the docs/ directory
           # because of https://github.com/sphinx-doc/sphinx/issues/11739
           LC_ALL = "C.UTF-8";
+          # Need PYTHONPATH for VS Code Debugger mode so that we run pyedifice
+          # in the source tree, not in the Nix store. It's not enough to get
+          # changes with editablePackageSources; we also want to set breakpoints.
+          PYTHONPATH = ".";
         });
 
       };
