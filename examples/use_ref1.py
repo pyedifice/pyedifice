@@ -4,6 +4,7 @@
 
 import asyncio as asyncio
 from typing import cast, TYPE_CHECKING
+from edifice.engine import QtWidgetElement, Reference
 
 from edifice.qt import QT_VERSION
 
@@ -17,12 +18,13 @@ from edifice import App, Window, View, Label, component, use_ref, use_effect
 
 @component
 def MyComp(self):
-    ref = use_ref()
+    ref: Reference[QtWidgetElement[QLabel]] = use_ref()
 
     def did_render():
         element = ref()
-        assert isinstance(element, Label)
-        cast(QLabel, element.underlying).setText("After")
+        if element is not None:
+            if element.underlying is not None:
+                element.underlying.setText("After")
 
     use_effect(did_render, ref)
 

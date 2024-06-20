@@ -18,6 +18,8 @@ else:
     from PySide6 import QtCore, QtWidgets, QtGui
 
 _T_use_state = tp.TypeVar("_T_use_state")
+_T_Element = tp.TypeVar("_T_Element", bound="Element")
+_T_widget = tp.TypeVar("_T_widget", bound=QtWidgets.QWidget)
 logger = logging.getLogger("Edifice")
 
 P = tp.ParamSpec("P")
@@ -170,7 +172,7 @@ class PropsDict(object):
         raise ValueError("Props are immutable")
 
 
-class Reference(object):
+class Reference(tp.Generic[_T_Element]):
     """Reference to a :class:`Element` to allow imperative modifications.
 
     While Edifice is a declarative library and tries to abstract away the need to issue
@@ -230,7 +232,7 @@ class Reference(object):
     """
 
     def __init__(self):
-        self._value: Element | None = None
+        self._value: _T_Element | None = None
 
     def __bool__(self) -> bool:
         return self._value is not None
@@ -238,7 +240,7 @@ class Reference(object):
     def __hash__(self) -> int:
         return id(self)
 
-    def __call__(self) -> tp.Optional["Element"]:
+    def __call__(self) -> tp.Optional[_T_Element]:
         return self._value
 
 
@@ -258,19 +260,16 @@ class ControllerProtocol(tp.Protocol):
         pass
 
 
-E = tp.TypeVar("E", bound="Element")
-
-
-class Tracker(tp.Generic[E]):
+class Tracker(tp.Generic[_T_Element]):
     """
     During a render, track the current element and the children being
     added to the current element.
     """
 
     children: list["Element"]
-    component: E
+    component: _T_Element
 
-    def __enter__(self: Self) -> E:
+    def __enter__(self: Self) -> _T_Element:
         ctx = get_render_context()
         ctx.trackers.append(self)
         return self.component
@@ -284,7 +283,7 @@ class Tracker(tp.Generic[E]):
             prop.append(child)
         tracker.component._props["children"] = prop
 
-    def __init__(self, component: E):
+    def __init__(self, component: _T_Element):
         self.component = component
         self.children = []
 
@@ -397,7 +396,7 @@ class Element:
     _render_changes_context: dict | None = None
     _render_unwind_context: dict | None = None
     _controller: ControllerProtocol | None = None
-    _edifice_internal_references: set[Reference] | None = None
+    _edifice_internal_references: set[Reference[Self]] | None = None
 
     def __init__(self):
         super().__setattr__("_edifice_internal_references", set())
@@ -460,7 +459,7 @@ class Element:
         self._key = key
         return self
 
-    def register_ref(self: Self, reference: Reference) -> Self:
+    def register_ref(self: Self, reference: Reference[Self]) -> Self:
         """Registers provided :class:`Reference` to this Element.
 
         During render, the provided reference will be set to point to the currently rendered instance of this Element
@@ -768,7 +767,7 @@ def _css_to_number(a):
     return float(a)
 
 
-class QtWidgetElement(Element):
+class QtWidgetElement(Element, tp.Generic[_T_widget]):
     """Base Qt Widget.
 
     All elements with an underlying
@@ -984,7 +983,7 @@ class QtWidgetElement(Element):
             if cursor not in _CURSORS:
                 raise ValueError("Unrecognized cursor %s. Cursor must be one of %s" % (cursor, list(_CURSORS.keys())))
 
-        self.underlying: QtWidgets.QWidget | None = None
+        self.underlying: _T_widget | None = None
         self._mouse_pressed = False
         """
         The underlying QWidget, which may not exist if this Element has not rendered.
@@ -1442,10 +1441,10 @@ qtT = tp.TypeVar("qtT", bound=QtWidgetElement)
 
 def qt_component(
     f: Callable[
-        tp.Concatenate[qtT, list[str], Callable[[QtWidgets.QWidget, QtWidgets.QLayout | None], list[CommandType]], P],
+        tp.Concatenate[qtT, list[str], Callable[[_T_widget, QtWidgets.QLayout | None], list[CommandType]], P],
         list[CommandType],
     ],
-) -> Callable[P, QtWidgetElement]:
+) -> Callable[P, QtWidgetElement[_T_widget]]:
     varnames = f.__code__.co_varnames[3:]
     signature = inspect.signature(f).parameters
     defaults = {k: v.default for k, v in signature.items() if v.default is not inspect.Parameter.empty and k[0] != "_"}
