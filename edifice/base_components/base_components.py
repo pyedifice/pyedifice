@@ -370,9 +370,9 @@ def use_underlying(self: QtWidgetElement, construct: tp.Callable[[], T]) -> T:
 
 @qt_component
 def Label(
-    self: QtWidgetElement,
+    self,
     newprops: list[str],
-    super_commands: tp.Callable[[QtWidgets.QWidget, QtWidgets.QLayout | None], list[CommandType]],
+    super_commands: tp.Callable[[QtWidgets.QLabel, QtWidgets.QLayout | None], list[CommandType]],
     text: str = "",
     selectable: bool = False,
     editable: bool = False,

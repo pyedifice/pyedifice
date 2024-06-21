@@ -72,7 +72,7 @@ class StyleTestCase(unittest.TestCase):
         }
         layout = Layout()
         comp = MockElement(style=style)
-        commands = comp._gen_styling_commands(style, None, layout)
+        commands = comp._gen_styling_commands(style, comp.underlying, layout)
         self.assertTrue("margin" not in style)
         self.assertCountEqual(
             commands,
@@ -90,7 +90,7 @@ class StyleTestCase(unittest.TestCase):
         }
         layout = Layout()
         comp = MockElement(style=style)
-        commands = comp._gen_styling_commands(style, None, layout)
+        commands = comp._gen_styling_commands(style, comp.underlying, layout)
         self.assertTrue("margin" not in style)
         self.assertCountEqual(
             commands,
@@ -113,7 +113,7 @@ class StyleTestCase(unittest.TestCase):
             }
             layout = Layout()
             comp = MockElement(style=style)
-            commands = comp._gen_styling_commands(style, None, layout)
+            commands = comp._gen_styling_commands(style, comp.underlying, layout)
             self.assertTrue("align" not in style)
             self.assertCountEqual(
                 commands,
@@ -136,7 +136,7 @@ class StyleTestCase(unittest.TestCase):
                 "align": align,
             }
             comp = MockElement(style=style)
-            comp._gen_styling_commands(style, None, None)
+            comp._gen_styling_commands(style, comp.underlying, None)
             self.assertTrue("align" not in style)
             self.assertEqual(style["qproperty-alignment"], qt_align)
 
@@ -153,7 +153,7 @@ class StyleTestCase(unittest.TestCase):
         }
         comp = MockElement(style=style)
         comp._size_from_font = None
-        comp._gen_styling_commands(style, None, None)
+        comp._gen_styling_commands(style, comp.underlying, None)
         self.assertEqual(style["font-size"], "12px")
 
     def test_top_left(self):
@@ -162,7 +162,7 @@ class StyleTestCase(unittest.TestCase):
             "left": 24,
         }
         comp = MockElement(style=style)
-        commands = comp._gen_styling_commands(style, None, None)
+        commands = comp._gen_styling_commands(style, comp.underlying, None)
         self.assertTrue(CommandType(comp.underlying.move, 24, 12) in commands)
 
 
@@ -205,7 +205,7 @@ class WidgetTreeTestCase(unittest.TestCase):
                 CommandType(button._set_on_drop, qt_button, None),
                 CommandType(qt_button.setContextMenuPolicy, QtCore.Qt.ContextMenuPolicy.DefaultContextMenu),
                 CommandType(qt_button.setCursor, QtCore.Qt.CursorShape.PointingHandCursor),
-                CommandType(button._set_on_resize, None),
+                CommandType(button._set_on_resize, qt_button, None),
             ],
         )
 
@@ -253,7 +253,7 @@ class WidgetTreeTestCase(unittest.TestCase):
                 CommandType(icon._set_on_mouse_move, icon.underlying, None),
                 CommandType(icon._set_on_click, icon.underlying, None),
                 CommandType(icon._set_on_drop, icon.underlying, None),
-                CommandType(icon._set_on_resize, None),
+                CommandType(icon._set_on_resize, icon.underlying, None),
             ],
         )
         icon._render_image(*render_img_args)
@@ -292,7 +292,7 @@ class WidgetTreeTestCase(unittest.TestCase):
             CommandType(view._set_on_click, view.underlying, None),
             CommandType(view._set_on_drop, view.underlying, None),
             CommandType(view._add_child, 0, label1.underlying),
-            CommandType(view._set_on_resize, None),
+            CommandType(view._set_on_resize, view.underlying, None),
         ]
 
         self.assertCountEqual(commands, commands_expected)
@@ -319,7 +319,7 @@ class WidgetTreeTestCase(unittest.TestCase):
                 CommandType(view._set_on_click, view.underlying, None),
                 CommandType(view._set_on_drop, view.underlying, None),
                 CommandType(view._add_child, 1, label2.underlying),
-                CommandType(view._set_on_resize, None),
+                CommandType(view._set_on_resize, view.underlying, None),
             ]
         )
         self.assertCountEqual(commands, commands_expected)
@@ -344,7 +344,7 @@ class WidgetTreeTestCase(unittest.TestCase):
             CommandType(view._set_on_mouse_move, view.underlying, None),
             CommandType(view._set_on_click, view.underlying, None),
             CommandType(view._set_on_drop, view.underlying, None),
-            CommandType(view._set_on_resize, None),
+            CommandType(view._set_on_resize, view.underlying, None),
             CommandType(inner_view.underlying.setStyleSheet, "QWidget#%s{}" % id(inner_view)),
             CommandType(inner_view.underlying.setProperty, "css_class", []),
             CommandType(inner_view.underlying.style().unpolish, inner_view.underlying),
@@ -360,7 +360,7 @@ class WidgetTreeTestCase(unittest.TestCase):
             CommandType(inner_view._set_on_mouse_move, inner_view.underlying, None),
             CommandType(inner_view._set_on_click, inner_view.underlying, None),
             CommandType(inner_view._set_on_drop, inner_view.underlying, None),
-            CommandType(inner_view._set_on_resize, None),
+            CommandType(inner_view._set_on_resize, inner_view.underlying, None),
             CommandType(view._soft_delete_child, 1, label2),
             CommandType(view._delete_child, 0, label1),
             CommandType(view._add_child, 0, label2.underlying),

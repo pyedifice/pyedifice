@@ -18,6 +18,8 @@ else:
     from PySide6 import QtCore, QtWidgets, QtGui
 
 _T_use_state = tp.TypeVar("_T_use_state")
+_T_Element = tp.TypeVar("_T_Element", bound="Element")
+_T_widget = tp.TypeVar("_T_widget", bound=QtWidgets.QWidget)
 logger = logging.getLogger("Edifice")
 
 P = tp.ParamSpec("P")
@@ -170,7 +172,7 @@ class PropsDict(object):
         raise ValueError("Props are immutable")
 
 
-class Reference(object):
+class Reference(tp.Generic[_T_Element]):
     """Reference to a :class:`Element` to allow imperative modifications.
 
     While Edifice is a declarative library and tries to abstract away the need to issue
@@ -230,7 +232,7 @@ class Reference(object):
     """
 
     def __init__(self):
-        self._value: Element | None = None
+        self._value: _T_Element | None = None
 
     def __bool__(self) -> bool:
         return self._value is not None
@@ -238,7 +240,7 @@ class Reference(object):
     def __hash__(self) -> int:
         return id(self)
 
-    def __call__(self) -> tp.Optional["Element"]:
+    def __call__(self) -> tp.Optional[_T_Element]:
         return self._value
 
 
@@ -258,19 +260,16 @@ class ControllerProtocol(tp.Protocol):
         pass
 
 
-E = tp.TypeVar("E", bound="Element")
-
-
-class Tracker(tp.Generic[E]):
+class Tracker(tp.Generic[_T_Element]):
     """
     During a render, track the current element and the children being
     added to the current element.
     """
 
     children: list["Element"]
-    component: E
+    component: _T_Element
 
-    def __enter__(self: Self) -> E:
+    def __enter__(self: Self) -> _T_Element:
         ctx = get_render_context()
         ctx.trackers.append(self)
         return self.component
@@ -284,7 +283,7 @@ class Tracker(tp.Generic[E]):
             prop.append(child)
         tracker.component._props["children"] = prop
 
-    def __init__(self, component: E):
+    def __init__(self, component: _T_Element):
         self.component = component
         self.children = []
 
@@ -397,7 +396,7 @@ class Element:
     _render_changes_context: dict | None = None
     _render_unwind_context: dict | None = None
     _controller: ControllerProtocol | None = None
-    _edifice_internal_references: set[Reference] | None = None
+    _edifice_internal_references: set[Reference[Self]] | None = None
 
     def __init__(self):
         super().__setattr__("_edifice_internal_references", set())
@@ -460,7 +459,7 @@ class Element:
         self._key = key
         return self
 
-    def register_ref(self: Self, reference: Reference) -> Self:
+    def register_ref(self: Self, reference: Reference[Self]) -> Self:
         """Registers provided :class:`Reference` to this Element.
 
         During render, the provided reference will be set to point to the currently rendered instance of this Element
@@ -768,7 +767,7 @@ def _css_to_number(a):
     return float(a)
 
 
-class QtWidgetElement(Element):
+class QtWidgetElement(Element, tp.Generic[_T_widget]):
     """Base Qt Widget.
 
     All elements with an underlying
@@ -984,7 +983,8 @@ class QtWidgetElement(Element):
             if cursor not in _CURSORS:
                 raise ValueError("Unrecognized cursor %s. Cursor must be one of %s" % (cursor, list(_CURSORS.keys())))
 
-        self.underlying: QtWidgets.QWidget | None = None
+        self.underlying: _T_widget | None = None
+        self._mouse_pressed = False
         """
         The underlying QWidget, which may not exist if this Element has not rendered.
         """
@@ -1018,116 +1018,110 @@ class QtWidgetElement(Element):
         except ValueError:
             return 0
 
-    def _mouse_press(self, event: QtGui.QMouseEvent):
+    def _mouse_press(self, event: QtGui.QMouseEvent) -> None:
         if self._on_mouse_down is not None:
             self._on_mouse_down(event)
         if self._default_mouse_press_event is not None:
             self._default_mouse_press_event(event)
 
-    def _mouse_release(self, event):
-        assert self.underlying is not None
-        event_pos = event.pos()
-        if self._on_mouse_up is not None:
-            self._on_mouse_up(event)
-        if self._default_mouse_release_event is not None:
-            self._default_mouse_release_event(event)
-        geometry = self.underlying.geometry()
+    def _mouse_release(self, underlying: QtWidgets.QWidget):
+        def handler(event: QtGui.QMouseEvent):
+            event_pos = event.pos()
+            if self._on_mouse_up is not None:
+                self._on_mouse_up(event)
+            if self._default_mouse_release_event is not None:
+                self._default_mouse_release_event(event)
+            geometry = underlying.geometry()
 
-        if 0 <= event_pos.x() <= geometry.width() and 0 <= event_pos.y() <= geometry.height():
-            self._mouse_clicked(event)
-        self._mouse_pressed = False
+            if 0 <= event_pos.x() <= geometry.width() and 0 <= event_pos.y() <= geometry.height():
+                self._mouse_clicked(event)
+            self._mouse_pressed = False
+
+        return handler
 
     def _mouse_clicked(self, ev):
         if self._on_click:
             self._on_click(ev)
 
     def _set_on_click(self, underlying: QtWidgets.QWidget, on_click):
-        assert self.underlying is not None
         # FIXME: Should this not use `underlying`?
         if on_click is not None:
             self._on_click = _ensure_future(on_click)
         else:
             self._on_click = None
         if self._default_mouse_press_event is None:
-            self._default_mouse_press_event = self.underlying.mousePressEvent
-        self.underlying.mousePressEvent = self._mouse_press
+            self._default_mouse_press_event = underlying.mousePressEvent
+        underlying.mousePressEvent = self._mouse_press
         if self._default_mouse_release_event is None:
-            self._default_mouse_release_event = self.underlying.mouseReleaseEvent
-        self.underlying.mouseReleaseEvent = self._mouse_release
+            self._default_mouse_release_event = underlying.mouseReleaseEvent
+        underlying.mouseReleaseEvent = self._mouse_release(underlying)
 
     def _set_on_key_down(self, underlying: QtWidgets.QWidget, on_key_down):
-        assert self.underlying is not None
         if self._default_on_key_down is None:
-            self._default_on_key_down = self.underlying.keyPressEvent
+            self._default_on_key_down = underlying.keyPressEvent
         if on_key_down is not None:
             self._on_key_down = _ensure_future(on_key_down)
         else:
             self._on_key_down = self._default_on_key_down
-        self.underlying.keyPressEvent = self._on_key_down
+        underlying.keyPressEvent = self._on_key_down
 
     def _set_on_key_up(self, underlying: QtWidgets.QWidget, on_key_up):
-        assert self.underlying is not None
         if self._default_on_key_up is None:
-            self._default_on_key_up = self.underlying.keyReleaseEvent
+            self._default_on_key_up = underlying.keyReleaseEvent
         if on_key_up is not None:
             self._on_key_up = _ensure_future(on_key_up)
         else:
             self._on_key_up = self._default_on_key_up
-        self.underlying.keyReleaseEvent = self._on_key_up
+        underlying.keyReleaseEvent = self._on_key_up
 
     def _set_on_mouse_down(self, underlying: QtWidgets.QWidget, on_mouse_down):
-        assert self.underlying is not None
         if on_mouse_down is not None:
             self._on_mouse_down = _ensure_future(on_mouse_down)
         else:
             self._on_mouse_down = None
         if self._default_mouse_press_event is None:
-            self._default_mouse_press_event = self.underlying.mousePressEvent
-        self.underlying.mousePressEvent = self._mouse_press
+            self._default_mouse_press_event = underlying.mousePressEvent
+        underlying.mousePressEvent = self._mouse_press
 
     def _set_on_mouse_up(self, underlying: QtWidgets.QWidget, on_mouse_up):
-        assert self.underlying is not None
         if on_mouse_up is not None:
             self._on_mouse_up = _ensure_future(on_mouse_up)
         else:
             self._on_mouse_up = None
         if self._default_mouse_release_event is None:
-            self._default_mouse_release_event = self.underlying.mouseReleaseEvent
-        self.underlying.mouseReleaseEvent = self._mouse_release
+            self._default_mouse_release_event = underlying.mouseReleaseEvent
+        underlying.mouseReleaseEvent = self._mouse_release(underlying)
 
     def _set_on_mouse_enter(self, underlying: QtWidgets.QWidget, on_mouse_enter):
-        assert self.underlying is not None
         if self._default_mouse_enter_event is None:
-            self._default_mouse_enter_event = self.underlying.enterEvent
+            self._default_mouse_enter_event = underlying.enterEvent
         if on_mouse_enter is not None:
             self._on_mouse_enter = _ensure_future(on_mouse_enter)
-            self.underlying.enterEvent = self._on_mouse_enter
+            underlying.enterEvent = self._on_mouse_enter
         else:
             self._on_mouse_enter = None
-            self.underlying.enterEvent = self._default_mouse_enter_event
+            underlying.enterEvent = self._default_mouse_enter_event
 
     def _set_on_mouse_leave(self, underlying: QtWidgets.QWidget, on_mouse_leave):
-        assert self.underlying is not None
         if self._default_mouse_leave_event is None:
-            self._default_mouse_leave_event = self.underlying.leaveEvent
+            self._default_mouse_leave_event = underlying.leaveEvent
         if on_mouse_leave is not None:
             self._on_mouse_leave = _ensure_future(on_mouse_leave)
-            self.underlying.leaveEvent = self._on_mouse_leave
+            underlying.leaveEvent = self._on_mouse_leave
         else:
-            self.underlying.leaveEvent = self._default_mouse_leave_event
+            underlying.leaveEvent = self._default_mouse_leave_event
             self._on_mouse_leave = None
 
     def _set_on_mouse_move(self, underlying: QtWidgets.QWidget, on_mouse_move):
-        assert self.underlying is not None
         if self._default_mouse_move_event is None:
-            self._default_mouse_move_event = self.underlying.mouseMoveEvent
+            self._default_mouse_move_event = underlying.mouseMoveEvent
         if on_mouse_move is not None:
             self._on_mouse_move = _ensure_future(on_mouse_move)
-            self.underlying.mouseMoveEvent = self._on_mouse_move
-            self.underlying.setMouseTracking(True)
+            underlying.mouseMoveEvent = self._on_mouse_move
+            underlying.setMouseTracking(True)
         else:
             self._on_mouse_move = None
-            self.underlying.mouseMoveEvent = self._default_mouse_move_event
+            underlying.mouseMoveEvent = self._default_mouse_move_event
 
     def _set_on_drop(
         self,
@@ -1136,51 +1130,49 @@ class QtWidgetElement(Element):
             tp.Callable[[QtGui.QDragEnterEvent | QtGui.QDragMoveEvent | QtGui.QDragLeaveEvent | QtGui.QDropEvent], None]
         ],
     ):
-        assert self.underlying is not None
-
         # Store the QWidget's default virtual event handler methods
         if self._default_drag_enter_event is None:
-            self._default_drag_enter_event = self.underlying.dragEnterEvent
+            self._default_drag_enter_event = underlying.dragEnterEvent
         if self._default_drag_move_event is None:
-            self._default_drag_move_event = self.underlying.dragMoveEvent
+            self._default_drag_move_event = underlying.dragMoveEvent
         if self._default_drag_leave_event is None:
-            self._default_drag_leave_event = self.underlying.dragLeaveEvent
+            self._default_drag_leave_event = underlying.dragLeaveEvent
         if self._default_drop_event is None:
-            self._default_drop_event = self.underlying.dropEvent
+            self._default_drop_event = underlying.dropEvent
 
         if on_drop is not None:
             self._on_drop = on_drop
-            self.underlying.setAcceptDrops(True)
-            self.underlying.dragEnterEvent = self._on_drop  # type: ignore
-            self.underlying.dragMoveEvent = self._on_drop  # type: ignore
-            self.underlying.dragLeaveEvent = self._on_drop  # type: ignore
-            self.underlying.dropEvent = self._on_drop  # type: ignore
+            underlying.setAcceptDrops(True)
+            underlying.dragEnterEvent = self._on_drop  # type: ignore
+            underlying.dragMoveEvent = self._on_drop  # type: ignore
+            underlying.dragLeaveEvent = self._on_drop  # type: ignore
+            underlying.dropEvent = self._on_drop  # type: ignore
         else:
             self._on_drop = None
-            self.underlying.setAcceptDrops(False)
+            underlying.setAcceptDrops(False)
 
     def _resizeEvent(self, event: QtGui.QResizeEvent):
         if self._on_resize is not None:
             self._on_resize(event)
 
-    def _set_on_resize(self, on_resize: tp.Optional[tp.Callable[[QtGui.QResizeEvent], None]]):
-        assert self.underlying is not None
-
+    def _set_on_resize(
+        self, underlying: QtWidgets.QWidget, on_resize: tp.Optional[tp.Callable[[QtGui.QResizeEvent], None]]
+    ):
         # Store the QWidget's default virtual event handler method one time
         if self._default_resize_event is None:
-            self._default_resize_event = self.underlying.resizeEvent
+            self._default_resize_event = underlying.resizeEvent
 
         if on_resize is not None:
             self._on_resize = _ensure_future(on_resize)
-            self.underlying.resizeEvent = self._resizeEvent
+            underlying.resizeEvent = self._resizeEvent
         else:
             self._on_resize = None
-            self.underlying.resizeEvent = self._default_resize_event
+            underlying.resizeEvent = self._default_resize_event
 
     def _gen_styling_commands(
         self,
         style,
-        underlying: QtWidgets.QWidget | None,
+        underlying: QtWidgets.QWidget,
         underlying_layout: QtWidgets.QLayout | None = None,
     ):
         commands: list[CommandType] = []
@@ -1332,27 +1324,25 @@ class QtWidgetElement(Element):
             self._left = move_coords[0]
 
         if set_move:
-            assert self.underlying is not None
-            commands.append(CommandType(self.underlying.move, move_coords[0], move_coords[1]))
+            commands.append(CommandType(underlying.move, move_coords[0], move_coords[1]))
 
-        assert self.underlying is not None
         css_string = _dict_to_style(style, "QWidget#" + str(id(self)))
-        commands.append(CommandType(self.underlying.setStyleSheet, css_string))
+        commands.append(CommandType(underlying.setStyleSheet, css_string))
         return commands
 
     def _set_context_menu(self, underlying: QtWidgets.QWidget):
         if self._context_menu_connected:
             underlying.customContextMenuRequested.disconnect()
         self._context_menu_connected = True
-        underlying.customContextMenuRequested.connect(self._show_context_menu)
 
-    def _show_context_menu(self, pos):
-        assert self.underlying is not None
-        if self.props.context_menu is not None:
-            menu = _create_qmenu(self.props.context_menu, self.underlying)
-            pos = self.underlying.mapToGlobal(pos)
-            menu.move(pos)
-            menu.show()
+        def _show_context_menu(pos):
+            if self.props.context_menu is not None:
+                menu = _create_qmenu(self.props.context_menu, underlying)
+                pos = underlying.mapToGlobal(pos)
+                menu.move(pos)
+                menu.show()
+
+        underlying.customContextMenuRequested.connect(_show_context_menu)
 
     def _qt_update_commands(
         self,
@@ -1413,7 +1403,7 @@ class QtWidgetElement(Element):
             elif prop == "on_drop":
                 commands.append(CommandType(self._set_on_drop, underlying, newprops.on_drop))
             elif prop == "on_resize":
-                commands.append(CommandType(self._set_on_resize, newprops.on_resize))
+                commands.append(CommandType(self._set_on_resize, underlying, newprops.on_resize))
             elif prop == "tool_tip":
                 if newprops.tool_tip is not None:
                     commands.append(CommandType(underlying.setToolTip, newprops.tool_tip))
@@ -1451,10 +1441,10 @@ qtT = tp.TypeVar("qtT", bound=QtWidgetElement)
 
 def qt_component(
     f: Callable[
-        tp.Concatenate[qtT, list[str], Callable[[QtWidgets.QWidget, QtWidgets.QLayout | None], list[CommandType]], P],
+        tp.Concatenate[qtT, list[str], Callable[[_T_widget, QtWidgets.QLayout | None], list[CommandType]], P],
         list[CommandType],
     ],
-) -> Callable[P, QtWidgetElement]:
+) -> Callable[P, QtWidgetElement[_T_widget]]:
     varnames = f.__code__.co_varnames[3:]
     signature = inspect.signature(f).parameters
     defaults = {k: v.default for k, v in signature.items() if v.default is not inspect.Parameter.empty and k[0] != "_"}
