@@ -12,7 +12,7 @@ else:
 from .base_components import QtWidgetElement, CommandType, _ensure_future, Element, _WidgetTree
 
 
-class _SpinBox(QSpinBox):
+class EdSpinBox(QSpinBox):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._textFromValue: tp.Callable[[int], str] | None = None
@@ -51,7 +51,7 @@ class _SpinBox(QSpinBox):
             return super().validate(input, pos)
 
 
-class SpinInput(QtWidgetElement):
+class SpinInput(QtWidgetElement[EdSpinBox]):
     """Widget for a :code:`int` input value with up/down buttons.
 
     Allows the user to choose a value by clicking the up/down buttons or
@@ -121,7 +121,7 @@ class SpinInput(QtWidgetElement):
         )
 
     def _initialize(self):
-        self.underlying = _SpinBox()
+        self.underlying = EdSpinBox()
         self.underlying.setObjectName(str(id(self)))
         self.underlying.valueChanged.connect(self._on_change_handler)
         if "enable_mouse_scroll" in self.props and not self.props.enable_mouse_scroll:
@@ -132,22 +132,22 @@ class SpinInput(QtWidgetElement):
             return _ensure_future(self.props.on_change)(value)
 
     def _set_value(self, value: int):
-        widget = tp.cast(_SpinBox, self.underlying)
-        widget.blockSignals(True)
-        widget.setValue(value)
-        widget.blockSignals(False)
+        assert self.underlying is not None
+        self.underlying.blockSignals(True)
+        self.underlying.setValue(value)
+        self.underlying.blockSignals(False)
 
     def _set_min_value(self, value: int):
-        widget = tp.cast(_SpinBox, self.underlying)
-        widget.blockSignals(True)
-        widget.setMinimum(value)
-        widget.blockSignals(False)
+        assert self.underlying is not None
+        self.underlying.blockSignals(True)
+        self.underlying.setMinimum(value)
+        self.underlying.blockSignals(False)
 
     def _set_max_value(self, value: int):
-        widget = tp.cast(_SpinBox, self.underlying)
-        widget.blockSignals(True)
-        widget.setMaximum(value)
-        widget.blockSignals(False)
+        assert self.underlying is not None
+        self.underlying.blockSignals(True)
+        self.underlying.setMaximum(value)
+        self.underlying.blockSignals(False)
 
     def _qt_update_commands(
         self,
@@ -157,7 +157,7 @@ class SpinInput(QtWidgetElement):
         if self.underlying is None:
             self._initialize()
         assert self.underlying is not None
-        widget = tp.cast(_SpinBox, self.underlying)
+        widget = self.underlying
 
         commands = super()._qt_update_commands_super(widget_trees, newprops, self.underlying)
 
