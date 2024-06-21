@@ -11,16 +11,22 @@ def MyComponent(
     children: list[ed.Element] = [],
 ):
     bgcolor = "blue"
-    with ed.View(
-        layout="column",
-        style={"align": "top"},
-    ).render():
+    put = ed.TreeBuilder()
+    with put(
+        ed.View(
+            layout="column",
+            style={"align": "top"},
+        )
+    ) as root:
         for child in children:
-            with ed.View(
-                style={"background-color": bgcolor, "padding": 10},
-            ).render():
-                child.render()
+            with put(
+                ed.View(
+                    style={"background-color": bgcolor, "padding": 10},
+                )
+            ):
+                put(child)
             bgcolor = "blue" if bgcolor == "green" else "green"
+    return root
 
 
 @ed.component
@@ -30,19 +36,23 @@ def Main(self):
     ] = "Callables which take other callables as arguments may indicate that their parameter types are dependent on".split(
         " "
     )
-    with ed.Window().render():
-        with ed.View(style={"padding": 20}).render():
+    put = ed.TreeBuilder()
+    with put(ed.Window()) as root:
+        with put(ed.View(style={"padding": 20})):
             x, x_set = ed.use_state(0)
-            ed.Slider(
-                value=x,
-                on_change=x_set,
-                min_value=0,
-                max_value=len(strings),
-                style={"min-width": 200},
-            ).render()
-            with MyComponent().render():
+            put(
+                ed.Slider(
+                    value=x,
+                    on_change=x_set,
+                    min_value=0,
+                    max_value=len(strings),
+                    style={"min-width": 200},
+                )
+            )
+            with put(MyComponent()):
                 for i in range(0, x):
-                    ed.Label(text=strings[i]).render()
+                    put(ed.Label(text=strings[i]))
+    return root
 
 
 if __name__ == "__main__":

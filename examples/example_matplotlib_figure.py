@@ -32,19 +32,18 @@ def Component(self):
             mouse_hover_set(None)
         plot_fun_set((lambda figure: plot(figure),))
 
-    MatplotlibFigure(plot_fun[0], on_figure_mouse_move=handle_house_move).render()
+    return MatplotlibFigure(plot_fun[0], on_figure_mouse_move=handle_house_move)
 
 
 @ed.component
 def Main(self):
-    with ed.Window(
+    return ed.Window(
         title="Matplotlib Example",
         style={
             "min-width": "200px",
             "min-height": "200px",
         },
-    ).render():
-        Component().render()
+    )(Component())
 
 
 if __name__ == "__main__":

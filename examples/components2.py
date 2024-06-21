@@ -1,5 +1,5 @@
 import asyncio as asyncio
-from edifice import App, Window, Button, ButtonView, View, Label, Icon, component
+from edifice import App, Window, Button, ButtonView, View, Label, Icon, component, TreeBuilder
 from edifice.hooks import use_state, use_effect
 
 
@@ -17,23 +17,29 @@ def Main(self):
 
     use_effect(setup_print, x)
 
-    with Window().render():
-        with View().render():
-            with View(style={"margin": 30}).render():
-                with ButtonView(
-                    layout="row",
-                    on_click=lambda event: None,
-                    style={"margin": 10},
-                ).render():
-                    Icon(name="share", style={"margin": 10}).render()
-                    Label(text="<i>Share the Content<i>").render()
-            Button(
-                title="asd + 1",
-                on_click=lambda ev: x_set(x + 1),
-            ).render()
-            Label("asd " + str(x)).render()
+    put = TreeBuilder()
+    with put(Window()) as root:
+        with put(View()):
+            with put(View(style={"margin": 30})):
+                with put(
+                    ButtonView(
+                        layout="row",
+                        on_click=lambda event: None,
+                        style={"margin": 10},
+                    )
+                ):
+                    put(Icon(name="share", style={"margin": 10}))
+                    put(Label(text="<i>Share the Content<i>"))
+            put(
+                Button(
+                    title="asd + 1",
+                    on_click=lambda ev: x_set(x + 1),
+                )
+            )
+            put(Label("asd " + str(x)))
             for i in range(x):
-                Label(text=str(i)).render()
+                put(Label(text=str(i)))
+        return root
 
 
 if __name__ == "__main__":

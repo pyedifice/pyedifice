@@ -16,9 +16,7 @@ def MainComp(self):
         print(x)
 
     use_async(effect, x)
-    with Window().render():
-        with View().render():
-            TextInput(text=x, on_change=x_set)
+    return Window()(View()(TextInput(text=x, on_change=x_set)))
 
 
 if __name__ == "__main__":

@@ -30,7 +30,7 @@ def ComponentWithAsync(self):
 
     ed.use_async(set_label, ())
 
-    ed.Label(x).render()
+    return ed.Label(x)
 
 
 @ed.component
@@ -126,82 +126,104 @@ def Main(self):
 
     ##########
 
-    with ed.Window(title="Async Example").render(), ed.View().render():
-        with ed.View(
-            style={
-                "margin-top": 20,
-                "margin-bottom": 20,
-                "border-top-width": "1px",
-                "border-top-style": "solid",
-                "border-top-color": "black",
-            },
-        ).render():
-            with ed.View(layout="row").render():
-                ed.CheckBox(
-                    checked=checked,
-                    on_change=set_checked,
-                ).render()
+    put = ed.TreeBuilder()
+    with put(ed.Window(title="Async Example")) as root, put(ed.View()):
+        with put(
+            ed.View(
+                style={
+                    "margin-top": 20,
+                    "margin-bottom": 20,
+                    "border-top-width": "1px",
+                    "border-top-style": "solid",
+                    "border-top-color": "black",
+                },
+            )
+        ):
+            with put(ed.View(layout="row")):
+                put(
+                    ed.CheckBox(
+                        checked=checked,
+                        on_change=set_checked,
+                    )
+                )
                 if checked:
-                    ComponentWithAsync().render()
+                    put(ComponentWithAsync())
 
-        with ed.View(
-            style={
-                "margin-top": 20,
-                "margin-bottom": 20,
-                "border-top-width": "1px",
-                "border-top-style": "solid",
-                "border-top-color": "black",
-            },
-        ).render():
-            ed.Label(str(a)).render()
-            ed.Label(str(b)).render()
-            ed.Slider(a, min_value=0, max_value=100, on_change=_on_change1).render()
+        put(
+            ed.View(
+                style={
+                    "margin-top": 20,
+                    "margin-bottom": 20,
+                    "border-top-width": "1px",
+                    "border-top-style": "solid",
+                    "border-top-color": "black",
+                },
+            )(
+                ed.Label(str(a)),
+                ed.Label(str(b)),
+                ed.Slider(a, min_value=0, max_value=100, on_change=_on_change1),
+            )
+        )
 
-        with ed.View(
-            style={
-                "margin-top": 20,
-                "margin-bottom": 20,
-                "border-top-width": "1px",
-                "border-top-style": "solid",
-                "border-top-color": "black",
-            },
-        ).render():
-            ed.Label(str(c)).render()
-            ed.Slider(c, min_value=0, max_value=100, on_change=_on_change2).render()
+        put(
+            ed.View(
+                style={
+                    "margin-top": 20,
+                    "margin-bottom": 20,
+                    "border-top-width": "1px",
+                    "border-top-style": "solid",
+                    "border-top-color": "black",
+                },
+            )(
+                ed.Label(str(c)),
+                ed.Slider(c, min_value=0, max_value=100, on_change=_on_change2),
+            )
+        )
 
-        with ed.View(
-            style={
-                "margin-top": 20,
-                "margin-bottom": 20,
-                "border-top-width": "1px",
-                "border-top-style": "solid",
-                "border-top-color": "black",
-            },
-        ).render():
-            ed.Label(str(e)).render()
-            ed.Slider(d, min_value=0, max_value=100, on_change=set_d).render()
+        put(
+            ed.View(
+                style={
+                    "margin-top": 20,
+                    "margin-bottom": 20,
+                    "border-top-width": "1px",
+                    "border-top-style": "solid",
+                    "border-top-color": "black",
+                },
+            )(
+                ed.Label(str(e)),
+                ed.Slider(d, min_value=0, max_value=100, on_change=set_d),
+            )
+        )
 
-        with ed.View(
-            style={
-                "margin-top": 20,
-                "margin-bottom": 20,
-                "border-top-width": "1px",
-                "border-top-style": "solid",
-                "border-top-color": "black",
-            },
-        ).render():
-            with ed.View(layout="row").render():
-                with ed.ButtonView(
-                    on_click=lambda _ev: start_k(),
-                ).render():
-                    ed.Label(text="Start").render()
-                with ed.ButtonView(
-                    on_click=lambda _ev: cancel_k(),
-                    enabled=len(k) > 0 and k[0][1] == "Running",
-                ).render():
-                    ed.Label(text="Cancel").render()
+        with put(
+            ed.View(
+                style={
+                    "margin-top": 20,
+                    "margin-bottom": 20,
+                    "border-top-width": "1px",
+                    "border-top-style": "solid",
+                    "border-top-color": "black",
+                },
+            )
+        ):
+            with put(ed.View(layout="row")):
+                with put(
+                    ed.ButtonView(
+                        on_click=lambda _ev: start_k(),
+                    )
+                ):
+                    put(ed.Label(text="Start"))
+                with put(
+                    ed.ButtonView(
+                        on_click=lambda _ev: cancel_k(),
+                        enabled=len(k) > 0 and k[0][1] == "Running",
+                    )
+                ):
+                    put(ed.Label(text="Cancel"))
             for k_ in k:
-                ed.ProgressBar(value=k_[0], format=k_[1]).render()
+                put(ed.ProgressBar(value=k_[0], format=k_[1]))
+
+    return root
 
 
 if __name__ == "__main__":

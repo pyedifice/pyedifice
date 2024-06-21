@@ -3,6 +3,7 @@
 #
 
 import typing as tp
+from edifice.engine import TreeBuilder
 
 
 from edifice.qt import QT_VERSION
@@ -58,66 +59,83 @@ def Component(self):
                     proposed_files_set([])
                     max_images_set(len(proposed_files))
 
-    with ed.View(
-        layout="column",
-        style={
-            "min-height": "300px",
-            "min-width": "500px",
-            "align": "top",
-        },
-        on_drop=handle_drop,
-    ).render():
+    put = TreeBuilder()
+    with put(
+        ed.View(
+            layout="column",
+            style={
+                "min-height": "300px",
+                "min-width": "500px",
+                "align": "top",
+            },
+            on_drop=handle_drop,
+        )
+    ) as root:
         if proposed_files != []:
-            with ed.FlowView(
-                style={
-                    "align": "top",
-                },
-            ).render():
+            with put(
+                ed.FlowView(
+                    style={
+                        "align": "top",
+                    },
+                )
+            ):
                 for file in proposed_files:
                     ed.Label(
                         text=file,
                     )
         elif dropped_files != []:
-            with ed.View(
-                layout="column",
-            ).render():
-                ed.CheckBox(
-                    checked=auto_stress, on_change=auto_stress_set, text="Rapidly load and unload images"
-                ).render()
-                ed.Slider(
-                    value=max_images,
-                    max_value=len(dropped_files),
-                    on_change=max_images_set,
-                    style={
-                        "margin": 20,
-                    },
-                ).render()
-            with ed.FlowView(
-                style={
-                    "align": "top",
-                },
-            ).render():
-                for file in dropped_files[:max_images]:
-                    ed.Image(
-                        src=file,
-                        aspect_ratio_mode=Qt.AspectRatioMode.KeepAspectRatio,
+            with put(
+                ed.View(
+                    layout="column",
+                )
+            ):
+                put(ed.CheckBox(checked=auto_stress, on_change=auto_stress_set, text="Rapidly load and unload images"))
+                put(
+                    ed.Slider(
+                        value=max_images,
+                        max_value=len(dropped_files),
+                        on_change=max_images_set,
                         style={
-                            "width": 100,
-                            "height": 100,
+                            "margin": 20,
                         },
-                    ).set_key(file).render()
+                    )
+                )
+            with put(
+                ed.FlowView(
+                    style={
+                        "align": "top",
+                    },
+                )
+            ):
+                for file in dropped_files[:max_images]:
+                    put(
+                        ed.Image(
+                            src=file,
+                            aspect_ratio_mode=Qt.AspectRatioMode.KeepAspectRatio,
+                            style={
+                                "width": 100,
+                                "height": 100,
+                            },
+                        ).set_key(file)
+                    )
         else:
-            with ed.View().render():
-                ed.Label(
-                    text="DROP IMAGE FILES HERE",
-                ).render()
+            with put(ed.View()):
+                put(
+                    ed.Label(
+                        text="DROP IMAGE FILES HERE",
+                    )
+                )
+
+        return root
 
 
 @ed.component
 def Main(self):
-    with ed.Window("Image Stress Test").render():
-        with ed.View().render():
-            Component().render()
+    return ed.Window("Image Stress Test")(
+        ed.View()(
+            Component(),
+        )
+    )
 
 
 # myobj_init = tp.ParamSpec("myobj_init")

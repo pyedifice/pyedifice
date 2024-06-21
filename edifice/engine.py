@@ -259,6 +259,7 @@ class ControllerProtocol(tp.Protocol):
     def stop(self):
         pass
 
+
 class _RenderContext(object):
     """
     Encapsulates various state that's needed for rendering.
@@ -566,15 +567,17 @@ def component(f: Callable[tp.Concatenate[selfT, P], Element]) -> Callable[P, Ele
 
         @component
         def ContainerComponent(self:Element, children:list[Element]=[]):
-            with View().render():
-                for child in children:
-                    with View().render():
-                        child.render()
+            put = TreeBuilder()
+            with put(View()) as root:
+                with put(View()):
+                    for child in children:
+                        put(child)
+                return root
 
-        with ContainerComponent().render():
-            Label("First Child").render()
-            Label("Second Child").render()
-            Label("Third Child").render()
+        with ContainerComponent() as root:
+            root(Label("First Child"))
+            root(Label("Second Child"))
+            root(Label("Third Child"))
 
     Element rendering
     ----------------------------------------------
@@ -2193,30 +2196,37 @@ class RenderEngine(object):
 
             return cancel
 
-class TreeBuilder():
+
+class TreeBuilder:
     """
     This class exists to make it easier to declare conditional trees
     of :class:`Element` using Python’s statement-heavy syntax.
     """
+
     def __init__(self):
         self.stack = []
-    def __call__(self, element:Element):
+
+    def __call__(self, element: _T_Element) -> "TreeBuilderManager[_T_Element]":
         if len(self.stack) == 0:
             self.stack.append(element)
         else:
             self.stack[-1](element)
         return TreeBuilderManager(self, element)
 
-class TreeBuilderManager():
+
+class TreeBuilderManager(tp.Generic[_T_Element]):
     """
     The :code:`with` context manager for :class:`TreeBuilder`.
     """
-    def __init__(self, tb: TreeBuilder, element: Element):
+
+    def __init__(self, tb: TreeBuilder, element: _T_Element):
         self.tree_builder = tb
         self.element = element
-    def __enter__(self):
+
+    def __enter__(self) -> _T_Element:
         self.tree_builder.stack.append(self.element)
         return self.element
+
     def __exit__(self, exc_type, exc_value, traceback):
         self.tree_builder.stack.pop()
         return True

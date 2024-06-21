@@ -1,7 +1,7 @@
 import asyncio as asyncio
 import unittest
 
-from edifice import App, Window, Element, View, Label, Button, component
+from edifice import App, Window, Element, View, Label, Button, component, TreeBuilder
 from edifice.hooks import use_state
 
 from edifice.qt import QT_VERSION
@@ -21,14 +21,16 @@ class IntegrationTestCase(unittest.TestCase):
         def Wrapper(self):
             show, set_show = use_state(False)
 
-            with Window().render():
+            put = TreeBuilder()
+            with put(Window()) as root:
                 if show:
-                    with View().render():
-                        Button(title="Hide", on_click=lambda ev: set_show(False)).render()
-                        TestComp().render()
+                    with put(View()):
+                        put(Button(title="Hide", on_click=lambda ev: set_show(False)))
+                        put(TestComp())
                 else:
-                    with View().render():
-                        Button(title="Show", on_click=lambda ev: set_show(True)).render()
+                    with put(View()):
+                        put(Button(title="Show", on_click=lambda ev: set_show(True)))
+                return root
 
         class TestComp(Element):
             def __init__(self):
