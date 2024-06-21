@@ -12,7 +12,7 @@ else:
 import pyqtgraph as pg
 
 
-class PyQtPlot(QtWidgetElement):
+class PyQtPlot(QtWidgetElement[pg.PlotWidget]):
     """
     A **PyQtGraph**
     `PlotWidget <https://pyqtgraph.readthedocs.io/en/latest/api_reference/widgets/plotwidget.html>`_.
