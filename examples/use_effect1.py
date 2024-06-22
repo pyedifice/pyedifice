@@ -4,20 +4,23 @@
 
 import asyncio as asyncio
 from edifice import App, Window, View, Label, Button, component
+from edifice.engine import TreeBuilder
 from edifice.hooks import use_state, use_effect
 
 
 @component
 def MainComp(self):
     show, set_show = use_state(False)
-    with Window(on_close=lambda ev: print("Window will close")).render():
+    put = TreeBuilder()
+    with put(Window(on_close=lambda ev: print("Window will close"))) as root:
         if show:
-            with View().render():
-                Button(title="Hide", on_click=lambda ev: set_show(False)).render()
-                TestComp().render()
+            with put(View()):
+                put(Button(title="Hide", on_click=lambda ev: set_show(False)))
+                put(TestComp())
         else:
-            with View().render():
-                Button(title="Show", on_click=lambda ev: set_show(True)).render()
+            with put(View()):
+                put(Button(title="Show", on_click=lambda ev: set_show(True)))
+        return root
 
 
 @component
@@ -48,10 +51,11 @@ def TestComp(self):
 
     use_effect(setup_always, None)
 
-    with View(style={"align": "top"}).render():
-        Label(text="Label text").render()
-        Button(title="State " + str(x), on_click=lambda ev: x_setter(x + 1)).render()
-        Button(title="State Unchanged", on_click=lambda ev: x_setter(lambda y: y)).render()
+    with View(style={"align": "top"}) as root:
+        root(Label(text="Label text"))
+        root(Button(title="State " + str(x), on_click=lambda ev: x_setter(x + 1)))
+        root(Button(title="State Unchanged", on_click=lambda ev: x_setter(lambda y: y)))
+        return root
 
 
 if __name__ == "__main__":

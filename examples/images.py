@@ -1,6 +1,7 @@
 import typing as tp
 from edifice import App, Window, View, component, Image
 import os
+from edifice.engine import TreeBuilder
 
 from edifice.qt import QT_VERSION
 
@@ -16,19 +17,20 @@ imgstyle = {"width": "200px", "height": "200px"}
 
 @component
 def MyComponent(self):
-    with View(layout="column").render():
-        with View(layout="row").render():
-            Image(src=imgpath, style=imgstyle).render()
-            Image(src=imgpath, aspect_ratio_mode=Qt.AspectRatioMode.IgnoreAspectRatio, style=imgstyle).render()
-        with View(layout="row").render():
-            Image(src=imgpath, aspect_ratio_mode=Qt.AspectRatioMode.KeepAspectRatio, style=imgstyle).render()
-            Image(src=imgpath, aspect_ratio_mode=Qt.AspectRatioMode.KeepAspectRatioByExpanding, style=imgstyle).render()
+    put = TreeBuilder()
+    with put(View(layout="column")) as root:
+        with put(View(layout="row")):
+            put(Image(src=imgpath, style=imgstyle))
+            put(Image(src=imgpath, aspect_ratio_mode=Qt.AspectRatioMode.IgnoreAspectRatio, style=imgstyle))
+        with put(View(layout="row")):
+            put(Image(src=imgpath, aspect_ratio_mode=Qt.AspectRatioMode.KeepAspectRatio, style=imgstyle))
+            put(Image(src=imgpath, aspect_ratio_mode=Qt.AspectRatioMode.KeepAspectRatioByExpanding, style=imgstyle))
+        return root
 
 
 @component
 def Main(self):
-    with Window().render():
-        MyComponent().render()
+    return Window()(MyComponent())
 
 
 if __name__ == "__main__":

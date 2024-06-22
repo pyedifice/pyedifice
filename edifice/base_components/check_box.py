@@ -26,7 +26,7 @@ class EdCheckBox(QtWidgets.QCheckBox):
         pass
 
 
-class CheckBox(QtWidgetElement):
+class CheckBox(QtWidgetElement[EdCheckBox]):
     """Checkbox widget.
 
     * Underlying Qt Widget

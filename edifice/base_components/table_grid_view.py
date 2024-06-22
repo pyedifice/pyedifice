@@ -34,7 +34,7 @@ class _TableGridViewRow(QtWidgetElement):
         return []
 
 
-class TableGridView(QtWidgetElement):
+class TableGridView(QtWidgetElement[QWidget]):
     """Table-style grid layout displays its children as aligned rows of columns.
 
     * Underlying Qt Layout

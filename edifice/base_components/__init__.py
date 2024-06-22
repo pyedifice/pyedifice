@@ -56,7 +56,6 @@ from .base_components import (
     Slider,
     ProgressBar,
     Dropdown,
-    CustomWidget,
     GroupBox,
 )
 from .button_view import ButtonView
@@ -87,7 +86,6 @@ __all__ = [
     "Slider",
     "ProgressBar",
     "Dropdown",
-    "CustomWidget",
     "GroupBox",
     "ButtonView",
     "FlowView",

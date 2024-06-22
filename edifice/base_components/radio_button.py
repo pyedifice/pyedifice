@@ -24,7 +24,7 @@ class EdRadioButton(QtWidgets.QRadioButton):
         pass
 
 
-class RadioButton(QtWidgetElement):
+class RadioButton(QtWidgetElement[EdRadioButton]):
     """Radio buttons.
 
     * Underlying Qt Widget

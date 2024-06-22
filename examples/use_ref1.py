@@ -28,9 +28,7 @@ def MyComp(self):
 
     use_effect(did_render, ref)
 
-    with Window().render():
-        with View().render():
-            Label("Before").register_ref(ref).render()
+    return Window()(View()(Label("Before").register_ref(ref)))
 
 
 if __name__ == "__main__":

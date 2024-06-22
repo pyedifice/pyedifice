@@ -78,7 +78,7 @@ def _get_svg_image(icon_path, size, rotation=0, color=(0, 0, 0, 255)):
     return pixmap
 
 
-class GroupBox(QtWidgetElement):
+class GroupBox(QtWidgetElement[QtWidgets.QGroupBox]):
     """
     Underlying
     `QGroupBox <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGroupBox.html>`_
@@ -116,7 +116,7 @@ class GroupBox(QtWidgetElement):
         return commands
 
 
-class Icon(QtWidgetElement):
+class Icon(QtWidgetElement[QtWidgets.QLabel]):
     """Display an Icon.
 
     * Underlying Qt Widget
@@ -216,7 +216,7 @@ class Icon(QtWidgetElement):
         return commands
 
 
-class Button(QtWidgetElement):
+class Button(QtWidgetElement[QtWidgets.QPushButton]):
     """Basic button widget.
 
     * Underlying Qt Widget
@@ -440,7 +440,7 @@ def Label(
     return commands
 
 
-class ImageSvg(QtWidgetElement):
+class ImageSvg(QtWidgetElement[QtSvgWidgets.QSvgWidget]):
     """An SVG Image container.
 
     * Underlying Qt Widget
@@ -516,7 +516,7 @@ class Completer(object):
         return (self.options != other.options) or (self.mode != other.mode)
 
 
-class TextInput(QtWidgetElement):
+class TextInput(QtWidgetElement[QtWidgets.QLineEdit]):
     """Basic widget for a one line text input.
 
     * Underlying Qt Widget
@@ -612,7 +612,7 @@ class TextInput(QtWidgetElement):
         return commands
 
 
-class TextInputMultiline(QtWidgetElement):
+class TextInputMultiline(QtWidgetElement[QtWidgets.QTextEdit]):
     """Basic widget for a multiline text input.
 
     * Underlying Qt Widget
@@ -687,7 +687,7 @@ class TextInputMultiline(QtWidgetElement):
         return commands
 
 
-class Dropdown(QtWidgetElement):
+class Dropdown(QtWidgetElement[QtWidgets.QComboBox]):
     """Basic widget for a dropdown menu.
 
     * Underlying Qt Widget
@@ -776,7 +776,7 @@ class Dropdown(QtWidgetElement):
         return commands
 
 
-class Slider(QtWidgetElement):
+class Slider(QtWidgetElement[QtWidgets.QSlider]):
     """Slider bar widget.
 
     * Underlying Qt Widget
@@ -888,7 +888,7 @@ class Slider(QtWidgetElement):
         return commands
 
 
-class _LinearView(QtWidgetElement):
+class _LinearView(QtWidgetElement[QtWidgets.QWidget]):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self._widget_children: list[QtWidgetElement] = []
@@ -1371,7 +1371,7 @@ def _layout_str_to_grid_spec(layout):
     return (num_rows, num_cols, ls)
 
 
-class GridView(QtWidgetElement):
+class GridView(QtWidgetElement[QtWidgets.QWidget]):
     """Grid layout widget for rendering children on a 2D rectangular grid.
 
     * Underlying Qt Layout
@@ -1528,56 +1528,56 @@ class TabView(_LinearView):
         return commands
 
 
-class CustomWidget(QtWidgetElement):
-    """Custom widgets that you can define.
-
-    Not all widgets are currently supported by Edifice.
-    You can create your own base Qt Widget element
-    by inheriting from :class:`QtWidgetElement` directly, or more simply
-    by overriding :class:`CustomWidget`::
-
-        class MyWidgetElement(CustomWidget):
-            def create_widget(self):
-                # This function should return the new widget
-                # (with parent set to None; Edifice will handle parenting)
-                return QtWidgets.FooWidget()
-
-            def paint(self, widget, newprops):
-                # This function should update the widget
-                for prop in newprops:
-                    if prop == "text":
-                        widget.setText(newprops[prop])
-                    elif prop == "value":
-                        widget.setValue(newprops[prop])
-
-    The two methods to override are :code:`create_widget`,
-    which should return the Qt widget,
-    and :code:`paint`,
-    which takes the current widget and new props,
-    and should update the widget according to the new props.
-    The created widget inherits all the properties of Qt widgets,
-    allowing the user to, for example, set the style.
-    """
-
-    def __init__(self):
-        super().__init__()
-
-    def create_widget(self) -> QtWidgets.QWidget:
-        raise NotImplementedError
-
-    def paint(self, widget, newprops):
-        raise NotImplementedError
-
-    def _qt_update_commands(
-        self,
-        widget_trees: dict[Element, _WidgetTree],
-        newprops: PropsDict,
-    ):
-        if self.underlying is None:
-            self.underlying = self.create_widget()
-        commands = super()._qt_update_commands_super(widget_trees, newprops, self.underlying, None)
-        commands.append(CommandType(self.paint, self.underlying, newprops))
-        return commands
+# class CustomWidget(QtWidgetElement):
+#     """Custom widgets that you can define.
+#
+#     Not all widgets are currently supported by Edifice.
+#     You can create your own base Qt Widget element
+#     by inheriting from :class:`QtWidgetElement` directly, or more simply
+#     by overriding :class:`CustomWidget`::
+#
+#         class MyWidgetElement(CustomWidget):
+#             def create_widget(self):
+#                 # This function should return the new widget
+#                 # (with parent set to None; Edifice will handle parenting)
+#                 return QtWidgets.FooWidget()
+#
+#             def paint(self, widget, newprops):
+#                 # This function should update the widget
+#                 for prop in newprops:
+#                     if prop == "text":
+#                         widget.setText(newprops[prop])
+#                     elif prop == "value":
+#                         widget.setValue(newprops[prop])
+#
+#     The two methods to override are :code:`create_widget`,
+#     which should return the Qt widget,
+#     and :code:`paint`,
+#     which takes the current widget and new props,
+#     and should update the widget according to the new props.
+#     The created widget inherits all the properties of Qt widgets,
+#     allowing the user to, for example, set the style.
+#     """
+#
+#     def __init__(self):
+#         super().__init__()
+#
+#     def create_widget(self) -> QtWidgets.QWidget:
+#         raise NotImplementedError
+#
+#     def paint(self, widget, newprops):
+#         raise NotImplementedError
+#
+#     def _qt_update_commands(
+#         self,
+#         widget_trees: dict[Element, _WidgetTree],
+#         newprops: PropsDict,
+#     ):
+#         if self.underlying is None:
+#             self.underlying = self.create_widget()
+#         commands = super()._qt_update_commands_super(widget_trees, newprops, self.underlying, None)
+#         commands.append(CommandType(self.paint, self.underlying, newprops))
+#         return commands
 
 
 class ExportList(QtWidgetElement):
@@ -1667,7 +1667,7 @@ class ExportList(QtWidgetElement):
 #         return commands
 
 
-class ProgressBar(QtWidgetElement):
+class ProgressBar(QtWidgetElement[QtWidgets.QProgressBar]):
     """Progress bar widget.
 
     * Underlying Qt Widget

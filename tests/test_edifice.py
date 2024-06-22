@@ -88,10 +88,9 @@ class TestReference(unittest.TestCase):
             sub_comp_ref.append(ref1)
 
             if self.render_count == 1:
-                base_components.Label("Test").register_ref(ref0).render()
+                return base_components.Label("Test").register_ref(ref0)
             else:
-                base_components.Label("Test").register_ref(ref1).render()
-            return
+                return base_components.Label("Test").register_ref(ref1)
 
         @component
         def TestCompWrapper(self):
@@ -102,9 +101,9 @@ class TestReference(unittest.TestCase):
 
             if self.render_count == 3:
                 # We do this to force the dismount of TestComp
-                base_components.Label("Test").render()
+                return base_components.Label("Test")
             else:
-                TestComp(self.render_count).render()
+                return TestComp(self.render_count)
 
         root = TestCompWrapper()
         render_engine = engine.RenderEngine(root)
@@ -528,18 +527,19 @@ class RefreshClassTestCase(unittest.TestCase):
         @component
         def OldInnerClass(self, val):
             old_inner_render_count[0] += 1
-            base_components.Label(str(val)).render()
+            return base_components.Label(str(val))
 
         @component
         def NewInnerClass(self, val):
             new_inner_render_count[0] += 1
-            base_components.Label(str(val * 2)).render()
+            return base_components.Label(str(val * 2))
 
         @component
         def OuterClass(self):
             outer_render_count[0] += 1
-            with base_components.View().render():
-                OldInnerClass(5).render()
+            with base_components.View() as root:
+                root(OldInnerClass(5))
+                return root
 
         outer_comp = OuterClass()
         app = engine.RenderEngine(outer_comp)

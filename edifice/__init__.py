@@ -129,7 +129,7 @@ To ensure control over the rerender process, it is recommended to :func:`Element
 whenever you have many children of the same class.
 """
 
-from .engine import QtWidgetElement, Element, component, Reference, qt_component
+from .engine import QtWidgetElement, Element, component, Reference, qt_component, TreeBuilder, TreeBuilderManager
 from .app import App
 from .utilities import alert, file_dialog, set_trace
 from .hooks import use_state, use_effect, use_async, use_ref, use_async_call, use_effect_final
@@ -153,7 +153,6 @@ from .base_components import (
     Slider,
     ProgressBar,
     Dropdown,
-    CustomWidget,
     ButtonView,
     FlowView,
     Image,
@@ -166,7 +165,6 @@ __all__ = [
     "Button",
     "ButtonView",
     "CheckBox",
-    "CustomWidget",
     "Dropdown",
     "Element",
     "ExportList",
@@ -188,6 +186,8 @@ __all__ = [
     "TableGridView",
     "TextInput",
     "TextInputMultiline",
+    "TreeBuilder",
+    "TreeBuilderManager",
     "View",
     "Window",
     "alert",

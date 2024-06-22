@@ -6,6 +6,8 @@ import edifice as ed
 import asyncio
 import random
 
+from edifice.engine import TreeBuilder
+
 stylesheet = dict(
     price_box={
         "padding-top": 0,
@@ -57,19 +59,25 @@ def PriceLevel(self, price, size, side, last=False):
         price_box_style["border-bottom"] = "1px solid black"
         size_box_style["border-bottom"] = "1px solid black"
 
-    with ed.View(layout="row", style={"padding": "0px", "width": "360px", "align": "left"}).render():
-        ed.Label(price, style=price_box_style).set_key("price").render()
-        ed.Label(size, style=size_box_style).set_key("size").render()
-        ed.Label("", style=size_bar_style).set_key("vis_size").render()
+    return ed.View(layout="row", style={"padding": "0px", "width": "360px", "align": "left"})(
+        ed.Label(price, style=price_box_style).set_key("price"),
+        ed.Label(size, style=size_box_style).set_key("size"),
+        ed.Label("", style=size_bar_style).set_key("vis_size"),
+    )
 
 
 @ed.component
 def Book(self, book):
     sizes = book["sizes"]
     market_price = book["price"]
-    with ed.View(layout="column", style={"margin": "10px", "padding": "0px", "width": 360}).render():
+    with ed.View(layout="column", style={"margin": "10px", "padding": "0px", "width": 360}) as root:
         for p in range(20, 0, -1):
-            PriceLevel(price=p, size=sizes[p], side="bid" if p < market_price else "ask", last=(p == 1)).set_key(str(p)).render()
+            root(
+                PriceLevel(price=p, size=sizes[p], side="bid" if p < market_price else "ask", last=(p == 1)).set_key(
+                    str(p)
+                )
+            )
+        return root
 
 
 book_init = {"price": 10, "sizes": [random.randint(100, 300) for _ in range(21)]}
@@ -96,18 +104,22 @@ def App(self):
     def play(e):
         playing_set(lambda p: not p)
 
-    with ed.Window().render():
-        with ed.View(layout="column").render():
-            with ed.View(layout="row", style={"align": "left", "margin-left": "10px"}).set_key("Controls").render():
-                ed.Icon(name="chart-line", size=14).set_key("Icon").render()
-                ed.Label("Market Data Viewer", style={"margin-left": "5px"}).set_key("Label").render()
-                ed.IconButton(
-                    name="pause" if playing else "play",
-                    style=stylesheet["play_button"],
-                    size=10,
-                    on_click=play,
-                ).set_key("Play").render()
-            Book(book).set_key("Book").render()
+    put = TreeBuilder()
+    with put(ed.Window()) as root:
+        with put(ed.View(layout="column")):
+            with put(ed.View(layout="row", style={"align": "left", "margin-left": "10px"}).set_key("Controls")):
+                put(ed.Icon(name="chart-line", size=14).set_key("Icon"))
+                put(ed.Label("Market Data Viewer", style={"margin-left": "5px"}).set_key("Label"))
+                put(
+                    ed.IconButton(
+                        name="pause" if playing else "play",
+                        style=stylesheet["play_button"],
+                        size=10,
+                        on_click=play,
+                    ).set_key("Play")
+                )
+            put(Book(book).set_key("Book"))
+        return root
 
 
 if __name__ == "__main__":
