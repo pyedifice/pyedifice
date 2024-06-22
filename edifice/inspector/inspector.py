@@ -57,7 +57,7 @@ def TreeView(
         child_style["height"] = 0
 
     put = ed.TreeBuilder()
-    with put(ed.View(layout="column", style={"align": "top"})) as root:
+    with put(ed.View(layout="column", style={"align": "top"})) as treeroot:
         put(Collapsible(
             root=root,
             current_selection=current_selection,
@@ -72,7 +72,7 @@ def TreeView(
             if not collapsed:
                 for comp_fn in load_fun:
                     put(comp_fn())
-    return root
+    return treeroot
 
 
 
@@ -89,7 +89,7 @@ def StateView(
     with put(ed.ScrollView(
         layout="column",
         style={"align": "top", "margin-left": 15},
-    )) as root:
+    )) as treeroot:
         if component in hook_state:
             for s in hook_state[component]:
                 with put(ed.View(
@@ -100,15 +100,15 @@ def StateView(
                         text=str(s.state),
                         selectable=True,
                     ))
-        return root
+        return treeroot
 
 
 @ed.component
-def PropsView(self, props: PropsDict):
+def PropsView(self, props: dict[str, tp.Any]):
     setattr(self, "__edifice_inspector_element", True)
     put = ed.TreeBuilder()
-    with put(ed.ScrollView(layout="column", style={"align": "top", "margin-left": 15})) as root:
-        for key in props._keys:
+    with put(ed.ScrollView(layout="column", style={"align": "top", "margin-left": 15})) as treeroot:
+        for key in props.keys():
             with put(ed.View(
                 layout="row",
                 style={"align": "left"},
@@ -123,7 +123,7 @@ def PropsView(self, props: PropsDict):
                     selectable=True,
                     style={},
                 ))
-        return root
+        return treeroot
 
 
 @ed.component
@@ -152,7 +152,7 @@ def ElementView(
             "Class defined in " + str(module.__file__) + ":" + str(lineno), selectable=True, style={"margin-left": 10}
         ),
         ed.Label("Props", style=heading_style),
-        PropsView(component.props),
+        PropsView(component.props._d),
         ed.Label("State", style=heading_style),
         StateView(component, hook_state, refresh_trigger),
     )
@@ -196,11 +196,11 @@ def Inspector(
         else:
             return ElementLabel(root, current_selection=selected, on_click=lambda: selected_set(root))
 
-    with ed.View(layout="row") as root:
+    with ed.View(layout="row") as topview:
         if component_tree is not None and root_component is not None and hook_state is not None:
-            root(ed.View(
+            topview(ed.View(
                 layout="column", style={"align": "top", "width": 251, "border-right": "1px solid gray"}
-            ))(
+            )(
                 ed.View(layout="row", style={"align": "left", "height": 30})(
                     ed.Label("Edifice Inspector", style={"font-size": 18, "margin-left": 10, "width": 160}),
                     ed.Icon(
@@ -210,8 +210,8 @@ def Inspector(
                 ed.ScrollView(layout="column", style={"width": 250, "min-height": 450, "margin-top": 10})(
                     _build_tree(root_component) if root_component is not None else None
                 )
-            )
-            root(ed.View(layout="column", style={"min-width": 450, "min-height": 450})(
+            ))
+            topview(ed.View(layout="column", style={"min-width": 450, "min-height": 450})(
                 ElementView( selected, hook_state, refresh_trigger) if selected is not None else None
             ))
-        return root
+        return topview

@@ -102,16 +102,14 @@ def Calculator(self):
         elif e.key() == QtCore.Qt.Key.Key_Return:
             apply_binary_operand("=")
 
-    with ed.View(layout="column", style=window_style, on_key_down=key_press) as root:
-        root(ed.Label(display, style=display_style))
-        root(
-            ed.GridView(
-                layout="""cs%/
-                                789*
-                                456-
-                                123+
-                                00.="""
-            )
+    return ed.View(layout="column", style=window_style, on_key_down=key_press)(
+        ed.Label(display, style=display_style),
+        ed.GridView(
+            layout="""cs%/
+                            789*
+                            456-
+                            123+
+                            00.="""
         )(
             unary_button("AC").set_key("c"),
             unary_button("+/-").set_key("s"),
@@ -136,8 +134,8 @@ def Calculator(self):
             digit_button(0, double_width=True).set_key("0"),
             digit_button(".").set_key("."),
             binary_button("=").set_key("="),
-        )
-    return root
+        ),
+    )
 
 
 @ed.component

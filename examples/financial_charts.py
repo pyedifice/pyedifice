@@ -146,25 +146,16 @@ def PlotDescriptor(self, plot: dict[str, tp.Any], plot_change: tp.Callable[[dict
         plot_["color"] = plot_colors[color_index]
         plot_change(plot_)
 
-    put = TreeBuilder()
-    with put(View(layout="row", style={"margin": 5, "align": "left"})) as root:
-        with put(View(layout="column", style={"align": "top", "width": 400})):
-            put(AxisDescriptor("x-axis", "xaxis", plot, plot_change))
-            put(AxisDescriptor("y-axis", "yaxis", plot, plot_change))
-        with put(View(layout="column", style={"align": "top", "margin-left": 10})):
-            put(
-                labeled_elem(
-                    "Chart type",
-                    Dropdown(selection=plot_type, options=plot_types, on_select=handle_plot_type),
-                )
-            )
-            put(
-                labeled_elem(
-                    "Color",
-                    Dropdown(selection=color, options=plot_colors, on_select=handle_color),
-                )
-            )
-        return root
+    return View(layout="row", style={"margin": 5, "align": "left"})(
+        View(layout="column", style={"align": "top", "width": 400})(
+            AxisDescriptor("x-axis", "xaxis", plot, plot_change),
+            AxisDescriptor("y-axis", "yaxis", plot, plot_change),
+        ),
+        View(layout="column", style={"align": "top", "margin-left": 10})(
+            labeled_elem("Chart type", Dropdown(selection=plot_type, options=plot_types, on_select=handle_plot_type)),
+            labeled_elem("Color", Dropdown(selection=color, options=plot_colors, on_select=handle_color)),
+        ),
+    )
 
 
 # Finally, we create a component that contains the plot descriptions, a button to add a plot,

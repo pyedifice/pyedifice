@@ -123,8 +123,7 @@ class MakeElementTestCase(unittest.TestCase):
 
         @ed.component
         def Element1234(self, prop1, prop2):
-            with A() as root:
-                return root(Value(9))
+            return A()(Value(9))
 
         self.assertEqual(Element1234.__name__, "Element1234")
         comp = Element1234(1, 2)

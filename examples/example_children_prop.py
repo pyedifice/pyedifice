@@ -36,10 +36,10 @@ def Main(self):
     ] = "Callables which take other callables as arguments may indicate that their parameter types are dependent on".split(
         " "
     )
+    x, x_set = ed.use_state(0)
     put = ed.TreeBuilder()
     with put(ed.Window()) as root:
         with put(ed.View(style={"padding": 20})):
-            x, x_set = ed.use_state(0)
             put(
                 ed.Slider(
                     value=x,
