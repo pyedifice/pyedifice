@@ -1678,7 +1678,11 @@ class RenderEngine(object):
                 if hook.task is not None:
                     # If there are some running tasks, wait until they are
                     # done and then delete this HookAsync object.
-                    def done_callback(_future_object):
+                    def done_callback(task_object: asyncio.Task[None]):
+                        if not task_object.cancelled():
+                            exc = task_object.exception()
+                            if exc is not None:
+                                raise exc
                         if component in self._hook_async:
                             if self.is_hook_async_done(component):
                                 del self._hook_async[component]
@@ -2206,7 +2210,11 @@ class RenderEngine(object):
             )
             hooks.append(hook)
 
-            def done_callback(_future_object):
+            def done_callback(task_object: asyncio.Task[None]):
+                if not task_object.cancelled():
+                    exc = task_object.exception()
+                    if exc is not None:
+                        raise exc
                 hook.task = None
                 if len(hook.queue) > 0:
                     # There is another async task waiting in the queue
@@ -2238,7 +2246,11 @@ class RenderEngine(object):
             else:
                 hook.task = asyncio.create_task(fn_coroutine())
 
-                def done_callback(_future_object):
+                def done_callback(task_object: asyncio.Task[None]):
+                    if not task_object.cancelled():
+                        exc = task_object.exception()
+                        if exc is not None:
+                            raise exc
                     hook.task = None
                     if len(hook.queue) > 0:
                         # There is another async task waiting in the queue

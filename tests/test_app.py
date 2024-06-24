@@ -127,6 +127,33 @@ class IntegrationTestCase(unittest.TestCase):
 
         self.assertTrue(not render_after_has_cancelled)
 
+    def test_use_async_exception(self):
+        """
+        Test exceptions raised with the use of the use_async hook.
+
+        Uncaught exceptions should propagate to the main thread and stop the
+        program.
+        """
+
+        @ed.component
+        def MainTestAsyncExcept(self):
+            async def runy():
+                raise ValueError("This is an exception")
+
+            ed.use_async(runy, ())
+
+            with ed.Window().render():
+                ed.Label(text="TestAsyncCancel unmounted").render()
+
+        has_crashed = False
+        try:
+            my_app = ed.App(MainTestAsyncExcept(), create_application=False)
+            my_app.start()
+        except ValueError:
+            has_crashed = True
+
+        self.assertTrue(has_crashed)
+
 
 if __name__ == "__main__":
     unittest.main()
