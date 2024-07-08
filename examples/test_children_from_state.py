@@ -35,40 +35,35 @@ def MyComponent3(self):
     def handle_resize(event: QtGui.QResizeEvent):
         resize_event_set(event.size())
 
-    put = TreeBuilder()
-    with put(View(layout="column")) as root:
-        put(Label(text=str(resize_event)))
-        with put(TableGridView()) as tgv:
-            with put(tgv.row()):
-                put(Slider(x, min_value=0, max_value=100, on_change=x_set).set_key("row1"))
-            with put(tgv.row()):
-                put(Slider(x_minus, min_value=0, max_value=100, on_change=x_minus_set).set_key("row2"))
-            with put(tgv.row()):
-                with put(View(layout="row", on_resize=handle_resize).set_key("row3")):
+    tree = TreeBuilder()
+    with tree + View(layout="column"):
+        tree += Label(text=str(resize_event))
+        with tree + TableGridView() as tgv:
+            with tree + tgv.row():
+                tree += Slider(x, min_value=0, max_value=100, on_change=x_set).set_key("row1")
+            with tree + tgv.row():
+                tree += Slider(x_minus, min_value=0, max_value=100, on_change=x_minus_set).set_key("row2")
+            with tree + tgv.row():
+                with tree + View(layout="row", on_resize=handle_resize).set_key("row3"):
                     for i in range(x_minus, x):
-                        with put(View(layout="column", style={"align": "center"}).set_key("view" + str(i))):
-                            put(Label(str(i)))
-                            put(
-                                Image(
-                                    src=imgpath,
-                                    aspect_ratio_mode=Qt.AspectRatioMode.KeepAspectRatio,
-                                    style={
-                                        "width": 15,
-                                        "height": 15,
-                                    },
-                                )
+                        with tree + View(layout="column", style={"align": "center"}).set_key("view" + str(i)):
+                            tree += Label(str(i))
+                            tree += Image(
+                                src=imgpath,
+                                aspect_ratio_mode=Qt.AspectRatioMode.KeepAspectRatio,
+                                style={
+                                    "width": 15,
+                                    "height": 15,
+                                },
                             )
-        return root
+    return tree.root()
 
 
 @component
 def MyComponent(self):
     x, x_set = use_state(0)
 
-    with View(layout="column") as root:
-        root(Slider(x, min_value=0, max_value=100, on_change=x_set))
-        root(InnerComponent(x))
-        return root
+    return View(layout="column")(Slider(x, min_value=0, max_value=100, on_change=x_set), InnerComponent(x))
 
 
 @component
@@ -81,10 +76,10 @@ def InnerComponent(self, x: int):
 
     use_effect(y_setter, x)
 
-    with View(layout="row") as root:
-        for i in range(y):
-            root(ItemComponent(i).set_key("X" + str(i)))
-        return root
+    root = View(layout="row")
+    for i in range(y):
+        root(ItemComponent(i).set_key("X" + str(i)))
+    return root
 
 
 @component

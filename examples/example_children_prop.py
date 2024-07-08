@@ -11,22 +11,18 @@ def MyComponent(
     children: list[ed.Element] = [],
 ):
     bgcolor = "blue"
-    put = ed.TreeBuilder()
-    with put(
-        ed.View(
-            layout="column",
-            style={"align": "top"},
-        )
-    ) as root:
+    tree = ed.TreeBuilder()
+    with tree + ed.View(
+        layout="column",
+        style={"align": "top"},
+    ):
         for child in children:
-            with put(
-                ed.View(
-                    style={"background-color": bgcolor, "padding": 10},
-                )
+            with tree + ed.View(
+                style={"background-color": bgcolor, "padding": 10},
             ):
-                put(child)
+                tree += child
             bgcolor = "blue" if bgcolor == "green" else "green"
-    return root
+    return tree.root()
 
 
 @ed.component
@@ -37,22 +33,20 @@ def Main(self):
         " "
     )
     x, x_set = ed.use_state(0)
-    put = ed.TreeBuilder()
-    with put(ed.Window()) as root:
-        with put(ed.View(style={"padding": 20})):
-            put(
-                ed.Slider(
-                    value=x,
-                    on_change=x_set,
-                    min_value=0,
-                    max_value=len(strings),
-                    style={"min-width": 200},
-                )
+    tree = ed.TreeBuilder()
+    with tree + ed.Window():
+        with tree + ed.View(style={"padding": 20}):
+            tree += ed.Slider(
+                value=x,
+                on_change=x_set,
+                min_value=0,
+                max_value=len(strings),
+                style={"min-width": 200},
             )
-            with put(MyComponent()):
+            with tree + MyComponent():
                 for i in range(0, x):
-                    put(ed.Label(text=strings[i]))
-    return root
+                    tree += ed.Label(text=strings[i])
+    return tree.root()
 
 
 if __name__ == "__main__":

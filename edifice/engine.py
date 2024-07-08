@@ -472,11 +472,13 @@ class Element:
                 self._props["children"].append(a)
         return self
 
+    # deprecate
     def __enter__(self):
         """Allows for the use of the with statement to establish an indentation
         block for the children of this Element."""
         return self
 
+    # deprecate
     def __exit__(self, exc_type, exc_value, traceback):
         return True
 
@@ -2204,11 +2206,17 @@ class RenderEngine(object):
 class TreeBuilder:
     """
     This class exists to make it easier to declare conditional trees
-    of :class:`Element` using Python’s statement-heavy syntax.
+    of :class:`Element` using Python’s statement syntax.
     """
 
     def __init__(self):
         self.stack = []
+
+    def root(self) -> Element:
+        """
+        Returns the root element of the tree.
+        """
+        return self.stack[0]
 
     def __call__(self, element: _T_Element) -> "TreeBuilderManager[_T_Element]":
         if len(self.stack) == 0:
@@ -2216,6 +2224,20 @@ class TreeBuilder:
         else:
             self.stack[-1](element)
         return TreeBuilderManager(self, element)
+
+    def __add__(self, element: _T_Element) -> "TreeBuilderManager[_T_Element]":
+        if len(self.stack) == 0:
+            self.stack.append(element)
+        else:
+            self.stack[-1](element)
+        return TreeBuilderManager(self, element)
+
+    def __iadd__(self, element: Element) -> "TreeBuilder":
+        if len(self.stack) == 0:
+            self.stack.append(element)
+        else:
+            self.stack[-1](element)
+        return self
 
 
 class TreeBuilderManager(tp.Generic[_T_Element]):
@@ -2233,4 +2255,4 @@ class TreeBuilderManager(tp.Generic[_T_Element]):
 
     def __exit__(self, exc_type, exc_value, traceback):
         self.tree_builder.stack.pop()
-        return True
+        return False

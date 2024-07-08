@@ -37,45 +37,41 @@ def MyComponent(self):
     def second_slider(value: int):
         x_set(value)
 
-    put = TreeBuilder()
-    with put(View(layout="column")) as root:
-        put(Slider(x, min_value=0, max_value=100, on_change=x_set))
-        put(Slider(x, min_value=0, max_value=100, on_change=second_slider))
-        put(
-            ProgressBar(
-                x,
-                min_value=0,
-                max_value=100,
-                # format="%p% is the progress",
-                format=f"{x}% is the progress",
-            )
+    tree = TreeBuilder()
+    # with put(View(layout="column")) as root:
+    with tree + View(layout="column"):
+        tree += Slider(x, min_value=0, max_value=100, on_change=x_set)
+        tree += Slider(x, min_value=0, max_value=100, on_change=second_slider)
+        tree += ProgressBar(
+            x,
+            min_value=0,
+            max_value=100,
+            # format="%p% is the progress",
+            format=f"{x}% is the progress",
         )
-        put(ProgressBar(0, min_value=0, max_value=0, format="Loading…"))
-        put(
-            ProgressBar(
-                y,
-                min_value=0,
-                max_value=1000,
-                format="%p% is the progress",
-                orientation=Qt.Orientation.Vertical,
-                style={"max-height": "100px"},
-            )
+        tree += ProgressBar(0, min_value=0, max_value=0, format="Loading…")
+        tree += ProgressBar(
+            y,
+            min_value=0,
+            max_value=1000,
+            format="%p% is the progress",
+            orientation=Qt.Orientation.Vertical,
+            style={"max-height": "100px"},
         )
-        put(
-            SpinInput(
-                y,
-                min_value=0,
-                max_value=1000,
-                value_to_text=to_percent,
-                text_to_value=from_percent,
-                on_change=y_set,
-                style={
-                    "font-size": "20px",
-                },
-            )
+        tree += SpinInput(
+            y,
+            min_value=0,
+            max_value=1000,
+            value_to_text=to_percent,
+            text_to_value=from_percent,
+            on_change=y_set,
+            style={
+                "font-size": "20px",
+            },
         )
-        put(Label(to_percent(y)))
-        return root
+        tree += Label(to_percent(y))
+
+    return tree.root()
 
 
 @component
