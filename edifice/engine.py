@@ -171,6 +171,10 @@ class PropsDict(object):
     def __setattr__(self, key, value) -> tp.NoReturn:
         raise ValueError("Props are immutable")
 
+    # TODO Should PropsDict have an __eq__ method?
+    # def __eq__(self, other:"PropsDict") -> bool:
+    #     return self._d == other._d
+
 
 class Reference(tp.Generic[_T_Element]):
     """Reference to a :class:`Element` to allow imperative modifications.

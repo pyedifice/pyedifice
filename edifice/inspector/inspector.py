@@ -79,9 +79,9 @@ def TreeView(
 @ed.component
 def StateView(
     self,
-    component: ed.Element,
-    hook_state: defaultdict[ed.Element, list[_HookState]],
-    refresh_trigger: bool,  # force a refresh when this changes
+    # component: ed.Element,
+    component_hook_state: list[_HookState],
+    # refresh_trigger: bool,  # force a refresh when this changes
 ):
     setattr(self, "__edifice_inspector_element", True)
 
@@ -90,16 +90,15 @@ def StateView(
         layout="column",
         style={"align": "top", "margin-left": 15},
     )) as treeroot:
-        if component in hook_state:
-            for s in hook_state[component]:
-                with put(ed.View(
-                    layout="row",
-                    style={"align": "left"},
-                )):
-                    put(ed.Label(
-                        text=str(s.state),
-                        selectable=True,
-                    ))
+        for s in component_hook_state:
+            with put(ed.View(
+                layout="row",
+                style={"align": "left"},
+            )):
+                put(ed.Label(
+                    text=str(s.state),
+                    selectable=True,
+                ))
         return treeroot
 
 
@@ -130,7 +129,11 @@ def PropsView(self, props: dict[str, tp.Any]):
 def ElementView(
     self,
     component: ed.Element,
-    hook_state: defaultdict[ed.Element, list[_HookState]],
+    # hook_state: defaultdict[ed.Element, list[_HookState]],
+    # We pass component_props in as separate props because the component
+    # props doesn't have an __eq__ relation.
+    component_props: dict[str, tp.Any],
+    component_hook_state: list[_HookState],
     refresh_trigger: bool,  # force a refresh when this changes
 ):
     setattr(self, "__edifice_inspector_element", True)
@@ -152,9 +155,11 @@ def ElementView(
             "Class defined in " + str(module.__file__) + ":" + str(lineno), selectable=True, style={"margin-left": 10}
         ),
         ed.Label("Props", style=heading_style),
-        PropsView(component.props._d),
+        # PropsView(component.props._d),
+        PropsView(component_props),
         ed.Label("State", style=heading_style),
-        StateView(component, hook_state, refresh_trigger),
+        # StateView(component, hook_state, refresh_trigger),
+        StateView(component_hook_state),
     )
 
 
@@ -212,6 +217,12 @@ def Inspector(
                 )
             ))
             topview(ed.View(layout="column", style={"min-width": 450, "min-height": 450})(
-                ElementView( selected, hook_state, refresh_trigger) if selected is not None else None
+                # ElementView( selected, hook_state, refresh_trigger) if selected is not None else None
+                ElementView(
+                    selected,
+                    selected.props._d,
+                    hook_state[selected],
+                    refresh_trigger
+                ) if selected is not None else None
             ))
         return topview
