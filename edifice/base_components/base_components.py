@@ -1528,58 +1528,6 @@ class TabView(_LinearView):
         return commands
 
 
-class CustomWidget(QtWidgetElement):
-    """Custom widgets that you can define.
-
-    Not all widgets are currently supported by Edifice.
-    You can create your own base Qt Widget element
-    by inheriting from :class:`QtWidgetElement` directly, or more simply
-    by overriding :class:`CustomWidget`::
-
-        class MyWidgetElement(CustomWidget):
-            def create_widget(self):
-                # This function should return the new widget
-                # (with parent set to None; Edifice will handle parenting)
-                return QtWidgets.FooWidget()
-
-            def paint(self, widget, newprops):
-                # This function should update the widget
-                for prop in newprops:
-                    if prop == "text":
-                        widget.setText(newprops[prop])
-                    elif prop == "value":
-                        widget.setValue(newprops[prop])
-
-    The two methods to override are :code:`create_widget`,
-    which should return the Qt widget,
-    and :code:`paint`,
-    which takes the current widget and new props,
-    and should update the widget according to the new props.
-    The created widget inherits all the properties of Qt widgets,
-    allowing the user to, for example, set the style.
-    """
-
-    def __init__(self):
-        super().__init__()
-
-    def create_widget(self) -> QtWidgets.QWidget:
-        raise NotImplementedError
-
-    def paint(self, widget, newprops):
-        raise NotImplementedError
-
-    def _qt_update_commands(
-        self,
-        widget_trees: dict[Element, _WidgetTree],
-        newprops: PropsDict,
-    ):
-        if self.underlying is None:
-            self.underlying = self.create_widget()
-        commands = super()._qt_update_commands_super(widget_trees, newprops, self.underlying, None)
-        commands.append(CommandType(self.paint, self.underlying, newprops))
-        return commands
-
-
 class ExportList(QtWidgetElement):
     """
     The root element for an App which does :func:`App.export_widgets`.
