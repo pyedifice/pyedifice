@@ -21,15 +21,15 @@ def str_to_float(s):
 def ConversionWidget(self, from_unit, to_unit, factor):
     current_text, current_text_set = use_state("0.0")
 
-    to_text = "%.3f" % (str_to_float(current_text) * factor)
+    to_text = "%.3f" % (str_to_float(current_text) * self.props.factor)
 
-    from_label_style = {"min-width": 170}
-    to_label_style = {"margin-left": 60, "min-width": 220}
+    from_label_style = {"width": 170}
+    to_label_style = {"margin-left": 60, "width": 200}
     input_style = {"padding": 2, "width": 120}
-    with View(layout="row", style={"padding": 10}).render():
-        Label(f"Measurement in {from_unit}:", style=from_label_style).render()
+    with View(layout="row", style={"margin": 10, "width": 560}).render():
+        Label(f"Measurement in {self.props.from_unit}:", style=from_label_style).render()
         TextInput(current_text, style=input_style, on_change=current_text_set).render()
-        Label(f"Measurement in {to_unit}: {to_text}", style=to_label_style).render()
+        Label(f"Measurement in {self.props.to_unit}: {to_text}", style=to_label_style).render()
 
 
 @component
