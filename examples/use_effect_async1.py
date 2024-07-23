@@ -10,14 +10,14 @@ from edifice.hooks import use_state, use_async
 @component
 def MainComp(self):
     show, set_show = use_state(False)
-    with Window().render():
+    with Window():
         if show:
-            with View(style={"align": "top"}).render():
-                Button(title="Hide", on_click=lambda ev: set_show(False)).render()
-                TestComp().render()
+            with View(style={"align": "top"}):
+                Button(title="Hide", on_click=lambda ev: set_show(False))
+                TestComp()
         else:
-            with View(style={"align": "top"}).render():
-                Button(title="Show", on_click=lambda ev: set_show(True)).render()
+            with View(style={"align": "top"}):
+                Button(title="Show", on_click=lambda ev: set_show(True))
 
 
 @component
@@ -53,13 +53,13 @@ def TestComp(self):
         for i in range(10):
             asyncio.get_running_loop().call_later(0.1 * i, x_setter, (lambda y: y + 1))
 
-    with View(style={"align": "top"}).render():
-        Label(text=result).render()
-        Button(title="State " + str(x), on_click=lambda ev: x_setter(lambda y: y + 1)).render()
+    with View(style={"align": "top"}):
+        Label(text=result)
+        Button(title="State " + str(x), on_click=lambda ev: x_setter(lambda y: y + 1))
         Button(
             title="State + 10",
             on_click=fetch10,
-        ).render()
+        )
 
 
 if __name__ == "__main__":

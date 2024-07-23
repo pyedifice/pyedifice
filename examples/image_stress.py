@@ -66,13 +66,13 @@ def Component(self):
             "align": "top",
         },
         on_drop=handle_drop,
-    ).render():
+    ):
         if proposed_files != []:
             with ed.FlowView(
                 style={
                     "align": "top",
                 },
-            ).render():
+            ):
                 for file in proposed_files:
                     ed.Label(
                         text=file,
@@ -80,10 +80,8 @@ def Component(self):
         elif dropped_files != []:
             with ed.View(
                 layout="column",
-            ).render():
-                ed.CheckBox(
-                    checked=auto_stress, on_change=auto_stress_set, text="Rapidly load and unload images"
-                ).render()
+            ):
+                ed.CheckBox(checked=auto_stress, on_change=auto_stress_set, text="Rapidly load and unload images")
                 ed.Slider(
                     value=max_images,
                     max_value=len(dropped_files),
@@ -91,12 +89,12 @@ def Component(self):
                     style={
                         "margin": 20,
                     },
-                ).render()
+                )
             with ed.FlowView(
                 style={
                     "align": "top",
                 },
-            ).render():
+            ):
                 for file in dropped_files[:max_images]:
                     ed.Image(
                         src=file,
@@ -105,19 +103,19 @@ def Component(self):
                             "width": 100,
                             "height": 100,
                         },
-                    ).set_key(file).render()
+                    ).set_key(file)
         else:
-            with ed.View().render():
+            with ed.View():
                 ed.Label(
                     text="DROP IMAGE FILES HERE",
-                ).render()
+                )
 
 
 @ed.component
 def Main(self):
-    with ed.Window("Image Stress Test").render():
-        with ed.View().render():
-            Component().render()
+    with ed.Window("Image Stress Test"):
+        with ed.View():
+            Component()
 
 
 # myobj_init = tp.ParamSpec("myobj_init")

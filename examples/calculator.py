@@ -102,44 +102,44 @@ def Calculator(self):
         elif e.key() == QtCore.Qt.Key.Key_Return:
             apply_binary_operand("=")
 
-    with ed.View(layout="column", style=window_style, on_key_down=key_press).render():
-        ed.Label(display, style=display_style).render()
+    with ed.View(layout="column", style=window_style, on_key_down=key_press):
+        ed.Label(display, style=display_style)
         with ed.GridView(
             layout="""cs%/
                                 789*
                                 456-
                                 123+
                                 00.="""
-        ).render():
-            unary_button("AC").set_key("c").render()
-            unary_button("+/-").set_key("s").render()
-            unary_button("%").set_key("%").render()
-            binary_button("÷").set_key("/").render()
+        ):
+            unary_button("AC").set_key("c")
+            unary_button("+/-").set_key("s")
+            unary_button("%").set_key("%")
+            binary_button("÷").set_key("/")
 
-            digit_button(7).set_key("7").render()
-            digit_button(8).set_key("8").render()
-            digit_button(9).set_key("9").render()
-            binary_button("×").set_key("*").render()
+            digit_button(7).set_key("7")
+            digit_button(8).set_key("8")
+            digit_button(9).set_key("9")
+            binary_button("×").set_key("*")
 
-            digit_button(4).set_key("4").render()
-            digit_button(5).set_key("5").render()
-            digit_button(6).set_key("6").render()
-            binary_button("-").set_key("-").render()
+            digit_button(4).set_key("4")
+            digit_button(5).set_key("5")
+            digit_button(6).set_key("6")
+            binary_button("-").set_key("-")
 
-            digit_button(1).set_key("1").render()
-            digit_button(2).set_key("2").render()
-            digit_button(3).set_key("3").render()
-            binary_button("+").set_key("+").render()
+            digit_button(1).set_key("1")
+            digit_button(2).set_key("2")
+            digit_button(3).set_key("3")
+            binary_button("+").set_key("+")
 
-            digit_button(0, double_width=True).set_key("0").render()
-            digit_button(".").set_key(".").render()
-            binary_button("=").set_key("=").render()
+            digit_button(0, double_width=True).set_key("0")
+            digit_button(".").set_key(".")
+            binary_button("=").set_key("=")
 
 
 @ed.component
 def Main(self):
-    with ed.Window(title="Calculator").render():
-        Calculator().render()
+    with ed.Window(title="Calculator"):
+        Calculator()
 
 
 if __name__ == "__main__":

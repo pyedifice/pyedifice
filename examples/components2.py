@@ -1,4 +1,5 @@
 import asyncio as asyncio
+import signal
 from edifice import App, Window, Button, ButtonView, View, Label, Icon, component
 from edifice.hooks import use_state, use_effect
 
@@ -17,23 +18,23 @@ def Main(self):
 
     use_effect(setup_print, x)
 
-    with Window().render():
-        with View().render():
-            with View(style={"margin": 30}).render():
+    with Window():
+        with View():
+            with View(style={"margin": 30}):
                 with ButtonView(
                     layout="row",
                     on_click=lambda event: None,
                     style={"margin": 10},
-                ).render():
-                    Icon(name="share", style={"margin": 10}).render()
-                    Label(text="<i>Share the Content<i>").render()
+                ):
+                    Icon(name="share", style={"margin": 10})
+                    Label(text="<i>Share the Content<i>")
             Button(
                 title="asd + 1",
                 on_click=lambda ev: x_set(x + 1),
-            ).render()
-            Label("asd " + str(x)).render()
+            )
+            Label("asd " + str(x))
             for i in range(x):
-                Label(text=str(i)).render()
+                Label(text=str(i))
 
 
 if __name__ == "__main__":
