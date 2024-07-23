@@ -15,5 +15,6 @@ Class overview
 
    Element
    component
+   child_place
    App
    Reference

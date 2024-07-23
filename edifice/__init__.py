@@ -191,6 +191,7 @@ __all__ = [
     "View",
     "Window",
     "alert",
+    "child_place",
     "component",
     "file_dialog",
     "qt_component",
