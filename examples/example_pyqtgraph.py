@@ -36,24 +36,27 @@ def Component(self):
         ys = np.sin(xs)
         plot_item.plot(x=xs, y=ys, pen=pen, fillLevel=-1.0, brush=brush)
 
-    with ed.View().render():
-        with ed.ButtonView(
-            on_trigger=lambda _: x_min_set(x_min + 1.0),
-            style={
-                "width": "200px",
-                "height": "50px",
-                "margin": "10px",
-            },
-        ).render():
-            ed.Label("Increment x_min").render()
-        PyQtPlot(plot_fun=plot_fn).render()
+    with ed.View() as root:
+        return root(
+            ed.ButtonView(
+                on_trigger=lambda _: x_min_set(x_min + 1.0),
+                style={
+                    "width": "200px",
+                    "height": "50px",
+                    "margin": "10px",
+                },
+            )(ed.Label("Increment x_min")),
+            PyQtPlot(plot_fun=plot_fn),
+        )
 
 
 @ed.component
 def Main(self):
-    with ed.Window("PyQtPlot Example").render():
-        with ed.View().render():
-            Component().render()
+    return ed.Window("PyQtPlot Example")(
+        ed.View()(
+            Component(),
+        ),
+    )
 
 
 if __name__ == "__main__":

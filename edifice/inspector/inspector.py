@@ -10,11 +10,11 @@ SELECTION_COLOR = "#ACCEF7"
 @ed.component
 def ElementLabel(self, root: ed.Element, current_selection: ed.Element | None, on_click: tp.Callable[[], None]):
     setattr(self, "__edifice_inspector_element", True)
-    ed.Label(
+    return ed.Label(
         root.__class__.__name__,
         style={"background-color": SELECTION_COLOR} if root == current_selection else {},
         on_click=lambda _ev: on_click(),
-    ).render()
+    )
 
 
 @ed.component
@@ -30,13 +30,14 @@ def Collapsible(
     root_style: dict[str, tp.Any] = {"margin-left": 5}
     if root == current_selection:
         root_style["background-color"] = SELECTION_COLOR
-    with ed.View(layout="row", style={"align": "left"}).render():
+    return ed.View(layout="row", style={"align": "left"})(
         ed.Icon(
             "caret-right",
             rotation=0 if collapsed else 90,
             on_click=lambda _ev: toggle(),
-        ).render()
-        ed.Label(root.__class__.__name__, style=root_style, on_click=lambda _ev: on_click()).render()
+        ),
+        ed.Label(root.__class__.__name__, style=root_style, on_click=lambda _ev: on_click()),
+    )
 
 
 @ed.component
@@ -45,7 +46,7 @@ def TreeView(
     root: ed.Element,
     current_selection: ed.Element | None,
     on_click: tp.Callable[[], None],
-    load_fun: list[tp.Callable[[], None]],
+    load_fun: list[tp.Callable[[], ed.Element]],
 ):
     setattr(self, "__edifice_inspector_element", True)
 
@@ -54,74 +55,85 @@ def TreeView(
     child_style = {"align": "top", "margin-left": 20}
     if collapsed:
         child_style["height"] = 0
-    with ed.View(layout="column", style={"align": "top"}).render():
-        Collapsible(
+
+    put = ed.TreeBuilder()
+    with put(ed.View(layout="column", style={"align": "top"})) as treeroot:
+        put(Collapsible(
             root=root,
             current_selection=current_selection,
             collapsed=collapsed,
             on_click=on_click,
             toggle=lambda: collapsed_set(lambda p: not p),
-        ).render()
-        with ed.View(
+        ))
+        with put(ed.View(
             layout="column",
             style=child_style,
-        ).render():
+        )):
             if not collapsed:
                 for comp_fn in load_fun:
-                    comp_fn()
+                    put(comp_fn())
+    return treeroot
+
 
 
 @ed.component
 def StateView(
     self,
-    component: ed.Element,
-    hook_state: defaultdict[ed.Element, list[_HookState]],
-    refresh_trigger: bool,  # force a refresh when this changes
+    # component: ed.Element,
+    component_hook_state: list[_HookState],
+    # refresh_trigger: bool,  # force a refresh when this changes
 ):
     setattr(self, "__edifice_inspector_element", True)
 
-    with ed.ScrollView(
+    put = ed.TreeBuilder()
+    with put(ed.ScrollView(
         layout="column",
         style={"align": "top", "margin-left": 15},
-    ).render():
-        if component in hook_state:
-            for s in hook_state[component]:
-                with ed.View(
-                    layout="row",
-                    style={"align": "left"},
-                ).render():
-                    ed.Label(
-                        text=str(s.state),
-                        selectable=True,
-                    ).render()
+    )) as treeroot:
+        for s in component_hook_state:
+            with put(ed.View(
+                layout="row",
+                style={"align": "left"},
+            )):
+                put(ed.Label(
+                    text=str(s.state),
+                    selectable=True,
+                ))
+        return treeroot
 
 
 @ed.component
-def PropsView(self, props: PropsDict):
+def PropsView(self, props: dict[str, tp.Any]):
     setattr(self, "__edifice_inspector_element", True)
-    with ed.ScrollView(layout="column", style={"align": "top", "margin-left": 15}).render():
-        for key in props._keys:
-            with ed.View(
+    put = ed.TreeBuilder()
+    with put(ed.ScrollView(layout="column", style={"align": "top", "margin-left": 15})) as treeroot:
+        for key in props.keys():
+            with put(ed.View(
                 layout="row",
                 style={"align": "left"},
-            ).render():
-                ed.Label(
+            )):
+                put(ed.Label(
                     key + ":",
                     selectable=True,
                     style={"font-weight": 600, "width": 140},
-                ).render()
-                ed.Label(
+                ))
+                put(ed.Label(
                     str(props[key]),
                     selectable=True,
                     style={},
-                ).render()
+                ))
+        return treeroot
 
 
 @ed.component
 def ElementView(
     self,
     component: ed.Element,
-    hook_state: defaultdict[ed.Element, list[_HookState]],
+    # hook_state: defaultdict[ed.Element, list[_HookState]],
+    # We pass component_props in as separate props because the component
+    # props doesn't have an __eq__ relation.
+    component_props: dict[str, tp.Any],
+    component_hook_state: list[_HookState],
     refresh_trigger: bool,  # force a refresh when this changes
 ):
     setattr(self, "__edifice_inspector_element", True)
@@ -137,15 +149,18 @@ def ElementView(
     heading_style = {"font-size": "16px", "margin": 10, "margin-bottom": 0}
 
     assert module is not None
-    with ed.View(layout="column", style={"align": "top", "min-width": 450, "min-height": 450}).render():
-        ed.Label(cls.__name__, selectable=True, style={"font-size": "20px", "margin": 10}).render()
+    return ed.View(layout="column", style={"align": "top", "min-width": 450, "min-height": 450})(
+        ed.Label(cls.__name__, selectable=True, style={"font-size": "20px", "margin": 10}),
         ed.Label(
             "Class defined in " + str(module.__file__) + ":" + str(lineno), selectable=True, style={"margin-left": 10}
-        ).render()
-        ed.Label("Props", style=heading_style).render()
-        PropsView(component.props).render()
-        ed.Label("State", style=heading_style).render()
-        StateView(component, hook_state, refresh_trigger).render()
+        ),
+        ed.Label("Props", style=heading_style),
+        # PropsView(component.props._d),
+        PropsView(component_props),
+        ed.Label("State", style=heading_style),
+        # StateView(component, hook_state, refresh_trigger),
+        StateView(component_hook_state),
+    )
 
 
 @ed.component
@@ -174,35 +189,40 @@ def Inspector(
 
     ed.use_effect(setup, [])
 
-    def _build_tree(root: ed.Element, recurse_level=0) -> None:
+    def _build_tree(root: ed.Element, recurse_level=0) -> ed.Element:
         children = component_tree[root]
         if len(children) > 0:
-            TreeView(
+            return TreeView(
                 root=root,
                 current_selection=selected,
                 on_click=lambda: selected_set(root),
                 load_fun=[(lambda child=child: _build_tree(child, recurse_level + 1)) for child in children],
-            ).render()
+            )
         else:
-            ElementLabel(root, current_selection=selected, on_click=lambda: selected_set(root)).render()
+            return ElementLabel(root, current_selection=selected, on_click=lambda: selected_set(root))
 
-    with ed.View(layout="row").render():
+    with ed.View(layout="row") as topview:
         if component_tree is not None and root_component is not None and hook_state is not None:
-            with ed.View(
+            topview(ed.View(
                 layout="column", style={"align": "top", "width": 251, "border-right": "1px solid gray"}
-            ).render():
-                with ed.View(layout="row", style={"align": "left", "height": 30}).render():
-                    ed.Label("Edifice Inspector", style={"font-size": 18, "margin-left": 10, "width": 160}).render()
+            )(
+                ed.View(layout="row", style={"align": "left", "height": 30})(
+                    ed.Label("Edifice Inspector", style={"font-size": 18, "margin-left": 10, "width": 160}),
                     ed.Icon(
                         "sync-alt", size=20, on_click=lambda e: _force_refresh(), tool_tip="Reload component tree"
-                    ).render()
-                with ed.ScrollView(layout="column", style={"width": 250, "min-height": 450, "margin-top": 10}).render():
-                    if root_component is not None:
-                        _build_tree(root_component)
-            with ed.View(layout="column", style={"min-width": 450, "min-height": 450}).render():
-                if selected is not None:
-                    ElementView(
-                        selected,
-                        hook_state,
-                        refresh_trigger,
-                    ).render()
+                    ),
+                ),
+                ed.ScrollView(layout="column", style={"width": 250, "min-height": 450, "margin-top": 10})(
+                    _build_tree(root_component) if root_component is not None else None
+                )
+            ))
+            topview(ed.View(layout="column", style={"min-width": 450, "min-height": 450})(
+                # ElementView( selected, hook_state, refresh_trigger) if selected is not None else None
+                ElementView(
+                    selected,
+                    selected.props._d,
+                    hook_state[selected],
+                    refresh_trigger
+                ) if selected is not None else None
+            ))
+        return topview

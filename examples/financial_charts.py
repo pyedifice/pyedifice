@@ -13,6 +13,7 @@ from collections import OrderedDict
 import typing as tp
 import edifice as ed
 from edifice import Dropdown, IconButton, Label, Slider, TextInput, View
+from edifice.engine import Element, TreeBuilder
 from edifice.extra.matplotlib_figure import MatplotlibFigure
 
 import matplotlib.colors
@@ -78,41 +79,49 @@ def AxisDescriptor(
         plot_[f"{key}.transform"] = (transform_type, param_val)
         plot_change(plot_)
 
-    with View(layout="column").render():
-        with View(layout="row", style=row_style).render():
-            Label(name, style={"width": 100}).render()
-            Dropdown(
-                selection=data_type_selection,
-                options=data_types,
-                on_select=handle_data_type,
-            ).render()
+    put = TreeBuilder()
+    with put(View(layout="column")) as root:
+        with put(View(layout="row", style=row_style)):
+            put(Label(name, style={"width": 100}))
+            put(
+                Dropdown(
+                    selection=data_type_selection,
+                    options=data_types,
+                    on_select=handle_data_type,
+                )
+            )
             if data_type != "Date":
-                TextInput(text=ticker, style={"padding": 2}, on_change=handle_ticker).render()
+                put(TextInput(text=ticker, style={"padding": 2}, on_change=handle_ticker))
 
-        with View(layout="row", style=row_style).render():
-            Label("Transform:", style={"width": 100}).render()
-            Dropdown(
-                selection=transform_type_selection,
-                options=transform_types,
-                on_select=handle_transform_type,
-            ).render()
+        with put(View(layout="row", style=row_style)):
+            put(Label("Transform:", style={"width": 100}))
+            put(
+                Dropdown(
+                    selection=transform_type_selection,
+                    options=transform_types,
+                    on_select=handle_transform_type,
+                )
+            )
             if transform_type == "EMA":
-                Label(f"Half Life ({param} days)", style={"width": 120}).render()
+                put(Label(f"Half Life ({param} days)", style={"width": 120}))
             if transform_type == "EMA":
-                Slider(value=param, min_value=1, max_value=90, on_change=handle_param).render()
+                put(Slider(value=param, min_value=1, max_value=90, on_change=handle_param))
+        return root
 
 
 # We create a shorthand for creating a component with a label
-def labeled_elem(label, comp):
-    with View(layout="row", style={"align": "left"}).render():
-        Label(label, style={"width": 100}).render()
-        comp().render()
+def labeled_elem(label, comp: Element):
+    return View(layout="row", style={"align": "left"})(
+        Label(label, style={"width": 100}),
+        comp,
+    )
 
 
-def add_divider(comp):
-    with View(layout="column").render():
-        comp().render()
-        View(style={"height": 0, "border": "1px solid gray"}).render()
+def add_divider(comp: Element):
+    return View(layout="column")(
+        comp,
+        View(style={"height": 0, "border": "1px solid gray"}),
+    )
 
 
 plot_types = ["scatter", "line"]
@@ -137,15 +146,16 @@ def PlotDescriptor(self, plot: dict[str, tp.Any], plot_change: tp.Callable[[dict
         plot_["color"] = plot_colors[color_index]
         plot_change(plot_)
 
-    with View(layout="row", style={"margin": 5, "align": "left"}).render():
-        with View(layout="column", style={"align": "top", "width": 400}).render():
-            AxisDescriptor("x-axis", "xaxis", plot, plot_change).render()
-            AxisDescriptor("y-axis", "yaxis", plot, plot_change).render()
-        with View(layout="column", style={"align": "top", "margin-left": 10}).render():
-            labeled_elem(
-                "Chart type", lambda: Dropdown(selection=plot_type, options=plot_types, on_select=handle_plot_type)
-            )
-            labeled_elem("Color", lambda: Dropdown(selection=color, options=plot_colors, on_select=handle_color))
+    return View(layout="row", style={"margin": 5, "align": "left"})(
+        View(layout="column", style={"align": "top", "width": 400})(
+            AxisDescriptor("x-axis", "xaxis", plot, plot_change),
+            AxisDescriptor("y-axis", "yaxis", plot, plot_change),
+        ),
+        View(layout="column", style={"align": "top", "margin-left": 10})(
+            labeled_elem("Chart type", Dropdown(selection=plot_type, options=plot_types, on_select=handle_plot_type)),
+            labeled_elem("Color", Dropdown(selection=color, options=plot_colors, on_select=handle_color)),
+        ),
+    )
 
 
 # Finally, we create a component that contains the plot descriptions, a button to add a plot,
@@ -198,8 +208,9 @@ def App(self):
             elif plot_type == "scatter":
                 ax.scatter(df.xdata, df.ydata, color=color)
 
-    with View(layout="column", style={"margin": 10, "align": "top"}).render():
-        with View(layout="column").render():
+    put = TreeBuilder()
+    with put(View(layout="column", style={"margin": 10, "align": "top"})) as root:
+        with put(View(layout="column")):
             for key, plot in plots.items():
 
                 def plot_change(p: dict[str, tp.Any]) -> None:
@@ -207,18 +218,18 @@ def App(self):
                     plots_.update([(key, p)])
                     plots_set(plots_)
 
-                add_divider(lambda: PlotDescriptor(plot, plot_change))
+                put(add_divider(PlotDescriptor(plot, plot_change)))
             # Edifice comes with Font-Awesome icons for your convenience
-            IconButton(name="plus", title="Add Plot", on_click=add_plot)
+            put(IconButton(name="plus", title="Add Plot", on_click=add_plot))
 
-        with View(style={"height": 500, "margin-top": 10}).render():
-            MatplotlibFigure(plot_figure).render()
+        with put(View(style={"height": 500, "margin-top": 10})):
+            put(MatplotlibFigure(plot_figure))
+        return root
 
 
 @ed.component
 def Main(self):
-    with ed.Window(title="Financial Charts").render():
-        App().render()
+    return ed.Window(title="Financial Charts")(App())
 
 
 # Finally to start the the app, we pass the Element to the edifice.App object

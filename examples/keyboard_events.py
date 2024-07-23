@@ -12,9 +12,11 @@ def KeyboardEvents(self):
     def key_down(e):
         text_set(chr(e.key()))
 
-    with ed.Window().render():
-        with ed.View(on_key_down=key_down).render():
-            ed.Label(text).render()
+    return ed.Window()(
+        ed.View(on_key_down=key_down)(
+            ed.Label(text),
+        )
+    )
 
 
 if __name__ == "__main__":

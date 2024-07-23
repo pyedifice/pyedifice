@@ -5,28 +5,33 @@
 import edifice as ed
 from edifice import FlowView
 from edifice import ButtonView
+from edifice.engine import TreeBuilder
 
 
 @ed.component
 def myComponent(self):
     def mkElement(j):
-        with ed.View(style={"margin": 5}).render():
-            with ButtonView(style={"margin": 5}).render():
-                ed.Label(
-                    text="<div style='font-size:20px'>Label " + chr(ord("🦄") + j) + "</>", style={"margin": 5}
-                ).render()
+        return ed.View(style={"margin": 5})(
+            ButtonView(style={"margin": 5})(
+                ed.Label(text="<div style='font-size:20px'>Label " + chr(ord("🦄") + j) + "</>", style={"margin": 5}),
+            )
+        )
 
-    with ed.Window().render():
-        with ed.View(
-            layout="column",
-            style={
-                # We cannot align to center, it doesn't work with FlowView. TODO
-                # "align":"center"
-            },
-        ).render():
-            with FlowView().render():
+    put = TreeBuilder()
+    with put(ed.Window()) as root:
+        with put(
+            ed.View(
+                layout="column",
+                style={
+                    # We cannot align to center, it doesn't work with FlowView. TODO
+                    # "align":"center"
+                },
+            )
+        ):
+            with put(FlowView()):
                 for i in range(100):
-                    mkElement(i)
+                    put(mkElement(i))
+        return root
 
 
 if __name__ == "__main__":

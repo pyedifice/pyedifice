@@ -11,16 +11,18 @@ def MyComponent(
     children: list[ed.Element] = [],
 ):
     bgcolor = "blue"
-    with ed.View(
+    tree = ed.TreeBuilder()
+    with tree + ed.View(
         layout="column",
         style={"align": "top"},
-    ).render():
+    ):
         for child in children:
-            with ed.View(
+            with tree + ed.View(
                 style={"background-color": bgcolor, "padding": 10},
-            ).render():
-                child.render()
+            ):
+                tree += child
             bgcolor = "blue" if bgcolor == "green" else "green"
+    return tree.root()
 
 
 @ed.component
@@ -30,19 +32,21 @@ def Main(self):
     ] = "Callables which take other callables as arguments may indicate that their parameter types are dependent on".split(
         " "
     )
-    with ed.Window().render():
-        with ed.View(style={"padding": 20}).render():
-            x, x_set = ed.use_state(0)
-            ed.Slider(
+    x, x_set = ed.use_state(0)
+    tree = ed.TreeBuilder()
+    with tree + ed.Window():
+        with tree + ed.View(style={"padding": 20}):
+            tree += ed.Slider(
                 value=x,
                 on_change=x_set,
                 min_value=0,
                 max_value=len(strings),
                 style={"min-width": 200},
-            ).render()
-            with MyComponent().render():
+            )
+            with tree + MyComponent():
                 for i in range(0, x):
-                    ed.Label(text=strings[i]).render()
+                    tree += ed.Label(text=strings[i])
+    return tree.root()
 
 
 if __name__ == "__main__":

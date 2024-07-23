@@ -5,6 +5,7 @@
 import asyncio
 import logging
 import edifice as ed
+from edifice.engine import TreeBuilder
 
 from edifice.extra.pyqtgraph_plot import PyQtPlot
 import numpy as np
@@ -75,43 +76,46 @@ def Oscillator(self):
         simulation_time_set(0)
         plot_fun_set((lambda figure: plot(figure),))
 
-    with ed.View(layout="row").render():
-        with ed.View(layout="column", style={"margin": 10}).render():
-            with ed.View(layout="row").render():
-                ed.IconButton(
-                    "pause" if is_playing else "play", on_click=lambda e: is_playing_set(lambda p: not p)
-                ).render()
-                ed.Button("Reset", on_click=lambda e: simulation_time_set(0)).render()
-            with ed.View().render():
-                PyQtPlot(plot_fun=plot_fun[0]).render()
-            with ed.View(layout="row", style={"margin": 10}).render():
-                ed.Label("Angular Frequency").render()
-                ed.Slider(
-                    value=int(angular_frequency * 20.0), min_value=20, max_value=200, on_change=freq_slider_change
-                ).render()
-                ed.Label("Damping Factor").render()
-                ed.Slider(
-                    value=int(damping * 100.0), min_value=-300, max_value=0, on_change=damp_slider_change
-                ).render()
+    put = TreeBuilder()
+    with put(ed.View(layout="row")) as root:
+        with put(ed.View(layout="column", style={"margin": 10})):
+            with put(ed.View(layout="row")):
+                put(
+                    ed.IconButton("pause" if is_playing else "play", on_click=lambda e: is_playing_set(lambda p: not p))
+                )
+                put(ed.Button("Reset", on_click=lambda e: simulation_time_set(0)))
+            with put(ed.View()):
+                put(PyQtPlot(plot_fun=plot_fun[0]))
+            with put(ed.View(layout="row", style={"margin": 10})):
+                put(ed.Label("Angular Frequency"))
+                put(
+                    ed.Slider(
+                        value=int(angular_frequency * 20.0), min_value=20, max_value=200, on_change=freq_slider_change
+                    )
+                )
+                put(ed.Label("Damping Factor"))
+                put(ed.Slider(value=int(damping * 100.0), min_value=-300, max_value=0, on_change=damp_slider_change))
 
             # We position the ball and the centroid using absolute positioning.
             # The label and ball offsets are different since we have to take into
             # account the size of the ball
-            with ed.View(layout="row", style={"align": "center"}).render():
-                with ed.View(layout="none", style={"width": 720, "height": 10, "margin-top": 40}).render():
-                    ed.Icon(
-                        "bowling-ball",
-                        size=20,
-                        color=(255, 0, 0, 255),
-                        style={"left": 350 + 200 * calculate_harmonic_motion(simulation_time)},
-                    ).render()
-                    ed.Label("|", style={"left": 356, "font-size": 20, "color": "blue"}).render()
+            with put(ed.View(layout="row", style={"align": "center"})):
+                with put(ed.View(layout="none", style={"width": 720, "height": 10, "margin-top": 40})):
+                    put(
+                        ed.Icon(
+                            "bowling-ball",
+                            size=20,
+                            color=(255, 0, 0, 255),
+                            style={"left": 350 + 200 * calculate_harmonic_motion(simulation_time)},
+                        )
+                    )
+                    put(ed.Label("|", style={"left": 356, "font-size": 20, "color": "blue"}))
+        return root
 
 
 @ed.component
 def Main(self):
-    with ed.Window("Harmonic Oscillator").render():
-        Oscillator().render()
+    return ed.Window("Harmonic Oscillator")(Oscillator())
 
 
 if __name__ == "__main__":

@@ -103,7 +103,7 @@ class IntegrationTestCase(unittest.TestCase):
 
             ed.use_async(runx, ())
 
-            ed.Label(text="Test Async Cancel").render()
+            return ed.Label(text="Test Async Cancel")
 
         @ed.component
         def MainTestAsyncCancel(self):
@@ -114,13 +114,14 @@ class IntegrationTestCase(unittest.TestCase):
 
             ed.use_effect(runy, y)
 
-            with ed.Window().render():
+            with ed.Window() as root:
                 if y == 0:
-                    TestAsyncCancel().render()
+                    root(TestAsyncCancel())
                 elif y == 1:
-                    ed.Label(text="TestAsyncCancel unmounted").render()
+                    root(ed.Label(text="TestAsyncCancel unmounted"))
                 else:
                     self._controller.stop()
+                return root
 
         my_app = ed.App(MainTestAsyncCancel(), create_application=False)
         my_app.start()

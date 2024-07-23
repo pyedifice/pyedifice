@@ -1,5 +1,6 @@
 import typing as tp
 from edifice import App, Window, View, component, ProgressBar, Slider, SpinInput, Label
+from edifice.engine import TreeBuilder
 from edifice.hooks import use_state
 
 from edifice.qt import QT_VERSION
@@ -36,26 +37,28 @@ def MyComponent(self):
     def second_slider(value: int):
         x_set(value)
 
-    with View(layout="column").render():
-        Slider(x, min_value=0, max_value=100, on_change=x_set).render()
-        Slider(x, min_value=0, max_value=100, on_change=second_slider).render()
-        ProgressBar(
+    tree = TreeBuilder()
+    # with put(View(layout="column")) as root:
+    with tree + View(layout="column"):
+        tree += Slider(x, min_value=0, max_value=100, on_change=x_set)
+        tree += Slider(x, min_value=0, max_value=100, on_change=second_slider)
+        tree += ProgressBar(
             x,
             min_value=0,
             max_value=100,
             # format="%p% is the progress",
             format=f"{x}% is the progress",
-        ).render()
-        ProgressBar(0, min_value=0, max_value=0, format="Loading…").render()
-        ProgressBar(
+        )
+        tree += ProgressBar(0, min_value=0, max_value=0, format="Loading…")
+        tree += ProgressBar(
             y,
             min_value=0,
             max_value=1000,
             format="%p% is the progress",
             orientation=Qt.Orientation.Vertical,
             style={"max-height": "100px"},
-        ).render()
-        SpinInput(
+        )
+        tree += SpinInput(
             y,
             min_value=0,
             max_value=1000,
@@ -65,14 +68,15 @@ def MyComponent(self):
             style={
                 "font-size": "20px",
             },
-        ).render()
-        Label(to_percent(y)).render()
+        )
+        tree += Label(to_percent(y))
+
+    return tree.root()
 
 
 @component
 def Main(self):
-    with Window().render():
-        MyComponent().render()
+    return Window()(MyComponent())
 
 
 if __name__ == "__main__":

@@ -171,6 +171,10 @@ class PropsDict(object):
     def __setattr__(self, key, value) -> tp.NoReturn:
         raise ValueError("Props are immutable")
 
+    # TODO Should PropsDict have an __eq__ method?
+    # def __eq__(self, other:"PropsDict") -> bool:
+    #     return self._d == other._d
+
 
 class Reference(tp.Generic[_T_Element]):
     """Reference to a :class:`Element` to allow imperative modifications.
@@ -260,47 +264,6 @@ class ControllerProtocol(tp.Protocol):
         pass
 
 
-class Tracker(tp.Generic[_T_Element]):
-    """
-    During a render, track the current element and the children being
-    added to the current element.
-    """
-
-    children: list["Element"]
-    component: _T_Element
-
-    def __enter__(self: Self) -> _T_Element:
-        ctx = get_render_context()
-        ctx.trackers.append(self)
-        return self.component
-
-    def __exit__(self, *args):
-        ctx = get_render_context()
-        tracker = ctx.trackers.pop()
-        children = tracker.collect()
-        prop = tracker.component._props.get("children", [])
-        for child in children:
-            prop.append(child)
-        tracker.component._props["children"] = prop
-
-    def __init__(self, component: _T_Element):
-        self.component = component
-        self.children = []
-
-    def append_child(self, component: "Element"):
-        self.children.append(component)
-
-    def collect(self) -> list["Element"]:
-        """Collect all the children for the component, except for... something?"""
-        children = set()
-        for child in self.children:
-            # find_components will flatten lists of elements, but according
-            # to append_child, it's impossible for child to be a list.
-            # So why do we need find_components?
-            children |= find_components(child) - {child}
-        return [child for child in self.children if child not in children]
-
-
 class _RenderContext(object):
     """
     Encapsulates various state that's needed for rendering.
@@ -315,13 +278,11 @@ class _RenderContext(object):
         "component_tree",
         "widget_tree",
         "enqueued_deletions",
-        "trackers",
         "_callback_queue",
         "engine",
         "current_element",
     )
-    trackers: list[Tracker]
-    """Stack of Tracker"""
+
     current_element: "Element | None"
     """The Element currently being rendered."""
 
@@ -346,8 +307,6 @@ class _RenderContext(object):
         self.enqueued_deletions: list[Element] = []
 
         self._callback_queue = []
-
-        self.trackers = []
 
         self.current_element = None
 
@@ -413,16 +372,6 @@ class Element:
         """use_effect hook index for current render."""
         self._hook_async_index: int = 0
         """use_async hook index for current render."""
-
-    def render(self: Self) -> Tracker[Self]:
-        tracker = Tracker(self)
-        ctx = get_render_context_maybe()
-        if ctx is not None:
-            trackers = ctx.trackers
-            if len(trackers) > 0:
-                parent = trackers[-1]
-                parent.append_child(self)
-        return tracker
 
     def _register_props(self, props: tp.Mapping[tp.Text, tp.Any]) -> None:
         """Register props.
@@ -517,15 +466,21 @@ class Element:
 
         return False
 
-    def __call__(self, *args):
-        children = []
+    def __call__(self, *args: tp.Optional["Element"]):
         for a in args:
-            if isinstance(a, list):
-                children.extend(a)
-            elif a:
-                children.append(a)
-        self._props["children"] = children
+            if a is not None:
+                self._props["children"].append(a)
         return self
+
+    # deprecate
+    def __enter__(self):
+        """Allows for the use of the with statement to establish an indentation
+        block for the children of this Element."""
+        return self
+
+    # deprecate
+    def __exit__(self, exc_type, exc_value, traceback):
+        return True
 
     def __hash__(self):
         return id(self)
@@ -544,7 +499,7 @@ class Element:
         tags = self._tags()
         return tags[2]
 
-    def _render_element(self) -> tp.Optional["Element"]:
+    def _render_element(self) -> "Element":
         """Logic for rendering, must be overridden.
 
         The render logic for this Element, not implemented for this abstract class.
@@ -570,7 +525,7 @@ def not_ignored(arg: tuple[str, tp.Any]) -> bool:
     return arg[0][0] != "_"
 
 
-def component(f: Callable[tp.Concatenate[selfT, P], None]) -> Callable[P, Element]:
+def component(f: Callable[tp.Concatenate[selfT, P], Element]) -> Callable[P, Element]:
     """Decorator turning a render function of **props** into an :class:`Element`.
 
     The component will be re-rendered when its **props** are not :code:`__eq__`
@@ -618,15 +573,17 @@ def component(f: Callable[tp.Concatenate[selfT, P], None]) -> Callable[P, Elemen
 
         @component
         def ContainerComponent(self:Element, children:list[Element]=[]):
-            with View().render():
-                for child in children:
-                    with View().render():
-                        child.render()
+            put = TreeBuilder()
+            with put(View()) as root:
+                with put(View()):
+                    for child in children:
+                        put(child)
+                return root
 
-        with ContainerComponent().render():
-            Label("First Child").render()
-            Label("Second Child").render()
-            Label("Third Child").render()
+        with ContainerComponent() as root:
+            root(Label("First Child"))
+            root(Label("Second Child"))
+            root(Label("Third Child"))
 
     Element rendering
     ----------------------------------------------
@@ -693,7 +650,7 @@ def component(f: Callable[tp.Concatenate[selfT, P], None]) -> Callable[P, Elemen
 
             # We cannot type this because PropsDict forgets the types
             # call the render function
-            f(self, **params)  # type: ignore[reportGeneralTypeIssues]
+            return f(self, **params)  # type: ignore[reportGeneralTypeIssues]
 
         def __repr__(self):
             return f.__name__
@@ -714,11 +671,6 @@ def find_components(el: Element | list[Element]) -> set[Element]:
                 # The type of el says that it's impossible for an element
                 # in list[Element] to be a list[Element], so why recurse?
             return elements
-
-
-@component
-def Container(self):
-    pass
 
 
 ContextMenuType = tp.Mapping[tp.Text, tp.Union[None, tp.Callable[[], tp.Any], "ContextMenuType"]]
@@ -1972,31 +1924,12 @@ class RenderEngine(object):
         self._hook_state_setted.discard(component)
 
         # Call user provided render function and retrieve old results
-        with Container().render() as container:
-            prev_element = render_context.current_element
-            render_context.current_element = component
-            sub_component = component._render_element()
-            render_context.current_element = prev_element
-        # If the component.render() call evaluates to an Element
-        # we use that as the sub_component the component renders as.
-        if sub_component is None:
-            # If the render() method doesn't render as
-            # an Element (always the case for @component Components)
-            # we obtain the rendered sub_component as either:
-            #
-            # 1. The only child of the Container wrapping the render, or
-            # 2. A View element containing the children of the Container
-            if len(container.children) == 1:
-                sub_component = container.children[0]
-            else:
-                newline = "\n"
-                message = dedent(
-                    f"""\
-                    A @component must render as exactly one Element.
-                    Did you forget to call the .render() method inside {component.__class__.__name__}?
-                    Element {component} renders as {len(container.children)} elements."""
-                ) + newline.join([child.__str__() for child in container.children])
-                raise ValueError(message)
+        # Restore the render_context.current_element for the parent component.
+        prev_element = render_context.current_element
+        render_context.current_element = component
+        sub_component = component._render_element()
+        render_context.current_element = prev_element
+
         old_rendering: list[Element] | None = self._component_tree.get(component, None)
 
         if old_rendering is not None and elements_match(old_rendering[0], sub_component):
@@ -2031,6 +1964,7 @@ class RenderEngine(object):
         new_props = PropsDict({k: v for k, v in element.props._items if k not in old_props or old_props[k] != v})
 
         # Call user provided render function and retrieve old results
+        # Restore the render_context.current_element for the parent component.
         prev_element = render_context.current_element
         render_context.current_element = element
         commands.extend(element._qt_update_commands(render_context.widget_tree, new_props))
@@ -2267,3 +2201,58 @@ class RenderEngine(object):
                     hook.queue.clear()
 
             return cancel
+
+
+class TreeBuilder:
+    """
+    This class exists to make it easier to declare conditional trees
+    of :class:`Element` using Python’s statement syntax.
+    """
+
+    def __init__(self):
+        self.stack = []
+
+    def root(self) -> Element:
+        """
+        Returns the root element of the tree.
+        """
+        return self.stack[0]
+
+    def __call__(self, element: _T_Element) -> "TreeBuilderManager[_T_Element]":
+        if len(self.stack) == 0:
+            self.stack.append(element)
+        else:
+            self.stack[-1](element)
+        return TreeBuilderManager(self, element)
+
+    def __add__(self, element: _T_Element) -> "TreeBuilderManager[_T_Element]":
+        if len(self.stack) == 0:
+            self.stack.append(element)
+        else:
+            self.stack[-1](element)
+        return TreeBuilderManager(self, element)
+
+    def __iadd__(self, element: Element) -> "TreeBuilder":
+        if len(self.stack) == 0:
+            self.stack.append(element)
+        else:
+            self.stack[-1](element)
+        return self
+
+
+class TreeBuilderManager(tp.Generic[_T_Element]):
+    """
+    The :code:`with` context manager for :class:`TreeBuilder`.
+    """
+
+    def __init__(self, tb: TreeBuilder, element: _T_Element):
+        self.tree_builder = tb
+        self.element = element
+
+    def __enter__(self) -> _T_Element:
+        self.tree_builder.stack.append(self.element)
+        return self.element
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        self.tree_builder.stack.pop()
+        return False

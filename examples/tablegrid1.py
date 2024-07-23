@@ -3,6 +3,7 @@
 #
 
 import edifice as ed
+from edifice.engine import TreeBuilder
 from edifice.hooks import use_state
 from edifice import TableGridView
 from edifice import ButtonView
@@ -24,22 +25,26 @@ def myComponent(self):
         new_rows.remove(i)
         set_rows(new_rows)
 
-    with ed.Window().render():
-        with ed.View(style={"align": "top"}).render():
-            with ed.View(style={"margin": 10}).render():
-                with ButtonView(
-                    on_click=lambda ev: add_key(),
-                    style={"width": 100, "height": 30, "margin": 10},
-                ).render():
-                    ed.Label(text="Add Row").render()
+    put = TreeBuilder()
+    with put(ed.Window()) as root:
+        with put(ed.View(style={"align": "top"})):
+            with put(ed.View(style={"margin": 10})):
+                with put(
+                    ButtonView(
+                        on_click=lambda ev: add_key(),
+                        style={"width": 100, "height": 30, "margin": 10},
+                    )
+                ):
+                    put(ed.Label(text="Add Row"))
 
-            with TableGridView().render() as tgv:
+            with put(TableGridView()) as tgv:
                 for rkey in rows:
-                    with tgv.row().render():
-                        ed.Label(text="Key " + str(rkey) + " Column 0").render()
-                        ed.Label(text="Key " + str(rkey) + " Column 1").render()
-                        with ButtonView(on_click=lambda ev, rkey=rkey: del_key(rkey)).render():
-                            ed.Label(text="Delete Key " + str(rkey)).render()
+                    with put(tgv.row()):
+                        put(ed.Label(text="Key " + str(rkey) + " Column 0"))
+                        put(ed.Label(text="Key " + str(rkey) + " Column 1"))
+                        with put(ButtonView(on_click=lambda ev, rkey=rkey: del_key(rkey))):
+                            put(ed.Label(text="Delete Key " + str(rkey)))
+        return root
 
 
 if __name__ == "__main__":

@@ -6,6 +6,7 @@ from edifice import engine, Image
 from edifice.extra import NumpyArray_to_QImage, NumpyImage, NumpyArray
 
 from edifice.qt import QT_VERSION
+
 if QT_VERSION == "PyQt6":
     from PyQt6 import QtWidgets
 else:
@@ -16,7 +17,6 @@ if QtWidgets.QApplication.instance() is None:
 
 
 class NumpyImageTest(unittest.TestCase):
-
     def _test_comp(self, comp, children=None):
         children = children or []
         render_engine = engine.RenderEngine(comp)
