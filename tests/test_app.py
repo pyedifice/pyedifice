@@ -5,7 +5,6 @@ import edifice.app as app
 import edifice as ed
 
 from edifice.qt import QT_VERSION
-
 if QT_VERSION == "PyQt6":
     from PyQt6 import QtWidgets
 else:
@@ -14,8 +13,8 @@ else:
 if QtWidgets.QApplication.instance() is None:
     app_obj = QtWidgets.QApplication(["-platform", "offscreen"])
 
-
 class TimingAvgTestCase(unittest.TestCase):
+
     def test_timing(self):
         avg = app._TimingAvg()
 
@@ -35,9 +34,12 @@ class TimingAvgTestCase(unittest.TestCase):
         self.assertEqual(avg.max(), 6)
 
 
+
 class IntegrationTestCase(unittest.TestCase):
+
     def test_export_widgets(self):
         class TestComp(ed.Element):
+
             def __init__(self):
                 super().__init__()
                 self.text = ""
@@ -45,7 +47,7 @@ class IntegrationTestCase(unittest.TestCase):
             def _render_element(self):
                 return ed.ExportList()(
                     ed.Label(f"Hello World: {self.text}"),
-                    ed.TextInput(self.text, on_change=lambda text: setattr(self, "text", text)),
+                    ed.TextInput(self.text, on_change=lambda text: setattr(self, "text", text))
                 )
 
         my_app = ed.App(TestComp(), create_application=False)
@@ -65,7 +67,10 @@ class IntegrationTestCase(unittest.TestCase):
             loop.call_later(0.1, my_app.stop)
 
     def test_start_loop(self):
-        my_app = ed.App(ed.Window()(ed.Label(text="start_loop")), create_application=False)
+        my_app = ed.App(
+            ed.Window()(ed.Label(text="start_loop")),
+            create_application=False
+        )
         with my_app.start_loop() as loop:
             loop.call_later(0.1, my_app.stop)
 
@@ -103,10 +108,11 @@ class IntegrationTestCase(unittest.TestCase):
 
             ed.use_async(runx, ())
 
-            ed.Label(text="Test Async Cancel").render()
+            ed.Label(text="Test Async Cancel")
 
         @ed.component
         def MainTestAsyncCancel(self):
+
             y, y_set = ed.use_state(0)
 
             def runy():
@@ -114,19 +120,18 @@ class IntegrationTestCase(unittest.TestCase):
 
             ed.use_effect(runy, y)
 
-            with ed.Window().render():
+            with ed.Window():
                 if y == 0:
-                    TestAsyncCancel().render()
+                    TestAsyncCancel()
                 elif y == 1:
-                    ed.Label(text="TestAsyncCancel unmounted").render()
+                    ed.Label(text="TestAsyncCancel unmounted")
                 else:
                     self._controller.stop()
 
-        my_app = ed.App(MainTestAsyncCancel(), create_application=False)
+        my_app = ed.App(
+            MainTestAsyncCancel(),
+            create_application=False
+        )
         my_app.start()
 
         self.assertTrue(not render_after_has_cancelled)
-
-
-if __name__ == "__main__":
-    unittest.main()

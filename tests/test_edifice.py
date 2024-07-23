@@ -6,7 +6,6 @@ import edifice.engine as engine
 import edifice.base_components as base_components
 
 from edifice.qt import QT_VERSION
-
 if QT_VERSION == "PyQt6":
     from PyQt6 import QtWidgets
 else:
@@ -17,6 +16,7 @@ if QtWidgets.QApplication.instance() is None:
 
 
 class TestReference(unittest.TestCase):
+
     def test_reference(self):
         class TestComp(Element):
             def __init__(self, parent_render_count):
@@ -34,6 +34,7 @@ class TestReference(unittest.TestCase):
                     return base_components.Label("Test").register_ref(self.ref2)
 
         class TestCompWrapper(Element):
+
             def __init__(self):
                 super().__init__()
                 self.render_count = 0
@@ -88,13 +89,14 @@ class TestReference(unittest.TestCase):
             sub_comp_ref.append(ref1)
 
             if self.render_count == 1:
-                base_components.Label("Test").register_ref(ref0).render()
+                base_components.Label("Test").register_ref(ref0)
             else:
-                base_components.Label("Test").register_ref(ref1).render()
+                base_components.Label("Test").register_ref(ref1)
             return
 
         @component
         def TestCompWrapper(self):
+
             if hasattr(self, "render_count"):
                 self.render_count += 1
             else:
@@ -102,9 +104,9 @@ class TestReference(unittest.TestCase):
 
             if self.render_count == 3:
                 # We do this to force the dismount of TestComp
-                base_components.Label("Test").render()
+                base_components.Label("Test")
             else:
-                TestComp(self.render_count).render()
+                TestComp(self.render_count)
 
         root = TestCompWrapper()
         render_engine = engine.RenderEngine(root)
@@ -132,13 +134,12 @@ class TestReference(unittest.TestCase):
 
 
 class _TestElementInner(Element):
+
     def __init__(self, prop_a):
         super().__init__()
-        self._register_props(
-            {
-                "prop_a": prop_a,
-            }
-        )
+        self._register_props({
+            "prop_a": prop_a,
+        })
         self.state_a = "A"
 
     def _render_element(self):
@@ -146,7 +147,6 @@ class _TestElementInner(Element):
             base_components.Label(str(self.props.prop_a)),
             base_components.Label(str(self.state_a)),
         )
-
 
 class _TestElementOuter(Element):
     """
@@ -175,7 +175,6 @@ class _TestElementOuter(Element):
             base_components.Label(self.state_c),
         )
 
-
 class _TestElementOuterList(Element):
     """
     The rendered tree should be (with index address):
@@ -199,15 +198,19 @@ class _TestElementOuterList(Element):
     def _render_element(self):
         if self.use_keys:
             if self.use_state_as_key:
-                return base_components.View()(*[_TestElementInner(text).set_key(text) for text in self.state])
+                return base_components.View()(
+                    *[_TestElementInner(text).set_key(text) for text in self.state]
+                )
             else:
                 return base_components.View()(
                     *[_TestElementInner(text).set_key(str(i)) for i, text in enumerate(self.state)]
                 )
-        return base_components.View()(*[_TestElementInner(text) for text in self.state])
+        return base_components.View()(
+            *[_TestElementInner(text) for text in self.state]
+        )
 
 
-def _commands_for_address(widget_trees: dict[Element, _WidgetTree], qt_tree, address):
+def _commands_for_address(widget_trees: dict[Element, _WidgetTree],qt_tree, address):
     qt_tree = _dereference_tree(widget_trees, qt_tree, address)
     if isinstance(qt_tree.component, base_components.View):
         return qt_tree.component._qt_stateless_commands(widget_trees, qt_tree.component.props)
@@ -215,6 +218,7 @@ def _commands_for_address(widget_trees: dict[Element, _WidgetTree], qt_tree, add
 
 
 class RenderTestCase(unittest.TestCase):
+
     def test_basic_render(self):
         component = _TestElementOuter()
         app = engine.RenderEngine(component)
@@ -228,9 +232,8 @@ class RenderTestCase(unittest.TestCase):
 
         def V(*args):
             view = _dereference_tree(app._widget_tree, qt_tree, list(args))
-            return [
-                CommandType(view.component._add_child, i, child.underlying) for (i, child) in enumerate(view.children)
-            ]
+            return [CommandType(view.component._add_child, i, child.underlying)
+                    for (i, child) in enumerate(view.children)]
 
         expected_commands = C(0, 0) + C(0, 1) + V(0) + C(0) + C(1, 0) + C(1, 1) + V(1) + C(1) + C(2) + V() + C()
 
@@ -260,27 +263,21 @@ class RenderTestCase(unittest.TestCase):
         qt_tree = app._widget_tree[component]
         qt_commands = render_result.commands
         # TODO: Make it so that only the label (0, 0) needs to update!
-        expected_commands = [
-            CommandType(_dereference_tree(app._widget_tree, qt_tree, [0, 0]).component.underlying.setText, "AChanged")
-        ]
+        expected_commands = [CommandType(_dereference_tree(app._widget_tree, qt_tree, [0, 0]).component.underlying.setText, "AChanged")]
         self.assertEqual(qt_commands, expected_commands)
 
         component.state_b = "BChanged"
         render_result = app._request_rerender([component])
         qt_tree = app._widget_tree[component]
         qt_commands = render_result.commands
-        expected_commands = [
-            CommandType(_dereference_tree(app._widget_tree, qt_tree, [1, 0]).component.underlying.setText, "BChanged")
-        ]
+        expected_commands = [CommandType(_dereference_tree(app._widget_tree, qt_tree, [1, 0]).component.underlying.setText, "BChanged")]
         self.assertEqual(qt_commands, expected_commands)
 
         component.state_c = "CChanged"
         render_result = app._request_rerender([component])
         qt_tree = app._widget_tree[component]
         qt_commands = render_result.commands
-        expected_commands = [
-            CommandType(_dereference_tree(app._widget_tree, qt_tree, [2]).component.underlying.setText, "CChanged")
-        ]
+        expected_commands = [CommandType(_dereference_tree(app._widget_tree, qt_tree, [2]).component.underlying.setText, "CChanged")]
 
         self.assertEqual(qt_commands, expected_commands)
 
@@ -298,26 +295,18 @@ class RenderTestCase(unittest.TestCase):
 
         def new_V(*args):
             view = _dereference_tree(app._widget_tree, _new_qt_tree, args)
-            return [
-                CommandType(view.component._add_child, i, child.underlying) for (i, child) in enumerate(view.children)
-            ]
+            return [CommandType(view.component._add_child, i, child.underlying)
+                    for (i, child) in enumerate(view.children)]
 
         self.assertEqual(_dereference_tree(app._widget_tree, _new_qt_tree, [2, 0]).component.props.text, "D")
-
         def new_C(*args):
             return _commands_for_address(app._widget_tree, _new_qt_tree, args)
-
-        expected_commands = (
-            new_C(2, 0)
-            + new_C(2, 1)
-            + new_V(2)
-            + new_C(2)
-            + [
+        expected_commands = (new_C(2, 0) + new_C(2, 1) + new_V(2) + new_C(2) +
+            [
                 CommandType(qt_tree.component._soft_delete_child, 2, _new_qt_tree.children[3]),
                 CommandType(qt_tree.component._add_child, 2, _new_qt_tree.children[2].underlying),
                 CommandType(qt_tree.component._add_child, 3, _new_qt_tree.children[3].underlying),
-            ]
-        )
+            ])
 
         # Disabling this test.
         # After changing the _request_rerender method so that commands run
@@ -339,12 +328,12 @@ class RenderTestCase(unittest.TestCase):
         render_result = app._request_rerender([component])
         qt_commands = render_result.commands
 
-        expected_commands = [
+        expected_commands = ([
             CommandType(qt_tree.component._soft_delete_child, 2, qt_tree.children[2]),
             CommandType(qt_tree.component._soft_delete_child, 0, qt_tree.children[0]),
             CommandType(qt_tree.component._add_child, 0, qt_tree.children[2].underlying),
             CommandType(qt_tree.component._add_child, 2, qt_tree.children[0].underlying),
-        ]
+        ])
 
         self.assertEqual(qt_commands, expected_commands)
 
@@ -383,13 +372,12 @@ class RenderTestCase(unittest.TestCase):
 
     def test_one_child_rerender(self):
         class TestCompInner(Element):
+
             def __init__(self, val):
                 super().__init__()
-                self._register_props(
-                    {
-                        "val": val,
-                    }
-                )
+                self._register_props({
+                    "val": val,
+                })
                 self.count = 0
 
             def _render_element(self):
@@ -416,13 +404,12 @@ class RenderTestCase(unittest.TestCase):
 
     def test_render_exception(self):
         class TestCompInner1(Element):
+
             def __init__(self, val):
                 super().__init__()
-                self._register_props(
-                    {
-                        "val": val,
-                    }
-                )
+                self._register_props({
+                    "val": val,
+                })
                 self.count = 0
                 self.success_count = 0
 
@@ -432,13 +419,12 @@ class RenderTestCase(unittest.TestCase):
                 return base_components.Label(str(self.props.val))
 
         class TestCompInner2(Element):
+
             def __init__(self, val):
                 super().__init__()
-                self._register_props(
-                    {
-                        "val": val,
-                    }
-                )
+                self._register_props({
+                    "val": val,
+                })
                 self.count = 0
                 self.success_count = 0
 
@@ -467,15 +453,15 @@ class RenderTestCase(unittest.TestCase):
 
 
 class RefreshClassTestCase(unittest.TestCase):
+
     def test_refresh_child(self):
         class OldInnerClass(Element):
+
             def __init__(self, val):
                 super().__init__()
-                self._register_props(
-                    {
-                        "val": val,
-                    }
-                )
+                self._register_props({
+                    "val": val,
+                })
                 self.count = 0
 
             def _render_element(self):
@@ -483,13 +469,12 @@ class RefreshClassTestCase(unittest.TestCase):
                 return base_components.Label(str(self.props.val))
 
         class NewInnerClass(Element):
+
             def __init__(self, val):
                 super().__init__()
-                self._register_props(
-                    {
-                        "val": val,
-                    }
-                )
+                self._register_props({
+                    "val": val,
+                })
                 self.count = 0
 
             def _render_element(self):
@@ -497,13 +482,16 @@ class RefreshClassTestCase(unittest.TestCase):
                 return base_components.Label(str(self.props.val * 2))
 
         class OuterClass(Element):
+
             def __init__(self):
                 super().__init__()
                 self.count = 0
 
             def _render_element(self):
                 self.count += 1
-                return base_components.View()(OldInnerClass(5))
+                return base_components.View()(
+                    OldInnerClass(5)
+                )
 
         outer_comp = OuterClass()
         app = engine.RenderEngine(outer_comp)
@@ -528,18 +516,18 @@ class RefreshClassTestCase(unittest.TestCase):
         @component
         def OldInnerClass(self, val):
             old_inner_render_count[0] += 1
-            base_components.Label(str(val)).render()
+            base_components.Label(str(val))
 
         @component
         def NewInnerClass(self, val):
             new_inner_render_count[0] += 1
-            base_components.Label(str(val * 2)).render()
+            base_components.Label(str(val * 2))
 
         @component
         def OuterClass(self):
             outer_render_count[0] += 1
-            with base_components.View().render():
-                OldInnerClass(5).render()
+            with base_components.View():
+                OldInnerClass(5)
 
         outer_comp = OuterClass()
         app = engine.RenderEngine(outer_comp)
@@ -555,13 +543,12 @@ class RefreshClassTestCase(unittest.TestCase):
 
     def test_refresh_child_error(self):
         class OldInnerClass(Element):
+
             def __init__(self, val):
                 super().__init__()
-                self._register_props(
-                    {
-                        "val": val,
-                    }
-                )
+                self._register_props({
+                    "val": val,
+                })
                 self.count = 0
 
             def _render_element(self):
@@ -569,28 +556,30 @@ class RefreshClassTestCase(unittest.TestCase):
                 return base_components.Label(str(self.props.val))
 
         class NewInnerClass(Element):
+
             def __init__(self, val):
                 super().__init__()
-                self._register_props(
-                    {
-                        "val": val,
-                    }
-                )
+                self._register_props({
+                    "val": val,
+                })
                 self.count = 0
 
             def _render_element(self):
                 self.count += 1
                 assert False
-                return base_components.Label(str(self.props.val * 2)).render()
+                return base_components.Label(str(self.props.val * 2))
 
         class OuterClass(Element):
+
             def __init__(self):
                 super().__init__()
                 self.count = 0
 
             def _render_element(self):
                 self.count += 1
-                return base_components.View()(OldInnerClass(5))
+                return base_components.View()(
+                    OldInnerClass(5)
+                )
 
         outer_comp = OuterClass()
         app = engine.RenderEngine(outer_comp)
@@ -606,14 +595,12 @@ class RefreshClassTestCase(unittest.TestCase):
         assert isinstance(inner_comp, OldInnerClass)
         self.assertEqual(inner_comp.props.val, 5)
 
+
     def test_view_recalculate_children_1(self):
+
         v = base_components.View()
         v._initialize()
-        children1: list[QtWidgetElement] = [
-            base_components.Label("A"),
-            base_components.Button("B"),
-            base_components.RadioButton(False, "C"),
-        ]
+        children1:list[QtWidgetElement] = [base_components.Label("A"), base_components.Button("B"), base_components.RadioButton(False,"C")]
         for c in children1:
             c._qt_update_commands({}, PropsDict({}))
 
@@ -625,8 +612,7 @@ class RefreshClassTestCase(unittest.TestCase):
         commands = v._recompute_children(new_children)
         self.assertEqual(
             commands,
-            [
-                CommandType(v._delete_child, 2, children1[2]),
+            [ CommandType(v._delete_child, 2, children1[2]),
             ],
         )
 
