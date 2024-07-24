@@ -1,5 +1,7 @@
 # https://legacy.reactjs.org/docs/composition-vs-inheritance.html#containment
 
+from __future__ import annotations
+
 import typing as tp
 
 import edifice as ed
@@ -8,8 +10,9 @@ import edifice as ed
 @ed.component
 def MyComponent(
     self: ed.Element,
-    children: list[ed.Element] = [],
-):
+    *,
+    children: tuple[ed.Element,...] = (),
+) -> None:
     bgcolor = "blue"
     with ed.View(
         layout="column",
@@ -24,11 +27,11 @@ def MyComponent(
 
 
 @ed.component
-def Main(self):
-    strings: tp.Sequence[
-        str
-    ] = "Callables which take other callables as arguments may indicate that their parameter types are dependent on".split(
-        " "
+def Main(self: ed.Element) -> None:
+    strings: tp.Sequence[str] = (
+        "Callables which take other callables as arguments may indicate that their parameter types are dependent on".split(
+            " ",
+        )
     )
     with ed.Window():
         with ed.View(style={"padding": 20}):

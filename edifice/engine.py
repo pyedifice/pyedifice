@@ -1,21 +1,25 @@
+from __future__ import annotations
+
 import asyncio
-from collections import defaultdict
-from collections.abc import Callable, Coroutine, Iterator, Iterable
-from dataclasses import dataclass
 import functools
 import inspect
 import logging
-from textwrap import dedent
 import threading
 import typing as tp
+from collections import defaultdict
+from collections.abc import Callable, Coroutine, Iterable, Iterator
+from copy import copy
+from dataclasses import dataclass
+from textwrap import dedent
+
 from typing_extensions import Self
 
 from .qt import QT_VERSION
 
 if QT_VERSION == "PyQt6" and not tp.TYPE_CHECKING:
-    from PyQt6 import QtCore, QtWidgets, QtGui
+    from PyQt6 import QtCore, QtGui, QtWidgets
 else:
-    from PySide6 import QtCore, QtWidgets, QtGui
+    from PySide6 import QtCore, QtGui, QtWidgets
 
 _T_use_state = tp.TypeVar("_T_use_state")
 _T_Element = tp.TypeVar("_T_Element", bound="Element")
@@ -266,16 +270,16 @@ class _Tracker:
     added to the current element.
     """
 
-    children: list["Element"]
+    children: list[Element]
 
-    def __init__(self, component: "Element"):
+    def __init__(self, component: Element):
         self.component = component
         self.children = []
 
-    def append_child(self, component: "Element"):
+    def append_child(self, component: Element):
         self.children.append(component)
 
-    def collect(self) -> list["Element"]:
+    def collect(self) -> list[Element]:
         """Collect all the children for the component, except for... something?"""
         children = set()
         for child in self.children:
@@ -371,6 +375,7 @@ def child_place(component: "Element") -> None:
     """
     get_render_context().trackers[-1].append_child(component)
 
+
 class Element:
     """The base class for Edifice Elements.
 
@@ -422,10 +427,9 @@ class Element:
         ctx = get_render_context()
         tracker = ctx.trackers.pop()
         children = tracker.collect()
-        prop = self._props.get("children", [])
-        for child in children:
-            prop.append(child)
-        self._props["children"] = prop
+        prop: list[Element] = list(self._props.get("children", ()))
+        prop.extend(children)
+        self._props["children"] = tuple(prop)
 
     def _register_props(self, props: tp.Mapping[tp.Text, tp.Any]) -> None:
         """Register props.
@@ -479,7 +483,7 @@ class Element:
         return self
 
     @property
-    def children(self) -> list["Element"]:
+    def children(self) -> tuple[Element, ...]:
         """The children of this Element."""
         return self._props["children"]
 
@@ -527,7 +531,7 @@ class Element:
                 children.extend(a)
             elif a:
                 children.append(a)
-        self._props["children"] = children
+        self._props["children"] = tuple(children)
         return self
 
     def __hash__(self):
@@ -572,6 +576,7 @@ selfT = tp.TypeVar("selfT", bound=Element)
 def not_ignored(arg: tuple[str, tp.Any]) -> bool:
     return arg[0][0] != "_"
 
+
 def component(f: Callable[tp.Concatenate[selfT, P], None]) -> Callable[P, Element]:
     """Decorator turning a render function of **props** into an :class:`Element`.
 
@@ -605,7 +610,7 @@ def component(f: Callable[tp.Concatenate[selfT, P], None]) -> Callable[P, Elemen
 
     There are two features to accomplish this.
 
-    1. The special :code:`children` **prop** is a list of :class:`Element` s.
+    1. The special :code:`children` **prop** is a tuple of :class:`Element` s.
        This special **prop** must always be declared as a **keyword argument**
        with a default value.
 
@@ -618,7 +623,7 @@ def component(f: Callable[tp.Concatenate[selfT, P], None]) -> Callable[P, Elemen
     container :func:`component` will render its children::
 
         @component
-        def ContainerComponent(self:Element, children:list[Element]=[]):
+        def ContainerComponent(self:Element, children:tuple[Element, ...]=()):
             with View():
                 for child in children:
                     with View():
@@ -697,7 +702,7 @@ def component(f: Callable[tp.Concatenate[selfT, P], None]) -> Callable[P, Elemen
             name_to_val = defaults.copy()
             name_to_val.update(filter(not_ignored, zip(varnames, args, strict=False)))
             name_to_val.update(((k, v) for (k, v) in kwargs.items() if k[0] != "_"))
-            name_to_val["children"] = name_to_val.get("children") or []
+            name_to_val["children"] = name_to_val.get("children") or ()
             self._register_props(name_to_val)
 
         def _render_element(self):
@@ -1473,6 +1478,7 @@ def qt_component(
             super().__init__()
             name_to_val = defaults.copy()
             name_to_val.update(filter(not_ignored, zip(varnames, args, strict=False)))
+            # kwards prefixed with _ are excluded from props
             name_to_val.update(((k, v) for (k, v) in kwargs.items() if k[0] != "_"))
             self._register_props(name_to_val)
 
@@ -1781,10 +1787,11 @@ class RenderEngine(object):
 
         backup = {}
         for old_comp, _, parent_comp, new_comp in components_to_replace:
-            backup[parent_comp] = list(parent_comp.children)
+            parent_comp_children = list(parent_comp.children)
+            backup[parent_comp] = copy(parent_comp.children)
             for i, comp in enumerate(parent_comp.children):
                 if comp is old_comp:
-                    parent_comp._props["children"][i] = new_comp
+                    parent_comp_children[i] = new_comp
                     # Move the hook states to the new component.
                     # We want to be careful that the hooks don't have
                     # any references to the old component, especially
@@ -1807,6 +1814,7 @@ class RenderEngine(object):
                     if old_comp in self._hook_async:
                         self._hook_async[new_comp] = self._hook_async[old_comp]
                         del self._hook_async[old_comp]
+            parent_comp._props["children"] = tuple(parent_comp_children)
 
         # 5) call _render for all new component parents
         try:
@@ -1876,7 +1884,7 @@ class RenderEngine(object):
                 children_old_bykey[child_old._key] = child_old
 
         # We will mutate children_new to replace them with old elements if we can match them.
-        children_new: list[Element] = component.children[:]
+        children_new: list[Element] = list(component.children)
         for child_new in children_new:
             if hasattr(child_new, "_key"):
                 if children_new_bykey.get(child_new._key, None) is not None:
@@ -1956,7 +1964,7 @@ class RenderEngine(object):
         children = self._recycle_children(component, render_context)
 
         props_dict = dict(component.props._items)
-        props_dict["children"] = list(children)
+        props_dict["children"] = tuple(children)
         render_context.mark_props_change(component, PropsDict(props_dict))
         return render_context.widget_tree[component]
 
@@ -1976,8 +1984,7 @@ class RenderEngine(object):
         component._controller = self._app
 
         if isinstance(component, QtWidgetElement):
-            ret = self._render_base_component(component, render_context)
-            return ret
+            return self._render_base_component(component, render_context)
 
         # Before the render, set the hooks indices to 0.
         component._hook_state_index = 0
@@ -2017,7 +2024,9 @@ class RenderEngine(object):
 
         if old_rendering is not None and elements_match(old_rendering[0], sub_component):
             render_context.widget_tree[component] = self._update_old_component(
-                old_rendering[0], sub_component, render_context
+                old_rendering[0],
+                sub_component,
+                render_context,
             )
         else:
             if old_rendering is not None:
