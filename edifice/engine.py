@@ -1990,7 +1990,6 @@ class RenderEngine(object):
                 message = dedent(
                     f"""\
                     A @component must render as exactly one Element.
-                    Did you forget to call the .render() method inside {component.__class__.__name__}?
                     Element {component} renders as {len(container.children)} elements."""
                 ) + newline.join([child.__str__() for child in container.children])
                 raise ValueError(message)
