@@ -389,6 +389,7 @@ class Element:
         # Ensure we only construct this element once
         assert getattr(self, "_initialized", False) is False
         self._initialized = True
+        self._key : str | None = None
         ctx = get_render_context_maybe()
         if ctx is not None:
             trackers = ctx.trackers
@@ -426,7 +427,7 @@ class Element:
         """
         self._props.update(props)
 
-    def set_key(self: Self, key: tp.Text) -> Self:
+    def set_key(self: Self, key: str | None) -> Self:
         """Sets the key of the Element.
 
         The key is used by the re-rendering logic to match a new list of Elements
@@ -1580,7 +1581,7 @@ def elements_match(a: Element, b: Element) -> bool:
     return (
         (a.__class__ == b.__class__)
         and (a.__class__.__name__ == b.__class__.__name__)
-        and (getattr(a, "_key", None) == getattr(b, "_key", None))
+        and (a._key == b._key)
     )
 
 
@@ -1754,8 +1755,7 @@ class RenderEngine(object):
                 )
             parts[3] = new_comp_class(**kwargs)
             parts[3]._props.update(old_comp._props)
-            if hasattr(old_comp, "_key"):
-                parts[3]._key = old_comp._key
+            parts[3]._key = old_comp._key
 
         # 3) Replace old component in the place in the tree where they first appear, with a reference to new component
 
@@ -1854,15 +1854,15 @@ class RenderEngine(object):
         # Ordering of children_old must be preserved for reverse deletion.
         children_old: list[Element] = children_old_[:]
         for child_old in children_old:
-            if hasattr(child_old, "_key"):
+            if child_old._key is not None:
                 children_old_bykey[child_old._key] = child_old
 
         # We will mutate children_new to replace them with old elements if we can match them.
         children_new: list[Element] = list(component.children)
         for child_new in children_new:
-            if hasattr(child_new, "_key"):
+            if child_new._key is not None:
                 if children_new_bykey.get(child_new._key, None) is not None:
-                    raise ValueError("Duplicate keys found in %s" % component)
+                    raise ValueError("Duplicate keys found in " + str(component))
                 children_new_bykey[child_new._key] = child_new
 
         # We will not try to intelligently handle the situation where
@@ -1872,9 +1872,9 @@ class RenderEngine(object):
         i_new = 0
         while i_new < len(children_new):
             child_new = children_new[i_new]
-            if (key := getattr(child_new, "_key", None)) is not None:
+            if (key := child_new._key) is not None:
                 if (child_old_bykey := children_old_bykey.get(key, None)) is not None and elements_match(
-                    child_old_bykey, child_new
+                    child_old_bykey, child_new,
                 ):
                     # then we have a match for reusing the old child
                     self._update_old_component(child_old_bykey, child_new, render_context)
