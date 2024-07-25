@@ -270,24 +270,12 @@ class _Tracker:
     added to the current element.
     """
 
-    children: list[Element]
-
     def __init__(self, component: Element):
         self.component = component
-        self.children = []
+        self.children: list[Element] = []
 
     def append_child(self, component: Element):
         self.children.append(component)
-
-    def collect(self) -> list[Element]:
-        """Collect all the children for the component, except for... something?"""
-        children = set()
-        for child in self.children:
-            # find_components will flatten lists of elements, but according
-            # to append_child, it's impossible for child to be a list.
-            # So why do we need find_components?
-            children |= find_components(child) - {child}
-        return [child for child in self.children if child not in children]
 
 
 class _RenderContext(object):
@@ -426,9 +414,8 @@ class Element:
     def __exit__(self, *args):
         ctx = get_render_context()
         tracker = ctx.trackers.pop()
-        children = tracker.collect()
         prop: list[Element] = list(self._props.get("children", ()))
-        prop.extend(children)
+        prop.extend(tracker.children)
         self._props["children"] = tuple(prop)
 
     def _register_props(self, props: tp.Mapping[tp.Text, tp.Any]) -> None:
@@ -722,19 +709,6 @@ def component(f: Callable[tp.Concatenate[selfT, P], None]) -> Callable[P, Elemen
     ComponentElement.__name__ = f.__name__
     comp = tp.cast(Callable[P, Element], ComponentElement)
     return comp
-
-
-def find_components(el: Element | list[Element]) -> set[Element]:
-    match el:
-        case Element():
-            return {el}
-        case list():
-            elements = set()
-            for child in el:
-                elements |= find_components(child)
-                # The type of el says that it's impossible for an element
-                # in list[Element] to be a list[Element], so why recurse?
-            return elements
 
 
 @component
