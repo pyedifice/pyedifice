@@ -4,6 +4,7 @@ import numpy as np
 import numpy.typing as npt
 
 from edifice.qt import QT_VERSION
+
 if QT_VERSION == "PyQt6" and not TYPE_CHECKING:
     import PyQt6.QtCore as QtCore
     from PyQt6.QtGui import QImage, QPixmap
@@ -20,7 +21,7 @@ T_Numpy_Array_co = TypeVar("T_Numpy_Array_co", bound=np.generic, covariant=True)
 
 class NumpyArray(Generic[T_Numpy_Array_co]):
     """Wrapper for :code:`numpy` arrays.
-    
+
     This wrapper class provides the :code:`__eq__` relation for the wrapped :code:`numpy` array such that if two
     wrapped arrays are :code:`__eq__`, then one can be substituted for the other. This class may be used as a
     **prop** or a **state**.
@@ -41,12 +42,12 @@ def NumpyArray_to_QImage(arr: npt.NDArray[np.uint8] | NumpyArray[np.uint8]) -> Q
     """Function to convert :code:`numpy` arrays into QImages.
 
     The provided array should have a shape of:
-    
+
     * (height, width)
     * (height, width, 1)
     * (height, width, 3)
     * (height, width, 4)
-    
+
     Args:
         arr:
             One of:
@@ -70,7 +71,13 @@ def NumpyArray_to_QImage(arr: npt.NDArray[np.uint8] | NumpyArray[np.uint8]) -> Q
         case (height, width, channel):
             if not (3 <= channel <= 4):
                 raise ValueError(f"Numpy array with {channel} channels cannot be converted into a QImage.")
-            return QImage(arr.data, width, height, channel * width, QImage.Format.Format_RGB888 if channel == 3 else QImage.Format.Format_RGBA8888)
+            return QImage(
+                arr.data,
+                width,
+                height,
+                channel * width,
+                QImage.Format.Format_RGB888 if channel == 3 else QImage.Format.Format_RGBA8888,
+            )
 
 
 class NumpyImage(ed.QtWidgetElement):
@@ -133,7 +140,3 @@ class NumpyImage(ed.QtWidgetElement):
         if "aspect_ratio_mode" in newprops:
             commands.append(CommandType(self.underlying._setAspectRatioMode, newprops.aspect_ratio_mode))
         return commands
-
-
-
-
