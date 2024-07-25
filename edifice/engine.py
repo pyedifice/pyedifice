@@ -119,7 +119,7 @@ class PropsDict(object):
 
     __slots__ = ("_d",)
 
-    def __init__(self, dictionary: tp.Mapping[tp.Text, tp.Any]):
+    def __init__(self, dictionary: tp.Mapping[str, tp.Any]):
         super().__setattr__("_d", dictionary)
 
     def __getitem__(self, key) -> tp.Any:
@@ -138,7 +138,7 @@ class PropsDict(object):
         """Returns the (key, value) of the props dict as a list."""
         return self._d.items()
 
-    def _get(self, key: tp.Text, default: tp.Optional[tp.Any] = None) -> tp.Any:
+    def _get(self, key: str, default: tp.Any | None = None) -> tp.Any:
         """Gets item by key.
 
         Equivalent to dictionary.get(key, default)
@@ -164,16 +164,16 @@ class PropsDict(object):
     def __getattr__(self, key) -> tp.Any:
         if key in self._d:
             return self._d[key]
-        raise KeyError("%s not in props" % key)
+        raise KeyError(str(key) + " not in props")
 
     def __repr__(self):
-        return "PropsDict(%s)" % repr(self._d)
+        return "PropsDict(" + str(repr(self._d)) + ")"
 
     def __str__(self) -> str:
-        return "PropsDict(%s)" % str(self._d)
+        return "PropsDict(" + str(self._d) + ")"
 
     def __setattr__(self, key, value) -> tp.NoReturn:
-        raise ValueError("Props are immutable")
+        raise ValueError("Props are immutable")  # noqa: TRY003
 
 
 class Reference(tp.Generic[_T_Element]):
@@ -356,12 +356,12 @@ def get_render_context_maybe() -> _RenderContext | None:
     return getattr(local_state, "render_context", None)
 
 
-def child_place(component: "Element") -> None:
+def child_place(element: Element) -> None:
     """
     Place a child passed through the special :code:`children` **props** into
     the layout of a parent :func:`component`.
     """
-    get_render_context().trackers[-1].append_child(component)
+    get_render_context().trackers[-1].append_child(element)
 
 
 class Element:
@@ -389,7 +389,7 @@ class Element:
         # Ensure we only construct this element once
         assert getattr(self, "_initialized", False) is False
         self._initialized = True
-        self._key : str | None = None
+        self._key: str | None = None
         ctx = get_render_context_maybe()
         if ctx is not None:
             trackers = ctx.trackers
@@ -441,10 +441,10 @@ class Element:
         Example::
 
             # inside a render call
-            with edifice.View():
-                edifice.Label("Hello").set_key("en")
-                edifice.Label("Bonjour").set_key("fr")
-                edifice.Label("Hola").set_key("es")
+            with View():
+                Label("Hello").set_key("en")
+                Label("Bonjour").set_key("fr")
+                Label("Hola").set_key("es")
 
         Args:
             key: The key to label the Element with.
@@ -566,10 +566,25 @@ def not_ignored(arg: tuple[str, tp.Any]) -> bool:
 
 
 def component(f: Callable[tp.Concatenate[selfT, P], None]) -> Callable[P, Element]:
-    """Decorator turning a render function of **props** into an :class:`Element`.
+    """
+    Decorator turning a render function of **props** into an :class:`Element`.
 
-    The component will be re-rendered when its **props** are not :code:`__eq__`
-    to the **props** from the last time the component rendered.
+    The first argument of the render function must be :code:`self`, for
+    internal technical reasons.
+
+    Props
+    -----
+
+    The **props** are the arguments passed to the :func:`component` function.
+
+    The component will be re-rendered when some of its **props** are not
+    :code:`__eq__` to the **props** from the last time the component rendered.
+    If the **props** are all :code:`__eq__`, the component will not re-render.
+
+    Arguments with a leading underscore :code:`_` will not count as **props**.
+
+    Render
+    ------
 
     The component function must render exactly one :class:`Element`.
     In the component function, declare a tree of :class:`Element` with a
@@ -578,9 +593,57 @@ def component(f: Callable[tp.Concatenate[selfT, P], None]) -> Callable[P, Elemen
         @component
         def MySimpleComp(self, prop1, prop2, prop3):
             with View():
-                Label(prop1)
-                Label(prop2)
-                Label(prop3)
+                Label(text=prop1)
+                Label(text=prop2)
+                Label(text=prop3)
+
+    Element initialization is a render side-effect
+    ----------------------------------------------
+
+    Each :class:`Element` is actually implemented as the constructor function
+    for a Python class. The :class:`Element` constructor function also has
+    the side-effect of inserting itself to the rendered :class:`Element` tree,
+    as a child of the :code:`with` context layout Element.
+
+    For that reason, you have to be careful about binding Elements to variables
+    and passing them around. They will insert themselves at the time they are
+    created. This code will **NOT** declare the intended Element tree::
+
+        @component
+        def MySimpleComp(self, prop1, prop2, prop3):
+            label3 = Label(text=prop3)
+            with View():
+                Label(text=prop1)
+                Label(text=prop2)
+                label3
+
+    To solve this, defer the construction of the Element with a lambda function.
+    This code will declare the same intended Element tree as the code above::
+
+        @component
+        def MySimpleComp(self, prop1, prop2, prop3):
+            label3 = lambda: Label(text=prop3)
+            with View():
+                Label(text=prop1)
+                Label(text=prop2)
+                label3()
+
+    If these component Elements are render functions, then why couldn’t we just write
+    a normal render function with no decorator::
+
+        # No decorator
+        def MySimpleComp(prop1, prop2, prop3):
+            with View():
+                Label(text=prop1)
+                Label(text=prop2)
+                Label(text=prop3)
+
+    instead. The difference is, with the :func:`component` decorator, an
+    actual :class:`Element` object is created,
+    which means that subsequent renders will be skipped if the **props** didn’t change.
+    Also we need an :func:`component` to
+    be able to use Hooks such as :func:`use_state`, because those are bound to
+    an :class:`Element`.
 
     State
     -----
@@ -618,57 +681,9 @@ def component(f: Callable[tp.Concatenate[selfT, P], None]) -> Callable[P, Elemen
                         child_place(child)
 
         with ContainerComponent():
-            Label("First Child")
-            Label("Second Child")
-            Label("Third Child")
-
-    Element initialization is a render side-effect
-    ----------------------------------------------
-
-    Each :class:`Element` is actually implemented as the constructor function
-    for a Python class. The :class:`Element` constructor function also has
-    the side-effect of inserting itself to the rendered :class:`Element` tree,
-    as a child of the :code:`with` context layout Element.
-
-    For that reason, you have to be careful about binding Elements to variables
-    and passing them around. They will insert themselves at the time they are
-    created. This code will **NOT** declare the intended Element tree::
-
-        @component
-        def MySimpleComp(self, prop1, prop2, prop3):
-            label3 = Label(prop3)
-            with View():
-                Label(prop1)
-                Label(prop2)
-                label3
-
-    To solve this, defer the construction of the Element with a lambda function.
-    This code will declare the same intended Element tree as the code above::
-
-        @component
-        def MySimpleComp(self, prop1, prop2, prop3):
-            label3 = lambda: Label(prop3)
-            with View():
-                Label(prop1)
-                Label(prop2)
-                label3()
-
-    If these component Elements are render functions, then why couldn’t we just write
-    a normal render function with no decorator::
-
-        # No decorator
-        def MySimpleComp(prop1, prop2, prop3):
-            with View():
-                Label(prop1)
-                Label(prop2)
-                Label(prop3)
-
-    instead. The difference is, with the :func:`component` decorator, an
-    actual :class:`Element` object is created,
-    which means that subsequent renders will be skipped if the **props** didn’t change.
-    Also we need an :func:`component` to
-    be able to use Hooks such as :func:`use_state`, because those are bound to
-    an :class:`Element`.
+            Label(text="First Child")
+            Label(text="Second Child")
+            Label(text="Third Child")
 
     Args:
         f:
@@ -689,7 +704,7 @@ def component(f: Callable[tp.Concatenate[selfT, P], None]) -> Callable[P, Elemen
             super().__init__()
             name_to_val = defaults.copy()
             name_to_val.update(filter(not_ignored, zip(varnames, args, strict=False)))
-            name_to_val.update(((k, v) for (k, v) in kwargs.items() if k[0] != "_"))
+            name_to_val.update((k, v) for (k, v) in kwargs.items() if k[0] != "_")
             name_to_val["children"] = name_to_val.get("children") or ()
             self._register_props(name_to_val)
 
@@ -1578,11 +1593,7 @@ def elements_match(a: Element, b: Element) -> bool:
     # Elements must have the same __class__.__name__. This is to distinguish
     # between different @component Components. (Why does class __eq__ return
     # True if the class __name__ is different?)
-    return (
-        (a.__class__ == b.__class__)
-        and (a.__class__.__name__ == b.__class__.__name__)
-        and (a._key == b._key)
-    )
+    return (a.__class__ == b.__class__) and (a.__class__.__name__ == b.__class__.__name__) and (a._key == b._key)
 
 
 class RenderEngine(object):
@@ -1874,7 +1885,8 @@ class RenderEngine(object):
             child_new = children_new[i_new]
             if (key := child_new._key) is not None:
                 if (child_old_bykey := children_old_bykey.get(key, None)) is not None and elements_match(
-                    child_old_bykey, child_new,
+                    child_old_bykey,
+                    child_new,
                 ):
                     # then we have a match for reusing the old child
                     self._update_old_component(child_old_bykey, child_new, render_context)

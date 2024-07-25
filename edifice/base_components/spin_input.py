@@ -16,9 +16,10 @@ class EdSpinBox(QSpinBox):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._textFromValue: tp.Callable[[int], str] | None = None
-        self._valueFromText: tp.Callable[
-            [str], int | tp.Literal[QValidator.State.Intermediate] | tp.Literal[QValidator.State.Invalid]
-        ] | None = None
+        self._valueFromText: (
+            tp.Callable[[str], int | tp.Literal[QValidator.State.Intermediate] | tp.Literal[QValidator.State.Invalid]]
+            | None
+        ) = None
 
     def textFromValue(self, val: int) -> str:
         if self._textFromValue is not None:
