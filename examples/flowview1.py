@@ -10,21 +10,19 @@ from edifice import ButtonView
 @ed.component
 def myComponent(self):
     def mkElement(j):
-        with ed.View(style={"margin": 5}).render():
-            with ButtonView(style={"margin": 5}).render():
-                ed.Label(
-                    text="<div style='font-size:20px'>Label " + chr(ord("🦄") + j) + "</>", style={"margin": 5}
-                ).render()
+        with ed.View(style={"margin": 5}):
+            with ButtonView(style={"margin": 5}):
+                ed.Label(text="<div style='font-size:20px'>Label " + chr(ord("🦄") + j) + "</>", style={"margin": 5})
 
-    with ed.Window().render():
+    with ed.Window():
         with ed.View(
             layout="column",
             style={
                 # We cannot align to center, it doesn't work with FlowView. TODO
                 # "align":"center"
             },
-        ).render():
-            with FlowView().render():
+        ):
+            with FlowView():
                 for i in range(100):
                     mkElement(i)
 

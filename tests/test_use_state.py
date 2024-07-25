@@ -21,14 +21,14 @@ class IntegrationTestCase(unittest.TestCase):
         def Wrapper(self):
             show, set_show = use_state(False)
 
-            with Window().render():
+            with Window():
                 if show:
-                    with View().render():
-                        Button(title="Hide", on_click=lambda ev: set_show(False)).render()
-                        TestComp().render()
+                    with View():
+                        Button(title="Hide", on_click=lambda ev: set_show(False))
+                        TestComp()
                 else:
-                    with View().render():
-                        Button(title="Show", on_click=lambda ev: set_show(True)).render()
+                    with View():
+                        Button(title="Show", on_click=lambda ev: set_show(True))
 
         class TestComp(Element):
             def __init__(self):

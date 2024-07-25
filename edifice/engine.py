@@ -1,21 +1,25 @@
+from __future__ import annotations
+
 import asyncio
-from collections import defaultdict
-from collections.abc import Callable, Coroutine, Iterator, Iterable
-from dataclasses import dataclass
 import functools
 import inspect
 import logging
-from textwrap import dedent
 import threading
 import typing as tp
+from collections import defaultdict
+from collections.abc import Callable, Coroutine, Iterable, Iterator
+from copy import copy
+from dataclasses import dataclass
+from textwrap import dedent
+
 from typing_extensions import Self
 
 from .qt import QT_VERSION
 
 if QT_VERSION == "PyQt6" and not tp.TYPE_CHECKING:
-    from PyQt6 import QtCore, QtWidgets, QtGui
+    from PyQt6 import QtCore, QtGui, QtWidgets
 else:
-    from PySide6 import QtCore, QtWidgets, QtGui
+    from PySide6 import QtCore, QtGui, QtWidgets
 
 _T_use_state = tp.TypeVar("_T_use_state")
 _T_Element = tp.TypeVar("_T_Element", bound="Element")
@@ -260,45 +264,18 @@ class ControllerProtocol(tp.Protocol):
         pass
 
 
-class Tracker(tp.Generic[_T_Element]):
+class _Tracker:
     """
     During a render, track the current element and the children being
     added to the current element.
     """
 
-    children: list["Element"]
-    component: _T_Element
-
-    def __enter__(self: Self) -> _T_Element:
-        ctx = get_render_context()
-        ctx.trackers.append(self)
-        return self.component
-
-    def __exit__(self, *args):
-        ctx = get_render_context()
-        tracker = ctx.trackers.pop()
-        children = tracker.collect()
-        prop = tracker.component._props.get("children", [])
-        for child in children:
-            prop.append(child)
-        tracker.component._props["children"] = prop
-
-    def __init__(self, component: _T_Element):
+    def __init__(self, component: Element):
         self.component = component
-        self.children = []
+        self.children: list[Element] = []
 
-    def append_child(self, component: "Element"):
+    def append_child(self, component: Element):
         self.children.append(component)
-
-    def collect(self) -> list["Element"]:
-        """Collect all the children for the component, except for... something?"""
-        children = set()
-        for child in self.children:
-            # find_components will flatten lists of elements, but according
-            # to append_child, it's impossible for child to be a list.
-            # So why do we need find_components?
-            children |= find_components(child) - {child}
-        return [child for child in self.children if child not in children]
 
 
 class _RenderContext(object):
@@ -320,8 +297,8 @@ class _RenderContext(object):
         "engine",
         "current_element",
     )
-    trackers: list[Tracker]
-    """Stack of Tracker"""
+    trackers: list[_Tracker]
+    """Stack of _Tracker"""
     current_element: "Element | None"
     """The Element currently being rendered."""
 
@@ -379,6 +356,14 @@ def get_render_context_maybe() -> _RenderContext | None:
     return getattr(local_state, "render_context", None)
 
 
+def child_place(component: "Element") -> None:
+    """
+    Place a child passed through the special :code:`children` **props** into
+    the layout of a parent :func:`component`.
+    """
+    get_render_context().trackers[-1].append_child(component)
+
+
 class Element:
     """The base class for Edifice Elements.
 
@@ -404,6 +389,13 @@ class Element:
         # Ensure we only construct this element once
         assert getattr(self, "_initialized", False) is False
         self._initialized = True
+        self._key : str | None = None
+        ctx = get_render_context_maybe()
+        if ctx is not None:
+            trackers = ctx.trackers
+            if len(trackers) > 0:
+                parent = trackers[-1]
+                parent.append_child(self)
 
         # We don't really need these hook indices to be per-instance state.
         # They are only used during a render.
@@ -414,15 +406,18 @@ class Element:
         self._hook_async_index: int = 0
         """use_async hook index for current render."""
 
-    def render(self: Self) -> Tracker[Self]:
-        tracker = Tracker(self)
-        ctx = get_render_context_maybe()
-        if ctx is not None:
-            trackers = ctx.trackers
-            if len(trackers) > 0:
-                parent = trackers[-1]
-                parent.append_child(self)
-        return tracker
+    def __enter__(self: Self) -> Self:
+        ctx = get_render_context()
+        tracker = _Tracker(self)
+        ctx.trackers.append(tracker)
+        return self
+
+    def __exit__(self, *args):
+        ctx = get_render_context()
+        tracker = ctx.trackers.pop()
+        prop: list[Element] = list(self._props.get("children", ()))
+        prop.extend(tracker.children)
+        self._props["children"] = tuple(prop)
 
     def _register_props(self, props: tp.Mapping[tp.Text, tp.Any]) -> None:
         """Register props.
@@ -432,7 +427,7 @@ class Element:
         """
         self._props.update(props)
 
-    def set_key(self: Self, key: tp.Text) -> Self:
+    def set_key(self: Self, key: str | None) -> Self:
         """Sets the key of the Element.
 
         The key is used by the re-rendering logic to match a new list of Elements
@@ -476,7 +471,7 @@ class Element:
         return self
 
     @property
-    def children(self) -> list["Element"]:
+    def children(self) -> tuple[Element, ...]:
         """The children of this Element."""
         return self._props["children"]
 
@@ -524,7 +519,7 @@ class Element:
                 children.extend(a)
             elif a:
                 children.append(a)
-        self._props["children"] = children
+        self._props["children"] = tuple(children)
         return self
 
     def __hash__(self):
@@ -603,46 +598,60 @@ def component(f: Callable[tp.Concatenate[selfT, P], None]) -> Callable[P, Elemen
 
     There are two features to accomplish this.
 
-    1. The special :code:`children` **prop** is a list of :class:`Element` s.
+    1. The special :code:`children` **prop** is a tuple of :class:`Element` s.
        This special **prop** must always be declared as a **keyword argument**
        with a default value.
 
        Do not explicitly pass the :code:`children` **prop** when calling
        the :func:`component`. The children will be passed implicitly.
-    2. The :func:`render()` method is used to place the :code:`children`
-       in the parent :func:`component`’s render function where.
+    2. The :func:`child_place` function is used to place the :code:`children`
+       in the parent :func:`component`’s render function.
 
-    [TODO]: reword this
     With these two features, you can declare how the parent
     container :func:`component` will render its children::
 
         @component
-        def ContainerComponent(self:Element, children:list[Element]=[]):
-            with View().render():
+        def ContainerComponent(self:Element, children:tuple[Element, ...]=()):
+            with View():
                 for child in children:
-                    with View().render():
-                        child.render()
+                    with View():
+                        child_place(child)
 
-        with ContainerComponent().render():
-            Label("First Child").render()
-            Label("Second Child").render()
-            Label("Third Child").render()
+        with ContainerComponent():
+            Label("First Child")
+            Label("Second Child")
+            Label("Third Child")
 
-    Element rendering
+    Element initialization is a render side-effect
     ----------------------------------------------
 
-    To render an :class:`Element` as a sub-element of another
-    :class:`Element` you must call the `.render()` method, otherwise
-    the :class:`Element` is not included when rendering the widgets
-    to the UI.
+    Each :class:`Element` is actually implemented as the constructor function
+    for a Python class. The :class:`Element` constructor function also has
+    the side-effect of inserting itself to the rendered :class:`Element` tree,
+    as a child of the :code:`with` context layout Element.
+
+    For that reason, you have to be careful about binding Elements to variables
+    and passing them around. They will insert themselves at the time they are
+    created. This code will **NOT** declare the intended Element tree::
 
         @component
         def MySimpleComp(self, prop1, prop2, prop3):
             label3 = Label(prop3)
-            with View().render():
-                Label(prop1).render()
-                Label(prop2).render()
-                label3.render()
+            with View():
+                Label(prop1)
+                Label(prop2)
+                label3
+
+    To solve this, defer the construction of the Element with a lambda function.
+    This code will declare the same intended Element tree as the code above::
+
+        @component
+        def MySimpleComp(self, prop1, prop2, prop3):
+            label3 = lambda: Label(prop3)
+            with View():
+                Label(prop1)
+                Label(prop2)
+                label3()
 
     If these component Elements are render functions, then why couldn’t we just write
     a normal render function with no decorator::
@@ -681,7 +690,7 @@ def component(f: Callable[tp.Concatenate[selfT, P], None]) -> Callable[P, Elemen
             name_to_val = defaults.copy()
             name_to_val.update(filter(not_ignored, zip(varnames, args, strict=False)))
             name_to_val.update(((k, v) for (k, v) in kwargs.items() if k[0] != "_"))
-            name_to_val["children"] = name_to_val.get("children") or []
+            name_to_val["children"] = name_to_val.get("children") or ()
             self._register_props(name_to_val)
 
         def _render_element(self):
@@ -701,19 +710,6 @@ def component(f: Callable[tp.Concatenate[selfT, P], None]) -> Callable[P, Elemen
     ComponentElement.__name__ = f.__name__
     comp = tp.cast(Callable[P, Element], ComponentElement)
     return comp
-
-
-def find_components(el: Element | list[Element]) -> set[Element]:
-    match el:
-        case Element():
-            return {el}
-        case list():
-            elements = set()
-            for child in el:
-                elements |= find_components(child)
-                # The type of el says that it's impossible for an element
-                # in list[Element] to be a list[Element], so why recurse?
-            return elements
 
 
 @component
@@ -1457,6 +1453,7 @@ def qt_component(
             super().__init__()
             name_to_val = defaults.copy()
             name_to_val.update(filter(not_ignored, zip(varnames, args, strict=False)))
+            # kwards prefixed with _ are excluded from props
             name_to_val.update(((k, v) for (k, v) in kwargs.items() if k[0] != "_"))
             self._register_props(name_to_val)
 
@@ -1584,7 +1581,7 @@ def elements_match(a: Element, b: Element) -> bool:
     return (
         (a.__class__ == b.__class__)
         and (a.__class__.__name__ == b.__class__.__name__)
-        and (getattr(a, "_key", None) == getattr(b, "_key", None))
+        and (a._key == b._key)
     )
 
 
@@ -1758,17 +1755,17 @@ class RenderEngine(object):
                 )
             parts[3] = new_comp_class(**kwargs)
             parts[3]._props.update(old_comp._props)
-            if hasattr(old_comp, "_key"):
-                parts[3]._key = old_comp._key
+            parts[3]._key = old_comp._key
 
         # 3) Replace old component in the place in the tree where they first appear, with a reference to new component
 
         backup = {}
         for old_comp, _, parent_comp, new_comp in components_to_replace:
-            backup[parent_comp] = list(parent_comp.children)
+            parent_comp_children = list(parent_comp.children)
+            backup[parent_comp] = copy(parent_comp.children)
             for i, comp in enumerate(parent_comp.children):
                 if comp is old_comp:
-                    parent_comp._props["children"][i] = new_comp
+                    parent_comp_children[i] = new_comp
                     # Move the hook states to the new component.
                     # We want to be careful that the hooks don't have
                     # any references to the old component, especially
@@ -1791,6 +1788,7 @@ class RenderEngine(object):
                     if old_comp in self._hook_async:
                         self._hook_async[new_comp] = self._hook_async[old_comp]
                         del self._hook_async[old_comp]
+            parent_comp._props["children"] = tuple(parent_comp_children)
 
         # 5) call _render for all new component parents
         try:
@@ -1856,15 +1854,15 @@ class RenderEngine(object):
         # Ordering of children_old must be preserved for reverse deletion.
         children_old: list[Element] = children_old_[:]
         for child_old in children_old:
-            if hasattr(child_old, "_key"):
+            if child_old._key is not None:
                 children_old_bykey[child_old._key] = child_old
 
         # We will mutate children_new to replace them with old elements if we can match them.
-        children_new: list[Element] = component.children[:]
+        children_new: list[Element] = list(component.children)
         for child_new in children_new:
-            if hasattr(child_new, "_key"):
+            if child_new._key is not None:
                 if children_new_bykey.get(child_new._key, None) is not None:
-                    raise ValueError("Duplicate keys found in %s" % component)
+                    raise ValueError("Duplicate keys found in " + str(component))
                 children_new_bykey[child_new._key] = child_new
 
         # We will not try to intelligently handle the situation where
@@ -1874,9 +1872,9 @@ class RenderEngine(object):
         i_new = 0
         while i_new < len(children_new):
             child_new = children_new[i_new]
-            if (key := getattr(child_new, "_key", None)) is not None:
+            if (key := child_new._key) is not None:
                 if (child_old_bykey := children_old_bykey.get(key, None)) is not None and elements_match(
-                    child_old_bykey, child_new
+                    child_old_bykey, child_new,
                 ):
                     # then we have a match for reusing the old child
                     self._update_old_component(child_old_bykey, child_new, render_context)
@@ -1940,7 +1938,7 @@ class RenderEngine(object):
         children = self._recycle_children(component, render_context)
 
         props_dict = dict(component.props._items)
-        props_dict["children"] = list(children)
+        props_dict["children"] = tuple(children)
         render_context.mark_props_change(component, PropsDict(props_dict))
         return render_context.widget_tree[component]
 
@@ -1960,8 +1958,7 @@ class RenderEngine(object):
         component._controller = self._app
 
         if isinstance(component, QtWidgetElement):
-            ret = self._render_base_component(component, render_context)
-            return ret
+            return self._render_base_component(component, render_context)
 
         # Before the render, set the hooks indices to 0.
         component._hook_state_index = 0
@@ -1972,7 +1969,7 @@ class RenderEngine(object):
         self._hook_state_setted.discard(component)
 
         # Call user provided render function and retrieve old results
-        with Container().render() as container:
+        with Container() as container:
             prev_element = render_context.current_element
             render_context.current_element = component
             sub_component = component._render_element()
@@ -1993,7 +1990,6 @@ class RenderEngine(object):
                 message = dedent(
                     f"""\
                     A @component must render as exactly one Element.
-                    Did you forget to call the .render() method inside {component.__class__.__name__}?
                     Element {component} renders as {len(container.children)} elements."""
                 ) + newline.join([child.__str__() for child in container.children])
                 raise ValueError(message)
@@ -2001,7 +1997,9 @@ class RenderEngine(object):
 
         if old_rendering is not None and elements_match(old_rendering[0], sub_component):
             render_context.widget_tree[component] = self._update_old_component(
-                old_rendering[0], sub_component, render_context
+                old_rendering[0],
+                sub_component,
+                render_context,
             )
         else:
             if old_rendering is not None:

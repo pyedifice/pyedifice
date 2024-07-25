@@ -35,11 +35,11 @@ Copy this code into a new file, for example tutorial.py::
 
     @component
     def MyApp(self):
-        with Window().render(): # Top of every App must be a Window
-            with View(layout="row").render():
-                Label("Measurement in meters:").render()
-                TextInput("").render()
-                Label("Measurement in feet:").render()
+        with Window(): # Top of every App must be a Window
+            with View(layout="row"):
+                Label("Measurement in meters:")
+                TextInput("")
+                Label("Measurement in feet:")
 
     if __name__ == "__main__":
         App(MyApp()).start()
@@ -49,21 +49,16 @@ First we define a function :code:`MyApp` which is decorated by
 :func:`component<edifice.component>`.
 The :code:`MyApp` component is the top-level Element of our application.
 
-The :class:`View<edifice.View>` is an Element which receives :code:`layout="row"`
-as an argument in its constructor.
+:class:`View<edifice.View>` is an example of
+a base :class:`QtWidgetElement <edifice.QtWidgetElement>`.
+The View receives :code:`layout="row"` as an argument in its constructor.
 We refer to layout as a **"prop"** of the View Element — it is a property
 passed to the View.
 
-When each Element is constructed, it is not immediately rendered. To render an Element,
-we call the :func:`render()<edifice.Element.render>` method. The :func:`render()<edifice.Element.render>` method
-is contextual and will place the Element in the tree of rendered Elements
-as a side-effect.
-
-The View can have children. To declare the View as a parent Element and
+The View can have children. To establish the View as a parent Element and
 then declare its children, we use a
 `with statement <https://docs.python.org/3/reference/compound_stmts.html#with>`_
-context. Elements inside the :code:`with` context will be rendered as children
-when their :func:`render()<edifice.Element.render>` method is called.
+context. Elements inside the :code:`with` context are children.
 
 In HTML or XML, you might have written it as:
 
@@ -109,18 +104,18 @@ For example::
     @component
     def MyApp(self):
         meters_label_style = {"min-width": 170}
-        feet_label_style = {"margin-left": 20, "width": 200}
+        feet_label_style = {"margin-left": 20, "width": 220}
         input_style = {"padding": 2, "width": 120}
-        with Window().render():
-            with View(layout="row", style={"padding": 10, "width": 560}).render():
-                Label("Measurement in meters:", style=meters_label_style).render()
-                TextInput("", style=input_style).render()
-                Label("Measurement in feet:", style=feet_label_style).render()
+        with Window():
+            with View(layout="row", style={"padding": 10}):
+                Label("Measurement in meters:", style=meters_label_style)
+                TextInput("", style=input_style)
+                Label("Measurement in feet:", style=feet_label_style)
 
     if __name__ == "__main__":
         App(MyApp()).start()
 
-If you want to make adjustments to this styling you can edit your source file
+If you want to make adjustments to this styling, you can edit your source file
 and all changes will automatically be reflected.
 
 Our application still doesn't do anything, however. Let's add an :code:`on_change`
@@ -147,14 +142,14 @@ box and in the label are in sync::
         feet = "%.3f" % (str_to_float(meters) * METERS_TO_FEET)
 
         meters_label_style = {"width": 170}
-        feet_label_style = {"margin-left": 20, "width": 200}
+        feet_label_style = {"margin-left": 20, "width": 220}
         input_style = {"padding": 2, "width": 120}
 
-        with Window().render():
-            with View(layout="row", style={"padding": 10, "width": 560}).render():
-                Label("Measurement in meters:", style=meters_label_style).render()
-                TextInput(meters, style=input_style, on_change=meters_set).render()
-                Label(f"Measurement in feet: {feet}", style=feet_label_style).render()
+        with Window():
+            with View(layout="row", style={"padding": 10}):
+                Label("Measurement in meters:", style=meters_label_style)
+                TextInput(meters, style=input_style, on_change=meters_set)
+                Label(f"Measurement in feet: {feet}", style=feet_label_style)
 
     if __name__ == "__main__":
         App(MyApp()).start()
@@ -208,16 +203,16 @@ it for each measurement pair, we can factor out the conversion logic into its ow
         to_label_style = {"margin-left": 60, "min-width": 220}
         input_style = {"padding": 2, "width": 120}
 
-        with View(layout="row", style={"padding": 10, "width": 560}).render():
-            Label(f"Measurement in {from_unit}:", style=from_label_style).render()
-            TextInput(current_text, style=input_style, on_change=current_text_set).render()
-            Label(f"Measurement in {to_unit}: {to_text}", style=to_label_style).render()
+        with View(layout="row", style={"padding": 10}):
+            Label(f"Measurement in {from_unit}:", style=from_label_style)
+            TextInput(current_text, style=input_style, on_change=current_text_set)
+            Label(f"Measurement in {to_unit}: {to_text}", style=to_label_style)
 
     @component
     def MyApp(self):
-        with Window(title="Measurement Conversion").render():
-            ConversionWidget("meters", "feet", METERS_TO_FEET).render()
-            ConversionWidget("feet", "meters", 1 / METERS_TO_FEET).render()
+        with Window(title="Measurement Conversion"):
+            ConversionWidget("meters", "feet", METERS_TO_FEET)
+            ConversionWidget("feet", "meters", 1 / METERS_TO_FEET)
 
     if __name__ == "__main__":
         App(MyApp()).start()

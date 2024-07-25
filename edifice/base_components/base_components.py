@@ -1,33 +1,32 @@
+from __future__ import annotations
+
 import functools
 import importlib.resources
 import logging
 import re
 import typing as tp
 
-from edifice.hooks import use_singleton, use_state
-from ..engine import (
-    _WidgetTree,
-    _get_widget_children,
+import edifice.icons
+from edifice.engine import (
+    _CURSORS,
     CommandType,
-    PropsDict,
     Element,
+    PropsDict,
     QtWidgetElement,
     _create_qmenu,
-    _CURSORS,
     _ensure_future,
+    _get_widget_children,
+    _WidgetTree,
     qt_component,
 )
-
-from ..qt import QT_VERSION
-
-import edifice.icons
+from edifice.qt import QT_VERSION
 
 ICONS = importlib.resources.files(edifice.icons)
 
 if QT_VERSION == "PyQt6" and not tp.TYPE_CHECKING:
-    from PyQt6 import QtCore, QtWidgets, QtSvg, QtGui, QtSvgWidgets
+    from PyQt6 import QtCore, QtGui, QtSvg, QtSvgWidgets, QtWidgets
 else:
-    from PySide6 import QtCore, QtWidgets, QtSvg, QtGui, QtSvgWidgets
+    from PySide6 import QtCore, QtGui, QtSvg, QtSvgWidgets, QtWidgets
 
 logger = logging.getLogger("Edifice")
 
@@ -903,8 +902,6 @@ class _LinearView(QtWidgetElement[QtWidgets.QWidget]):
         into the new children.
         """
 
-        children_new = children
-
         commands: list[CommandType] = []
 
         children_old_positioned_reverse: list[QtWidgetElement] = []
@@ -923,17 +920,17 @@ class _LinearView(QtWidgetElement[QtWidgets.QWidget]):
         # instead of deleting them.
         #
         # Note: QLayout.takeAt will decrement the indices of all greater children.
-        if len(children_new) > 0 and len(self._widget_children) > 0 and children_new[0] is self._widget_children[0]:
+        if len(children) > 0 and len(self._widget_children) > 0 and children[0] is self._widget_children[0]:
             i_new = 0
             i_old = 0
             for child_old in self._widget_children:
-                if i_new < len(children_new) and child_old is children_new[i_new]:
+                if i_new < len(children) and child_old is children[i_new]:
                     # old child is in the same position as new child
                     children_old_positioned_reverse.append(child_old)
                     i_old += 1
                 else:
                     # old child is out of position
-                    if child_old in children_new:
+                    if child_old in children:
                         # child will be added back in later
                         commands.append(CommandType(self._soft_delete_child, i_old, child_old))
                     else:
@@ -951,14 +948,14 @@ class _LinearView(QtWidgetElement[QtWidgets.QWidget]):
         # This will likely be true if the last old child is the same as the
         # last new child.
         else:
-            i_new = len(children_new) - 1
+            i_new = len(children) - 1
             for i_old, child_old in reversed(list(enumerate(self._widget_children))):
-                if i_new > 0 and child_old is children_new[i_new]:
+                if i_new > 0 and child_old is children[i_new]:
                     # old child is in the same position as new child
                     children_old_positioned_reverse.append(child_old)
                 else:
                     # old child is out of position
-                    if child_old in children_new:
+                    if child_old in children:
                         # child will be added back in later
                         commands.append(CommandType(self._soft_delete_child, i_old, child_old))
                     else:
@@ -968,7 +965,7 @@ class _LinearView(QtWidgetElement[QtWidgets.QWidget]):
 
         # Now we have deleted all the old children that are not in the right position.
         # Add in the missing new children.
-        for i, child_new in enumerate(children_new):
+        for i, child_new in enumerate(children):
             if len(children_old_positioned_reverse) > 0 and child_new is children_old_positioned_reverse[-1]:
                 # if child is already in the right position
                 del children_old_positioned_reverse[-1]
@@ -979,7 +976,7 @@ class _LinearView(QtWidgetElement[QtWidgets.QWidget]):
 
         # assert sanity check that we used all the old children.
         assert len(children_old_positioned_reverse) == 0
-        self._widget_children = children_new
+        self._widget_children = children
         return commands
 
     def _add_child(self, i, child_component: QtWidgets.QWidget):

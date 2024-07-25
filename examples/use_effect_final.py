@@ -22,9 +22,9 @@ def MyComp(self):
 
     ed.use_effect_final(unmount_cleanup_deps, deps)
 
-    with ed.Window().render():
-        ed.Button(title=str(x), on_click=lambda _: x_set(x + "a")).render()
-        ed.Button(title="Trigger cleanup", on_click=lambda _: deps_set(deps + 1)).render()
+    with ed.Window():
+        ed.Button(title=str(x), on_click=lambda _: x_set(x + "a"))
+        ed.Button(title="Trigger cleanup", on_click=lambda _: deps_set(deps + 1))
 
 
 if __name__ == "__main__":

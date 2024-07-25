@@ -47,35 +47,35 @@ def Component(self):
             "min-width": "500px",
         },
         on_drop=handle_drop,
-    ).render():
+    ):
         if dropped_files == [] and proposed_files == []:
-            with View().render():
+            with View():
                 Label(
                     text="DROP FILES HERE",
-                ).render()
+                )
         else:
             with View(
                 layout="column",
                 style={
                     "align": "top",
                 },
-            ).render():
+            ):
                 for file in dropped_files:
                     if proposed_files == []:
-                        Label(text=f"""<span style='color:white'>{file}</span>""").render()
+                        Label(text=f"""<span style='color:white'>{file}</span>""")
                     else:
-                        Label(text=f"""<span style='text-decoration:line-through;color:grey'>{file}</span>""").render()
+                        Label(text=f"""<span style='text-decoration:line-through;color:grey'>{file}</span>""")
                 for file in proposed_files:
                     Label(
                         text=file,
-                    ).render()
+                    )
 
 
 @component
 def Main(self):
-    with Window("Drop Example").render():
-        with View().render():
-            Component().render()
+    with Window("Drop Example"):
+        with View():
+            Component()
 
 
 if __name__ == "__main__":

@@ -13,7 +13,7 @@ if QT_VERSION == "PyQt6" and not TYPE_CHECKING:
 else:
     from PySide6.QtWidgets import QLabel
 
-from edifice import App, Window, View, Label, component, use_ref, use_effect
+from edifice import App, Window, View, Label, Button, component, use_ref, use_effect
 
 
 @component
@@ -28,9 +28,9 @@ def MyComp(self):
 
     use_effect(did_render, ref)
 
-    with Window().render():
-        with View().render():
-            Label("Before").register_ref(ref).render()
+    with Window():
+        with View():
+            Label("Before").register_ref(ref)
 
 
 if __name__ == "__main__":

@@ -28,8 +28,8 @@ PySide6 = ">= 6.0.0"
 matplotlib = ">= 3.3.3" # for https://pyedifice.github.io/stubs/edifice.extra.MatplotlibFigure.html
 pyqtgraph = ">= 0.13.0" # for https://pyedifice.github.io/stubs/edifice.extra.PyQtPlot.html
 
-ruff = "^0.1.3" # for dev environment
-ruff-lsp = "^0.0.42" # for dev environment
+ruff = ">= 0.1.3" # for dev environment
+ruff-lsp = ">= 0.0.42" # for dev environment
 watchdog = ">= 1.0.2" # for hot-reload https://pyedifice.github.io/developer_tools.html#dynamic-hot-reload
 
 sphinx-book-theme = "*" # sphinx packages for make docs
@@ -48,6 +48,36 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.ruff]
 line-length = 120
+
+[tool.ruff.lint]
+# https://docs.astral.sh/ruff/rules/
+select = ["ALL"]
+extend-ignore = [
+  # Rulesets
+  "N",
+  "D",
+  "ANN",
+  "FBT",
+  "CPY",
+  "PIE",
+  "SIM",
+  "SLF",
+  "TD",
+  "FIX",
+]
+ignore = [
+  "ARG001", # unused function argument `self`
+  "PLR0911",
+  "PLR0912",
+  "PLR0913",
+  "PLR0914",
+  "PLR0915",
+  "PLR0916",
+  "PLR0917",
+  "PLR1702",
+  "PLR1711",
+  "C901",
+]
 
 [tool.pyright]
 include = ["edifice"]

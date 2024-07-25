@@ -1,4 +1,5 @@
 import logging
+import typing as tp
 
 from collections.abc import Callable
 from dataclasses import dataclass
@@ -99,7 +100,7 @@ def FullRowViewFixed(
         layout="row",
         style={"align": "left"},
         size_policy=QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Policy.Ignored, QtWidgets.QSizePolicy.Policy.Preferred),
-    ).register_ref(vref).render():
+    ).register_ref(vref):
         if vref:
             view_element = vref()
             assert type(view_element) == View
@@ -113,7 +114,7 @@ def FullRowViewFixed(
         predicted_children_width = 0
         for i, c in enumerate(child_makers):
             if predicted_children_width + c.child_width < _view_width or i == 0:  # force one child
-                c.make_child().render()
+                c.make_child()
                 predicted_children_width += c.child_width
             else:
                 break
@@ -136,17 +137,17 @@ def MyComponent(self, start: int):
                 loop(i),
             )
         )
-    FullRowViewFixed(child_makers=child_makers).render()
+    FullRowViewFixed(child_makers=child_makers)
 
 
 @component
 def Main(self):
-    with Window().render():
+    with Window():
         with View(
             style={
                 "min-width": "500px",
             }
-        ).render():
+        ):
             x, x_set = use_state(0)
             Slider(
                 x,
@@ -154,22 +155,22 @@ def Main(self):
                 max_value=100,
                 on_change=x_set,
                 style={"max-width": "500px"},
-            ).render()
+            )
             with TableGridView(
                 column_stretch=[0, 1],
-            ).render() as tgv:
-                with tgv.row().render():
+            ) as tgv:
+                with tgv.row():
                     Label(
                         text="Row One",
                         style={"margin-right": 20},
-                    ).render()
-                    MyComponent(x).render()
-                with tgv.row().render():
+                    )
+                    MyComponent(x)
+                with tgv.row():
                     Label(
                         text="Row Two",
                         style={"margin-right": 20},
-                    ).render()
-                    MyComponent(0).render()
+                    )
+                    MyComponent(0)
 
 
 if __name__ == "__main__":

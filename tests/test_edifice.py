@@ -88,9 +88,9 @@ class TestReference(unittest.TestCase):
             sub_comp_ref.append(ref1)
 
             if self.render_count == 1:
-                base_components.Label("Test").register_ref(ref0).render()
+                base_components.Label("Test").register_ref(ref0)
             else:
-                base_components.Label("Test").register_ref(ref1).render()
+                base_components.Label("Test").register_ref(ref1)
             return
 
         @component
@@ -102,9 +102,9 @@ class TestReference(unittest.TestCase):
 
             if self.render_count == 3:
                 # We do this to force the dismount of TestComp
-                base_components.Label("Test").render()
+                base_components.Label("Test")
             else:
-                TestComp(self.render_count).render()
+                TestComp(self.render_count)
 
         root = TestCompWrapper()
         render_engine = engine.RenderEngine(root)
@@ -528,18 +528,18 @@ class RefreshClassTestCase(unittest.TestCase):
         @component
         def OldInnerClass(self, val):
             old_inner_render_count[0] += 1
-            base_components.Label(str(val)).render()
+            base_components.Label(str(val))
 
         @component
         def NewInnerClass(self, val):
             new_inner_render_count[0] += 1
-            base_components.Label(str(val * 2)).render()
+            base_components.Label(str(val * 2))
 
         @component
         def OuterClass(self):
             outer_render_count[0] += 1
-            with base_components.View().render():
-                OldInnerClass(5).render()
+            with base_components.View():
+                OldInnerClass(5)
 
         outer_comp = OuterClass()
         app = engine.RenderEngine(outer_comp)
@@ -581,7 +581,7 @@ class RefreshClassTestCase(unittest.TestCase):
             def _render_element(self):
                 self.count += 1
                 assert False
-                return base_components.Label(str(self.props.val * 2)).render()
+                return base_components.Label(str(self.props.val * 2))
 
         class OuterClass(Element):
             def __init__(self):

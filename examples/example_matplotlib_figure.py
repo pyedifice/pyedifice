@@ -32,7 +32,7 @@ def Component(self):
             mouse_hover_set(None)
         plot_fun_set((lambda figure: plot(figure),))
 
-    MatplotlibFigure(plot_fun[0], on_figure_mouse_move=handle_house_move).render()
+    MatplotlibFigure(plot_fun[0], on_figure_mouse_move=handle_house_move)
 
 
 @ed.component
@@ -43,8 +43,8 @@ def Main(self):
             "min-width": "200px",
             "min-height": "200px",
         },
-    ).render():
-        Component().render()
+    ):
+        Component()
 
 
 if __name__ == "__main__":

@@ -24,9 +24,9 @@ class FormTest(unittest.TestCase):
             with ButtonView(
                 layout="row",
                 on_click=lambda event: None,
-            ).render():
-                Icon(name="share").render()
-                Label(text="<i>Share the Content<i>").render()
+            ):
+                Icon(name="share")
+                Label(text="<i>Share the Content<i>")
 
         my_app = App(v(), create_application=False)
         with my_app.start_loop() as loop:

@@ -36,17 +36,17 @@ def MyComponent(self):
     def second_slider(value: int):
         x_set(value)
 
-    with View(layout="column").render():
-        Slider(x, min_value=0, max_value=100, on_change=x_set).render()
-        Slider(x, min_value=0, max_value=100, on_change=second_slider).render()
+    with View(layout="column"):
+        Slider(x, min_value=0, max_value=100, on_change=x_set)
+        Slider(x, min_value=0, max_value=100, on_change=second_slider)
         ProgressBar(
             x,
             min_value=0,
             max_value=100,
             # format="%p% is the progress",
             format=f"{x}% is the progress",
-        ).render()
-        ProgressBar(0, min_value=0, max_value=0, format="Loading…").render()
+        )
+        ProgressBar(0, min_value=0, max_value=0, format="Loading…")
         ProgressBar(
             y,
             min_value=0,
@@ -54,7 +54,7 @@ def MyComponent(self):
             format="%p% is the progress",
             orientation=Qt.Orientation.Vertical,
             style={"max-height": "100px"},
-        ).render()
+        )
         SpinInput(
             y,
             min_value=0,
@@ -65,14 +65,14 @@ def MyComponent(self):
             style={
                 "font-size": "20px",
             },
-        ).render()
-        Label(to_percent(y)).render()
+        )
+        Label(to_percent(y))
 
 
 @component
 def Main(self):
-    with Window().render():
-        MyComponent().render()
+    with Window():
+        MyComponent()
 
 
 if __name__ == "__main__":
