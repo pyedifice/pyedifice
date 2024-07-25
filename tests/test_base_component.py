@@ -11,6 +11,7 @@ from edifice.engine import CommandType
 import edifice.icons
 
 from edifice.qt import QT_VERSION
+
 if QT_VERSION == "PyQt6":
     from PyQt6 import QtCore, QtWidgets, QtGui
 else:
@@ -26,15 +27,14 @@ class MockUnderlying(object):
     setStyleSheet = "setStyleSheet"
     move = "move"
 
-class MockElement(base_components.QtWidgetElement):
 
+class MockElement(base_components.QtWidgetElement):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.underlying = MockUnderlying()
 
 
 class GridLayoutTestCase(unittest.TestCase):
-
     def test_layout_parsing(self):
         layout = base_components._layout_str_to_grid_spec(
             """
@@ -46,20 +46,26 @@ class GridLayoutTestCase(unittest.TestCase):
         self.assertEqual(layout[0], 3)
         self.assertEqual(layout[1], 4)
         self.assertCountEqual(
-            layout[2], [
-                ("a", 0, 0, 2, 2), ("b", 0, 2, 2, 1),
-                ("c", 0, 3, 1, 1), ("d", 1, 3, 1, 1),
-                ("e", 2, 0, 1, 2), ("f", 2, 2, 1, 2)
-            ])
+            layout[2],
+            [
+                ("a", 0, 0, 2, 2),
+                ("b", 0, 2, 2, 1),
+                ("c", 0, 3, 1, 1),
+                ("d", 1, 3, 1, 1),
+                ("e", 2, 0, 1, 2),
+                ("f", 2, 2, 1, 2),
+            ],
+        )
 
 
 class StyleTestCase(unittest.TestCase):
-
     def test_margin_layout(self):
         class Layout(object):
-            def setContentsMargins(self,a,b,c,d):
+            def setContentsMargins(self, a, b, c, d):
                 pass
+
             setAlignment = "setAlignment"
+
         style = {
             "margin-left": "10px",
             "margin": 5,
@@ -70,8 +76,10 @@ class StyleTestCase(unittest.TestCase):
         self.assertTrue("margin" not in style)
         self.assertCountEqual(
             commands,
-            [CommandType(layout.setContentsMargins, 10, 5, 5, 5),
-             CommandType(comp.underlying.setStyleSheet, "QWidget#%s{}" % id(comp))]
+            [
+                CommandType(layout.setContentsMargins, 10, 5, 5, 5),
+                CommandType(comp.underlying.setStyleSheet, "QWidget#%s{}" % id(comp)),
+            ],
         )
 
         style = {
@@ -86,14 +94,17 @@ class StyleTestCase(unittest.TestCase):
         self.assertTrue("margin" not in style)
         self.assertCountEqual(
             commands,
-            [CommandType(layout.setContentsMargins, 10, 9, 8, 9),
-             CommandType(comp.underlying.setStyleSheet, "QWidget#%s{}" % id(comp))]
+            [
+                CommandType(layout.setContentsMargins, 10, 9, 8, 9),
+                CommandType(comp.underlying.setStyleSheet, "QWidget#%s{}" % id(comp)),
+            ],
         )
 
     def test_align_layout(self):
         class Layout(object):
-            def setContentsMargins(self,a,b,c,d):
+            def setContentsMargins(self, a, b, c, d):
                 pass
+
             setAlignment = "setAlignment"
 
         def _test_for_align(align, qt_align):
@@ -106,9 +117,12 @@ class StyleTestCase(unittest.TestCase):
             self.assertTrue("align" not in style)
             self.assertCountEqual(
                 commands,
-                [CommandType(layout.setAlignment, qt_align),
-                 CommandType(comp.underlying.setStyleSheet, "QWidget#%s{}" % id(comp))]
+                [
+                    CommandType(layout.setAlignment, qt_align),
+                    CommandType(comp.underlying.setStyleSheet, "QWidget#%s{}" % id(comp)),
+                ],
             )
+
         _test_for_align("left", QtCore.Qt.AlignmentFlag.AlignLeft)
         _test_for_align("right", QtCore.Qt.AlignmentFlag.AlignRight)
         _test_for_align("center", QtCore.Qt.AlignmentFlag.AlignCenter)
@@ -153,16 +167,15 @@ class StyleTestCase(unittest.TestCase):
 
 
 class MockRenderContext(engine._RenderContext):
-
     def need_rerender(self, component):
         return True
 
 
 class WidgetTreeTestCase(unittest.TestCase):
-
     def test_button(self):
         def on_click():
             pass
+
         button_str = "asdf"
         button = base_components.Button(title=button_str, on_click=on_click)
         button_tree = engine._WidgetTree(button, [])
@@ -215,8 +228,7 @@ class WidgetTreeTestCase(unittest.TestCase):
         eng = engine.RenderEngine(icon)
         commands = eng.gen_qt_commands(icon, MockRenderContext(eng))
 
-        render_img_args = (str(ICONS / "font-awesome" / "solid" / "play.svg"),
-                           size, color, rotation)
+        render_img_args = (str(ICONS / "font-awesome" / "solid" / "play.svg"), size, color, rotation)
         qt_icon = icon.underlying
         assert qt_icon is not None
         style = qt_icon.style()
@@ -250,7 +262,7 @@ class WidgetTreeTestCase(unittest.TestCase):
         label1 = base_components.Label(text="A")
         label2 = base_components.Label(text="B")
         view = base_components.View()(label1)
-        eng =  engine.RenderEngine(view)
+        eng = engine.RenderEngine(view)
 
         def label_tree(label):
             return eng.gen_qt_commands(label, MockRenderContext(eng))
@@ -356,11 +368,13 @@ class WidgetTreeTestCase(unittest.TestCase):
         ]
         self.assertCountEqual(commands, commands_expected)
 
+
 def NDArray8_to_QImage(arr) -> QtGui.QImage:
     height, width, channel = arr.shape
     return QtGui.QImage(arr.data, width, height, channel * width, QtGui.QImage.Format.Format_RGB888)
-class BaseElementsTest(unittest.TestCase):
 
+
+class BaseElementsTest(unittest.TestCase):
     def _test_comp(self, comp, children=None):
         children = children or []
         render_engine = engine.RenderEngine(comp)
@@ -373,15 +387,17 @@ class BaseElementsTest(unittest.TestCase):
             "options": {
                 "faster": lambda: None,
                 "sloer": lambda: None,
-            }
+            },
         }
 
         # TODO
         # completer1 = base_components.Completer(["option1", "option2"])
-        self._test_comp(base_components.Window(
-            title="title",
-            menu={"Playback": context_menu},
-        )(base_components.View()))
+        self._test_comp(
+            base_components.Window(
+                title="title",
+                menu={"Playback": context_menu},
+            )(base_components.View())
+        )
         self._test_comp(base_components.IconButton("play", on_click=lambda e: None))
         self._test_comp(base_components.View(context_menu=context_menu))
         self._test_comp(base_components.Label(text="Hello", selectable=True))
@@ -390,8 +406,12 @@ class BaseElementsTest(unittest.TestCase):
         self._test_comp(base_components.Button("play", on_click=lambda e: None))
         self._test_comp(base_components.TextInput("initial_text", on_change=lambda text: None))
         self._test_comp(base_components.Button("play", on_click=lambda e: None))
-        self._test_comp(base_components.Dropdown(selection=0, options=["Option1, Option2"], on_select=lambda text: None))
-        self._test_comp(base_components.Dropdown(selection=1, options=["Option1, Option2"], on_select=lambda text: None))
+        self._test_comp(
+            base_components.Dropdown(selection=0, options=["Option1, Option2"], on_select=lambda text: None)
+        )
+        self._test_comp(
+            base_components.Dropdown(selection=1, options=["Option1, Option2"], on_select=lambda text: None)
+        )
         self._test_comp(base_components.TextInput("initial_text", on_change=lambda text: None))
         # TODO
         # self._test_comp(base_components.TextInput("initial_text", completer=completer1, on_change=lambda text: None))
@@ -402,7 +422,10 @@ class BaseElementsTest(unittest.TestCase):
         self._test_comp(base_components.GridView(layout=""))
         self._test_comp(base_components.ExportList())
         self._test_comp(base_components.GroupBox(title="Group")(base_components.View()))
-        self._test_comp(base_components.TabView(labels=["Tab 1", "Tab 2"])(base_components.Label(), base_components.Label()))
+        self._test_comp(
+            base_components.TabView(labels=["Tab 1", "Tab 2"])(base_components.Label(), base_components.Label())
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

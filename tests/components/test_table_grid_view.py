@@ -3,6 +3,7 @@ import unittest
 import edifice
 
 from edifice.qt import QT_VERSION
+
 if QT_VERSION == "PyQt6":
     from PyQt6 import QtWidgets
 else:
@@ -11,10 +12,9 @@ else:
 if QtWidgets.QApplication.instance() is None:
     app_obj = QtWidgets.QApplication(["-platform", "offscreen"])
 
+
 class FormTest(unittest.TestCase):
-
     def test_TableGridView_render(self):
-
         @edifice.component
         def myComponent(self):
             with edifice.TableGridView() as tgv:

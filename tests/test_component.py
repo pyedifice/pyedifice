@@ -6,6 +6,7 @@ import edifice.base_components as base_components
 import edifice as ed
 
 from edifice.qt import QT_VERSION
+
 if QT_VERSION == "PyQt6":
     from PyQt6 import QtWidgets
 else:
@@ -14,6 +15,7 @@ else:
 if QtWidgets.QApplication.instance() is None:
     qapp = QtWidgets.QApplication(["-platform", "offscreen"])
 
+
 @ed.component
 def Value(self, value):
     self.value = value
@@ -21,25 +23,27 @@ def Value(self, value):
 
 
 class OtherMockElement(ed.Element):
-
     def __init__(self):
         super().__init__()
+
         class MockController(object):
             _request_rerender = unittest.mock.MagicMock()
+
         self._controller = MockController()
 
-class MockBrokenElement(ed.Element):
 
+class MockBrokenElement(ed.Element):
     def __init__(self):
         super().__init__()
+
         class MockController(object):
             def _request_rerender(*args, **kwargs):
                 raise ValueError("I am broken")
+
         self._controller = MockController()
 
 
 class ElementTestCase(unittest.TestCase):
-
     def test_render_view_replacement(self):
         """
         Test that when a View row is replaced by a View column, a new View
@@ -61,14 +65,17 @@ class ElementTestCase(unittest.TestCase):
         app = App(root_element, create_application=False)
         render_engine = engine.RenderEngine(root_element, app)
         _render_results1 = render_engine._request_rerender([root_element])
-        self.assertIsInstance(render_engine._widget_tree[root_element].children[0].underlying_layout, QtWidgets.QHBoxLayout)
+        self.assertIsInstance(
+            render_engine._widget_tree[root_element].children[0].underlying_layout, QtWidgets.QHBoxLayout
+        )
         _render_results2 = render_engine._request_rerender([root_element])
-        self.assertIsInstance(render_engine._widget_tree[root_element].children[0].underlying_layout, QtWidgets.QVBoxLayout)
+        self.assertIsInstance(
+            render_engine._widget_tree[root_element].children[0].underlying_layout, QtWidgets.QVBoxLayout
+        )
+
 
 class MakeElementTestCase(unittest.TestCase):
-
     def test_make_component(self):
-
         @ed.component
         def Element1234(self, prop1, prop2):
             Value(1234)
@@ -86,7 +93,6 @@ class MakeElementTestCase(unittest.TestCase):
         self.assertEqual(value_component.value, 1234)
 
     def test_make_components(self):
-
         @ed.component
         def Element1234(self, prop1, prop2):
             with base_components.View():
@@ -112,7 +118,6 @@ class MakeElementTestCase(unittest.TestCase):
         self.assertEqual(values, [1337, 42, 69, 420])
 
     def test_make_nested_component(self):
-
         @ed.component
         def A(self):
             Value(13)
@@ -141,6 +146,7 @@ class MakeElementTestCase(unittest.TestCase):
             child._render_element()
         values = [comp.value for comp in children]
         self.assertEqual(values, [9])
+
 
 if __name__ == "__main__":
     unittest.main()

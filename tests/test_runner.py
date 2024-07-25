@@ -4,9 +4,9 @@ import edifice.runner as runner
 
 
 class ReloadTestCase(unittest.TestCase):
-
     def test_reload(self):
         import example_file
+
         old_comp_a, old_comp_b = example_file.ElementA, example_file.ElementB
         print("Oldest", id(old_comp_a))
 
@@ -34,8 +34,10 @@ class ReloadTestCase(unittest.TestCase):
 
     def test_file_to_module_name(self):
         import example_file
+
         mapping = runner._file_to_module_name()
         self.assertEqual(mapping[os.path.abspath(example_file.__file__)], "example_file")
+
 
 if __name__ == "__main__":
     unittest.main()
