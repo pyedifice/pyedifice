@@ -18,3 +18,6 @@ class FormTest(unittest.TestCase):
         my_app = edifice.App(fv, create_application=False)
         with my_app.start_loop() as loop:
             loop.call_later(0.1, my_app.stop)
+
+if __name__ == "__main__":
+    unittest.main()

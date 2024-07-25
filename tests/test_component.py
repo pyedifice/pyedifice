@@ -141,3 +141,6 @@ class MakeElementTestCase(unittest.TestCase):
             child._render_element()
         values = [comp.value for comp in children]
         self.assertEqual(values, [9])
+
+if __name__ == "__main__":
+    unittest.main()

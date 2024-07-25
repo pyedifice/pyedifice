@@ -49,3 +49,6 @@ class InspectorTestCase(unittest.TestCase):
         #     collapsed=True, on_click=lambda e: None,
         #     root=object(),
         #     toggle=lambda e: None)._render_element()
+
+if __name__ == "__main__":
+    unittest.main()

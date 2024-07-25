@@ -135,3 +135,6 @@ class IntegrationTestCase(unittest.TestCase):
         my_app.start()
 
         self.assertTrue(not render_after_has_cancelled)
+
+if __name__ == "__main__":
+    unittest.main()

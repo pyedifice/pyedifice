@@ -403,3 +403,6 @@ class BaseElementsTest(unittest.TestCase):
         self._test_comp(base_components.ExportList())
         self._test_comp(base_components.GroupBox(title="Group")(base_components.View()))
         self._test_comp(base_components.TabView(labels=["Tab 1", "Tab 2"])(base_components.Label(), base_components.Label()))
+
+if __name__ == "__main__":
+    unittest.main()

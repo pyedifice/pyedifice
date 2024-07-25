@@ -36,3 +36,6 @@ class ReloadTestCase(unittest.TestCase):
         import example_file
         mapping = runner._file_to_module_name()
         self.assertEqual(mapping[os.path.abspath(example_file.__file__)], "example_file")
+
+if __name__ == "__main__":
+    unittest.main()

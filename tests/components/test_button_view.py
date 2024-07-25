@@ -2,7 +2,7 @@ import unittest
 
 import sys,os
 # We need this sys.path line for running this example, especially in VSCode debugger.
-sys.path.insert(0, os.path.join(sys.path[0], '..'))
+sys.path.insert(0, os.path.join(sys.path[0], ".."))
 from edifice import Window, Label, ButtonView, App, component, Icon
 
 from edifice.qt import QT_VERSION
@@ -29,3 +29,6 @@ class FormTest(unittest.TestCase):
         my_app = App(v(), create_application=False)
         with my_app.start_loop() as loop:
             loop.call_later(0.1, my_app.stop)
+
+if __name__ == "__main__":
+    unittest.main()
