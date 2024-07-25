@@ -1,8 +1,16 @@
+from __future__ import annotations
+
 import inspect
 import typing as tp
+
 import edifice as ed
-from edifice.engine import _HookState, PropsDict
-from collections import defaultdict
+from edifice.engine import _HookState
+from edifice.qt import QT_VERSION
+
+if QT_VERSION == "PyQt6" and not tp.TYPE_CHECKING:
+    from PyQt6 import QtWidgets
+else:
+    from PySide6 import QtWidgets
 
 SELECTION_COLOR = "#ACCEF7"
 
@@ -73,9 +81,8 @@ def TreeView(
 
 @ed.component
 def StateView(
-    self,
-    component: ed.Element,
-    hook_state: defaultdict[ed.Element, list[_HookState]],
+    self: ed.Element,
+    component_hook_state: list[_HookState],
     refresh_trigger: bool,  # force a refresh when this changes
 ):
     setattr(self, "__edifice_inspector_element", True)
@@ -84,44 +91,52 @@ def StateView(
         layout="column",
         style={"align": "top", "margin-left": 15},
     ):
-        if component in hook_state:
-            for s in hook_state[component]:
-                with ed.View(
-                    layout="row",
-                    style={"align": "left"},
-                ):
-                    ed.Label(
-                        text=str(s.state),
-                        selectable=True,
-                    )
-
-
-@ed.component
-def PropsView(self, props: PropsDict):
-    setattr(self, "__edifice_inspector_element", True)
-    with ed.ScrollView(layout="column", style={"align": "top", "margin-left": 15}):
-        for key in props._keys:
+        for s in component_hook_state:
             with ed.View(
                 layout="row",
                 style={"align": "left"},
             ):
                 ed.Label(
-                    key + ":",
+                    text=str(s.state),
                     selectable=True,
-                    style={"font-weight": 600, "width": 140},
                 )
-                ed.Label(
-                    str(props[key]),
-                    selectable=True,
-                    style={},
-                )
+
+
+@ed.component
+def PropsView(self, props: dict[str, tp.Any], refresh_trigger: bool):
+    setattr(self, "__edifice_inspector_element", True)
+    with ed.ScrollView(layout="column", style={"align": "top", "margin-left": 15}):
+        for k, v in props.items():
+            if k != "children":
+                # It's weird and buggy that if we show the children prop, then
+                # it is wrong and shows children from the last selected
+                # component. But anyway we just don't show the children prop.
+                with ed.View(
+                    layout="row",
+                    style={"align": "left"},
+                ):
+                    ed.Label(
+                        k + ":",
+                        selectable=True,
+                        style={"font-weight": 600, "width": 140},
+                    )
+                    ed.Label(
+                        str(v),
+                        selectable=True,
+                        size_policy=QtWidgets.QSizePolicy(
+                            QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Fixed
+                        ),
+                    )
 
 
 @ed.component
 def ElementView(
     self,
     component: ed.Element,
-    hook_state: defaultdict[ed.Element, list[_HookState]],
+    # We pass component_props in as separate props because the component
+    # props doesn't have an __eq__ relation.
+    component_props: dict[str, tp.Any],
+    component_hook_state: list[_HookState],
     refresh_trigger: bool,  # force a refresh when this changes
 ):
     setattr(self, "__edifice_inspector_element", True)
@@ -136,29 +151,32 @@ def ElementView(
         pass
     heading_style = {"font-size": "16px", "margin": 10, "margin-bottom": 0}
 
-    assert module is not None
     with ed.View(layout="column", style={"align": "top", "min-width": 450, "min-height": 450}):
         ed.Label(cls.__name__, selectable=True, style={"font-size": "20px", "margin": 10})
-        ed.Label(
-            "Class defined in " + str(module.__file__) + ":" + str(lineno), selectable=True, style={"margin-left": 10}
-        )
+        if module is not None:
+            ed.Label(
+                "Class defined in " + str(module.__file__) + ":" + str(lineno),
+                selectable=True,
+                style={"margin-left": 10},
+            )
         ed.Label("Props", style=heading_style)
-        PropsView(component.props)
+        PropsView(component_props, refresh_trigger)
         ed.Label("State", style=heading_style)
-        StateView(component, hook_state, refresh_trigger)
+        StateView(component_hook_state, refresh_trigger)
 
 
 @ed.component
 def Inspector(
     self,
     refresh: tp.Callable[
-        [], tuple[dict[ed.Element, list[ed.Element]], ed.Element, defaultdict[ed.Element, list[_HookState]]]
+        [],
+        tuple[dict[ed.Element, list[ed.Element]], ed.Element, dict[ed.Element, list[_HookState]]],
     ],
 ):
     setattr(self, "__edifice_inspector_element", True)
     component_tree, component_tree_set = ed.use_state(tp.cast(dict[ed.Element, list[ed.Element]], {}))
     root_component, root_component_set = ed.use_state(tp.cast(ed.Element | None, None))
-    hook_state, hook_state_set = ed.use_state(tp.cast(defaultdict[ed.Element, list[_HookState]] | None, None))
+    hook_state, hook_state_set = ed.use_state(tp.cast(dict[ed.Element, list[_HookState]] | None, None))
     selected, selected_set = ed.use_state(tp.cast(ed.Element | None, None))
     refresh_trigger, refresh_trigger_set = ed.use_state(False)
 
@@ -191,7 +209,7 @@ def Inspector(
             with ed.View(layout="column", style={"align": "top", "width": 251, "border-right": "1px solid gray"}):
                 with ed.View(layout="row", style={"align": "left", "height": 30}):
                     ed.Label("Edifice Inspector", style={"font-size": 18, "margin-left": 10, "width": 160})
-                    ed.Icon("sync-alt", size=20, on_click=lambda e: _force_refresh(), tool_tip="Reload component tree")
+                    ed.Icon("sync-alt", size=20, on_click=lambda _e: _force_refresh(), tool_tip="Reload component tree")
                 with ed.ScrollView(layout="column", style={"width": 250, "min-height": 450, "margin-top": 10}):
                     if root_component is not None:
                         _build_tree(root_component)
@@ -199,6 +217,7 @@ def Inspector(
                 if selected is not None:
                     ElementView(
                         selected,
-                        hook_state,
+                        selected.props._d,
+                        hook_state[selected],
                         refresh_trigger,
                     )
