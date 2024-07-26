@@ -6,7 +6,7 @@ Release Notes
 
 0.8.0
 -----
-Released:
+Released: 2024-07-27
 
 * New Element: :class:`NumpyImage<extra.NumpyImage>`.
 
