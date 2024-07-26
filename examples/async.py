@@ -127,7 +127,7 @@ def Main(self):
 
     ##########
 
-    with ed.VBoxView():
+    with ed.VBoxView(style={"align": "top"}):
         with ed.VBoxView(
             style={
                 "margin-top": 20,
@@ -191,7 +191,7 @@ def Main(self):
                 "border-top-color": "black",
             },
         ):
-            with ed.VBoxView():
+            with ed.HBoxView():
                 with ed.ButtonView(
                     on_click=lambda _ev: start_k(),
                 ):
