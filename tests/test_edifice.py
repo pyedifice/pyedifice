@@ -209,7 +209,7 @@ class _TestElementOuterList(Element):
 
 def _commands_for_address(widget_trees: dict[Element, _WidgetTree], qt_tree, address):
     qt_tree = _dereference_tree(widget_trees, qt_tree, address)
-    if isinstance(qt_tree.component, base_components.View):
+    if isinstance(qt_tree.component, base_components.HBoxView) or isinstance(qt_tree.component, base_components.VBoxView):
         return qt_tree.component._qt_stateless_commands(widget_trees, qt_tree.component.props)
     return qt_tree.component._qt_update_commands(widget_trees, qt_tree.component.props)
 

@@ -3,17 +3,10 @@
 #
 
 import edifice as ed
-from edifice import FlowView
-from edifice import ButtonView
 
 
 @ed.component
-def myComponent(self):
-    def mkElement(j):
-        with ed.View(style={"margin": 5}):
-            with ButtonView(style={"margin": 5}):
-                ed.Label(text="<div style='font-size:20px'>Label " + chr(ord("🦄") + j) + "</>", style={"margin": 5})
-
+def Main(self):
     with ed.Window():
         with ed.View(
             layout="column",
@@ -22,10 +15,12 @@ def myComponent(self):
                 # "align":"center"
             },
         ):
-            with FlowView():
+            with ed.FlowView():
                 for i in range(100):
-                    mkElement(i)
+                    with ed.View(style={"margin": 5}):
+                        with ed.ButtonView(style={"margin": 5}):
+                            ed.Label(text="<div style='font-size:20px'>Label " + chr(ord("🦄") + i) + "</>", style={"margin": 5})
 
 
 if __name__ == "__main__":
-    ed.App(myComponent()).start()
+    ed.App(Main()).start()

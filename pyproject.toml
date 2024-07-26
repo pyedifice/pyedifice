@@ -85,6 +85,14 @@ ignore = [
   "RUF002",
 ]
 
+[tool.ruff.lint.per-file-ignores]
+# Don't require an `__all__ = ...` to explicitly re-export in __init__.py.
+# This is commonly disabled, ADT already disabled this linewise, so it's now made project-wide.
+"__init__.py" = [ "F401" ]
+# Don't require packages in test directories
+"**/tests/**" = [ "INP001" ]
+"**/examples/**" = [ "INP001" ]
+
 [tool.pyright]
 include = ["edifice"]
 exclude = ["**/__pycache__"]

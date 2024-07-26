@@ -218,7 +218,7 @@ class WidgetTreeTestCase(unittest.TestCase):
         self.assertEqual(view_r.underlying_layout.__class__, QtWidgets.QHBoxLayout)
         view_n = base_components.View(layout="none")
         view_n._initialize()
-        self.assertEqual(view_n.underlying_layout, None)
+        self.assertFalse(hasattr(view_n, "underlying_layout"))
 
     def test_icon(self):
         size = 15

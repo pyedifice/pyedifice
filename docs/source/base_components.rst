@@ -12,8 +12,12 @@ Base Elements
    QtWidgetElement
    Window
    ExportList
-   View
-   ScrollView
+   VBoxView
+   HBoxView
+   FixView
+   VScrollView
+   HScrollView
+   FixScrollView
    TabView
    GridView
    TableGridView

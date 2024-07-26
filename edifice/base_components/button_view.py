@@ -1,22 +1,19 @@
+from __future__ import annotations
+
 import typing as tp
 
-from ..qt import QT_VERSION
+from edifice.qt import QT_VERSION
 
-if tp.TYPE_CHECKING:
+if QT_VERSION == "PyQt6" and not tp.TYPE_CHECKING:
+    from PyQt6.QtCore import QSize, Qt
+    from PyQt6.QtGui import QKeyEvent, QMouseEvent
+    from PyQt6.QtWidgets import QHBoxLayout, QPushButton
+else:
     from PySide6.QtCore import QSize, Qt
     from PySide6.QtGui import QKeyEvent, QMouseEvent
-    from PySide6.QtWidgets import QPushButton, QVBoxLayout, QHBoxLayout
-else:
-    if QT_VERSION == "PyQt6":
-        from PyQt6.QtCore import QSize, Qt
-        from PyQt6.QtGui import QKeyEvent, QMouseEvent
-        from PyQt6.QtWidgets import QPushButton, QVBoxLayout, QHBoxLayout
-    else:
-        from PySide6.QtCore import QSize, Qt
-        from PySide6.QtGui import QKeyEvent, QMouseEvent
-        from PySide6.QtWidgets import QPushButton, QVBoxLayout, QHBoxLayout
+    from PySide6.QtWidgets import QHBoxLayout, QPushButton
 
-from .base_components import View, CommandType, Element, _WidgetTree
+from .base_components import CommandType, Element, HBoxView, _WidgetTree
 
 
 class _PushButton(QPushButton):
@@ -37,9 +34,9 @@ class _PushButton(QPushButton):
         return self.layout().totalMinimumSize()
 
 
-class ButtonView(View):
+class ButtonView(HBoxView):
     """
-    A Button where the label is the Button’s children rendered in a :class:`edifice.View`.
+    A Button where the label is the Button’s children rendered in a :class:`edifice.HBoxView`.
 
     * Underlying Qt Widget
       `QPushButton <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QPushButton.html>`_
@@ -47,7 +44,6 @@ class ButtonView(View):
     Example::
 
         with ButtonView(
-            layout="row",
             on_click=handle_click,
         ):
             Icon(name="share")
@@ -64,38 +60,23 @@ class ButtonView(View):
 
     def __init__(
         self,
-        layout: tp.Literal["row", "column", "none"] = "row",
         on_trigger: tp.Callable[[QKeyEvent], None] | tp.Callable[[QMouseEvent], None] | None = None,
         **kwargs,
     ):
-        super().__init__(layout, **kwargs)
+        super().__init__(**kwargs)
         self._register_props(
             {
-                "layout": layout,
                 "on_trigger": on_trigger,
-            }
+            },
         )
-        # self._register_props(kwargs)
 
     def _initialize(self):
         self.underlying = _PushButton()
-        layout = self.props.layout
-        if layout == "column":
-            self.underlying_layout = QVBoxLayout()
-        elif layout == "row":
-            self.underlying_layout = QHBoxLayout()
-        elif layout == "none":
-            self.underlying_layout = None
-        else:
-            raise ValueError("Layout must be row, column or none, got %s instead", layout)
-
+        self.underlying_layout = QHBoxLayout()
         self.underlying.setObjectName(str(id(self)))
-        if self.underlying_layout is not None:
-            self.underlying.setLayout(self.underlying_layout)
-            self.underlying_layout.setContentsMargins(0, 0, 0, 0)
-            self.underlying_layout.setSpacing(0)
-        else:
-            self.underlying.setMinimumSize(100, 100)
+        self.underlying.setLayout(self.underlying_layout)
+        self.underlying_layout.setContentsMargins(0, 0, 0, 0)
+        self.underlying_layout.setSpacing(0)
 
     def _add_child(self, i, child_component):
         super()._add_child(i, child_component)

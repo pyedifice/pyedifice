@@ -22,7 +22,6 @@ class FormTest(unittest.TestCase):
         @component
         def v(self):
             with ButtonView(
-                layout="row",
                 on_click=lambda event: None,
             ):
                 Icon(name="share")
