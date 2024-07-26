@@ -22,12 +22,17 @@ T_Numpy_Array_co = TypeVar("T_Numpy_Array_co", bound=np.generic, covariant=True)
 
 
 class NumpyArray(Generic[T_Numpy_Array_co]):
-    """Wrapper for :code:`numpy` arrays.
+    """Wrapper for one `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_.
 
     This wrapper class provides the :code:`__eq__` relation for the wrapped
     :code:`numpy` array such that if two wrapped arrays are :code:`__eq__`,
     then one can be substituted for the other. This class may be used as a
     **prop** or a **state**.
+
+    Args:
+        np_array:
+            A `numpy.ndarray <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_.
+
     """
 
     np_array: npt.NDArray[T_Numpy_Array_co]
@@ -86,17 +91,21 @@ def NumpyArray_to_QImage(arr: npt.NDArray[np.uint8] | NumpyArray[np.uint8]) -> Q
 
 
 class NumpyImage(ed.QtWidgetElement):
-    """An container for :code:`numpy` arrays representing images.
+    """Render a :code:`numpy` array as an image.
 
     * Underlying Qt Widget
       `QLabel <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QLabel.html>`_
 
     Args:
         src:
-            One of:
+            A :class:`NumpyArray` wrapping a :code:`numpy.ndarray` of :code:`uint8`.
 
-            * A `NDArray of type uint8 <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html>`_.
-            * A `NumpyArray of type uint8 <https://pyedifice.github.io/stubs/edifice.extra.NumpyArray.html>`_.
+            Allowed shapes:
+
+            * :code:`(height, width)`
+            * :code:`(height, width, 1)`
+            * :code:`(height, width, 3)`
+            * :code:`(height, width, 4)`
         aspect_ratio_mode:
             The aspect ratio mode of the image.
 

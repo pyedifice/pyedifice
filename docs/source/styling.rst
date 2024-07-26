@@ -64,7 +64,7 @@ Widgets follow the
   :class:`FixView <edifice.FixView>`.
 
 Layout View Styling
-------------
+-------------------
 
 Every Layout Base Element named :code:`View` has an underlying
 `QLayout <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QLayout.html>`_
