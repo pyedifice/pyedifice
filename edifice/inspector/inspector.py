@@ -99,6 +99,9 @@ def StateView(
                 ed.Label(
                     text=str(s.state),
                     selectable=True,
+                    size_policy=QtWidgets.QSizePolicy(
+                        QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Fixed,
+                    ),
                 )
 
 
@@ -121,10 +124,10 @@ def PropsView(self, props: dict[str, tp.Any], refresh_trigger: bool):
                         style={"font-weight": 600, "width": 140},
                     )
                     ed.Label(
-                        str(v),
+                        text=str(v),
                         selectable=True,
                         size_policy=QtWidgets.QSizePolicy(
-                            QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Fixed
+                            QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Fixed,
                         ),
                     )
 

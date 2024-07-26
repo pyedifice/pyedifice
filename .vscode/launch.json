@@ -35,6 +35,14 @@
 			"module": "edifice",
 			"justMyCode": true,
 			"args": ["examples/financial_charts.py", "Main"]
-		}
+		},
+		{
+			"name": "Runner --inspect todomvc.py",
+			"type": "debugpy",
+			"request": "launch",
+			"module": "edifice",
+			"justMyCode": true,
+			"args": ["--inspect", "examples/todomvc.py", "Main"]
+		},
 	]
 }

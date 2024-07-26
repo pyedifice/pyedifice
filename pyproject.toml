@@ -78,6 +78,11 @@ ignore = [
   "PLR1711",
   "C901",
   "EM101",
+  "S101",
+  "PLR2004",
+  "TRY003",
+  "EM102",
+  "RUF002",
 ]
 
 [tool.pyright]

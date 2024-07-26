@@ -1,4 +1,6 @@
-from typing import Generic, TypeVar, TYPE_CHECKING
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Generic, TypeVar
 
 import numpy as np
 import numpy.typing as npt
@@ -6,15 +8,15 @@ import numpy.typing as npt
 from edifice.qt import QT_VERSION
 
 if QT_VERSION == "PyQt6" and not TYPE_CHECKING:
-    import PyQt6.QtCore as QtCore
+    from PyQt6 import QtCore
     from PyQt6.QtGui import QImage, QPixmap
 else:
-    import PySide6.QtCore as QtCore
+    from PySide6 import QtCore
     from PySide6.QtGui import QImage, QPixmap
 
 import edifice as ed
-from edifice.base_components.image_aspect import _ScaledLabel, _image_descriptor_to_pixmap
-from edifice.engine import _WidgetTree, CommandType
+from edifice.base_components.image_aspect import _image_descriptor_to_pixmap, _ScaledLabel
+from edifice.engine import CommandType, _WidgetTree
 
 T_Numpy_Array_co = TypeVar("T_Numpy_Array_co", bound=np.generic, covariant=True)
 
@@ -22,8 +24,9 @@ T_Numpy_Array_co = TypeVar("T_Numpy_Array_co", bound=np.generic, covariant=True)
 class NumpyArray(Generic[T_Numpy_Array_co]):
     """Wrapper for :code:`numpy` arrays.
 
-    This wrapper class provides the :code:`__eq__` relation for the wrapped :code:`numpy` array such that if two
-    wrapped arrays are :code:`__eq__`, then one can be substituted for the other. This class may be used as a
+    This wrapper class provides the :code:`__eq__` relation for the wrapped
+    :code:`numpy` array such that if two wrapped arrays are :code:`__eq__`,
+    then one can be substituted for the other. This class may be used as a
     **prop** or a **state**.
     """
 
@@ -34,7 +37,7 @@ class NumpyArray(Generic[T_Numpy_Array_co]):
         self.dtype = np_array.dtype
         self.np_array = np_array
 
-    def __eq__(self, other: "NumpyArray[T_Numpy_Array_co]") -> bool:
+    def __eq__(self, other: NumpyArray[T_Numpy_Array_co]) -> bool:
         return np.array_equal(self.np_array, other.np_array, equal_nan=True)
 
 
@@ -78,6 +81,8 @@ def NumpyArray_to_QImage(arr: npt.NDArray[np.uint8] | NumpyArray[np.uint8]) -> Q
                 channel * width,
                 QImage.Format.Format_RGB888 if channel == 3 else QImage.Format.Format_RGBA8888,
             )
+        case _:
+            raise ValueError(f"Numpy array with shape {arr.shape} cannot be converted into a QImage.")
 
 
 class NumpyImage(ed.QtWidgetElement):
@@ -113,7 +118,7 @@ class NumpyImage(ed.QtWidgetElement):
             {
                 "src": src,
                 "aspect_ratio_mode": aspect_ratio_mode,
-            }
+            },
         )
         self.underlying: _ScaledLabel | None = None
 

@@ -38,18 +38,28 @@ for which :code:`__eq__`
 `defaults to identity <https://docs.python.org/3/reference/datamodel.html#object.__eq__>`_.
 
 Here is an example of a wrapper type for numpy arrays which implements
-:code:`__eq__` so that they can be used in Hooks::
+:code:`__eq__` so that the numpy arrays can be used in Hooks::
 
     T_Array_co = TypeVar("T_Array_co", bound=np.generic, covariant=True)
 
-    class Array(Generic[T_Array_co]):
-        """Wrapper for numpy arrays for substitutional __eq__."""
-        def __init__(self, np_array: npt.NDArray[T_Array_co]) -> None:
+    class NumpyArray(Generic[T_Numpy_Array_co]):
+        """Wrapper for :code:`numpy` arrays.
+
+        This wrapper class provides the :code:`__eq__` relation for the wrapped
+        :code:`numpy` array such that if two wrapped arrays are :code:`__eq__`,
+        then one can be substituted for the other. This class may be used as a
+        **prop** or a **state**.
+        """
+
+        np_array: npt.NDArray[T_Numpy_Array_co]
+
+        def __init__(self, np_array: npt.NDArray[T_Numpy_Array_co]) -> None:
             super().__init__()
+            self.dtype = np_array.dtype
             self.np_array = np_array
 
-        def __eq__(self, other: Array) -> bool:
-            return numpy.array_equal(self.np_array, other.np_array, equal_nan=True)
+        def __eq__(self, other: NumpyArray[T_Numpy_Array_co]) -> bool:
+            return np.array_equal(self.np_array, other.np_array, equal_nan=True)
 
 Custom Hooks
 ------------

@@ -1,15 +1,15 @@
 import typing as tp
-from edifice import App, Window, View, component, ProgressBar, Slider, SpinInput, Label
-from edifice.hooks import use_state
 
+from edifice import App, Label, ProgressBar, Slider, SpinInput, View, Window, component
+from edifice.hooks import use_state
 from edifice.qt import QT_VERSION
 
 if QT_VERSION == "PyQt6" and not tp.TYPE_CHECKING:
-    from PyQt6.QtGui import QValidator
     from PyQt6.QtCore import Qt
+    from PyQt6.QtGui import QValidator
 else:
-    from PySide6.QtGui import QValidator
     from PySide6.QtCore import Qt
+    from PySide6.QtGui import QValidator
 
 
 def to_percent(x):

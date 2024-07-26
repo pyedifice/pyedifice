@@ -12,24 +12,28 @@ def Leaf(self: ed.Element, text: str) -> None:
     # Check that the component lifecycle is correct for child_place
     def printcreatedestroy():
         print("  mount " + text)
+
         def printdestroy():
             print("unmount " + text)
+
         return printdestroy
 
     ed.use_effect(printcreatedestroy, ())
 
     ed.Label(text=text)
 
+
 @ed.component
-def ViewBackground(self: ed.Element, bgcolor: str, children:tuple[ed.Element,...]=()) -> None:
+def ViewBackground(self: ed.Element, bgcolor: str, children: tuple[ed.Element, ...] = ()) -> None:
     with ed.View(style={"background-color": bgcolor, "padding": 10}):
         ed.child_place(children[0])
+
 
 @ed.component
 def MyComponent(
     self: ed.Element,
     *,
-    children: tuple[ed.Element,...] = (),
+    children: tuple[ed.Element, ...] = (),
 ) -> None:
     bgcolor = "blue"
     with ed.View(

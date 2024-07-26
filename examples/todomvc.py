@@ -37,7 +37,7 @@ def TodoItem(self, key: int, todo: Todo, table_grid_view, set_complete, delete_t
         with View(
             style={
                 "margin-right": 10,
-            }
+            },
         ).set_key(str(key) + "comp"):
             CheckBox(checked=todo.completed, on_click=lambda _ev: set_complete(key, not todo.completed))
         if todo.editing:
@@ -68,21 +68,21 @@ def TodoItem(self, key: int, todo: Todo, table_grid_view, set_complete, delete_t
 def TodoMVC(self):
     todos, todos_set = use_state(cast(OrderedDict[int, Todo], OrderedDict([])))
 
-    filter, filter_set = use_state("All")
-    next_key, next_key_set = use_state(int(0))
-    input, input_set = use_state("")
+    item_filter, item_filter_set = use_state("All")
+    next_key, next_key_set = use_state(0)
+    item_text, item_text_set = use_state("")
     complete_all_toggle, complete_all_toggle_set = use_state(False)
 
     def handle_change(text: str):
-        input_set(text)
+        item_text_set(text)
 
     def handle_key_up(e: QtGui.QKeyEvent):
         if e.key() == QtCore.Qt.Key.Key_Return:
             new_todos = todos.copy()
-            new_todos.update([(next_key, Todo(False, input, False))])
+            new_todos.update([(next_key, Todo(False, item_text, False))])
             todos_set(new_todos)
             next_key_set(lambda k: k + 1)
-            input_set("")
+            item_text_set("")
 
     def set_complete(key: int, complete: bool):
         old_todo = todos[key]
@@ -141,14 +141,14 @@ def TodoMVC(self):
                             on_change=set_complete_all,
                         )
                 TextInput(
-                    text=input,
+                    text=item_text,
                     on_change=handle_change,
                     on_key_up=handle_key_up,
                     placeholder_text="What needs to be done?",
                     style={"font-size": 20},
                 )
             for key, todo in todos.items():
-                if filter == "All" or (filter == "Completed") == todo.completed:
+                if item_filter == "All" or (item_filter == "Completed") == todo.completed:
                     TodoItem(key, todo, tgv, set_complete, delete_todo, set_editing, set_text)
         with View(layout="column", style={"margin-top": 10}):
             if len(todos) > 0:
@@ -168,19 +168,19 @@ def TodoMVC(self):
                     )
                     with View(layout="row", style={"margin-left": 10}):
                         RadioButton(
-                            checked=filter == "All",
+                            checked=item_filter == "All",
                             text="All",
-                            on_click=lambda _ev: filter_set("All"),
+                            on_click=lambda _ev: item_filter_set("All"),
                         )
                         RadioButton(
-                            checked=filter == "Active",
+                            checked=item_filter == "Active",
                             text="Active",
-                            on_click=lambda _ev: filter_set("Active"),
+                            on_click=lambda _ev: item_filter_set("Active"),
                         )
                         RadioButton(
-                            checked=filter == "Completed",
+                            checked=item_filter == "Completed",
                             text="Completed",
-                            on_click=lambda _ev: filter_set("Completed"),
+                            on_click=lambda _ev: item_filter_set("Completed"),
                         )
                     with View(style={"min-width": 180, "margin-left": 10, "align": "right"}):
                         if len(todos) > items_left:

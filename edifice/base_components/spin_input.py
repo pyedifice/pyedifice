@@ -1,6 +1,8 @@
+from __future__ import annotations
+
 import typing as tp
 
-from ..qt import QT_VERSION
+from edifice.qt import QT_VERSION
 
 if QT_VERSION == "PyQt6" and not tp.TYPE_CHECKING:
     from PyQt6.QtGui import QValidator
@@ -9,7 +11,7 @@ else:
     from PySide6.QtGui import QValidator
     from PySide6.QtWidgets import QSpinBox
 
-from .base_components import QtWidgetElement, CommandType, _ensure_future, Element, _WidgetTree
+from .base_components import CommandType, Element, QtWidgetElement, _ensure_future, _WidgetTree
 
 
 class EdSpinBox(QSpinBox):
@@ -130,7 +132,7 @@ class SpinInput(QtWidgetElement[EdSpinBox]):
 
     def _on_change_handler(self, value: int):
         if self.props.on_change is not None:
-            return _ensure_future(self.props.on_change)(value)
+            _ensure_future(self.props.on_change)(value)
 
     def _set_value(self, value: int):
         assert self.underlying is not None
