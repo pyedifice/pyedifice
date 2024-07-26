@@ -41,11 +41,11 @@ child Elements in the tree, use the parent as a
     @component
     def MyApp(self):
         with Window():
-            with View(layout="column"):
-                with View(layout="row"):
+            with VBoxView():
+                with HBoxView():
                     Label("Username: ")
                     TextInput()
-                with View(layout="row"):
+                with HBoxView():
                     Label("Email: ")
                     TextInput()
 
@@ -54,15 +54,15 @@ In HTML/XML, this would be written as:
 .. code-block:: xml
 
     <Window>
-        <View layout="column">
-            <View layout="row">
+        <VBoxView>
+            <HBoxView>
                 <Label text="Username: " />
                 <TextInput />
-            </View>
-            <View layout="row">
+            </HBoxView>
+            <HBoxView>
                 <Label text="Email: " />
                 <TextInput />
-        </View>
+        </VBoxView>
     </Window>
 
 You can thus describe your entire application as a single root Element,
@@ -119,7 +119,7 @@ When comparing the child Elements, the Element’s
 be compared. Elements with the same :code:`_key` and same class are assumed to be
 the same. You can set the key using the :func:`Element.set_key` method::
 
-    with View(layout="row"):
+    with HBoxView():
         MyElement("Hello").set_key("hello")
         MyElement("World").set_key("world")
 

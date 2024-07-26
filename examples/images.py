@@ -1,6 +1,7 @@
+import os
 import typing as tp
-from edifice import App, Window, View, component, Image
 
+from edifice import App, HBoxView, Image, VBoxView, Window, component
 from edifice.qt import QT_VERSION
 
 if QT_VERSION == "PyQt6" and not tp.TYPE_CHECKING:
@@ -15,11 +16,11 @@ imgstyle = {"width": "200px", "height": "200px"}
 
 @component
 def MyComponent(self):
-    with View(layout="column"):
-        with View(layout="row"):
+    with VBoxView():
+        with HBoxView():
             Image(src=imgpath, style=imgstyle)
             Image(src=imgpath, aspect_ratio_mode=Qt.AspectRatioMode.IgnoreAspectRatio, style=imgstyle)
-        with View(layout="row"):
+        with HBoxView():
             Image(src=imgpath, aspect_ratio_mode=Qt.AspectRatioMode.KeepAspectRatio, style=imgstyle)
             Image(src=imgpath, aspect_ratio_mode=Qt.AspectRatioMode.KeepAspectRatioByExpanding, style=imgstyle)
 

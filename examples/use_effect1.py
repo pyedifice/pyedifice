@@ -2,22 +2,21 @@
 # python examples/use_effect1.py
 #
 
-import asyncio as asyncio
-from edifice import App, Window, View, Label, Button, component
-from edifice.hooks import use_state, use_effect
+from edifice import App, Button, Label, VBoxView, Window, component
+from edifice.hooks import use_effect, use_state
 
 
 @component
 def MainComp(self):
     show, set_show = use_state(False)
-    with Window(on_close=lambda ev: print("Window will close")):
+    with Window(on_close=lambda _ev: print("Window will close")):
         if show:
-            with View():
-                Button(title="Hide", on_click=lambda ev: set_show(False))
+            with VBoxView():
+                Button(title="Hide", on_click=lambda _ev: set_show(False))
                 TestComp()
         else:
-            with View():
-                Button(title="Show", on_click=lambda ev: set_show(True))
+            with VBoxView():
+                Button(title="Show", on_click=lambda _ev: set_show(True))
 
 
 @component
@@ -48,10 +47,10 @@ def TestComp(self):
 
     use_effect(setup_always, None)
 
-    with View(style={"align": "top"}):
+    with VBoxView(style={"align": "top"}):
         Label(text="Label text")
-        Button(title="State " + str(x), on_click=lambda ev: x_setter(x + 1))
-        Button(title="State Unchanged", on_click=lambda ev: x_setter(lambda y: y))
+        Button(title="State " + str(x), on_click=lambda _ev: x_setter(x + 1))
+        Button(title="State Unchanged", on_click=lambda _ev: x_setter(lambda y: y))
 
 
 if __name__ == "__main__":

@@ -142,7 +142,7 @@ class _TestElementInner(Element):
         self.state_a = "A"
 
     def _render_element(self):
-        return base_components.View()(
+        return base_components.VBoxView()(
             base_components.Label(str(self.props.prop_a)),
             base_components.Label(str(self.state_a)),
         )
@@ -169,7 +169,7 @@ class _TestElementOuter(Element):
         self.state_c = "C"
 
     def _render_element(self):
-        return base_components.View()(
+        return base_components.VBoxView()(
             _TestElementInner(self.state_a),
             _TestElementInner(self.state_b),
             base_components.Label(self.state_c),
@@ -199,17 +199,19 @@ class _TestElementOuterList(Element):
     def _render_element(self):
         if self.use_keys:
             if self.use_state_as_key:
-                return base_components.View()(*[_TestElementInner(text).set_key(text) for text in self.state])
+                return base_components.VBoxView()(*[_TestElementInner(text).set_key(text) for text in self.state])
             else:
-                return base_components.View()(
+                return base_components.VBoxView()(
                     *[_TestElementInner(text).set_key(str(i)) for i, text in enumerate(self.state)]
                 )
-        return base_components.View()(*[_TestElementInner(text) for text in self.state])
+        return base_components.VBoxView()(*[_TestElementInner(text) for text in self.state])
 
 
 def _commands_for_address(widget_trees: dict[Element, _WidgetTree], qt_tree, address):
     qt_tree = _dereference_tree(widget_trees, qt_tree, address)
-    if isinstance(qt_tree.component, base_components.HBoxView) or isinstance(qt_tree.component, base_components.VBoxView):
+    if isinstance(qt_tree.component, base_components.HBoxView) or isinstance(
+        qt_tree.component, base_components.VBoxView
+    ):
         return qt_tree.component._qt_stateless_commands(widget_trees, qt_tree.component.props)
     return qt_tree.component._qt_update_commands(widget_trees, qt_tree.component.props)
 
@@ -398,7 +400,7 @@ class RenderTestCase(unittest.TestCase):
 
         class TestCompOuter(Element):
             def _render_element(self):
-                return base_components.View()(TestCompInner(self.value))
+                return base_components.VBoxView()(TestCompInner(self.value))
 
         test_comp = TestCompOuter()
         test_comp.value = 2
@@ -450,7 +452,7 @@ class RenderTestCase(unittest.TestCase):
 
         class TestCompOuter(Element):
             def _render_element(self):
-                return base_components.View()(
+                return base_components.VBoxView()(
                     TestCompInner1(self.value * 2),
                     TestCompInner2(self.value * 4),
                 )
@@ -503,7 +505,7 @@ class RefreshClassTestCase(unittest.TestCase):
 
             def _render_element(self):
                 self.count += 1
-                return base_components.View()(OldInnerClass(5))
+                return base_components.VBoxView()(OldInnerClass(5))
 
         outer_comp = OuterClass()
         app = engine.RenderEngine(outer_comp)
@@ -538,7 +540,7 @@ class RefreshClassTestCase(unittest.TestCase):
         @component
         def OuterClass(self):
             outer_render_count[0] += 1
-            with base_components.View():
+            with base_components.VBoxView():
                 OldInnerClass(5)
 
         outer_comp = OuterClass()
@@ -590,7 +592,7 @@ class RefreshClassTestCase(unittest.TestCase):
 
             def _render_element(self):
                 self.count += 1
-                return base_components.View()(OldInnerClass(5))
+                return base_components.VBoxView()(OldInnerClass(5))
 
         outer_comp = OuterClass()
         app = engine.RenderEngine(outer_comp)
@@ -607,7 +609,7 @@ class RefreshClassTestCase(unittest.TestCase):
         self.assertEqual(inner_comp.props.val, 5)
 
     def test_view_recalculate_children_1(self):
-        v = base_components.View()
+        v = base_components.VBoxView()
         v._initialize()
         children1: list[QtWidgetElement] = [
             base_components.Label("A"),

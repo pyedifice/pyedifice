@@ -2,7 +2,6 @@
 # python examples/example_pyqtgraph.py
 #
 
-import typing as tp
 import numpy as np
 
 from edifice.qt import QT_VERSION
@@ -12,9 +11,10 @@ if QT_VERSION == "PyQt6":
 else:
     from PySide6 import QtGui
 
+import pyqtgraph as pg
+
 import edifice as ed
 from edifice.extra import PyQtPlot
-import pyqtgraph as pg
 
 pg.setConfigOption("antialias", True)
 
@@ -37,7 +37,7 @@ def Component(self):
         ys = np.sin(xs)
         plot_item.plot(x=xs, y=ys, pen=pen, fillLevel=-1.0, brush=brush)
 
-    with ed.View():
+    with ed.VBoxView():
         with ed.ButtonView(
             on_trigger=lambda _: x_min_set(x_min + 1.0),
             style={
@@ -53,7 +53,7 @@ def Component(self):
 @ed.component
 def Main(self):
     with ed.Window("PyQtPlot Example"):
-        with ed.View():
+        with ed.VBoxView():
             Component()
 
 

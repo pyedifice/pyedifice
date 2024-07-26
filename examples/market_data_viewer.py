@@ -2,12 +2,13 @@
 # python examples/marker_data_viewer.py
 #
 
-import edifice as ed
 import asyncio
 import random
 
-stylesheet = dict(
-    price_box={
+import edifice as ed
+
+stylesheet = {
+    "price_box": {
         "padding-top": 0,
         "padding": 0,
         "width": "50px",
@@ -15,7 +16,7 @@ stylesheet = dict(
         "border": "1px solid black",
         "height": "25px",
     },
-    size_box={
+    "size_box": {
         "color": "rgba(220, 230, 220, 1)",
         "margin": "0px",
         "padding": "2px",
@@ -25,14 +26,14 @@ stylesheet = dict(
         "width": "50px",
         "height": "25px",
     },
-    size_bar={
+    "size_bar": {
         "height": "25px",
         "margin-left": "10px",
         "padding": "2px",
         "align": "left",
     },
-    play_button={"width": "50px", "height": "25px", "left": 150, "margin-left": "5px"},
-)
+    "play_button": {"width": "50px", "height": "25px", "left": 150, "margin-left": "5px"},
+}
 
 
 @ed.component
@@ -51,15 +52,15 @@ def PriceLevel(self, price, size, side, last=False):
         {
             "background-color": color,
             "width": "%spx" % (size / 5),
-        }
+        },
     )
     if last:
         price_box_style["border-bottom"] = "1px solid black"
         size_box_style["border-bottom"] = "1px solid black"
 
-    with ed.View(layout="row", style={"padding": "0px", "width": "360px", "align": "left"}):
-        ed.Label(price, style=price_box_style).set_key("price")
-        ed.Label(size, style=size_box_style).set_key("size")
+    with ed.HBoxView(style={"padding": "0px", "width": "360px", "align": "left"}):
+        ed.Label(str(price), style=price_box_style).set_key("price")
+        ed.Label(str(size), style=size_box_style).set_key("size")
         ed.Label("", style=size_bar_style).set_key("vis_size")
 
 
@@ -67,7 +68,7 @@ def PriceLevel(self, price, size, side, last=False):
 def Book(self, book):
     sizes = book["sizes"]
     market_price = book["price"]
-    with ed.View(layout="column", style={"margin": "10px", "padding": "0px", "width": 360}):
+    with ed.VBoxView(style={"margin": "10px", "padding": "0px", "width": 360}):
         for p in range(20, 0, -1):
             PriceLevel(price=p, size=sizes[p], side="bid" if p < market_price else "ask", last=(p == 1)).set_key(str(p))
 
@@ -97,8 +98,8 @@ def App(self):
         playing_set(lambda p: not p)
 
     with ed.Window():
-        with ed.View(layout="column"):
-            with ed.View(layout="row", style={"align": "left", "margin-left": "10px"}).set_key("Controls"):
+        with ed.VBoxView():
+            with ed.HBoxView(style={"align": "left", "margin-left": "10px"}).set_key("Controls"):
                 ed.Icon(name="chart-line", size=14).set_key("Icon")
                 ed.Label("Market Data Viewer", style={"margin-left": "5px"}).set_key("Label")
                 ed.IconButton(

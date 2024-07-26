@@ -1,21 +1,20 @@
-import os
-
 import importlib.resources
-import numpy as np
-
+import os
 import unittest
 import unittest.mock
-import edifice.engine as engine
-import edifice.base_components.base_components as base_components
-from edifice.engine import CommandType
-import edifice.icons
 
+import numpy as np
+
+import edifice.icons
+from edifice import engine
+from edifice.base_components import base_components
+from edifice.engine import CommandType
 from edifice.qt import QT_VERSION
 
 if QT_VERSION == "PyQt6":
-    from PyQt6 import QtCore, QtWidgets, QtGui
+    from PyQt6 import QtCore, QtGui, QtWidgets
 else:
-    from PySide6 import QtCore, QtWidgets, QtGui
+    from PySide6 import QtCore, QtGui, QtWidgets
 
 ICONS = importlib.resources.files(edifice.icons)
 
@@ -210,13 +209,13 @@ class WidgetTreeTestCase(unittest.TestCase):
         )
 
     def test_view_layout(self):
-        view_c = base_components.View(layout="column")
+        view_c = base_components.VBoxView()
         view_c._initialize()
         self.assertEqual(view_c.underlying_layout.__class__, QtWidgets.QVBoxLayout)
-        view_r = base_components.View(layout="row")
+        view_r = base_components.HBoxView()
         view_r._initialize()
         self.assertEqual(view_r.underlying_layout.__class__, QtWidgets.QHBoxLayout)
-        view_n = base_components.View(layout="none")
+        view_n = base_components.FixView()
         view_n._initialize()
         self.assertFalse(hasattr(view_n, "underlying_layout"))
 
@@ -261,7 +260,7 @@ class WidgetTreeTestCase(unittest.TestCase):
     def test_view_change(self):
         label1 = base_components.Label(text="A")
         label2 = base_components.Label(text="B")
-        view = base_components.View()(label1)
+        view = base_components.VBoxView()(label1)
         eng = engine.RenderEngine(view)
 
         def label_tree(label):
@@ -324,7 +323,7 @@ class WidgetTreeTestCase(unittest.TestCase):
         )
         self.assertCountEqual(commands, commands_expected)
 
-        inner_view = base_components.View()
+        inner_view = base_components.VBoxView()
         context = MockRenderContext(eng)
         context.widget_tree[view] = engine._WidgetTree(view, [label2, inner_view])
         commands = eng.gen_qt_commands(view, context)
@@ -396,10 +395,10 @@ class BaseElementsTest(unittest.TestCase):
             base_components.Window(
                 title="title",
                 menu={"Playback": context_menu},
-            )(base_components.View())
+            )(base_components.VBoxView())
         )
         self._test_comp(base_components.IconButton("play", on_click=lambda e: None))
-        self._test_comp(base_components.View(context_menu=context_menu))
+        self._test_comp(base_components.VBoxView(context_menu=context_menu))
         self._test_comp(base_components.Label(text="Hello", selectable=True))
         self._test_comp(edifice.Image(src="tests/example.png"))
         self._test_comp(edifice.Image(src=NDArray8_to_QImage(np.zeros((100, 100, 3)))))
@@ -418,12 +417,12 @@ class BaseElementsTest(unittest.TestCase):
         self._test_comp(edifice.CheckBox(checked=True, text="Test", on_change=lambda checked: None))
         self._test_comp(edifice.RadioButton(checked=True, text="Test", on_change=lambda checked: None))
         self._test_comp(base_components.Slider(value=1, min_value=0, max_value=3, on_change=lambda value: None))
-        self._test_comp(base_components.ScrollView(layout="row"))
+        self._test_comp(base_components.HScrollView())
         self._test_comp(base_components.GridView(layout=""))
         self._test_comp(base_components.ExportList())
-        self._test_comp(base_components.GroupBox(title="Group")(base_components.View()))
+        self._test_comp(base_components.GroupBox(title="Group")(base_components.VBoxView()))
         self._test_comp(
-            base_components.TabView(labels=["Tab 1", "Tab 2"])(base_components.Label(), base_components.Label())
+            base_components.TabView(labels=["Tab 1", "Tab 2"])(base_components.Label(), base_components.Label()),
         )
 
 

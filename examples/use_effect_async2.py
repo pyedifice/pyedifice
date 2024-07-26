@@ -2,9 +2,10 @@
 # python examples/use_effect_async1.py
 #
 
-import asyncio as asyncio
-from edifice import App, Window, View, Label, Button, component, TextInput
-from edifice.hooks import use_state, use_async
+import asyncio
+
+from edifice import App, Button, Label, TextInput, VBoxView, Window, component
+from edifice.hooks import use_async, use_state
 
 
 @component
@@ -17,7 +18,7 @@ def MainComp(self):
 
     use_async(effect, x)
     with Window():
-        with View():
+        with VBoxView():
             TextInput(text=x, on_change=x_set)
 
 

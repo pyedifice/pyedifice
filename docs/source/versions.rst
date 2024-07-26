@@ -22,21 +22,21 @@ Released:
 * Deprecate :code:`View`, :code:`ScrollView`.
 
   Replace :code:`View` with:
-  - :class:`HBoxView`
-  - :class:`VBoxView`
-  - :class:`FixView`
+    - :class:`HBoxView`
+    - :class:`VBoxView`
+    - :class:`FixView`
 
   Replace :code:`ScrollView` with:
-  - :class:`HScrollView`
-  - :class:`VScrollView`
-  - :class:`FixScrollView`
+    - :class:`HScrollView`
+    - :class:`VScrollView`
+    - :class:`FixScrollView`
 
 We are eliminating the :code:`layout= "row" | "column" | "none"` prop because it
 never worked as a prop. If the value of the layout prop was
 changed then the layout of the View would not change. To render a
 :code:`View(layout="row")` and then replace it with a
 :code:`View(layout="column")`, it was necessary to add
-unique :code:`set_key()`s so that the reconciliation algorithm would recognize
+unique :code:`set_key()` so that the reconciliation algorithm would recognize
 that the Views needed to be destroyed and recreated. This behavior was
 buggy and surprising and now it’s gone.
 

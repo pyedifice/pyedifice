@@ -1,5 +1,3 @@
-import typing as tp
-
 import edifice as ed
 
 
@@ -24,15 +22,15 @@ def Main(self: ed.Element) -> None:
                 items_.remove(item)
                 items_set(items_)
 
-        with ed.View(layout="column"):
-            with ed.View(layout="row"):
+        with ed.VBoxView():
+            with ed.HBoxView():
                 for i in [100, 200, 300, 400, 500, 600]:
                     ed.RadioButton(
                         checked=True if i in items else False,
                         on_change=lambda checked, i=i: on_change_list(checked, i),
                         text=str(i),
                     )
-            with ed.View(layout="none", style={"width": 640, "height": 640, "background-color": "black"}):
+            with ed.FixView(style={"width": 640, "height": 640, "background-color": "black"}):
                 for v in items:
                     ed.Label(
                         text=str(v),

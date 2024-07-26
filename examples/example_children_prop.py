@@ -25,7 +25,7 @@ def Leaf(self: ed.Element, text: str) -> None:
 
 @ed.component
 def ViewBackground(self: ed.Element, bgcolor: str, children: tuple[ed.Element, ...] = ()) -> None:
-    with ed.View(style={"background-color": bgcolor, "padding": 10}):
+    with ed.VBoxView(style={"background-color": bgcolor, "padding": 10}):
         ed.child_place(children[0])
 
 
@@ -36,8 +36,7 @@ def MyComponent(
     children: tuple[ed.Element, ...] = (),
 ) -> None:
     bgcolor = "blue"
-    with ed.View(
-        layout="column",
+    with ed.VBoxView(
         style={"align": "top"},
     ):
         for child in children:
@@ -58,7 +57,7 @@ def Main(self: ed.Element) -> None:
         )
     )
     with ed.Window():
-        with ed.View(style={"padding": 20}):
+        with ed.VBoxView(style={"padding": 20}):
             a, a_set = ed.use_state(0)
             ed.Slider(
                 value=a,

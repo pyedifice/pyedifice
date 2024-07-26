@@ -1071,6 +1071,7 @@ class VBoxView(_LinearView[QtWidgets.QWidget]):
         commands = super()._qt_update_commands_super(widget_trees, newprops, self.underlying, self.underlying_layout)
         return commands
 
+
 class HBoxView(_LinearView[QtWidgets.QWidget]):
     """Horizontal row layout view for child elements.
 
@@ -1138,6 +1139,7 @@ class HBoxView(_LinearView[QtWidgets.QWidget]):
         assert self.underlying is not None
         commands = super()._qt_update_commands_super(widget_trees, newprops, self.underlying, self.underlying_layout)
         return commands
+
 
 class FixView(_LinearView[QtWidgets.QWidget]):
     """View layout for child widgets with fixed position.
@@ -1207,6 +1209,7 @@ class FixView(_LinearView[QtWidgets.QWidget]):
         assert self.underlying is not None
         commands = super()._qt_update_commands_super(widget_trees, newprops, self.underlying)
         return commands
+
 
 @deprecated("Instead of View use VBoxView, HBoxView, or FixView")
 def View(
@@ -1376,6 +1379,7 @@ class VScrollView(_LinearView[QtWidgets.QScrollArea]):
         )
         return commands
 
+
 class HScrollView(_LinearView[QtWidgets.QScrollArea]):
     """Scrollable horizontal row layout widget for grouping children together.
 
@@ -1436,6 +1440,7 @@ class HScrollView(_LinearView[QtWidgets.QScrollArea]):
             super()._qt_update_commands_super(widget_trees, newprops, self.underlying, self.underlying_layout)
         )
         return commands
+
 
 class FixScrollView(_LinearView[QtWidgets.QScrollArea]):
     """Scrollable layout widget for child widgets with fixed position.
@@ -1501,6 +1506,7 @@ class FixScrollView(_LinearView[QtWidgets.QScrollArea]):
         )
         return commands
 
+
 @deprecated("Instead of ScrollView use VScrollView, HScrollView, or FixScrollView")
 def ScrollView(
     layout: tp.Literal["row", "column", "none"] = "column",
@@ -1516,6 +1522,7 @@ def ScrollView(
         case "none":
             warnings.warn('Use FixScrollView instead of ScrollView(layout="none")', DeprecationWarning)
             return FixScrollView(**kwargs)
+
 
 def npones(num_rows, num_cols):
     """

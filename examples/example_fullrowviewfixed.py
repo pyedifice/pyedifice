@@ -1,23 +1,25 @@
-import logging
-import typing as tp
+from __future__ import annotations
 
+import logging
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from PySide6 import QtWidgets, QtGui
+from PySide6 import QtGui, QtWidgets
+
 from edifice import (
     App,
-    Window,
-    View,
     Element,
-    component,
-    Slider,
+    HBoxView,
     Label,
-    use_state,
-    use_effect,
     Reference,
-    use_ref,
+    Slider,
     TableGridView,
+    VBoxView,
+    Window,
+    component,
+    use_effect,
+    use_ref,
+    use_state,
 )
 
 logger = logging.getLogger("Edifice")
@@ -81,14 +83,14 @@ def FullRowViewFixed(
     def initialize():
         if vref:
             view_element = vref()
-            assert type(view_element) == View
+            assert type(view_element) == HBoxView
             assert isinstance(view_element.underlying, QtWidgets.QWidget)
             view_element.underlying.resizeEvent = handle_resize
 
             def cleanup():
-                assert type(view_element) == View
+                assert type(view_element) == HBoxView
                 assert isinstance(view_element.underlying, QtWidgets.QWidget)
-                view_element.underlying.resizeEvent = lambda event: None
+                view_element.underlying.resizeEvent = lambda _event: None
 
             return cleanup
         else:
@@ -96,14 +98,13 @@ def FullRowViewFixed(
 
     use_effect(initialize, [])
 
-    with View(
-        layout="row",
+    with HBoxView(
         style={"align": "left"},
         size_policy=QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Policy.Ignored, QtWidgets.QSizePolicy.Policy.Preferred),
     ).register_ref(vref):
         if vref:
             view_element = vref()
-            assert type(view_element) == View
+            assert type(view_element) == HBoxView
             assert type(view_element.underlying) == QtWidgets.QWidget
             _view_width = view_element.underlying.width()
         else:
@@ -143,10 +144,10 @@ def MyComponent(self, start: int):
 @component
 def Main(self):
     with Window():
-        with View(
+        with VBoxView(
             style={
                 "min-width": "500px",
-            }
+            },
         ):
             x, x_set = use_state(0)
             Slider(

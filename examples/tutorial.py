@@ -3,7 +3,8 @@
 #
 
 import logging
-from edifice import Window, Label, TextInput, View, App, component, use_state
+
+from edifice import App, HBoxView, Label, TextInput, Window, component, use_state
 
 logging.getLogger("Edifice").setLevel(logging.INFO)
 
@@ -26,7 +27,7 @@ def ConversionWidget(self, from_unit, to_unit, factor):
     from_label_style = {"width": 170}
     to_label_style = {"margin-left": 60, "width": 220}
     input_style = {"padding": 2, "width": 120}
-    with View(layout="row", style={"padding": 10}):
+    with HBoxView(style={"padding": 10}):
         Label(f"Measurement in {from_unit}:", style=from_label_style)
         TextInput(current_text, style=input_style, on_change=current_text_set)
         Label(f"Measurement in {to_unit}: {to_text}", style=to_label_style)

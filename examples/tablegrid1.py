@@ -3,9 +3,8 @@
 #
 
 import edifice as ed
+from edifice import ButtonView, TableGridView
 from edifice.hooks import use_state
-from edifice import TableGridView
-from edifice import ButtonView
 
 
 @ed.component
@@ -25,10 +24,10 @@ def myComponent(self):
         set_rows(new_rows)
 
     with ed.Window():
-        with ed.View(style={"align": "top"}):
-            with ed.View(style={"margin": 10}):
+        with ed.VBoxView(style={"align": "top"}):
+            with ed.VBoxView(style={"margin": 10}):
                 with ButtonView(
-                    on_click=lambda ev: add_key(),
+                    on_click=lambda _ev: add_key(),
                     style={"width": 100, "height": 30, "margin": 10},
                 ):
                     ed.Label(text="Add Row")
@@ -38,7 +37,7 @@ def myComponent(self):
                     with tgv.row():
                         ed.Label(text="Key " + str(rkey) + " Column 0")
                         ed.Label(text="Key " + str(rkey) + " Column 1")
-                        with ButtonView(on_click=lambda ev, rkey=rkey: del_key(rkey)):
+                        with ButtonView(on_click=lambda _ev, rkey=rkey: del_key(rkey)):
                             ed.Label(text="Delete Key " + str(rkey))
 
 

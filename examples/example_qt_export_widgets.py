@@ -1,6 +1,5 @@
 import asyncio
 
-# from PyQt6.QtWidgets import (
 from PySide6.QtWidgets import (
     QApplication,
     QLabel,
@@ -27,7 +26,7 @@ class MainWindow(QWidget):
 @ed.component
 def CompoundComponent(self):
     y, y_setter = ed.use_state(0)
-    with ed.View():
+    with ed.VBoxView():
         ed.Label("Compound Component")
         ed.Slider(y, on_change=y_setter)
         ed.Label("Slider value: " + str(y))

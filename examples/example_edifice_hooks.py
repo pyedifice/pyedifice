@@ -1,5 +1,6 @@
 import asyncio
-from edifice import App, Window, View, Label, TextInput, component, use_state, use_async
+
+from edifice import App, HBoxView, Label, TextInput, VBoxView, Window, component, use_async, use_state
 
 
 @component
@@ -15,10 +16,10 @@ def MyApp(self):
 
     use_async(force, f)
 
-    with View(layout="column"):
+    with VBoxView():
         Label("Hello world: " + text)
         TextInput(text, on_edit=text_set)
-        with View(layout="row"):
+        with HBoxView():
             Label("Bonjour")
 
 

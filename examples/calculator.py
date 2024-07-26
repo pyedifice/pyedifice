@@ -3,8 +3,8 @@
 #
 
 import logging
-import edifice as ed
 
+import edifice as ed
 from edifice.qt import QT_VERSION
 
 if QT_VERSION == "PyQt6":
@@ -102,7 +102,7 @@ def Calculator(self):
         elif e.key() == QtCore.Qt.Key.Key_Return:
             apply_binary_operand("=")
 
-    with ed.View(layout="column", style=window_style, on_key_down=key_press):
+    with ed.VBoxView(style=window_style, on_key_down=key_press):
         ed.Label(display, style=display_style)
         with ed.GridView(
             layout="""cs%/

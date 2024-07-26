@@ -13,11 +13,12 @@ from edifice import (
     App,
     Button,
     CheckBox,
+    HBoxView,
     Label,
     RadioButton,
     TableGridView,
     TextInput,
-    View,
+    VBoxView,
     Window,
     component,
     use_state,
@@ -34,7 +35,7 @@ class Todo:
 @component
 def TodoItem(self, key: int, todo: Todo, table_grid_view, set_complete, delete_todo, set_editing, set_text):
     with table_grid_view.row():
-        with View(
+        with VBoxView(
             style={
                 "margin-right": 10,
             },
@@ -129,10 +130,10 @@ def TodoMVC(self):
         if not todo.completed:
             items_left += 1
 
-    with View(style={"align": "top", "margin": 10}):
+    with VBoxView(style={"align": "top", "margin": 10}):
         with TableGridView() as tgv:
             with tgv.row():
-                with View(
+                with VBoxView(
                     style={"margin-right": 10, "width": 30},
                 ):
                     if len(todos) > 0:
@@ -150,10 +151,9 @@ def TodoMVC(self):
             for key, todo in todos.items():
                 if item_filter == "All" or (item_filter == "Completed") == todo.completed:
                     TodoItem(key, todo, tgv, set_complete, delete_todo, set_editing, set_text)
-        with View(layout="column", style={"margin-top": 10}):
+        with VBoxView(style={"margin-top": 10}):
             if len(todos) > 0:
-                with View(
-                    layout="row",
+                with HBoxView(
                     style={
                         "border-top-width": "2px",
                         "border-top-style": "solid",
@@ -166,7 +166,7 @@ def TodoMVC(self):
                         word_wrap=False,
                         style={"margin-right": 10},
                     )
-                    with View(layout="row", style={"margin-left": 10}):
+                    with HBoxView(style={"margin-left": 10}):
                         RadioButton(
                             checked=item_filter == "All",
                             text="All",
@@ -182,7 +182,7 @@ def TodoMVC(self):
                             text="Completed",
                             on_click=lambda _ev: item_filter_set("Completed"),
                         )
-                    with View(style={"min-width": 180, "margin-left": 10, "align": "right"}):
+                    with VBoxView(style={"min-width": 180, "margin-left": 10, "align": "right"}):
                         if len(todos) > items_left:
                             Button(
                                 title="Clear completed (" + str(len(todos) - items_left) + ")",
