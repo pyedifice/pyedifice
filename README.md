@@ -11,17 +11,13 @@ Edifice is a Python library for building declarative application user interfaces
 - A **native** desktop app instead of a bundled web browser.
 - Fast iteration via **hot-reloading**.
 
-This modern declarative UI paradigm is also known as
-“[The Elm Architecture](https://guide.elm-lang.org/architecture/),”
-or “[Model-View-Update](https://thomasbandt.com/model-view-update).”
-
 Edifice uses [PySide6](https://doc.qt.io/qtforpython-6/)
 or [PyQt6](https://www.riverbankcomputing.com/static/Docs/PyQt6/introduction.html)
 as a backend. Edifice is like
 [React](https://react.dev/), but with
 Python instead of JavaScript, and [Qt Widgets](https://doc.qt.io/qt-6/qtwidgets-index.html) instead of the HTML DOM.
 
-If you have React experience, you'll find Edifice to be very easy to pick up.
+If you have React experience, you'll find Edifice to be very easy to learn.
 Edifice has function components, props, and Hooks just like React.
 
 <img src="https://raw.githubusercontent.com/pyedifice/pyedifice/master/examples/example_calculator.png" width=200 /><img src="https://raw.githubusercontent.com/pyedifice/pyedifice/master/examples/example_harmonic_oscillator.gif" width=200 />
@@ -64,7 +60,7 @@ With Edifice you write code like:
 ```python
 number, set_number = use_state(0)
 
-with View():
+with VBoxView():
     Button("Add 5", on_click=lambda event: set_number(number+5))
     Label(str(number))
 ```
@@ -76,11 +72,12 @@ and Edifice will handle updating the GUI.
 
 ### Edifice vs. Qt Quick
 
-[Qt Quick](https://doc.qt.io/qtforpython-6/PySide6/QtQuick/) is Qt’s declarative GUI framework for Qt. Edifice differs from Qt Quick in these aspects:
+[Qt Quick](https://doc.qt.io/qtforpython-6/PySide6/QtQuick/) is Qt’s declarative GUI framework for Qt.
+Edifice differs from Qt Quick in these aspects:
 
 - Edifice programs are written in Python, whereas Qt Quick programs are written
   in Python + the special [QML](https://doc.qt.io/qtforpython-6/overviews/qmlapplications.html) language + JavaScript.
-- Because Edifice interfaces are built in Python code, binding the code to the declared UI is much more
+- Because Edifice interfaces are declared in Python code, binding the code to the declared UI is much more
 straightforward.
 - Edifice makes it easy to create dynamic applications. It's easy to create, shuffle, and destroy widgets
 because the interface is written in Python code. QML assumes a much more static interface.
@@ -92,19 +89,17 @@ Edifice and React.js allow fully dynamic applications to be specified declarativ
 
 ## How it works
 
-An Edifice component declares the mapping from the state to UI.
+An Edifice component is a render function which declares the mapping from the state to UI.
 The state of a component is divided into **props** and **state**.
 **props** are passed to the component in the constructor,
 whereas **state** is the component’s own internal state.
 
-Changes to **props** or **state** will trigger a re-render of the component
-and all its children.
+Changes to **props** or **state** will trigger a re-render of the component.
 The old and new component trees will be compared to one another,
 and a diffing algorithm will determine which components previously existed and which ones are new
 (the algorithm behaves similarly to the React diffing algorithm).
 Components that previously existed will maintain their **state**, whereas their **props** will be updated.
-Finally, Edifice will try to ensure that the minimal update commands are issued to the UI.
-All this logic is handled by the library, and the components need not care about it.
+Finally, Edifice will issue the minimal update commands to update the UI.
 
 ## Development Tools
 
