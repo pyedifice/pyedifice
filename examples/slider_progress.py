@@ -1,6 +1,6 @@
 import typing as tp
 
-from edifice import App, Label, ProgressBar, Slider, SpinInput, View, Window, component
+from edifice import App, Label, ProgressBar, Slider, SpinInput, VBoxView, Window, component
 from edifice.hooks import use_state
 from edifice.qt import QT_VERSION
 
@@ -36,7 +36,7 @@ def MyComponent(self):
     def second_slider(value: int):
         x_set(value)
 
-    with View(layout="column"):
+    with VBoxView():
         Slider(x, min_value=0, max_value=100, on_change=x_set)
         Slider(x, min_value=0, max_value=100, on_change=second_slider)
         ProgressBar(

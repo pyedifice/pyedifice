@@ -9,15 +9,16 @@ Everything is reactive -- changes will automatically be reflected in the entire 
 # python examples/financial_charts.py
 #
 
-from collections import OrderedDict
 import typing as tp
-import edifice as ed
-from edifice import Dropdown, IconButton, Label, Slider, TextInput, View
-from edifice.extra.matplotlib_figure import MatplotlibFigure
+from collections import OrderedDict
 
 import matplotlib.colors
 import pandas as pd
 import yfinance as yf
+
+import edifice as ed
+from edifice import Dropdown, HBoxView, IconButton, Label, Slider, TextInput, VBoxView
+from edifice.extra.matplotlib_figure import MatplotlibFigure
 
 
 def _create_state_for_plot() -> dict[str, tp.Any]:
@@ -78,8 +79,8 @@ def AxisDescriptor(
         plot_[f"{key}.transform"] = (transform_type, param_val)
         plot_change(plot_)
 
-    with View(layout="column"):
-        with View(layout="row", style=row_style):
+    with VBoxView():
+        with HBoxView(style=row_style):
             Label(name, style={"width": 100})
             Dropdown(
                 selection=data_type_selection,
@@ -89,7 +90,7 @@ def AxisDescriptor(
             if data_type != "Date":
                 TextInput(text=ticker, style={"padding": 2}, on_change=handle_ticker)
 
-        with View(layout="row", style=row_style):
+        with HBoxView(style=row_style):
             Label("Transform:", style={"width": 100})
             Dropdown(
                 selection=transform_type_selection,
@@ -104,15 +105,15 @@ def AxisDescriptor(
 
 # We create a shorthand for creating a component with a label
 def labeled_elem(label, comp):
-    with View(layout="row", style={"align": "left"}):
+    with HBoxView(style={"align": "left"}):
         Label(label, style={"width": 100})
         comp()
 
 
 def add_divider(comp):
-    with View(layout="column"):
+    with VBoxView():
         comp()
-        View(style={"height": 0, "border": "1px solid gray"})
+        VBoxView(style={"height": 0, "border": "1px solid gray"})
 
 
 plot_types = ["scatter", "line"]
@@ -137,11 +138,11 @@ def PlotDescriptor(self, plot: dict[str, tp.Any], plot_change: tp.Callable[[dict
         plot_["color"] = plot_colors[color_index]
         plot_change(plot_)
 
-    with View(layout="row", style={"margin": 5, "align": "left"}):
-        with View(layout="column", style={"align": "top", "width": 400}):
+    with HBoxView(style={"margin": 5, "align": "left"}):
+        with VBoxView(style={"align": "top", "width": 400}):
             AxisDescriptor("x-axis", "xaxis", plot, plot_change)
             AxisDescriptor("y-axis", "yaxis", plot, plot_change)
-        with View(layout="column", style={"align": "top", "margin-left": 10}):
+        with VBoxView(style={"align": "top", "margin-left": 10}):
             labeled_elem(
                 "Chart type", lambda: Dropdown(selection=plot_type, options=plot_types, on_select=handle_plot_type)
             )
@@ -198,8 +199,8 @@ def App(self):
             elif plot_type == "scatter":
                 ax.scatter(df.xdata, df.ydata, color=color)
 
-    with View(layout="column", style={"margin": 10, "align": "top"}):
-        with View(layout="column"):
+    with VBoxView(style={"margin": 10, "align": "top"}):
+        with VBoxView():
             for key, plot in plots.items():
 
                 def plot_change(p: dict[str, tp.Any]) -> None:
@@ -211,7 +212,7 @@ def App(self):
             # Edifice comes with Font-Awesome icons for your convenience
             IconButton(name="plus", title="Add Plot", on_click=add_plot)
 
-        with View(style={"height": 500, "margin-top": 10}):
+        with VBoxView(style={"height": 500, "margin-top": 10}):
             MatplotlibFigure(plot_figure)
 
 

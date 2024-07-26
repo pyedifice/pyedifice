@@ -7,16 +7,28 @@ Seems to work fine.
 import logging
 import os
 import typing as tp
-from edifice import App, Window, View, component, Slider, Label, use_state, use_effect, Image, TableGridView
 
+from edifice import (
+    App,
+    HBoxView,
+    Image,
+    Label,
+    Slider,
+    TableGridView,
+    VBoxView,
+    Window,
+    component,
+    use_effect,
+    use_state,
+)
 from edifice.qt import QT_VERSION
 
 if QT_VERSION == "PyQt6" and not tp.TYPE_CHECKING:
+    from PyQt6 import QtCore, QtGui, QtWidgets
     from PyQt6.QtCore import Qt
-    from PyQt6 import QtWidgets, QtGui, QtCore
 else:
+    from PySide6 import QtCore, QtGui, QtWidgets
     from PySide6.QtCore import Qt
-    from PySide6 import QtWidgets, QtGui, QtCore
 
 logger = logging.getLogger("Edifice")
 logger.setLevel(logging.INFO)
@@ -34,7 +46,7 @@ def MyComponent3(self):
     def handle_resize(event: QtGui.QResizeEvent):
         resize_event_set(event.size())
 
-    with View(layout="column"):
+    with VBoxView():
         Label(text=str(resize_event))
         with TableGridView() as tgv:
             with tgv.row():
@@ -42,9 +54,9 @@ def MyComponent3(self):
             with tgv.row():
                 Slider(x_minus, min_value=0, max_value=100, on_change=x_minus_set).set_key("row2")
             with tgv.row():
-                with View(layout="row", on_resize=handle_resize).set_key("row3"):
+                with HBoxView(on_resize=handle_resize).set_key("row3"):
                     for i in range(x_minus, x):
-                        with View(layout="column", style={"align": "center"}).set_key("view" + str(i)):
+                        with VBoxView(style={"align": "center"}).set_key("view" + str(i)):
                             Label(str(i))
                             Image(
                                 src=imgpath,
@@ -60,7 +72,7 @@ def MyComponent3(self):
 def MyComponent(self):
     x, x_set = use_state(0)
 
-    with View(layout="column"):
+    with VBoxView():
         Slider(x, min_value=0, max_value=100, on_change=x_set)
         InnerComponent(x)
 
@@ -75,14 +87,14 @@ def InnerComponent(self, x: int):
 
     use_effect(y_setter, x)
 
-    with View(layout="row"):
+    with HBoxView():
         for i in range(y):
             ItemComponent(i).set_key("X" + str(i))
 
 
 @component
 def ItemComponent(self, i: int):
-    with View():
+    with VBoxView():
         Label(str(i))
 
 

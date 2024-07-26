@@ -1,6 +1,6 @@
 import typing as tp
-import edifice as ed
 
+import edifice as ed
 from edifice.qt import QT_VERSION
 
 if QT_VERSION == "PyQt6" and not tp.TYPE_CHECKING:
@@ -26,7 +26,7 @@ def Main(self):
             text="World",
             selectable=True,
         )
-        with ed.View(layout="row"):
+        with ed.HBoxView():
             ed.Dropdown(
                 options=["Option set 1", "Option set 2"],
                 selection=ddoptions,
@@ -48,7 +48,7 @@ def Main(self):
                         on_select=ddoptions3_set,
                         enable_mouse_scroll=False,
                     )
-        with ed.View(layout="row", style={"margin": 10}):
+        with ed.HBoxView(style={"margin": 10}):
             ed.TextInputMultiline(
                 text=mltext,
                 on_change=mltext_set,
@@ -62,15 +62,15 @@ def Main(self):
                 },
             )
             ed.Button("Exclaim text", on_click=lambda _: mltext_set("!" + mltext + "!"))
-        with ed.View():
+        with ed.VBoxView():
             ed.SpinInput(
                 value=sival,
                 min_value=10,
                 max_value=20,
                 on_change=lambda v: (sival_set(v)),
             )
-        with ed.View(layout="row"):
-            with ed.View():
+        with ed.HBoxView():
+            with ed.VBoxView():
                 # RadioButtons with the same parent
                 ed.RadioButton(
                     text="Option 1",
@@ -90,9 +90,9 @@ def Main(self):
                     on_change=lambda checked: radio_value1_set("op3") if checked else None,
                     style={} if radio_value1 == "op3" else {"color": "grey"},
                 )
-            with ed.View():
+            with ed.VBoxView():
                 # RadioButtons with different parents
-                with ed.View():
+                with ed.VBoxView():
                     ed.RadioButton(
                         text="Option 1",
                         checked=radio_value2 == "op1",
@@ -101,7 +101,7 @@ def Main(self):
                             "color": "" if radio_value2 == "op1" else "grey",
                         },
                     )
-                with ed.View():
+                with ed.VBoxView():
                     ed.RadioButton(
                         text="Option 2",
                         checked=radio_value2 == "op2",
@@ -110,7 +110,7 @@ def Main(self):
                             "color": "" if radio_value2 == "op2" else "grey",
                         },
                     )
-                with ed.View():
+                with ed.VBoxView():
                     ed.RadioButton(
                         text="Option 3",
                         checked=radio_value2 == "op3",
@@ -119,7 +119,7 @@ def Main(self):
                             "color": "" if radio_value2 == "op3" else "grey",
                         },
                     )
-        with ed.View(layout="row"):
+        with ed.HBoxView():
             ed.CheckBox(
                 checked=True,
                 text="Check Const True",
@@ -135,9 +135,8 @@ def Main(self):
                 text="Check",
                 style={} if check_value1 else {"color": "grey"},
             )
-        with ed.View(
+        with ed.HBoxView(
             # https://doc.qt.io/qtforpython-6/overviews/stylesheet-customizing.html#the-box-model
-            layout="row",
             style={
                 "border": "3px solid black",
                 "background-color": "white",
@@ -155,11 +154,11 @@ def Main(self):
                     "background-color": "pink",
                 },
             )
-            with ed.View(
+            with ed.VBoxView(
                 style={
                     "padding": 20,
                     "border": "10px solid brown",
-                }
+                },
             ):
                 ed.Label(
                     text="CONTENT2",

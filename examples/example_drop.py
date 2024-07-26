@@ -11,7 +11,7 @@ if QT_VERSION == "PyQt6" and not tp.TYPE_CHECKING:
 else:
     from PySide6.QtGui import QDragEnterEvent, QDragLeaveEvent, QDragMoveEvent, QDropEvent
 
-from edifice import App, Label, View, Window, component, use_state
+from edifice import App, Label, VBoxView, Window, component, use_state
 
 
 @component
@@ -40,8 +40,7 @@ def Component(self):
                     dropped_files_set(proposed_files)
                     proposed_files_set([])
 
-    with View(
-        layout="column",
+    with VBoxView(
         style={
             "min-height": "300px",
             "min-width": "500px",
@@ -49,13 +48,12 @@ def Component(self):
         on_drop=handle_drop,
     ):
         if dropped_files == [] and proposed_files == []:
-            with View():
+            with VBoxView():
                 Label(
                     text="DROP FILES HERE",
                 )
         else:
-            with View(
-                layout="column",
+            with VBoxView(
                 style={
                     "align": "top",
                 },
@@ -74,7 +72,7 @@ def Component(self):
 @component
 def Main(self):
     with Window("Drop Example"):
-        with View():
+        with VBoxView():
             Component()
 
 

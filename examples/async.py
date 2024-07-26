@@ -5,8 +5,9 @@
 
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
+from typing import cast
+
 import edifice as ed
-from typing import cast, Callable
 
 
 @ed.component
@@ -126,8 +127,8 @@ def Main(self):
 
     ##########
 
-    with ed.View():
-        with ed.View(
+    with ed.VBoxView():
+        with ed.VBoxView(
             style={
                 "margin-top": 20,
                 "margin-bottom": 20,
@@ -136,7 +137,7 @@ def Main(self):
                 "border-top-color": "black",
             },
         ):
-            with ed.View(layout="row"):
+            with ed.HBoxView():
                 ed.CheckBox(
                     checked=checked,
                     on_change=set_checked,
@@ -144,7 +145,7 @@ def Main(self):
                 if checked:
                     ComponentWithAsync()
 
-        with ed.View(
+        with ed.VBoxView(
             style={
                 "margin-top": 20,
                 "margin-bottom": 20,
@@ -157,7 +158,7 @@ def Main(self):
             ed.Label(str(b))
             ed.Slider(a, min_value=0, max_value=100, on_change=_on_change1)
 
-        with ed.View(
+        with ed.VBoxView(
             style={
                 "margin-top": 20,
                 "margin-bottom": 20,
@@ -169,7 +170,7 @@ def Main(self):
             ed.Label(str(c))
             ed.Slider(c, min_value=0, max_value=100, on_change=_on_change2)
 
-        with ed.View(
+        with ed.VBoxView(
             style={
                 "margin-top": 20,
                 "margin-bottom": 20,
@@ -181,7 +182,7 @@ def Main(self):
             ed.Label(str(e))
             ed.Slider(d, min_value=0, max_value=100, on_change=set_d)
 
-        with ed.View(
+        with ed.VBoxView(
             style={
                 "margin-top": 20,
                 "margin-bottom": 20,
@@ -190,7 +191,7 @@ def Main(self):
                 "border-top-color": "black",
             },
         ):
-            with ed.View(layout="row"):
+            with ed.VBoxView():
                 with ed.ButtonView(
                     on_click=lambda _ev: start_k(),
                 ):

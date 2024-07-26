@@ -19,7 +19,7 @@ if QtWidgets.QApplication.instance() is None:
 @ed.component
 def Value(self, value):
     self.value = value
-    base_components.View()
+    base_components.VBoxView()
 
 
 class OtherMockElement(ed.Element):
@@ -54,11 +54,11 @@ class ElementTestCase(unittest.TestCase):
         def xComponent(self):
             x, x_set = ed.use_state(0)
             if x == 0:
-                with ed.View(layout="row").set_key("row"):
+                with ed.HBoxView().set_key("row"):
                     ed.Label("Test")
                 x_set(1)
             else:
-                with ed.View(layout="column").set_key("column"):
+                with ed.VBoxView().set_key("column"):
                     ed.Label("Test")
 
         root_element = Window()(xComponent())
@@ -95,7 +95,7 @@ class MakeElementTestCase(unittest.TestCase):
     def test_make_components(self):
         @ed.component
         def Element1234(self, prop1, prop2):
-            with base_components.View():
+            with base_components.VBoxView():
                 Value(1337)
                 Value(42)
                 Value(69)

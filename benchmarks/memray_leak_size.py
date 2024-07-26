@@ -5,6 +5,7 @@
 #
 
 import sys
+
 from memray import FileReader
 
 if len(sys.argv) < 2:

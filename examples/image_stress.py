@@ -2,25 +2,24 @@
 # python examples/image_stress.py
 #
 
-import typing as tp
+from __future__ import annotations
 
+import typing as tp
 
 from edifice.qt import QT_VERSION
 
 if QT_VERSION == "PyQt6" and not tp.TYPE_CHECKING:
-    from PyQt6.QtGui import QDragEnterEvent, QDragLeaveEvent, QDragMoveEvent, QDropEvent
     from PyQt6.QtCore import Qt
+    from PyQt6.QtGui import QDragEnterEvent, QDragLeaveEvent, QDragMoveEvent, QDropEvent
 else:
-    from PySide6.QtGui import QDragEnterEvent, QDragLeaveEvent, QDragMoveEvent, QDropEvent
     from PySide6.QtCore import Qt
+    from PySide6.QtGui import QDragEnterEvent, QDragLeaveEvent, QDragMoveEvent, QDropEvent
 
 import edifice as ed
 
 
 @ed.component
 def Component(self):
-    # print(ed.base_components.base_components._get_image.cache_info())
-
     dropped_files, dropped_files_set = ed.use_state(tp.cast(list[str], []))
     proposed_files, proposed_files_set = ed.use_state(tp.cast(list[str], []))
     max_images, max_images_set = ed.use_state(0)
@@ -58,8 +57,7 @@ def Component(self):
                     proposed_files_set([])
                     max_images_set(len(proposed_files))
 
-    with ed.View(
-        layout="column",
+    with ed.VBoxView(
         style={
             "min-height": "300px",
             "min-width": "500px",
@@ -78,9 +76,7 @@ def Component(self):
                         text=file,
                     )
         elif dropped_files != []:
-            with ed.View(
-                layout="column",
-            ):
+            with ed.VBoxView():
                 ed.CheckBox(checked=auto_stress, on_change=auto_stress_set, text="Rapidly load and unload images")
                 ed.Slider(
                     value=max_images,
@@ -105,7 +101,7 @@ def Component(self):
                         },
                     ).set_key(file)
         else:
-            with ed.View():
+            with ed.VBoxView():
                 ed.Label(
                     text="DROP IMAGE FILES HERE",
                 )
@@ -114,14 +110,9 @@ def Component(self):
 @ed.component
 def Main(self):
     with ed.Window("Image Stress Test"):
-        with ed.View():
+        with ed.VBoxView():
             Component()
 
-
-# myobj_init = tp.ParamSpec("myobj_init")
-# class myobj(object):
-#     def __init__(self, *args: myobj_init.args, **kwargs: myobj_init.kwargs):
-#         pass
 
 if __name__ == "__main__":
     ed.App(Main()).start()

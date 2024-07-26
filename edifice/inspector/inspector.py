@@ -38,7 +38,7 @@ def Collapsible(
     root_style: dict[str, tp.Any] = {"margin-left": 5}
     if root == current_selection:
         root_style["background-color"] = SELECTION_COLOR
-    with ed.View(layout="row", style={"align": "left"}):
+    with ed.HBoxView(style={"align": "left"}):
         ed.Icon(
             "caret-right",
             rotation=0 if collapsed else 90,
@@ -62,7 +62,7 @@ def TreeView(
     child_style = {"align": "top", "margin-left": 20}
     if collapsed:
         child_style["height"] = 0
-    with ed.View(layout="column", style={"align": "top"}):
+    with ed.VBoxView(style={"align": "top"}):
         Collapsible(
             root=root,
             current_selection=current_selection,
@@ -70,8 +70,7 @@ def TreeView(
             on_click=on_click,
             toggle=lambda: collapsed_set(lambda p: not p),
         )
-        with ed.View(
-            layout="column",
+        with ed.VBoxView(
             style=child_style,
         ):
             if not collapsed:
@@ -87,20 +86,19 @@ def StateView(
 ):
     setattr(self, "__edifice_inspector_element", True)
 
-    with ed.ScrollView(
-        layout="column",
+    with ed.VScrollView(
         style={"align": "top", "margin-left": 15},
     ):
         for s in component_hook_state:
-            with ed.View(
-                layout="row",
+            with ed.HBoxView(
                 style={"align": "left"},
             ):
                 ed.Label(
                     text=str(s.state),
                     selectable=True,
                     size_policy=QtWidgets.QSizePolicy(
-                        QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Fixed,
+                        QtWidgets.QSizePolicy.Policy.Expanding,
+                        QtWidgets.QSizePolicy.Policy.Fixed,
                     ),
                 )
 
@@ -108,14 +106,13 @@ def StateView(
 @ed.component
 def PropsView(self, props: dict[str, tp.Any], refresh_trigger: bool):
     setattr(self, "__edifice_inspector_element", True)
-    with ed.ScrollView(layout="column", style={"align": "top", "margin-left": 15}):
+    with ed.VScrollView(style={"align": "top", "margin-left": 15}):
         for k, v in props.items():
             if k != "children":
                 # It's weird and buggy that if we show the children prop, then
                 # it is wrong and shows children from the last selected
                 # component. But anyway we just don't show the children prop.
-                with ed.View(
-                    layout="row",
+                with ed.HBoxView(
                     style={"align": "left"},
                 ):
                     ed.Label(
@@ -127,7 +124,8 @@ def PropsView(self, props: dict[str, tp.Any], refresh_trigger: bool):
                         text=str(v),
                         selectable=True,
                         size_policy=QtWidgets.QSizePolicy(
-                            QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Fixed,
+                            QtWidgets.QSizePolicy.Policy.Expanding,
+                            QtWidgets.QSizePolicy.Policy.Fixed,
                         ),
                     )
 
@@ -154,7 +152,7 @@ def ElementView(
         pass
     heading_style = {"font-size": "16px", "margin": 10, "margin-bottom": 0}
 
-    with ed.View(layout="column", style={"align": "top", "min-width": 450, "min-height": 450}):
+    with ed.VBoxView(style={"align": "top", "min-width": 450, "min-height": 450}):
         ed.Label(cls.__name__, selectable=True, style={"font-size": "20px", "margin": 10})
         if module is not None:
             ed.Label(
@@ -207,16 +205,16 @@ def Inspector(
         else:
             ElementLabel(root, current_selection=selected, on_click=lambda: selected_set(root))
 
-    with ed.View(layout="row"):
+    with ed.HBoxView():
         if component_tree is not None and root_component is not None and hook_state is not None:
-            with ed.View(layout="column", style={"align": "top", "width": 251, "border-right": "1px solid gray"}):
-                with ed.View(layout="row", style={"align": "left", "height": 30}):
+            with ed.VBoxView(style={"align": "top", "width": 251, "border-right": "1px solid gray"}):
+                with ed.HBoxView(style={"align": "left", "height": 30}):
                     ed.Label("Edifice Inspector", style={"font-size": 18, "margin-left": 10, "width": 160})
                     ed.Icon("sync-alt", size=20, on_click=lambda _e: _force_refresh(), tool_tip="Reload component tree")
-                with ed.ScrollView(layout="column", style={"width": 250, "min-height": 450, "margin-top": 10}):
+                with ed.VScrollView(style={"width": 250, "min-height": 450, "margin-top": 10}):
                     if root_component is not None:
                         _build_tree(root_component)
-            with ed.View(layout="column", style={"min-width": 450, "min-height": 450}):
+            with ed.VBoxView(style={"min-width": 450, "min-height": 450}):
                 if selected is not None:
                     ElementView(
                         selected,

@@ -2,8 +2,9 @@
 # python examples/use_state1.py
 #
 
-import asyncio as asyncio
-from edifice import App, Window, View, Label, Button, component, use_state
+import asyncio
+
+from edifice import App, Button, Label, VBoxView, Window, component, use_state
 
 
 @component
@@ -12,12 +13,12 @@ def UseState1(self):
 
     with Window():
         if show:
-            with View():
-                Button(title="Hide", on_click=lambda ev: set_show(False))
+            with VBoxView():
+                Button(title="Hide", on_click=lambda _ev: set_show(False))
                 TestComp()
         else:
-            with View():
-                Button(title="Show", on_click=lambda ev: set_show(True))
+            with VBoxView():
+                Button(title="Show", on_click=lambda _ev: set_show(True))
 
 
 @component
@@ -29,13 +30,13 @@ def TestComp(self):
         x_setter(x + 1)
 
     def click10(_):
-        for i in range(10):
+        for _i in range(10):
             x_setter(lambda y: y + 1)
 
-    with View(style={"align": "top"}):
+    with VBoxView(style={"align": "top"}):
         Button(title="State " + str(x) + " + 1", on_click=handle_click)
         Button(title="State " + str(x) + " + 10", on_click=click10)
-        Button(title="Exit", on_click=lambda ev: asyncio.get_event_loop().call_soon(my_app.stop))
+        Button(title="Exit", on_click=lambda _ev: asyncio.get_event_loop().call_soon(my_app.stop))
         for i in range(x):
             Label(text=str(i))
 

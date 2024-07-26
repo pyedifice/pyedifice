@@ -2,15 +2,14 @@
 # python examples/harmonic_oscillator.py
 #
 
-import typing as tp
 import asyncio
 import logging
-import edifice as ed
 
-from edifice.extra.pyqtgraph_plot import PyQtPlot
 import numpy as np
-
 import pyqtgraph as pg
+
+import edifice as ed
+from edifice.extra.pyqtgraph_plot import PyQtPlot
 
 pg.setConfigOption("antialias", True)
 
@@ -76,14 +75,14 @@ def Oscillator(self):
         simulation_time_set(0)
         plot_fun_set((lambda figure: plot(figure),))
 
-    with ed.View(layout="row"):
-        with ed.View(layout="column", style={"margin": 10}):
-            with ed.View(layout="row"):
+    with ed.HBoxView():
+        with ed.VBoxView(style={"margin": 10}):
+            with ed.HBoxView():
                 ed.IconButton("pause" if is_playing else "play", on_click=lambda e: is_playing_set(lambda p: not p))
                 ed.Button("Reset", on_click=lambda e: simulation_time_set(0))
-            with ed.View():
+            with ed.VBoxView():
                 PyQtPlot(plot_fun=plot_fun[0])
-            with ed.View(layout="row", style={"margin": 10}):
+            with ed.HBoxView(style={"margin": 10}):
                 ed.Label("Angular Frequency")
                 ed.Slider(
                     value=int(angular_frequency * 20.0), min_value=20, max_value=200, on_change=freq_slider_change
@@ -94,8 +93,8 @@ def Oscillator(self):
             # We position the ball and the centroid using absolute positioning.
             # The label and ball offsets are different since we have to take into
             # account the size of the ball
-            with ed.View(layout="row", style={"align": "center"}):
-                with ed.View(layout="none", style={"width": 720, "height": 10, "margin-top": 40}):
+            with ed.HBoxView(style={"align": "center"}):
+                with ed.FixView(style={"width": 720, "height": 10, "margin-top": 40}):
                     ed.Icon(
                         "bowling-ball",
                         size=20,

@@ -3,12 +3,13 @@
 #
 
 import typing as tp
+
+import numpy as np
+from matplotlib.axes import Axes
+from matplotlib.backend_bases import MouseEvent
+
 import edifice as ed
 from edifice.extra import MatplotlibFigure
-import numpy as np
-
-from matplotlib.backend_bases import MouseEvent
-from matplotlib.axes import Axes
 
 
 @ed.component

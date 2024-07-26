@@ -2,9 +2,10 @@
 # python examples/use_effect_async1.py
 #
 
-import asyncio as asyncio
-from edifice import App, Window, View, Label, Button, component
-from edifice.hooks import use_state, use_async
+import asyncio
+
+from edifice import App, Button, Label, VBoxView, Window, component
+from edifice.hooks import use_async, use_state
 
 
 @component
@@ -12,11 +13,11 @@ def MainComp(self):
     show, set_show = use_state(False)
     with Window():
         if show:
-            with View(style={"align": "top"}):
+            with VBoxView(style={"align": "top"}):
                 Button(title="Hide", on_click=lambda ev: set_show(False))
                 TestComp()
         else:
-            with View(style={"align": "top"}):
+            with VBoxView(style={"align": "top"}):
                 Button(title="Show", on_click=lambda ev: set_show(True))
 
 
@@ -53,7 +54,7 @@ def TestComp(self):
         for i in range(10):
             asyncio.get_running_loop().call_later(0.1 * i, x_setter, (lambda y: y + 1))
 
-    with View(style={"align": "top"}):
+    with VBoxView(style={"align": "top"}):
         Label(text=result)
         Button(title="State " + str(x), on_click=lambda ev: x_setter(lambda y: y + 1))
         Button(

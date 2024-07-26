@@ -2,10 +2,10 @@
 # python examples/use_ref1.py
 #
 
-import asyncio as asyncio
-from typing import cast, TYPE_CHECKING
-from edifice.engine import QtWidgetElement, Reference
+import asyncio
+from typing import TYPE_CHECKING, cast
 
+from edifice.engine import QtWidgetElement, Reference
 from edifice.qt import QT_VERSION
 
 if QT_VERSION == "PyQt6" and not TYPE_CHECKING:
@@ -13,7 +13,7 @@ if QT_VERSION == "PyQt6" and not TYPE_CHECKING:
 else:
     from PySide6.QtWidgets import QLabel
 
-from edifice import App, Window, View, Label, Button, component, use_ref, use_effect
+from edifice import App, Label, VBoxView, Window, component, use_effect, use_ref
 
 
 @component
@@ -29,7 +29,7 @@ def MyComp(self):
     use_effect(did_render, ref)
 
     with Window():
-        with View():
+        with VBoxView():
             Label("Before").register_ref(ref)
 
 

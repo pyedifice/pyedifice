@@ -1,9 +1,7 @@
-import asyncio as asyncio
 import unittest
 
-from edifice import App, Window, Element, View, Label, Button, component
+from edifice import App, Button, Element, Label, VBoxView, Window, component
 from edifice.hooks import use_state
-
 from edifice.qt import QT_VERSION
 
 if QT_VERSION == "PyQt6":
@@ -23,12 +21,12 @@ class IntegrationTestCase(unittest.TestCase):
 
             with Window():
                 if show:
-                    with View():
-                        Button(title="Hide", on_click=lambda ev: set_show(False))
+                    with VBoxView():
+                        Button(title="Hide", on_click=lambda _ev: set_show(False))
                         TestComp()
                 else:
-                    with View():
-                        Button(title="Show", on_click=lambda ev: set_show(True))
+                    with VBoxView():
+                        Button(title="Show", on_click=lambda _ev: set_show(True))
 
         class TestComp(Element):
             def __init__(self):
@@ -37,10 +35,10 @@ class IntegrationTestCase(unittest.TestCase):
             def _render_element(self):
                 print("TestComp instance " + str(id(self)))
                 x, x_setter = use_state(0)
-                return View(style={"align": "top"})(
+                return VBoxView(style={"align": "top"})(
                     *[Label(text=str(i)) for i in range(x)],
-                    Button(title="State " + str(x), on_click=lambda ev: x_setter(x + 1)),
-                    Button(title="Exit", on_click=lambda ev: loop.call_soon(my_app.stop)),
+                    Button(title="State " + str(x), on_click=lambda _ev: x_setter(x + 1)),
+                    Button(title="Exit", on_click=lambda _ev: loop.call_soon(my_app.stop)),
                 )
 
         my_app = App(Wrapper(), create_application=False)
