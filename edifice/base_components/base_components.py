@@ -5,6 +5,9 @@ import importlib.resources
 import logging
 import re
 import typing as tp
+import warnings
+
+from typing_extensions import deprecated
 
 import edifice.icons
 from edifice.engine import (
@@ -31,6 +34,7 @@ else:
 logger = logging.getLogger("Edifice")
 
 P = tp.ParamSpec("P")
+_T_underlying = tp.TypeVar("_T_underlying", bound=QtWidgets.QWidget)
 
 RGBAType = tp.Tuple[int, int, int, int]
 
@@ -887,7 +891,7 @@ class Slider(QtWidgetElement[QtWidgets.QSlider]):
         return commands
 
 
-class _LinearView(QtWidgetElement[QtWidgets.QWidget]):
+class _LinearView(QtWidgetElement[_T_underlying], tp.Generic[_T_underlying]):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self._widget_children: list[QtWidgetElement] = []
@@ -996,102 +1000,51 @@ class _LinearView(QtWidgetElement[QtWidgets.QWidget]):
         raise NotImplementedError
 
 
-class View(_LinearView):
-    """Basic layout widget for grouping children together.
+class VBoxView(_LinearView[QtWidgets.QWidget]):
+    """Vertical column layout view for child elements.
+
+    This is the basic layout element which behaves like an
+    `HTML div <https://developer.mozilla.org/en-US/docs/Web/HTML/Element/div>`_.
 
     * Underlying Qt Layout
       `QVBoxLayout <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QVBoxLayout.html>`_
-      or
-      `QHBoxLayout <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QHBoxLayout.html>`_
-      or :code:`"none"`
 
-    Content that does not fit into the View layout will be clipped.
-    To allow scrolling in case of overflow, use :class:`ScrollView<edifice.ScrollView>`.
-
-    Args:
-        layout: one of :code:`"column"`, :code:`"row"`, or :code:`"none"`.
-
-            A row layout will lay its children in a row and a column layout will lay its children in a column.
-            When :code:`layout="row"` or :code:`layout="column"` are set, the position of their children is not adjustable.
-            If layout is :code:`"none"`, then all children by default will be positioned at the upper left-hand corner
-            of the View at *(x=0, y=0)*. Children can set the :code:`top` and :code:`left` attributes of their style
-            to position themselves relevative to their parent.
+    Content that does not fit into the VBoxView layout will be clipped.
+    To allow scrolling in case of overflow, use :class:`VScrollView<edifice.VScrollView>`.
     """
 
     def __init__(
         self,
-        layout: tp.Literal["row", "column", "none"] = "column",
         **kwargs,
     ):
         super().__init__(**kwargs)
-        self._register_props({"layout": layout})
 
     def _delete_child(self, i, old_child: QtWidgetElement):
-        # assert self.underlying_layout is not None
-        # self.underlying_layout.takeAt(i).widget().deleteLater()
-
         # https://doc.qt.io/qtforpython-6/PySide6/QtCore/QObject.html#detailed-description
         # “The parent takes ownership of the object; i.e., it will automatically delete its children in its destructor.”
-        # I think that sometimes when we try to delete a widget, it has already
-        # been deleted by its parent. So we can't just fail if the delete fails.
-
-        if self.underlying_layout is not None:
-            if (child_node := self.underlying_layout.takeAt(i)) is None:
-                logger.warning("_delete_child takeAt failed " + str(i) + " " + str(self))
-            else:
-                if (w := child_node.widget()) is None:
-                    logger.warning("_delete_child widget is None " + str(i) + " " + str(self))
-                else:
-                    w.deleteLater()
+        if (child_node := self.underlying_layout.takeAt(i)) is None:
+            logger.warning("_delete_child takeAt failed " + str(i) + " " + str(self))
         else:
-            # Then this is a fixed-position View
-            assert old_child.underlying is not None
-            old_child.underlying.setParent(None)
+            if (w := child_node.widget()) is None:
+                logger.warning("_delete_child widget is None " + str(i) + " " + str(self))
+            else:
+                w.deleteLater()
 
     def _soft_delete_child(self, i, old_child: QtWidgetElement):
-        if self.underlying_layout is not None:
-            if self.underlying_layout.takeAt(i) is None:
-                logger.warning("_soft_delete_child takeAt failed " + str(i) + " " + str(self))
-        else:
-            # Then this is a fixed-position View
-            assert old_child.underlying is not None
-            old_child.underlying.setParent(None)
+        if self.underlying_layout.takeAt(i) is None:
+            logger.warning("_soft_delete_child takeAt failed " + str(i) + " " + str(self))
 
     def _add_child(self, i, child_component: QtWidgets.QWidget):
         if self.underlying_layout is not None:
             self.underlying_layout.insertWidget(i, child_component)
-        else:
-            # Then this is a fixed-position View
-            child_component.setParent(self.underlying)
-            # https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.setParent
-            # “The widget becomes invisible as part of changing its parent, even if it was
-            # previously visible. You must call show() to make the widget visible again.”
-            child_component.setVisible(True)
 
     def _initialize(self):
         self.underlying = QtWidgets.QWidget()
-        layout = self.props.layout
-        if layout == "column":
-            self.underlying_layout = QtWidgets.QVBoxLayout()
-        elif layout == "row":
-            self.underlying_layout = QtWidgets.QHBoxLayout()
-        elif layout == "none":
-            self.underlying_layout = None
-        else:
-            raise ValueError("Layout must be row, column or none, got %s instead", layout)
-        # A bad consequence of the way we have one View which is either QVBoxLayout
-        # or QHBoxLayout is that can't change the layout after it's been set.
-        # This means that if a render replaces a View row with a View column,
-        # the underlying layout will not be changed.
-        # This can be solved by using set_key() to force a new View to be created.
-        # But it's not user-friendly. Maybe we should have different elements
-        # ViewColumn and ViewRow?
-
+        self.underlying_layout = QtWidgets.QVBoxLayout()
         self.underlying.setObjectName(str(id(self)))
-        if self.underlying_layout is not None:
-            self.underlying.setLayout(self.underlying_layout)
-            self.underlying_layout.setContentsMargins(0, 0, 0, 0)
-            self.underlying_layout.setSpacing(0)
+        self.underlying.setLayout(self.underlying_layout)
+        self.underlying_layout.setContentsMargins(0, 0, 0, 0)
+        self.underlying_layout.setSpacing(0)
 
     def _qt_update_commands(
         self,
@@ -1118,8 +1071,161 @@ class View(_LinearView):
         commands = super()._qt_update_commands_super(widget_trees, newprops, self.underlying, self.underlying_layout)
         return commands
 
+class HBoxView(_LinearView[QtWidgets.QWidget]):
+    """Horizontal row layout view for child elements.
 
-class Window(View):
+    * Underlying Qt Layout
+      `QHBoxLayout <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QHBoxLayout.html>`_
+
+    Content that does not fit into the HBoxView layout will be clipped.
+    To allow scrolling in case of overflow, use :class:`HScrollView<edifice.HScrollView>`.
+    """
+
+    def __init__(
+        self,
+        **kwargs,
+    ):
+        super().__init__(**kwargs)
+
+    def _delete_child(self, i, old_child: QtWidgetElement):
+        # https://doc.qt.io/qtforpython-6/PySide6/QtCore/QObject.html#detailed-description
+        # “The parent takes ownership of the object; i.e., it will automatically delete its children in its destructor.”
+        if (child_node := self.underlying_layout.takeAt(i)) is None:
+            logger.warning("_delete_child takeAt failed " + str(i) + " " + str(self))
+        else:
+            if (w := child_node.widget()) is None:
+                logger.warning("_delete_child widget is None " + str(i) + " " + str(self))
+            else:
+                w.deleteLater()
+
+    def _soft_delete_child(self, i, old_child: QtWidgetElement):
+        if self.underlying_layout.takeAt(i) is None:
+            logger.warning("_soft_delete_child takeAt failed " + str(i) + " " + str(self))
+
+    def _add_child(self, i, child_component: QtWidgets.QWidget):
+        if self.underlying_layout is not None:
+            self.underlying_layout.insertWidget(i, child_component)
+
+    def _initialize(self):
+        self.underlying = QtWidgets.QWidget()
+        self.underlying_layout = QtWidgets.QHBoxLayout()
+        self.underlying.setObjectName(str(id(self)))
+        self.underlying.setLayout(self.underlying_layout)
+        self.underlying_layout.setContentsMargins(0, 0, 0, 0)
+        self.underlying_layout.setSpacing(0)
+
+    def _qt_update_commands(
+        self,
+        widget_trees: dict[Element, _WidgetTree],
+        newprops,
+    ):
+        if self.underlying is None:
+            self._initialize()
+        assert self.underlying is not None
+        children = _get_widget_children(widget_trees, self)
+        commands = []
+        # Should we run the child commands after the View commands?
+        # No because children must be able to delete themselves before parent
+        # deletes them.
+        # https://doc.qt.io/qtforpython-6/PySide6/QtCore/QObject.html#detailed-description
+        # “The parent takes ownership of the object; i.e., it will automatically delete its children in its destructor.”
+        commands.extend(self._recompute_children(children))
+        commands.extend(self._qt_stateless_commands(widget_trees, newprops))
+        return commands
+
+    def _qt_stateless_commands(self, widget_trees: dict[Element, _WidgetTree], newprops):
+        # This stateless render command is used to test rendering
+        assert self.underlying is not None
+        commands = super()._qt_update_commands_super(widget_trees, newprops, self.underlying, self.underlying_layout)
+        return commands
+
+class FixView(_LinearView[QtWidgets.QWidget]):
+    """View layout for child widgets with fixed position.
+
+    Content that does not fit into the FixView layout will be clipped.
+    To allow scrolling in case of overflow, use :class:`FixScrollView<edifice.FixScrollView>`.
+
+    Use the :code:`top` and :code:`left` style properties to set the position of the child widgets.
+
+    Example::
+
+        with FixView():
+            Label(
+                text="Label 100px from top and 200px from left",
+                style={"top": 100, "left": 200},
+            )
+    """
+
+    def __init__(
+        self,
+        **kwargs,
+    ):
+        super().__init__(**kwargs)
+
+    def _delete_child(self, i, old_child: QtWidgetElement):
+        # https://doc.qt.io/qtforpython-6/PySide6/QtCore/QObject.html#detailed-description
+        # “The parent takes ownership of the object; i.e., it will automatically delete its children in its destructor.”
+        assert old_child.underlying is not None
+        old_child.underlying.setParent(None)
+
+    def _soft_delete_child(self, i, old_child: QtWidgetElement):
+        assert old_child.underlying is not None
+        old_child.underlying.setParent(None)
+
+    def _add_child(self, i, child_component: QtWidgets.QWidget):
+        child_component.setParent(self.underlying)
+        # https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.setParent
+        # “The widget becomes invisible as part of changing its parent, even if it was
+        # previously visible. You must call show() to make the widget visible again.”
+        child_component.setVisible(True)
+
+    def _initialize(self):
+        self.underlying = QtWidgets.QWidget()
+        self.underlying.setObjectName(str(id(self)))
+
+    def _qt_update_commands(
+        self,
+        widget_trees: dict[Element, _WidgetTree],
+        newprops,
+    ):
+        if self.underlying is None:
+            self._initialize()
+        assert self.underlying is not None
+        children = _get_widget_children(widget_trees, self)
+        commands = []
+        # Should we run the child commands after the View commands?
+        # No because children must be able to delete themselves before parent
+        # deletes them.
+        # https://doc.qt.io/qtforpython-6/PySide6/QtCore/QObject.html#detailed-description
+        # “The parent takes ownership of the object; i.e., it will automatically delete its children in its destructor.”
+        commands.extend(self._recompute_children(children))
+        commands.extend(self._qt_stateless_commands(widget_trees, newprops))
+        return commands
+
+    def _qt_stateless_commands(self, widget_trees: dict[Element, _WidgetTree], newprops):
+        # This stateless render command is used to test rendering
+        assert self.underlying is not None
+        commands = super()._qt_update_commands_super(widget_trees, newprops, self.underlying)
+        return commands
+
+@deprecated("Instead of View use VBoxView, HBoxView, or FixView")
+def View(
+    layout: tp.Literal["row", "column", "none"] = "column",
+    **kwargs,
+):
+    match layout:
+        case "column":
+            warnings.warn('Use VBoxView instead of View(layout="column")', DeprecationWarning)
+            return VBoxView(**kwargs)
+        case "row":
+            warnings.warn('Use HBoxView instead of View(layout="row")', DeprecationWarning)
+            return HBoxView(**kwargs)
+        case "none":
+            warnings.warn('Use FixView instead of View(layout="none")', DeprecationWarning)
+            return FixView(**kwargs)
+
+
+class Window(VBoxView):
     """
     The root :class:`View` element of an :class:`App` which runs in an
     operating system window.
@@ -1156,7 +1262,7 @@ class Window(View):
                 "icon": icon,
                 "menu": menu,
                 "on_close": on_close,
-            }
+            },
         )
 
         self._menu_bar = None
@@ -1209,54 +1315,37 @@ class Window(View):
         return commands
 
 
-class ScrollView(_LinearView):
-    """Scrollable layout widget for grouping children together.
+class VScrollView(_LinearView[QtWidgets.QScrollArea]):
+    """Scrollable vertical column layout widget for grouping children together.
 
     * Underlying Qt Widget
       `QScrollArea <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QScrollArea.html>`_
+    * Underlying Qt Layout
+      `QVBoxLayout <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QVBoxLayout.html>`_
 
     .. figure:: /image/scroll_view.png
        :width: 500
 
-       A ScrollView containing a Label.
+       A VScrollView containing a Label.
 
-    Unlike :class:`View<edifice.View>`, overflows in both the x and y direction
-    will cause a scrollbar to show.
-
-    Args:
-
-        layout: one of column or row.
-            A row layout will lay its children in a row and a column layout will lay its children in a column.
-            The position of their children is not adjustable.
+    Overflows in both the x and y direction will cause a scrollbar to show.
     """
 
-    def __init__(self, layout="column", **kwargs):
+    def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self._register_props(
-            {
-                "layout": layout,
-            }
-        )
-        # self._register_props(kwargs)
 
     def _delete_child(self, i, old_child: QtWidgetElement):
-        if self.underlying_layout is None:
-            logger.warning("_delete_child No underlying_layout " + str(self))
+        if (child_node := self.underlying_layout.takeAt(i)) is None:
+            logger.warning("_delete_child takeAt failed " + str(i) + " " + str(self))
         else:
-            if (child_node := self.underlying_layout.takeAt(i)) is None:
-                logger.warning("_delete_child takeAt failed " + str(i) + " " + str(self))
+            if (w := child_node.widget()) is None:
+                logger.warning("_delete_child widget is None " + str(i) + " " + str(self))
             else:
-                if (w := child_node.widget()) is None:
-                    logger.warning("_delete_child widget is None " + str(i) + " " + str(self))
-                else:
-                    w.deleteLater()
+                w.deleteLater()
 
     def _soft_delete_child(self, i, old_child: QtWidgetElement):
-        if self.underlying_layout is None:
-            logger.warning("_soft_delete_child No underlying_layout " + str(self))
-        else:
-            if self.underlying_layout.takeAt(i) is None:
-                logger.warning("_soft_delete_child takeAt failed " + str(i) + " " + str(self))
+        if self.underlying_layout.takeAt(i) is None:
+            logger.warning("_soft_delete_child takeAt failed " + str(i) + " " + str(self))
 
     def _add_child(self, i, child_component):
         self.underlying_layout.insertWidget(i, child_component)
@@ -1264,12 +1353,8 @@ class ScrollView(_LinearView):
     def _initialize(self):
         self.underlying = QtWidgets.QScrollArea()
         self.underlying.setWidgetResizable(True)
-
         self.inner_widget = QtWidgets.QWidget()
-        if self.props.layout == "column":
-            self.underlying_layout = QtWidgets.QVBoxLayout()
-        elif self.props.layout == "row":
-            self.underlying_layout = QtWidgets.QHBoxLayout()
+        self.underlying_layout = QtWidgets.QVBoxLayout()
         self.underlying_layout.setContentsMargins(0, 0, 0, 0)
         self.underlying_layout.setSpacing(0)
         self.inner_widget.setLayout(self.underlying_layout)
@@ -1291,6 +1376,146 @@ class ScrollView(_LinearView):
         )
         return commands
 
+class HScrollView(_LinearView[QtWidgets.QScrollArea]):
+    """Scrollable horizontal row layout widget for grouping children together.
+
+    * Underlying Qt Widget
+      `QScrollArea <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QScrollArea.html>`_
+    * Underlying Qt Layout
+      `QHBoxLayout <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QHBoxLayout.html>`_
+
+    .. figure:: /image/scroll_view.png
+       :width: 500
+
+       An HScrollView containing a Label.
+
+    Overflows in both the x and y direction will cause a scrollbar to show.
+    """
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
+    def _delete_child(self, i, old_child: QtWidgetElement):
+        if (child_node := self.underlying_layout.takeAt(i)) is None:
+            logger.warning("_delete_child takeAt failed " + str(i) + " " + str(self))
+        else:
+            if (w := child_node.widget()) is None:
+                logger.warning("_delete_child widget is None " + str(i) + " " + str(self))
+            else:
+                w.deleteLater()
+
+    def _soft_delete_child(self, i, old_child: QtWidgetElement):
+        if self.underlying_layout.takeAt(i) is None:
+            logger.warning("_soft_delete_child takeAt failed " + str(i) + " " + str(self))
+
+    def _add_child(self, i, child_component):
+        self.underlying_layout.insertWidget(i, child_component)
+
+    def _initialize(self):
+        self.underlying = QtWidgets.QScrollArea()
+        self.underlying.setWidgetResizable(True)
+        self.inner_widget = QtWidgets.QWidget()
+        self.underlying_layout = QtWidgets.QHBoxLayout()
+        self.underlying_layout.setContentsMargins(0, 0, 0, 0)
+        self.underlying_layout.setSpacing(0)
+        self.inner_widget.setLayout(self.underlying_layout)
+        self.underlying.setWidget(self.inner_widget)
+        self.underlying.setObjectName(str(id(self)))
+
+    def _qt_update_commands(
+        self,
+        widget_trees: dict[Element, _WidgetTree],
+        newprops,
+    ):
+        if self.underlying is None:
+            self._initialize()
+        assert self.underlying is not None
+        children = _get_widget_children(widget_trees, self)
+        commands = self._recompute_children(children)
+        commands.extend(
+            super()._qt_update_commands_super(widget_trees, newprops, self.underlying, self.underlying_layout)
+        )
+        return commands
+
+class FixScrollView(_LinearView[QtWidgets.QScrollArea]):
+    """Scrollable layout widget for child widgets with fixed position.
+
+    * Underlying Qt Widget
+      `QScrollArea <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QScrollArea.html>`_
+
+    .. figure:: /image/scroll_view.png
+       :width: 500
+
+       A ScrollView containing a Label.
+
+    Overflows in both the x and y direction will cause a scrollbar to show.
+
+    Use the :code:`top` and :code:`left` style properties to set the position of the child widgets.
+
+    Example::
+
+        with FixScrollView():
+            Label(
+                text="Label 100px from top and 200px from left",
+                style={"top": 100, "left": 200},
+            )
+    """
+
+    def __init__(self, layout="column", **kwargs):
+        super().__init__(**kwargs)
+
+    def _delete_child(self, i, old_child: QtWidgetElement):
+        # https://doc.qt.io/qtforpython-6/PySide6/QtCore/QObject.html#detailed-description
+        # “The parent takes ownership of the object; i.e., it will automatically delete its children in its destructor.”
+        assert old_child.underlying is not None
+        old_child.underlying.setParent(None)
+
+    def _soft_delete_child(self, i, old_child: QtWidgetElement):
+        assert old_child.underlying is not None
+        old_child.underlying.setParent(None)
+
+    def _add_child(self, i, child_component: QtWidgets.QWidget):
+        child_component.setParent(self.underlying)
+        # https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.setParent
+        # “The widget becomes invisible as part of changing its parent, even if it was
+        # previously visible. You must call show() to make the widget visible again.”
+        child_component.setVisible(True)
+
+    def _initialize(self):
+        self.underlying = QtWidgets.QScrollArea()
+        self.underlying.setWidgetResizable(True)
+        self.underlying.setObjectName(str(id(self)))
+
+    def _qt_update_commands(
+        self,
+        widget_trees: dict[Element, _WidgetTree],
+        newprops,
+    ):
+        if self.underlying is None:
+            self._initialize()
+        assert self.underlying is not None
+        children = _get_widget_children(widget_trees, self)
+        commands = self._recompute_children(children)
+        commands.extend(
+            super()._qt_update_commands_super(widget_trees, newprops, self.underlying),
+        )
+        return commands
+
+@deprecated("Instead of ScrollView use VScrollView, HScrollView, or FixScrollView")
+def ScrollView(
+    layout: tp.Literal["row", "column", "none"] = "column",
+    **kwargs,
+):
+    match layout:
+        case "column":
+            warnings.warn('Use VScrollView instead of ScrollView(layout="column")', DeprecationWarning)
+            return VScrollView(**kwargs)
+        case "row":
+            warnings.warn('Use HScrollView instead of ScrollView(layout="row")', DeprecationWarning)
+            return HScrollView(**kwargs)
+        case "none":
+            warnings.warn('Use FixScrollView instead of ScrollView(layout="none")', DeprecationWarning)
+            return FixScrollView(**kwargs)
 
 def npones(num_rows, num_cols):
     """

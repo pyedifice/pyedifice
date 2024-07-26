@@ -44,34 +44,34 @@ Widgets follow the
 - **font-style**: Font style, i.e. :code:`"italic"`.
 - **background-color**: :code:`"rgba(r, g, b, a)"` or named colors.
 - **margin**: Exterior margin in pixels.
-- **margin-left**, **margin-right**, **margin-top**, **margin-bottom**: Exterior margin in pixels.
+    - **margin-left**, **margin-right**, **margin-top**, **margin-bottom**: Exterior margin in pixels.
 - **padding**: Interior padding in pixels.
-- **padding-left**, **padding-right**, **padding-top**, **padding-bottom**: Interior padding in pixels.
+    - **padding-left**, **padding-right**, **padding-top**, **padding-bottom**: Interior padding in pixels.
 - **border**: For example :code:`"1px solid red"`
-- **border-left**, **border-right**, **border-top**, **border-bottom**: For example :code:`"1px solid red"`
-- **border-width**: Border width in pixels.
-- **border-left-width**, **border-right-width**, **border-top-width**, **border-bottom-width**: Border width in pixels.
-- **border-style**: Border style.
-- **border-left-style**, **border-right-style**, **border-top-style**, **border-bottom-style**: Border style.
-- **border-color**: Border color.
-- **border-left-color**, **border-right-color**, **border-top-color**, **border-bottom-color**: Border color.
-- **border-radius**: Border corner radius in pixels.
-- **border-top-left-radius**, **border-top-right-radius**, **border-bottom-right-radius**, **border-bottom-left-radius**
+    - **border-left**, **border-right**, **border-top**, **border-bottom**: For example :code:`"1px solid red"`
+    - **border-width**: Border width in pixels.
+        - **border-left-width**, **border-right-width**, **border-top-width**, **border-bottom-width**: Border width in pixels.
+    - **border-style**: Border style.
+        - **border-left-style**, **border-right-style**, **border-top-style**, **border-bottom-style**: Border style.
+    - **border-color**: Border color.
+        - **border-left-color**, **border-right-color**, **border-top-color**, **border-bottom-color**: Border color.
+    - **border-radius**: Border corner radius in pixels.
+        - **border-top-left-radius**, **border-top-right-radius**, **border-bottom-right-radius**, **border-bottom-left-radius**
 - **height**, **width**: Height/width in pixels.
 - **min-height**, **max-height**, **min-width**, **max-width**: Min/max height/width in pixels.
 - **align**: One of :code:`"left`, :code:`"right"`, :code:`"top"`, :code:`"bottom"`, :code:`"center"`, :code:`"justify"`.
 - **top**, **left** (but not bottom, right): Position offset in pixels from a
-  :class:`View <edifice.View>` with :code:`layout=None`.
+  :class:`FixView <edifice.FixView>`.
 
-View Styling
+Layout View Styling
 ------------
 
-Every Base Element named :code:`View` has an underlying
+Every Layout Base Element named :code:`View` has an underlying
 `QLayout <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QLayout.html>`_
 and follows slightly different rules than the
 `Qt Style Sheet Box Model <https://doc.qt.io/qtforpython-6/overviews/stylesheet-syntax.html#box-model>`_.
 
-Note especially that there is no :code:`margin` style for :code:`View` layout
+Note especially that there is no :code:`margin` style for :code:`View` Layout
 Elements. (Currently we allow setting the :code:`padding` with the
 :code:`margin` keyword, but probably this will be deprecated in the future.)
 
@@ -81,24 +81,24 @@ set at least *2px* of padding so that the content does not obscure the border.
 
 - **background-color**: :code:`"rgba(r, g, b, a)"` or named colors.
 - **margin**: Alias for **padding**. Interior padding in pixels.
-- **margin-left**, **margin-right**, **margin-top**, **margin-bottom**: Interior padding in pixels.
+    - **margin-left**, **margin-right**, **margin-top**, **margin-bottom**: Interior padding in pixels.
 - **padding**: Interior padding in pixels.
-- **padding-left**, **padding-right**, **padding-top**, **padding-bottom**: Interior padding in pixels.
+    - **padding-left**, **padding-right**, **padding-top**, **padding-bottom**: Interior padding in pixels.
 - **border**: For example :code:`"1px solid red"`
-- **border-left**, **border-right**, **border-top**, **border-bottom**: For example :code:`"1px solid red"`
-- **border-width**: Border width in pixels.
-- **border-left-width**, **border-right-width**, **border-top-width**, **border-bottom-width**: Border width in pixels.
-- **border-style**: Border style.
-- **border-left-style**, **border-right-style**, **border-top-style**, **border-bottom-style**: Border style.
-- **border-color**: Border color.
-- **border-left-color**, **border-right-color**, **border-top-color**, **border-bottom-color**: Border color.
-- **border-radius**: Border corner radius in pixels.
-- **border-top-left-radius**, **border-top-right-radius**, **border-bottom-right-radius**, **border-bottom-left-radius**
+    - **border-left**, **border-right**, **border-top**, **border-bottom**: For example :code:`"1px solid red"`
+    - **border-width**: Border width in pixels.
+        - **border-left-width**, **border-right-width**, **border-top-width**, **border-bottom-width**: Border width in pixels.
+    - **border-style**: Border style.
+        - **border-left-style**, **border-right-style**, **border-top-style**, **border-bottom-style**: Border style.
+    - **border-color**: Border color.
+        - **border-left-color**, **border-right-color**, **border-top-color**, **border-bottom-color**: Border color.
+    - **border-radius**: Border corner radius in pixels.
+        - **border-top-left-radius**, **border-top-right-radius**, **border-bottom-right-radius**, **border-bottom-left-radius**
 - **height**, **width**: Height/width in pixels.
 - **min-height**, **max-height**, **min-width**, **max-width**: Min/max height/width in pixels.
 - **align**: One of :code:`"left`, :code:`"right"`, :code:`"top"`, :code:`"bottom"`, :code:`"center"`, :code:`"justify"`.
 - **top**, **left** (but not bottom, right): Position offset in pixels from a
-  :class:`View <edifice.View>` with :code:`layout=None`.
+  :class:`FixView <edifice.FixView>`.
 
 
 Size Policy
