@@ -123,8 +123,8 @@ the same. You can set the key using the :func:`Element.set_key` method::
         MyElement("Hello").set_key("hello")
         MyElement("World").set_key("world")
 
-If the :code:`_key` is not provided, the diff algorithm will assign automatic keys
-based on index, which could result in subpar performance due to unnecessary rerenders.
+If the :code:`_key` is not provided, the diff algorithm will guess which
+Elements to maintain based on the order of the children.
 To ensure control over the rerender process, it is recommended to :func:`Element.set_key`
 whenever you have many children of the same class.
 """
