@@ -41,7 +41,7 @@ that the Views needed to be destroyed and recreated. This behavior was
 buggy and surprising and now it’s gone.
 
 :class:`ButtonView` is now a subclass of :class:`HBoxView` and has row layout
-instead of column layout by default. For column layout, put an :class:`HBoxView`
+instead of column layout by default. For column layout, put a :class:`VBoxView`
 inside the :class:`ButtonView`.
 
 We have added functions :func:`View`, :func:`ScrollView` which behave like the
