@@ -145,7 +145,11 @@ Edifice is [MIT Licensed](https://en.wikipedia.org/wiki/MIT_License).
 
 Edifice uses Qt under the hood, and both PyQt6 and PySide6 are supported. Note that PyQt6 is distributed with the *GPL* license while PySide6 is distributed
 under the more flexible *LGPL* license.
+
 See [PyQt vs PySide Licensing](https://www.pythonguis.com/faq/pyqt-vs-pyside/).
+
+> ### Can I use PySide for commercial applications?
+> Yes, and you don't need to release your source code to customers. The LGPL only requires you to release any changes you make to PySide itself.
 
 ## Version History / Change Log / Release Notes
 
