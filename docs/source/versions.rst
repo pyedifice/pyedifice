@@ -40,9 +40,8 @@ unique :code:`set_key()` so that the reconciliation algorithm would recognize
 that the Views needed to be destroyed and recreated. This behavior was
 buggy and surprising and now it’s gone.
 
-:class:`ButtonView` is now a subclass of :class:`HBoxView` and has row layout
-instead of column layout by default. For column layout, put a :class:`VBoxView`
-inside the :class:`ButtonView`.
+:class:`ButtonView` is now a subclass of :class:`HBoxView`.
+For column layout, put a :class:`VBoxView` inside the :class:`ButtonView`.
 
 We have added functions :func:`View`, :func:`ScrollView` which behave like the
 old elements of the same name, so that old code will still work, probably.
