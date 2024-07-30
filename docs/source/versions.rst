@@ -77,8 +77,8 @@ Released: 2024-06-06
 -----
 Released: 2024-06-04
 
-* :class:`RadioButton` fully delarative :code:`checked` prop.
-* :class:`CheckBox` fully delarative :code:`checked` prop.
+* :class:`RadioButton` fully declarative :code:`checked` prop.
+* :class:`CheckBox` fully declarative :code:`checked` prop.
 
 The state of :class:`RadioButton` and :class:`CheckBox` is now dependent only
 on the :code:`checked` prop.
