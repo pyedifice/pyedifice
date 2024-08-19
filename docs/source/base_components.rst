@@ -108,22 +108,3 @@ While the :code:`fetch_from_network` function is running, control is returned to
 allowing the application to continue handling button clicks.
 
 See docs for :class:`QtWidgetElement<edifice.QtWidgetElement>` for a list of supported events.
-
-
-.. _custom_widget:
-
-Custom Widgets
---------------
-
-Not all widgets are currently supported by Edifice.
-Edifice provides :class:`CustomWidget` to allow you to bind arbitrary
-QtWidgets to an Edifice Element.
-
-.. currentmodule:: edifice
-.. autosummary::
-   :toctree: stubs
-   :recursive:
-   :template: custom-class.rst
-
-   CustomWidget
-
