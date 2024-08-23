@@ -1701,7 +1701,7 @@ class GridView(QtWidgetElement[QtWidgets.QWidget]):
         return commands
 
 
-class TabView(_LinearView):
+class TabView(_LinearView[QtWidgets.QTabWidget]):
     """Widget with multiple tabs.
 
     * Underlying Qt Widget
