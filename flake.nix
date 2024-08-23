@@ -14,6 +14,27 @@
         inherit system;
         overlays = [
           inputs.poetry2nix.overlays.default
+          # https://github.com/nix-community/poetry2nix?tab=readme-ov-file#creating-a-custom-poetry2nix-instance
+          (final: prev: {
+            poetry2nix = prev.poetry2nix.overrideScope (p2nixfinal: p2nixprev: {
+              defaultPoetryOverrides = p2nixprev.defaultPoetryOverrides.extend (pyself: pysuper: {
+                # pyqt6-qt6 = pysuper.pyqt6-qt6.overridePythonAttrs (old: {
+                #   autoPatchelfIgnoreMissingDeps = old.autoPatchelfIgnoreMissingDeps or [ ] ++ [
+                #     "libmimerapi.so"
+                #   ];
+                # });
+                pyside6-essentials = pysuper.pyside6-essentials.overridePythonAttrs( old: {
+                  # autoPatchelfIgnoreMissingDeps = old.autoPatchelfIgnoreMissingDeps or [ ] ++ [
+                  #   "libgbm.so.1"
+                  # ];
+                  propagatedBuildInputs = old.propagatedBuildInputs or [] ++ [
+                    prev.mesa # provides libgbm.so.1
+                  ];
+                });
+              });
+            });
+          })
+
           (_final: prev: {
             # https://github.com/NixOS/nixpkgs/blob/release-23.11/doc/languages-frameworks/python.section.md#how-to-override-a-python-package-for-all-python-versions-using-extensions-how-to-override-a-python-package-for-all-python-versions-using-extensions
             pythonPackagesExtensions = prev.pythonPackagesExtensions ++ [
@@ -72,24 +93,24 @@
       pythonEnv = qtOverride pythonWithPackages.env;
 
 
-      # https://github.com/nix-community/poetry2nix?tab=readme-ov-file#creating-a-custom-poetry2nix-instance
-      poetry2nix-custom = pkgs.poetry2nix.overrideScope (p2n_self: p2n_super: {
-        defaultPoetryOverrides = p2n_super.defaultPoetryOverrides.extend (pyself: pysuper: {
-          # pyqt6-qt6 = pysuper.pyqt6-qt6.overridePythonAttrs (old: {
-          #   autoPatchelfIgnoreMissingDeps = old.autoPatchelfIgnoreMissingDeps or [ ] ++ [
-          #     "libmimerapi.so"
-          #   ];
-          # });
-          pyside6-essentials = pysuper.pyside6-essentials.overridePythonAttrs( old: {
-            # autoPatchelfIgnoreMissingDeps = old.autoPatchelfIgnoreMissingDeps or [ ] ++ [
-            #   "libgbm.so.1"
-            # ];
-            propagatedBuildInputs = old.propagatedBuildInputs or [] ++ [
-              pkgs.mesa # provides libgbm.so.1
-            ];
-          });
-        });
-      });
+      # # https://github.com/nix-community/poetry2nix?tab=readme-ov-file#creating-a-custom-poetry2nix-instance
+      # poetry2nix-custom = pkgs.poetry2nix.overrideScope (p2n_self: p2n_super: {
+      #   defaultPoetryOverrides = p2n_super.defaultPoetryOverrides.extend (pyself: pysuper: {
+      #     # pyqt6-qt6 = pysuper.pyqt6-qt6.overridePythonAttrs (old: {
+      #     #   autoPatchelfIgnoreMissingDeps = old.autoPatchelfIgnoreMissingDeps or [ ] ++ [
+      #     #     "libmimerapi.so"
+      #     #   ];
+      #     # });
+      #     pyside6-essentials = pysuper.pyside6-essentials.overridePythonAttrs( old: {
+      #       # autoPatchelfIgnoreMissingDeps = old.autoPatchelfIgnoreMissingDeps or [ ] ++ [
+      #       #   "libgbm.so.1"
+      #       # ];
+      #       propagatedBuildInputs = old.propagatedBuildInputs or [] ++ [
+      #         pkgs.mesa # provides libgbm.so.1
+      #       ];
+      #     });
+      #   });
+      # });
 
       repo-root =
         let
@@ -134,9 +155,9 @@
       #
       #        ./run_tests.sh
       #
-      devShells = {
+      devShells = rec {
 
-        default = inputs.self.devShells.${system}.poetry2nix;
+        # default = inputs.self.devShells.${system}.poetry2nix;
 
         inherit pythonEnv;
 
@@ -169,7 +190,7 @@
             '';
         };
 
-        poetry2nix = (poetry2nix-custom.mkPoetryEnv (poetryEnvAttrs // {
+        poetry2nix = (pkgs.poetry2nix.mkPoetryEnv (poetryEnvAttrs // {
           extras = [ "*" ];
           extraPackages = ps: with ps; [ ];
         })).env.overrideAttrs (oldAttrs: {
@@ -182,6 +203,8 @@
           # changes with editablePackageSources; we also want to set breakpoints.
           PYTHONPATH = ".";
         });
+
+        default = poetry2nix;
 
       };
 
@@ -202,7 +225,7 @@
               script = pkgs.writeShellApplication {
                 name = "edifice-run-tests";
                 runtimeInputs = [
-                  (poetry2nix-custom.mkPoetryEnv poetryEnvAttrs)
+                  (pkgs.poetry2nix.mkPoetryEnv poetryEnvAttrs)
                 ];
                 text = "${run_tests_sh}";
               };
@@ -216,7 +239,7 @@
               script-virtualX = pkgs.writeShellApplication {
                 name = "edifice-run-tests";
                 runtimeInputs = [
-                  (poetry2nix-custom.mkPoetryEnv poetryEnvAttrs)
+                  (pkgs.poetry2nix.mkPoetryEnv poetryEnvAttrs)
                   pkgs.xvfb-run
                 ];
                 text = "xvfb-run ${run_tests_sh}";
@@ -231,7 +254,7 @@
               script = pkgs.writeShellApplication {
                 name = "edifice-example";
                 runtimeInputs = [
-                  (poetry2nix-custom.mkPoetryEnv poetryEnvAttrs)
+                  (pkgs.poetry2nix.mkPoetryEnv poetryEnvAttrs)
                 ];
                 text = "cd ${inputs.self.outPath}; python examples/calculator.py";
               };
@@ -245,7 +268,7 @@
               script = pkgs.writeShellApplication {
                 name = "edifice-example";
                 runtimeInputs = [
-                  (poetry2nix-custom.mkPoetryEnv (poetryEnvAttrs // {
+                  (pkgs.poetry2nix.mkPoetryEnv (poetryEnvAttrs // {
                     extraPackages = ps: with ps; [ ];
                   }))
                 ];
@@ -261,7 +284,7 @@
               script = pkgs.writeShellApplication {
                 name = "edifice-example";
                 runtimeInputs = [
-                  (poetry2nix-custom.mkPoetryEnv poetryEnvAttrs)
+                  (pkgs.poetry2nix.mkPoetryEnv poetryEnvAttrs)
                 ];
                 text = "cd ${inputs.self.outPath}; python examples/harmonic_oscillator.py";
               };
@@ -275,7 +298,7 @@
               script = pkgs.writeShellApplication {
                 name = "edifice-example";
                 runtimeInputs = [
-                  (poetry2nix-custom.mkPoetryEnv poetryEnvAttrs)
+                  (pkgs.poetry2nix.mkPoetryEnv poetryEnvAttrs)
                 ];
                 text = "cd ${inputs.self.outPath}; python examples/todomvc.py";
               };
