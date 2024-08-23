@@ -1,6 +1,6 @@
 {
   inputs = {
-    nixpkgs.url = "github:nixos/nixpkgs/nixos-23.11";
+    nixpkgs.url = "github:nixos/nixpkgs/nixos-24.05";
     flake-utils.url = "github:numtide/flake-utils";
     poetry2nix = {
       url = "github:nix-community/poetry2nix";
@@ -15,21 +15,19 @@
         overlays = [
           inputs.poetry2nix.overlays.default
           (_final: prev: {
-            # Disable eventlet tests so that we can `nix develop .#poetry`
-            # https://github.com/NixOS/nixpkgs/issues/272430
             # https://github.com/NixOS/nixpkgs/blob/release-23.11/doc/languages-frameworks/python.section.md#how-to-override-a-python-package-for-all-python-versions-using-extensions-how-to-override-a-python-package-for-all-python-versions-using-extensions
             pythonPackagesExtensions = prev.pythonPackagesExtensions ++ [
               (
                 _pyfinal: pyprev: {
-                  eventlet = pyprev.eventlet.overridePythonAttrs (oldAttrs: {
-                    disabledTests = oldAttrs.disabledTests ++ [
-                      "test_full_duplex"
-                      "test_invalid_connection"
-                      "test_nonblocking_accept_mark_as_reopened"
-                      "test_raised_multiple_readers"
-                      "test_recv_into_timeout"
-                    ];
-                  });
+                  # eventlet = pyprev.eventlet.overridePythonAttrs (oldAttrs: {
+                  #   disabledTests = oldAttrs.disabledTests ++ [
+                  #     "test_full_duplex"
+                  #     "test_invalid_connection"
+                  #     "test_nonblocking_accept_mark_as_reopened"
+                  #     "test_raised_multiple_readers"
+                  #     "test_recv_into_timeout"
+                  #   ];
+                  # });
                 }
               )
             ];
@@ -75,16 +73,13 @@
 
 
       # https://github.com/nix-community/poetry2nix?tab=readme-ov-file#creating-a-custom-poetry2nix-instance
-      #
-      # We can remove poetry2nix-custom with pyqt6-qt6 override when the following PR is merged.
-      # https://github.com/nix-community/poetry2nix/pull/1551
       poetry2nix-custom = pkgs.poetry2nix.overrideScope' (p2n_self: p2n_super: {
         defaultPoetryOverrides = p2n_super.defaultPoetryOverrides.extend (pyself: pysuper: {
-          pyqt6-qt6 = pysuper.pyqt6-qt6.overridePythonAttrs (old: {
-            autoPatchelfIgnoreMissingDeps = old.autoPatchelfIgnoreMissingDeps or [ ] ++ [
-              "libmimerapi.so"
-            ];
-          });
+          # pyqt6-qt6 = pysuper.pyqt6-qt6.overridePythonAttrs (old: {
+          #   autoPatchelfIgnoreMissingDeps = old.autoPatchelfIgnoreMissingDeps or [ ] ++ [
+          #     "libmimerapi.so"
+          #   ];
+          # });
         });
       });
 
