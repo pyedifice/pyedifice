@@ -18,17 +18,17 @@
           (final: prev: {
             poetry2nix = prev.poetry2nix.overrideScope (p2nixfinal: p2nixprev: {
               defaultPoetryOverrides = p2nixprev.defaultPoetryOverrides.extend (pyself: pysuper: {
-                # pyqt6-qt6 = pysuper.pyqt6-qt6.overridePythonAttrs (old: {
-                #   autoPatchelfIgnoreMissingDeps = old.autoPatchelfIgnoreMissingDeps or [ ] ++ [
-                #     "libmimerapi.so"
-                #   ];
-                # });
                 pyside6-essentials = pysuper.pyside6-essentials.overridePythonAttrs( old: {
-                  # autoPatchelfIgnoreMissingDeps = old.autoPatchelfIgnoreMissingDeps or [ ] ++ [
-                  #   "libgbm.so.1"
+                  autoPatchelfIgnoreMissingDeps = old.autoPatchelfIgnoreMissingDeps or [ ] ++ [
+                    "libgbm.so.1"
+                  ];
+                  # propagatedBuildInputs = old.propagatedBuildInputs or [] ++ [
+                  #   prev.mesa # provides libgbm.so.1
                   # ];
-                  propagatedBuildInputs = old.propagatedBuildInputs or [] ++ [
-                    prev.mesa # provides libgbm.so.1
+                });
+                pyside6-addons = pysuper.pyside6-addons.overridePythonAttrs( old: {
+                  autoPatchelfIgnoreMissingDeps = old.autoPatchelfIgnoreMissingDeps or [ ] ++ [
+                    "libgbm.so.1"
                   ];
                 });
               });
@@ -91,26 +91,6 @@
       };
 
       pythonEnv = qtOverride pythonWithPackages.env;
-
-
-      # # https://github.com/nix-community/poetry2nix?tab=readme-ov-file#creating-a-custom-poetry2nix-instance
-      # poetry2nix-custom = pkgs.poetry2nix.overrideScope (p2n_self: p2n_super: {
-      #   defaultPoetryOverrides = p2n_super.defaultPoetryOverrides.extend (pyself: pysuper: {
-      #     # pyqt6-qt6 = pysuper.pyqt6-qt6.overridePythonAttrs (old: {
-      #     #   autoPatchelfIgnoreMissingDeps = old.autoPatchelfIgnoreMissingDeps or [ ] ++ [
-      #     #     "libmimerapi.so"
-      #     #   ];
-      #     # });
-      #     pyside6-essentials = pysuper.pyside6-essentials.overridePythonAttrs( old: {
-      #       # autoPatchelfIgnoreMissingDeps = old.autoPatchelfIgnoreMissingDeps or [ ] ++ [
-      #       #   "libgbm.so.1"
-      #       # ];
-      #       propagatedBuildInputs = old.propagatedBuildInputs or [] ++ [
-      #         pkgs.mesa # provides libgbm.so.1
-      #       ];
-      #     });
-      #   });
-      # });
 
       repo-root =
         let
