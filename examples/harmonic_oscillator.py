@@ -6,9 +6,19 @@ import asyncio
 import logging
 
 import numpy as np
-import pyqtgraph as pg
 
 import edifice as ed
+
+# Import edifice before importing pyqtgraph so that pyqtgraph detects the same version of PyQt
+from edifice.qt import QT_VERSION
+
+if QT_VERSION == "PyQt6":
+    pass
+else:
+    pass
+
+import pyqtgraph as pg
+
 from edifice.extra.pyqtgraph_plot import PyQtPlot
 
 pg.setConfigOption("antialias", True)
@@ -78,14 +88,14 @@ def Oscillator(self):
     with ed.HBoxView():
         with ed.VBoxView(style={"margin": 10}):
             with ed.HBoxView():
-                ed.IconButton("pause" if is_playing else "play", on_click=lambda e: is_playing_set(lambda p: not p))
-                ed.Button("Reset", on_click=lambda e: simulation_time_set(0))
+                ed.IconButton("pause" if is_playing else "play", on_click=lambda _: is_playing_set(lambda p: not p))
+                ed.Button("Reset", on_click=lambda _: simulation_time_set(0))
             with ed.VBoxView():
                 PyQtPlot(plot_fun=plot_fun[0])
             with ed.HBoxView(style={"margin": 10}):
                 ed.Label("Angular Frequency")
                 ed.Slider(
-                    value=int(angular_frequency * 20.0), min_value=20, max_value=200, on_change=freq_slider_change
+                    value=int(angular_frequency * 20.0), min_value=20, max_value=200, on_change=freq_slider_change,
                 )
                 ed.Label("Damping Factor")
                 ed.Slider(value=int(damping * 100.0), min_value=-300, max_value=0, on_change=damp_slider_change)
