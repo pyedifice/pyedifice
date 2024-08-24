@@ -1,8 +1,9 @@
 import typing as tp
-from ..base_components.base_components import CommandType, QtWidgetElement
+
+from edifice.base_components.base_components import CommandType, QtWidgetElement
 
 # Import PySide6 or PyQt6 before importing pyqtgraph so that pyqtgraph detects the same
-from ..qt import QT_VERSION
+from edifice.qt import QT_VERSION
 
 if QT_VERSION == "PyQt6" and not tp.TYPE_CHECKING:
     pass
@@ -80,7 +81,7 @@ class PyQtPlot(QtWidgetElement[pg.PlotWidget]):
         self._register_props(
             {
                 "plot_fun": plot_fun,
-            }
+            },
         )
 
     def _qt_update_commands(self, children, newprops):
