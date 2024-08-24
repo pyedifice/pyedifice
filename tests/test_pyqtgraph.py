@@ -3,6 +3,7 @@ import unittest
 from edifice import App
 from edifice.qt import QT_VERSION
 
+# Import edifice before importing pyqtgraph so that pyqtgraph detects the same version of PyQt
 if QT_VERSION == "PyQt6":
     from PyQt6 import QtWidgets
 else:
