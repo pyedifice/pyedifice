@@ -177,7 +177,7 @@
           extras = [ "*" ];
           extraPackages = ps: with ps; [ ];
         })).env.overrideAttrs (oldAttrs: {
-          buildInputs = [ pkgs.nodePackages.pyright ];
+          buildInputs = [ pkgs.nodePackages.pyright pkgs.nixd];
           # Need LC_ALL for the `make html` command in the docs/ directory
           # because of https://github.com/sphinx-doc/sphinx/issues/11739
           LC_ALL = "C.UTF-8";
