@@ -1,8 +1,6 @@
-import asyncio as asyncio
 import unittest
 
 from edifice import App
-
 from edifice.qt import QT_VERSION
 
 if QT_VERSION == "PyQt6":
