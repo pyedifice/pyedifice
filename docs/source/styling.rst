@@ -44,19 +44,32 @@ Widgets follow the
 - **font-style**: Font style, i.e. :code:`"italic"`.
 - **background-color**: :code:`"rgba(r, g, b, a)"` or named colors.
 - **margin**: Exterior margin in pixels.
-    - **margin-left**, **margin-right**, **margin-top**, **margin-bottom**: Exterior margin in pixels.
+
+  - **margin-left**, **margin-right**, **margin-top**, **margin-bottom**: Exterior margin in pixels.
+
 - **padding**: Interior padding in pixels.
-    - **padding-left**, **padding-right**, **padding-top**, **padding-bottom**: Interior padding in pixels.
+
+  - **padding-left**, **padding-right**, **padding-top**, **padding-bottom**: Interior padding in pixels.
+
 - **border**: For example :code:`"1px solid red"`
-    - **border-left**, **border-right**, **border-top**, **border-bottom**: For example :code:`"1px solid red"`
-    - **border-width**: Border width in pixels.
-        - **border-left-width**, **border-right-width**, **border-top-width**, **border-bottom-width**: Border width in pixels.
-    - **border-style**: Border style.
-        - **border-left-style**, **border-right-style**, **border-top-style**, **border-bottom-style**: Border style.
-    - **border-color**: Border color.
-        - **border-left-color**, **border-right-color**, **border-top-color**, **border-bottom-color**: Border color.
-    - **border-radius**: Border corner radius in pixels.
-        - **border-top-left-radius**, **border-top-right-radius**, **border-bottom-right-radius**, **border-bottom-left-radius**
+
+  - **border-left**, **border-right**, **border-top**, **border-bottom**: For example :code:`"1px solid red"`
+  - **border-width**: Border width in pixels.
+
+    - **border-left-width**, **border-right-width**, **border-top-width**, **border-bottom-width**: Border width in pixels.
+
+  - **border-style**: Border style.
+
+    - **border-left-style**, **border-right-style**, **border-top-style**, **border-bottom-style**: Border style.
+
+  - **border-color**: Border color.
+
+    - **border-left-color**, **border-right-color**, **border-top-color**, **border-bottom-color**: Border color.
+
+  - **border-radius**: Border corner radius in pixels.
+
+    - **border-top-left-radius**, **border-top-right-radius**, **border-bottom-right-radius**, **border-bottom-left-radius**: Border corner radius in pixels.
+
 - **height**, **width**: Height/width in pixels.
 - **min-height**, **max-height**, **min-width**, **max-width**: Min/max height/width in pixels.
 - **align**: One of :code:`"left`, :code:`"right"`, :code:`"top"`, :code:`"bottom"`, :code:`"center"`, :code:`"justify"`.
@@ -81,19 +94,32 @@ set at least *2px* of padding so that the content does not obscure the border.
 
 - **background-color**: :code:`"rgba(r, g, b, a)"` or named colors.
 - **margin**: Alias for **padding**. Interior padding in pixels.
-    - **margin-left**, **margin-right**, **margin-top**, **margin-bottom**: Interior padding in pixels.
+
+  - **margin-left**, **margin-right**, **margin-top**, **margin-bottom**: Interior padding in pixels.
+
 - **padding**: Interior padding in pixels.
-    - **padding-left**, **padding-right**, **padding-top**, **padding-bottom**: Interior padding in pixels.
+
+  - **padding-left**, **padding-right**, **padding-top**, **padding-bottom**: Interior padding in pixels.
+
 - **border**: For example :code:`"1px solid red"`
-    - **border-left**, **border-right**, **border-top**, **border-bottom**: For example :code:`"1px solid red"`
-    - **border-width**: Border width in pixels.
-        - **border-left-width**, **border-right-width**, **border-top-width**, **border-bottom-width**: Border width in pixels.
-    - **border-style**: Border style.
-        - **border-left-style**, **border-right-style**, **border-top-style**, **border-bottom-style**: Border style.
-    - **border-color**: Border color.
-        - **border-left-color**, **border-right-color**, **border-top-color**, **border-bottom-color**: Border color.
-    - **border-radius**: Border corner radius in pixels.
-        - **border-top-left-radius**, **border-top-right-radius**, **border-bottom-right-radius**, **border-bottom-left-radius**
+
+  - **border-left**, **border-right**, **border-top**, **border-bottom**: For example :code:`"1px solid red"`
+  - **border-width**: Border width in pixels.
+
+    - **border-left-width**, **border-right-width**, **border-top-width**, **border-bottom-width**: Border width in pixels.
+
+  - **border-style**: Border style.
+
+    - **border-left-style**, **border-right-style**, **border-top-style**, **border-bottom-style**: Border style.
+
+  - **border-color**: Border color.
+
+    - **border-left-color**, **border-right-color**, **border-top-color**, **border-bottom-color**: Border color.
+
+  - **border-radius**: Border corner radius in pixels.
+
+    - **border-top-left-radius**, **border-top-right-radius**, **border-bottom-right-radius**, **border-bottom-left-radius**: Border corner radius in pixels.
+
 - **height**, **width**: Height/width in pixels.
 - **min-height**, **max-height**, **min-width**, **max-width**: Min/max height/width in pixels.
 - **align**: One of :code:`"left`, :code:`"right"`, :code:`"top"`, :code:`"bottom"`, :code:`"center"`, :code:`"justify"`.
@@ -119,7 +145,7 @@ font sizes, you can create a common style object encoding shared styles::
         "background-color": "rgba(245, 245, 220, 100)",
     }
     ...
-    with View():
+    with VBoxView():
         Label("foo", style=[LABEL_STYLE, {"font-size": 16}])
         Label("foo", style=LABEL_STYLE)
         Label("foo", style=[LABEL_STYLE, {"font-size": 8}])
@@ -127,7 +153,7 @@ font sizes, you can create a common style object encoding shared styles::
 You can also accomplish the same style merging with the Python dictionary
 merge operator::
 
-    with View():
+    with VBoxView():
         Label("foo", style=LABEL_STYLE | {"font-size": 16})
         Label("foo", style=LABEL_STYLE)
         Label("foo", style=LABEL_STYLE | {"font-size": 8})
