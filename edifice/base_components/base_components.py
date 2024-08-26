@@ -721,8 +721,7 @@ class TextInput(QtWidgetElement[QtWidgets.QLineEdit]):
 class TextInputMultiline(QtWidgetElement[QtWidgets.QTextEdit]):
     """Basic widget for a multiline text input.
 
-    * Underlying Qt Widget
-        `QTextEdit <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QTextEdit.html>`_
+    * Underlying Qt Widget `QTextEdit <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QTextEdit.html>`_
 
     Accepts only plain text, not “rich text.”
 
@@ -1708,7 +1707,6 @@ class GridView(QtWidgetElement[QtWidgets.QWidget]):
       `QGridLayout <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGridLayout.html>`_
 
     Grid views allow you to precisely control 2D positioning of widgets.
-    While you can also layout widgets using nested :class:`View<edifice.View>`,
     specifying the exact location of children relative to each other (with proper alignment)
     requires extensive fine tuning of style attributes.
     The GridView allows you to lay out widgets at specified grid indices and size.
