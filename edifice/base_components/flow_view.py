@@ -6,22 +6,19 @@
 
 """PySide6 port of the widgets/layouts/flowlayout example from Qt v6.x"""
 
-from ..qt import QT_VERSION
-import typing
 import logging
+import typing
 
-if typing.TYPE_CHECKING:
+from edifice.qt import QT_VERSION
+
+if QT_VERSION == "PyQt6" and not typing.TYPE_CHECKING:
+    from PyQt6.QtCore import QPoint, QRect, QSize, Qt
+    from PyQt6.QtWidgets import QLayout, QLayoutItem, QSizePolicy, QWidget
+else:
     from PySide6.QtCore import QPoint, QRect, QSize, Qt
     from PySide6.QtWidgets import QLayout, QLayoutItem, QSizePolicy, QWidget
-else:
-    if QT_VERSION == "PyQt6":
-        from PyQt6.QtCore import QPoint, QRect, QSize, Qt
-        from PyQt6.QtWidgets import QLayout, QLayoutItem, QSizePolicy, QWidget
-    else:
-        from PySide6.QtCore import QPoint, QRect, QSize, Qt
-        from PySide6.QtWidgets import QLayout, QLayoutItem, QSizePolicy, QWidget
 
-from .base_components import _LinearView, QtWidgetElement, Element, _WidgetTree, _get_widget_children
+from .base_components import Element, QtWidgetElement, _get_widget_children, _LinearView, _WidgetTree
 
 logger = logging.getLogger("Edifice")
 
@@ -137,7 +134,7 @@ class FlowLayout(QLayout):
         return y + line_height - rect.y()
 
 
-class FlowView(_LinearView):
+class FlowView(_LinearView[QWidget]):
     """
     Flow-style layout widget. Displays its children in a row which wraps onto
     multiple lines.
@@ -148,7 +145,6 @@ class FlowView(_LinearView):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        # self._register_props(kwargs)
         self.underlying = None
 
     def _delete_child(self, i, old_child: QtWidgetElement):

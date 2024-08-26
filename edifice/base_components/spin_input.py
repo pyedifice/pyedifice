@@ -19,8 +19,7 @@ class EdSpinBox(QSpinBox):
         super().__init__(*args, **kwargs)
         self._textFromValue: tp.Callable[[int], str] | None = None
         self._valueFromText: (
-            tp.Callable[[str], int | tp.Literal[QValidator.State.Intermediate] | tp.Literal[QValidator.State.Invalid]]
-            | None
+            tp.Callable[[str], int | tp.Literal[QValidator.State.Intermediate, QValidator.State.Invalid]] | None
         ) = None
 
     def textFromValue(self, val: int) -> str:
@@ -104,7 +103,8 @@ class SpinInput(QtWidgetElement[EdSpinBox]):
         on_change: tp.Callable[[int], None | tp.Awaitable[None]] | None = None,
         value_to_text: tp.Callable[[int], str] | None = None,
         text_to_value: tp.Callable[
-            [str], int | tp.Literal[QValidator.State.Intermediate] | tp.Literal[QValidator.State.Invalid]
+            [str],
+            int | tp.Literal[QValidator.State.Intermediate, QValidator.State.Invalid],
         ]
         | None = None,
         enable_mouse_scroll: bool = True,

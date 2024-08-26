@@ -1,17 +1,21 @@
-import typing as tp
-from ..base_components.base_components import CommandType, QtWidgetElement
+from __future__ import annotations
 
-from ..qt import QT_VERSION
+import typing as tp
+
+from edifice.base_components.base_components import CommandType, QtWidgetElement
+from edifice.qt import QT_VERSION
 
 if QT_VERSION == "PyQt6":
     pass
 else:
     pass
 
-from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg
-from matplotlib.backend_bases import MouseEvent
-from matplotlib.figure import Figure
 from matplotlib.axes import Axes
+from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg
+from matplotlib.figure import Figure
+
+if tp.TYPE_CHECKING:
+    from matplotlib.backend_bases import MouseEvent
 
 
 class MatplotlibFigure(QtWidgetElement):
@@ -54,7 +58,7 @@ class MatplotlibFigure(QtWidgetElement):
             {
                 "plot_fun": plot_fun,
                 "on_figure_mouse_move": on_figure_mouse_move,
-            }
+            },
         )
         self.underlying: FigureCanvasQTAgg | None = None
         self.subplots: Axes | None = None
@@ -90,7 +94,7 @@ class MatplotlibFigure(QtWidgetElement):
                     self.underlying.mpl_disconnect(self.on_mouse_move_connect_id)
                 if newprops["on_figure_mouse_move"] is not None:
                     self.on_mouse_move_connect_id = self.underlying.mpl_connect(
-                        "motion_notify_event", newprops["on_figure_mouse_move"]
+                        "motion_notify_event", newprops["on_figure_mouse_move"],
                     )
                 else:
                     self.on_mouse_move_connect_id = None

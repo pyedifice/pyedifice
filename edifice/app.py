@@ -1,12 +1,15 @@
-from . import logger as _logger_module
+from __future__ import annotations
+
 import asyncio
 import contextlib
 import os
-import sys
 import queue
+import sys
 import time
 import traceback
 import typing as tp
+
+from edifice import logger as _logger_module
 
 from .qt import QT_VERSION
 
@@ -21,8 +24,8 @@ else:
 
 from qasync import QEventLoop
 
-from .base_components import Window, ExportList
-from .engine import RenderEngine, Element, QtWidgetElement
+from .base_components import ExportList, Window
+from .engine import Element, QtWidgetElement, RenderEngine
 from .inspector import inspector as inspector_module
 
 logger = _logger_module.logger

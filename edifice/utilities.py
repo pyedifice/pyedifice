@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import typing as tp
 
 from .qt import QT_VERSION
@@ -8,7 +10,7 @@ else:
     from PySide6 import QtWidgets
 
 
-def alert(message: tp.Text, choices: tp.Optional[tp.Sequence[tp.Text]] = None) -> tp.Optional[int]:
+def alert(message: str, choices: tp.Sequence[str] | None = None) -> int | None:
     """Displays a message in an alert box.
 
     If choices is specified, the alert box contain a list of buttons showing each of the choices,

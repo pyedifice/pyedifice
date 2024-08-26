@@ -91,7 +91,7 @@ class GroupBox(QtWidgetElement[QtWidgets.QGroupBox]):
         self._register_props(
             {
                 "title": title,
-            }
+            },
         )
 
     def _initialize(self):
@@ -159,10 +159,10 @@ class Icon(QtWidgetElement[QtWidgets.QLabel]):
 
     def __init__(
         self,
-        name: tp.Text,
+        name: str,
         size: int = 10,
-        collection: tp.Text = "font-awesome",
-        sub_collection: tp.Text = "solid",
+        collection: str = "font-awesome",
+        sub_collection: str = "solid",
         color: RGBAType = (0, 0, 0, 255),
         rotation: float = 0,
         **kwargs,
@@ -176,7 +176,7 @@ class Icon(QtWidgetElement[QtWidgets.QLabel]):
                 "sub_collection": sub_collection,
                 "color": color,
                 "rotation": rotation,
-            }
+            },
         )
         self._register_props(kwargs)
 
@@ -212,7 +212,7 @@ class Icon(QtWidgetElement[QtWidgets.QLabel]):
             or "rotation" in newprops
         ):
             commands.append(
-                CommandType(self._render_image, icon_path, self.props.size, self.props.color, self.props.rotation)
+                CommandType(self._render_image, icon_path, self.props.size, self.props.color, self.props.rotation),
             )
 
         return commands
@@ -320,7 +320,7 @@ class IconButton(Button):
                 "sub_collection": sub_collection,
                 "color": color,
                 "rotation": rotation,
-            }
+            },
         )
         self._register_props(kwargs)
 
@@ -355,11 +355,10 @@ class IconButton(Button):
             or "rotation" in newprops
         ):
             commands.append(
-                CommandType(render_image, icon_path, self.props.size, self.props.color, self.props.rotation)
+                CommandType(render_image, icon_path, self.props.size, self.props.color, self.props.rotation),
             )
 
         return commands
-
 
 
 # TODO
@@ -454,6 +453,7 @@ class IconButton(Button):
 # >             commands.append(CommandType(widget.setTextInteractionFlags, interaction_flags))
 # >     return commands
 
+
 class Label(QtWidgetElement[QtWidgets.QLabel]):
     """Basic widget for displaying text.
 
@@ -493,9 +493,11 @@ class Label(QtWidgetElement[QtWidgets.QLabel]):
             },
         )
         self._register_props(kwargs)
+
     def _initialize(self):
         self.underlying = QtWidgets.QLabel(self.props.text)
         self.underlying.setObjectName(str(id(self)))
+
     def _qt_update_commands(
         self,
         widget_trees: dict[Element, _WidgetTree],
@@ -561,7 +563,7 @@ class ImageSvg(QtWidgetElement[QtSvgWidgets.QSvgWidget]):
         self._register_props(
             {
                 "src": src,
-            }
+            },
         )
         self._register_props(kwargs)
 
@@ -655,8 +657,8 @@ class TextInput(QtWidgetElement[QtWidgets.QLineEdit]):
         self,
         text: str = "",
         placeholder_text: str | None = None,
-        on_change: tp.Optional[tp.Callable[[tp.Text], None | tp.Awaitable[None]]] = None,
-        on_edit_finish: tp.Optional[tp.Callable[[], None | tp.Awaitable[None]]] = None,
+        on_change: tp.Callable[[tp.Text], None | tp.Awaitable[None]] | None = None,
+        on_edit_finish: tp.Callable[[], None | tp.Awaitable[None]] | None = None,
         # completer: tp.Optional[Completer] = None,
         **kwargs,
     ):
@@ -667,7 +669,7 @@ class TextInput(QtWidgetElement[QtWidgets.QLineEdit]):
                 "placeholder_text": placeholder_text,
                 "on_change": on_change,
                 "on_edit_finish": on_edit_finish,
-            }
+            },
         )
         self._register_props(kwargs)
 
@@ -741,7 +743,7 @@ class TextInputMultiline(QtWidgetElement[QtWidgets.QTextEdit]):
         self,
         text: str = "",
         placeholder_text: str | None = None,
-        on_change: tp.Optional[tp.Callable[[tp.Text], None | tp.Awaitable[None]]] = None,
+        on_change: tp.Callable[[str], None | tp.Awaitable[None]] | None = None,
         **kwargs,
     ):
         super().__init__(**kwargs)
@@ -750,7 +752,7 @@ class TextInputMultiline(QtWidgetElement[QtWidgets.QTextEdit]):
                 "text": text,
                 "placeholder_text": placeholder_text,
                 "on_change": on_change,
-            }
+            },
         )
         self._register_props(kwargs)
 
@@ -820,7 +822,7 @@ class Dropdown(QtWidgetElement[QtWidgets.QComboBox]):
         self,
         selection: int = 0,
         options: tp.Sequence[str] = [],
-        on_select: tp.Optional[tp.Callable[[int], None | tp.Awaitable[None]]] = None,
+        on_select: tp.Callable[[int], None | tp.Awaitable[None]] | None = None,
         enable_mouse_scroll: bool = True,
         **kwargs,
     ):
@@ -831,7 +833,7 @@ class Dropdown(QtWidgetElement[QtWidgets.QComboBox]):
                 "options": options,
                 "on_select": on_select,
                 "enable_mouse_scroll": enable_mouse_scroll,
-            }
+            },
         )
         self._register_props(kwargs)
 
@@ -941,7 +943,7 @@ class Slider(QtWidgetElement[QtWidgets.QSlider]):
         )
         self._register_props(kwargs)
         self._connected = False
-        self._on_change: tp.Optional[tp.Callable[[int], None | tp.Awaitable[None]]] = None
+        self._on_change: tp.Callable[[int], None | tp.Awaitable[None]] | None = None
 
     def _initialize(self, orientation):
         self.underlying = QtWidgets.QSlider(orientation)
@@ -1238,8 +1240,7 @@ class HBoxView(_LinearView[QtWidgets.QWidget]):
     def _qt_stateless_commands(self, widget_trees: dict[Element, _WidgetTree], newprops):
         # This stateless render command is used to test rendering
         assert self.underlying is not None
-        commands = super()._qt_update_commands_super(widget_trees, newprops, self.underlying, self.underlying_layout)
-        return commands
+        return super()._qt_update_commands_super(widget_trees, newprops, self.underlying, self.underlying_layout)
 
 
 class FixView(_LinearView[QtWidgets.QWidget]):
@@ -1308,8 +1309,7 @@ class FixView(_LinearView[QtWidgets.QWidget]):
     def _qt_stateless_commands(self, widget_trees: dict[Element, _WidgetTree], newprops):
         # This stateless render command is used to test rendering
         assert self.underlying is not None
-        commands = super()._qt_update_commands_super(widget_trees, newprops, self.underlying)
-        return commands
+        return super()._qt_update_commands_super(widget_trees, newprops, self.underlying)
 
 
 @deprecated("Instead of View use VBoxView, HBoxView, or FixView")
@@ -1354,9 +1354,9 @@ class Window(VBoxView):
     def __init__(
         self,
         title: str = "Edifice Application",
-        icon: tp.Optional[tp.Union[tp.Text, tp.Sequence]] = None,
+        icon: tp.Union[tp.Text, tp.Sequence] | None = None,
         menu=None,
-        on_close: tp.Optional[tp.Callable[[QtGui.QCloseEvent], None | tp.Awaitable[None]]] = None,
+        on_close: tp.Callable[[QtGui.QCloseEvent], None | tp.Awaitable[None]] | None = None,
         **kwargs,
     ):
         super().__init__(**kwargs)
@@ -1370,7 +1370,7 @@ class Window(VBoxView):
         )
 
         self._menu_bar = None
-        self._on_close: tp.Optional[tp.Callable[[QtGui.QCloseEvent], None | tp.Awaitable[None]]] = None
+        self._on_close: tp.Callable[[QtGui.QCloseEvent], None | tp.Awaitable[None]] | None = None
 
     def _set_on_close(self, on_close):
         self._on_close = on_close
@@ -1387,7 +1387,7 @@ class Window(VBoxView):
         menu_bar.setParent(self.underlying)
         for menu_title, menu in menus.items():
             if not isinstance(menu, dict):
-                raise ValueError("Menu must be a dict of dicts (each of which describes a submenu)")
+                raise TypeError("Menu must be a dict of dicts (each of which describes a submenu)")
             menu_bar.addMenu(_create_qmenu(menu, menu_title))
 
     def _qt_update_commands(
@@ -1567,7 +1567,7 @@ class FixScrollView(_LinearView[QtWidgets.QScrollArea]):
             )
     """
 
-    def __init__(self, layout="column", **kwargs):
+    def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
     def _delete_child(self, i, old_child: QtWidgetElement):
@@ -1760,9 +1760,8 @@ class GridView(QtWidgetElement[QtWidgets.QWidget]):
             {
                 "layout": layout,
                 "key_to_code": key_to_code,
-            }
+            },
         )
-        # self._register_props(kwargs)
         self._previously_rendered = None
 
     def _initialize(self):
@@ -1822,20 +1821,19 @@ class TabView(_LinearView[QtWidgets.QTabWidget]):
         self._register_props(
             {
                 "labels": labels,
-            }
+            },
         )
-        # self._register_props(kwargs)
 
     def _delete_child(self, i, old_child):
-        assert type(self.underlying) == QtWidgets.QTabWidget
+        assert self.underlying is QtWidgets.QTabWidget
         self.underlying.removeTab(i)
 
     def _soft_delete_child(self, i, old_child: QtWidgetElement):
-        assert type(self.underlying) == QtWidgets.QTabWidget
+        assert self.underlying is QtWidgets.QTabWidget
         self.underlying.removeTab(i)
 
     def _add_child(self, i, child_component):
-        assert type(self.underlying) == QtWidgets.QTabWidget
+        assert self.underlying is QtWidgets.QTabWidget
         self.underlying.insertTab(i, child_component, self.props.labels[i])
 
     def _initialize(self):
@@ -2044,9 +2042,8 @@ class ProgressBar(QtWidgetElement[QtWidgets.QProgressBar]):
                 "max_value": max_value,
                 "orientation": orientation,
                 "format": format,
-            }
+            },
         )
-        # self._register_props(kwargs)
         self._connected = False
 
     def _initialize(self, orientation):

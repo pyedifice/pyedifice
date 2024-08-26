@@ -1,14 +1,16 @@
-from typing import TYPE_CHECKING
-import logging
+from __future__ import annotations
 
-from ..qt import QT_VERSION
+import logging
+from typing import TYPE_CHECKING
+
+from edifice.qt import QT_VERSION
 
 if QT_VERSION == "PyQt6" and not TYPE_CHECKING:
     from PyQt6.QtWidgets import QGridLayout, QWidget
 else:
     from PySide6.QtWidgets import QGridLayout, QWidget
 
-from .base_components import CommandType, PropsDict, Element, _get_widget_children, _WidgetTree, QtWidgetElement
+from .base_components import CommandType, Element, PropsDict, QtWidgetElement, _get_widget_children, _WidgetTree
 
 logger = logging.getLogger("Edifice")
 
@@ -20,7 +22,7 @@ class _TableGridViewRow(QtWidgetElement):
     Do not create this Element directly. Instead, use the :func:`TableGridView.row` method.
     """
 
-    def __init__(self, tgv: "TableGridView"):
+    def __init__(self):
         super().__init__()
 
     def _qt_update_commands(
@@ -96,7 +98,6 @@ class TableGridView(QtWidgetElement[QWidget]):
                 "column_minwidth": column_minwidth,
             }
         )
-        # self._register_props(kwargs)
         self.underlying = None
         self._old_children: dict[QtWidgetElement, tuple[int, int]] = {}
         """Like _LinearView._widget_children"""
@@ -112,7 +113,9 @@ class TableGridView(QtWidgetElement[QWidget]):
         this :class:`TableGridView`. Each child of the new row element
         will be rendered in columns aligned with the other rows.
         """
-        return _TableGridViewRow(self)
+        return _TableGridViewRow()
+        # TODO since the _TableGridViewRow doesn't need a reference to the
+        # parent TableGridView anymore, we don't need this row() method?
 
     def _initialize(self):
         self.underlying = QWidget()

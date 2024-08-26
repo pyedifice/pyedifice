@@ -28,7 +28,7 @@ logger = logging.getLogger("Edifice")
 
 P = tp.ParamSpec("P")
 
-StyleType = tp.Optional[tp.Union[tp.Mapping[tp.Text, tp.Any], tp.Sequence[tp.Mapping[tp.Text, tp.Any]]]]
+StyleType = tp.Optional[tp.Union[tp.Mapping[str, tp.Any], tp.Sequence[tp.Mapping[str, tp.Any]]]]
 
 
 def _dict_to_style(d, prefix="QWidget"):
@@ -244,7 +244,7 @@ class Reference(tp.Generic[_T_Element]):
     def __hash__(self) -> int:
         return id(self)
 
-    def __call__(self) -> tp.Optional[_T_Element]:
+    def __call__(self) -> _T_Element | None:
         return self._value
 
 
@@ -254,10 +254,10 @@ T = tp.TypeVar("T")
 class ControllerProtocol(tp.Protocol):
     """Protocol for App"""
 
-    def _request_rerender(self, components: Iterable["Element"], kwargs: dict[str, tp.Any]):
+    def _request_rerender(self, components: Iterable[Element], kwargs: dict[str, tp.Any]):
         pass
 
-    def _defer_rerender(self, components: list["Element"]):
+    def _defer_rerender(self, components: list[Element]):
         pass
 
     def stop(self):
@@ -299,14 +299,14 @@ class _RenderContext(object):
     )
     trackers: list[_Tracker]
     """Stack of _Tracker"""
-    current_element: "Element | None"
+    current_element: Element | None
     """The Element currently being rendered."""
 
     # I guess static scope typing of instance members is normal in Python?
     # https://peps.python.org/pep-0526/#class-and-instance-variable-annotations
     def __init__(
         self,
-        engine: "RenderEngine",
+        engine: RenderEngine,
     ):
         self.engine = engine
         self.need_qt_command_reissue = {}
@@ -328,7 +328,7 @@ class _RenderContext(object):
 
         self.current_element = None
 
-    def mark_props_change(self, component: "Element", newprops: PropsDict):
+    def mark_props_change(self, component: Element, newprops: PropsDict):
         if component not in self.component_to_old_props:
             self.component_to_old_props[component] = component.props
         component._props = newprops._d
@@ -338,10 +338,10 @@ class _RenderContext(object):
             return self.component_to_old_props[component]
         return PropsDict({})
 
-    def mark_qt_rerender(self, component: "QtWidgetElement", need_rerender: bool):
+    def mark_qt_rerender(self, component: QtWidgetElement, need_rerender: bool):
         self.need_qt_command_reissue[component] = need_rerender
 
-    def need_rerender(self, component: "QtWidgetElement"):
+    def need_rerender(self, component: QtWidgetElement):
         return self.need_qt_command_reissue.get(component, False)
 
 
@@ -419,7 +419,7 @@ class Element:
         prop.extend(tracker.children)
         self._props["children"] = tuple(prop)
 
-    def _register_props(self, props: tp.Mapping[tp.Text, tp.Any]) -> None:
+    def _register_props(self, props: tp.Mapping[str, tp.Any]) -> None:
         """Register props.
 
         Args:
@@ -539,7 +539,7 @@ class Element:
         tags = self._tags()
         return tags[2]
 
-    def _render_element(self) -> tp.Optional["Element"]:
+    def _render_element(self) -> Element | None:
         """Logic for rendering, must be overridden.
 
         The render logic for this Element, not implemented for this abstract class.
@@ -732,10 +732,10 @@ def Container(self):
     pass
 
 
-ContextMenuType = tp.Mapping[tp.Text, tp.Union[None, tp.Callable[[], tp.Any], "ContextMenuType"]]
+ContextMenuType = tp.Mapping[str, tp.Union[None, tp.Callable[[], tp.Any], "ContextMenuType"]]
 
 
-def _create_qmenu(menu: ContextMenuType, parent, title: tp.Optional[tp.Text] = None):
+def _create_qmenu(menu: ContextMenuType, parent, title: str | None = None):
     widget = QtWidgets.QMenu(parent)
     if title is not None:
         widget.setTitle(title)
@@ -915,25 +915,26 @@ class QtWidgetElement(Element, tp.Generic[_T_widget]):
     def __init__(
         self,
         style: StyleType = None,
-        tool_tip: tp.Optional[tp.Text] = None,
-        cursor: tp.Optional[tp.Text] = None,
-        context_menu: tp.Optional[ContextMenuType] = None,
-        css_class: tp.Optional[tp.Any] = None,
-        size_policy: tp.Optional[QtWidgets.QSizePolicy] = None,
-        focus_policy: tp.Optional[QtCore.Qt.FocusPolicy] = None,
-        enabled: tp.Optional[bool] = None,
-        on_click: tp.Optional[tp.Callable[[QtGui.QMouseEvent], None | tp.Awaitable[None]]] = None,
-        on_key_down: tp.Optional[tp.Callable[[QtGui.QKeyEvent], None | tp.Awaitable[None]]] = None,
-        on_key_up: tp.Optional[tp.Callable[[QtGui.QKeyEvent], None | tp.Awaitable[None]]] = None,
-        on_mouse_down: tp.Optional[tp.Callable[[QtGui.QMouseEvent], None | tp.Awaitable[None]]] = None,
-        on_mouse_up: tp.Optional[tp.Callable[[QtGui.QMouseEvent], None | tp.Awaitable[None]]] = None,
-        on_mouse_enter: tp.Optional[tp.Callable[[QtGui.QMouseEvent], None | tp.Awaitable[None]]] = None,
-        on_mouse_leave: tp.Optional[tp.Callable[[QtGui.QMouseEvent], None | tp.Awaitable[None]]] = None,
-        on_mouse_move: tp.Optional[tp.Callable[[QtGui.QMouseEvent], None | tp.Awaitable[None]]] = None,
-        on_drop: tp.Optional[
-            tp.Callable[[QtGui.QDragEnterEvent | QtGui.QDragMoveEvent | QtGui.QDragLeaveEvent | QtGui.QDropEvent], None]
-        ] = None,
-        on_resize: tp.Optional[tp.Callable[[QtGui.QResizeEvent], None | tp.Awaitable[None]]] = None,
+        tool_tip: str | None = None,
+        cursor: str | None = None,
+        context_menu: ContextMenuType | None = None,
+        css_class: tp.Any | None = None,
+        size_policy: QtWidgets.QSizePolicy | None = None,
+        focus_policy: QtCore.Qt.FocusPolicy | None = None,
+        enabled: bool | None = None,
+        on_click: tp.Callable[[QtGui.QMouseEvent], None | tp.Awaitable[None]] | None = None,
+        on_key_down: tp.Callable[[QtGui.QKeyEvent], None | tp.Awaitable[None]] | None = None,
+        on_key_up: tp.Callable[[QtGui.QKeyEvent], None | tp.Awaitable[None]] | None = None,
+        on_mouse_down: tp.Callable[[QtGui.QMouseEvent], None | tp.Awaitable[None]] | None = None,
+        on_mouse_up: tp.Callable[[QtGui.QMouseEvent], None | tp.Awaitable[None]] | None = None,
+        on_mouse_enter: tp.Callable[[QtGui.QMouseEvent], None | tp.Awaitable[None]] | None = None,
+        on_mouse_leave: tp.Callable[[QtGui.QMouseEvent], None | tp.Awaitable[None]] | None = None,
+        on_mouse_move: tp.Callable[[QtGui.QMouseEvent], None | tp.Awaitable[None]] | None = None,
+        on_drop: tp.Callable[
+            [QtGui.QDragEnterEvent | QtGui.QDragMoveEvent | QtGui.QDragLeaveEvent | QtGui.QDropEvent], None
+        ]
+        | None = None,
+        on_resize: tp.Callable[[QtGui.QResizeEvent], None | tp.Awaitable[None]] | None = None,
     ):
         super().__init__()
         self._register_props(
@@ -956,7 +957,7 @@ class QtWidgetElement(Element, tp.Generic[_T_widget]):
                 "on_mouse_move": on_mouse_move,
                 "on_drop": on_drop,
                 "on_resize": on_resize,
-            }
+            },
         )
         self._height = 0
         self._width = 0
@@ -973,10 +974,11 @@ class QtWidgetElement(Element, tp.Generic[_T_widget]):
         self._on_mouse_down = None
         self._on_mouse_up = None
         self._on_mouse_move = None
-        self._on_drop: tp.Optional[
+        self._on_drop: (
             tp.Callable[[QtGui.QDragEnterEvent | QtGui.QDragMoveEvent | QtGui.QDragLeaveEvent | QtGui.QDropEvent], None]
-        ] = None
-        self._on_resize: tp.Optional[tp.Callable[[QtGui.QResizeEvent], None]] = None
+            | None
+        ) = None
+        self._on_resize: tp.Callable[[QtGui.QResizeEvent], None] | None = None
         self._default_mouse_press_event = None
         self._default_mouse_release_event = None
         self._default_mouse_move_event = None
@@ -1137,9 +1139,10 @@ class QtWidgetElement(Element, tp.Generic[_T_widget]):
     def _set_on_drop(
         self,
         underlying: QtWidgets.QWidget,
-        on_drop: tp.Optional[
-            tp.Callable[[QtGui.QDragEnterEvent | QtGui.QDragMoveEvent | QtGui.QDragLeaveEvent | QtGui.QDropEvent], None]
-        ],
+        on_drop: tp.Callable[
+            [QtGui.QDragEnterEvent | QtGui.QDragMoveEvent | QtGui.QDragLeaveEvent | QtGui.QDropEvent], None
+        ]
+        | None,
     ):
         # Store the QWidget's default virtual event handler methods
         if self._default_drag_enter_event is None:
@@ -1166,9 +1169,7 @@ class QtWidgetElement(Element, tp.Generic[_T_widget]):
         if self._on_resize is not None:
             self._on_resize(event)
 
-    def _set_on_resize(
-        self, underlying: QtWidgets.QWidget, on_resize: tp.Optional[tp.Callable[[QtGui.QResizeEvent], None]]
-    ):
+    def _set_on_resize(self, underlying: QtWidgets.QWidget, on_resize: tp.Callable[[QtGui.QResizeEvent], None] | None):
         # Store the QWidget's default virtual event handler method one time
         if self._default_resize_event is None:
             self._default_resize_event = underlying.resizeEvent
@@ -1427,7 +1428,7 @@ class QtWidgetElement(Element, tp.Generic[_T_widget]):
                     [
                         CommandType(underlying.style().unpolish, underlying),
                         CommandType(underlying.style().polish, underlying),
-                    ]
+                    ],
                 )
             elif prop == "cursor":
                 cursor = self.props.cursor or ("default" if self.props.on_click is None else "pointer")
@@ -1437,12 +1438,12 @@ class QtWidgetElement(Element, tp.Generic[_T_widget]):
                     underlying.customContextMenuRequested.disconnect()
                 if self.props.context_menu is not None:
                     commands.append(
-                        CommandType(underlying.setContextMenuPolicy, QtCore.Qt.ContextMenuPolicy.CustomContextMenu)
+                        CommandType(underlying.setContextMenuPolicy, QtCore.Qt.ContextMenuPolicy.CustomContextMenu),
                     )
                     commands.append(CommandType(self._set_context_menu, underlying))
                 else:
                     commands.append(
-                        CommandType(underlying.setContextMenuPolicy, QtCore.Qt.ContextMenuPolicy.DefaultContextMenu)
+                        CommandType(underlying.setContextMenuPolicy, QtCore.Qt.ContextMenuPolicy.DefaultContextMenu),
                     )
         return commands
 
@@ -1474,7 +1475,7 @@ def qt_component(
 
         def _qt_update_commands(
             self,
-            widget_trees: dict[Element, "_WidgetTree"],
+            widget_trees: dict[Element, _WidgetTree],
             newprops: PropsDict,
         ) -> list[CommandType]:
             props: dict[str, tp.Any] = self.props._d
@@ -1816,7 +1817,10 @@ class RenderEngine(object):
             raise e
 
     def _update_old_component(
-        self, component: Element, new_component: Element, render_context: _RenderContext
+        self,
+        component: Element,
+        new_component: Element,
+        render_context: _RenderContext,
     ) -> _WidgetTree:
         # new_component is a new rendering of old component, so update
         # old component to have props of new_component.
@@ -1854,8 +1858,8 @@ class RenderEngine(object):
         #
         # Returns children widget trees, cached or newly rendered.
 
-        children_old_bykey: dict[str, Element] = dict()
-        children_new_bykey: dict[str, Element] = dict()
+        children_old_bykey: dict[str, Element] = {}
+        children_new_bykey: dict[str, Element] = {}
 
         children_old_ = self._component_tree[component]
 
@@ -2002,7 +2006,7 @@ class RenderEngine(object):
                 message = dedent(
                     f"""\
                     A @component must render as exactly one Element.
-                    Element {component} renders as {len(container.children)} elements."""
+                    Element {component} renders as {len(container.children)} elements.""",
                 ) + newline.join([child.__str__() for child in container.children])
                 raise ValueError(message)
         old_rendering: list[Element] | None = self._component_tree.get(component, None)
