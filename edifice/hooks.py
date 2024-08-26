@@ -1,7 +1,10 @@
-from collections.abc import Awaitable, Callable, Coroutine
-from edifice.engine import get_render_context_maybe, _T_use_state, Reference
-from typing import Any, Generic, ParamSpec, TypeVar, cast
+from __future__ import annotations
+
 from asyncio import get_event_loop
+from collections.abc import Awaitable, Callable, Coroutine
+from typing import Any, Generic, ParamSpec, TypeVar, cast
+
+from edifice.engine import Reference, _T_use_state, get_render_context_maybe
 
 
 def use_state(

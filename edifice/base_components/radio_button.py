@@ -1,7 +1,10 @@
-import typing as tp
-from .base_components import CommandType, QtWidgetElement, Element, _WidgetTree, _ensure_future
+from __future__ import annotations
 
-from ..qt import QT_VERSION
+import typing as tp
+
+from edifice.qt import QT_VERSION
+
+from .base_components import CommandType, Element, QtWidgetElement, _ensure_future, _WidgetTree
 
 if QT_VERSION == "PyQt6" and not tp.TYPE_CHECKING:
     from PyQt6 import QtWidgets
@@ -86,7 +89,7 @@ class RadioButton(QtWidgetElement[EdRadioButton]):
                 "checked": checked,
                 "text": text,
                 "on_change": on_change,
-            }
+            },
         )
         self._register_props(kwargs)
 

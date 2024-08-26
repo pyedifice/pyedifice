@@ -39,7 +39,7 @@ class ColoredFormatter(logging.Formatter):
 
 GRAY_SEQ = COLOR_SEQ % (30 + BLACK)
 FORMAT = formatter_message(
-    f"[$BOLD%(name)s$RESET|%(levelname)s] {GRAY_SEQ}%(asctime)s.%(msecs)03d{RESET_SEQ}: %(message)s"
+    f"[$BOLD%(name)s$RESET|%(levelname)s] {GRAY_SEQ}%(asctime)s.%(msecs)03d{RESET_SEQ}: %(message)s",
 )
 
 handler = logging.StreamHandler()
