@@ -4,7 +4,8 @@
 
 <h1 align=center>Edifice<br> Declarative GUI framework for Python and Qt</h1>
 
-Edifice is a Python library for building declarative application user interfaces.
+Edifice is a Python library declarative framework for application user
+interfaces.
 
 - Modern **declarative** UI paradigm from web development.
 - **100% Python** application development, no language inter-op.
@@ -17,7 +18,7 @@ as a backend. Edifice is like
 [React](https://react.dev/), but with
 Python instead of JavaScript, and [Qt Widgets](https://doc.qt.io/qt-6/qtwidgets-index.html) instead of the HTML DOM.
 
-If you have React experience, you'll find Edifice to be very easy to learn.
+If you have React experience, you'll find Edifice to be easy to learn.
 Edifice has function components, props, and Hooks just like React.
 
 <img src="https://raw.githubusercontent.com/pyedifice/pyedifice/master/examples/example_calculator.png" width=200 /><img src="https://raw.githubusercontent.com/pyedifice/pyedifice/master/examples/example_harmonic_oscillator.gif" width=200 />
@@ -73,7 +74,6 @@ and Edifice will handle updating the GUI.
 ### Edifice vs. Qt Quick
 
 [Qt Quick](https://doc.qt.io/qtforpython-6/PySide6/QtQuick/) is Qt’s declarative GUI framework for Qt.
-Edifice differs from Qt Quick in these aspects:
 
 - Edifice programs are written in Python, whereas Qt Quick programs are written
   in Python + the special [QML](https://doc.qt.io/qtforpython-6/overviews/qmlapplications.html) language + JavaScript.

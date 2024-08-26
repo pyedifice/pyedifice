@@ -82,7 +82,7 @@ Update and then back to Model.
 
 ====== =======
 Model  The **state** of the application.
-View   The declarative render function.
+View   The declarative render function, which takes the **state** and renders an Element tree.
 Update Event handlers which change the **state**.
 ====== =======
 
@@ -92,7 +92,7 @@ this style of GUI programming scale up well to complicated user interfaces.
 Rendering
 ---------
 
-An :class:`App` encapsulates the rendering engine that's responsible
+An :class:`App` provides the rendering engine that's responsible
 for issuing the commands necessary to render the each of the declared Elements.
 The :class:`App` object is created by passing in the root :class:`Element`,
 and it tracks all state changes in the Element tree with the given root.
