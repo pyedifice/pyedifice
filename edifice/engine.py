@@ -231,7 +231,7 @@ class Reference(tp.Generic[_T_Element]):
 
             use_effect(did_render, ref)
 
-            with View():
+            with VBoxView():
                 Label("Before").register_ref(ref)
     """
 
@@ -441,7 +441,7 @@ class Element:
         Example::
 
             # inside a render call
-            with View():
+            with VBoxView():
                 Label("Hello").set_key("en")
                 Label("Bonjour").set_key("fr")
                 Label("Hola").set_key("es")
@@ -592,7 +592,7 @@ def component(f: Callable[tp.Concatenate[selfT, P], None]) -> Callable[P, Elemen
 
         @component
         def MySimpleComp(self, prop1, prop2, prop3):
-            with View():
+            with VBoxView():
                 Label(text=prop1)
                 Label(text=prop2)
                 Label(text=prop3)
@@ -612,7 +612,7 @@ def component(f: Callable[tp.Concatenate[selfT, P], None]) -> Callable[P, Elemen
         @component
         def MySimpleComp(self, prop1, prop2, prop3):
             label3 = Label(text=prop3)
-            with View():
+            with VBoxView():
                 Label(text=prop1)
                 Label(text=prop2)
                 label3
@@ -623,7 +623,7 @@ def component(f: Callable[tp.Concatenate[selfT, P], None]) -> Callable[P, Elemen
         @component
         def MySimpleComp(self, prop1, prop2, prop3):
             label3 = lambda: Label(text=prop3)
-            with View():
+            with VBoxView():
                 Label(text=prop1)
                 Label(text=prop2)
                 label3()
@@ -633,7 +633,7 @@ def component(f: Callable[tp.Concatenate[selfT, P], None]) -> Callable[P, Elemen
 
         # No decorator
         def MySimpleComp(prop1, prop2, prop3):
-            with View():
+            with VBoxView():
                 Label(text=prop1)
                 Label(text=prop2)
                 Label(text=prop3)
@@ -675,9 +675,9 @@ def component(f: Callable[tp.Concatenate[selfT, P], None]) -> Callable[P, Elemen
 
         @component
         def ContainerComponent(self:Element, children:tuple[Element, ...]=()):
-            with View():
+            with VBoxView():
                 for child in children:
-                    with View():
+                    with VBoxView():
                         child_place(child)
 
         with ContainerComponent():
