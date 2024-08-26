@@ -409,7 +409,7 @@ class IconButton(Button):
 # >             `Qt supported HTML subset <https://doc.qt.io/qtforpython-6/overviews/richtext-html-subset.html>`_.
 # >         word_wrap: Enable/disable word wrapping.
 # >         link_open: Whether hyperlinks will open to the operating system. Defaults to False.
-# >             `PySide6.QtWidgets.PySide6.QtWidgets.QLabel.setOpenExternalLinks <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QLabel.html#PySide6.QtWidgets.PySide6.QtWidgets.QLabel.setOpenExternalLinks>`_
+# >             `PySide6.QtWidgets.QLabel.setOpenExternalLinks <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QLabel.html#PySide6.QtWidgets.QLabel.setOpenExternalLinks>`_
 # >         selectable: Whether the content of the label can be selected. Defaults to False.
 # >         editable: Whether the content of the label can be edited. Defaults to False.
 # >     """
@@ -468,7 +468,7 @@ class Label(QtWidgetElement[QtWidgets.QLabel]):
             `Qt supported HTML subset <https://doc.qt.io/qtforpython-6/overviews/richtext-html-subset.html>`_.
         word_wrap: Enable/disable word wrapping.
         link_open: Whether hyperlinks will open to the operating system. Defaults to False.
-            `PySide6.QtWidgets.PySide6.QtWidgets.QLabel.setOpenExternalLinks <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QLabel.html#PySide6.QtWidgets.PySide6.QtWidgets.QLabel.setOpenExternalLinks>`_
+            `PySide6.QtWidgets.QLabel.setOpenExternalLinks <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QLabel.html#PySide6.QtWidgets.QLabel.setOpenExternalLinks>`_
         selectable: Whether the content of the label can be selected. Defaults to False.
         editable: Whether the content of the label can be edited. Defaults to False.
     """
@@ -603,7 +603,7 @@ class Completer(object):
         options,
         # TODO In PySide6, there is no longer an options, instead its a model.
         mode: str = "popup",
-        # TODO Should mode be this type instead? https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QCompleter.html#PySide6.QtWidgets.PySide6.QtWidgets.QCompleter.CompletionMode
+        # TODO Should mode be this type instead? https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QCompleter.html#PySide6.QtWidgets.QCompleter.CompletionMode
     ):
         self.options = options
         if mode == "popup":
@@ -637,14 +637,14 @@ class TextInput(QtWidgetElement[QtWidgets.QLineEdit]):
         placeholder_text:
             “makes the line edit display a grayed-out placeholder
             text as long as the line edit is empty.”
-            See `placeHolderText <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QLineEdit.html#PySide6.QtWidgets.PySide6.QtWidgets.QLineEdit.placeholderText>`_
+            See `placeHolderText <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QLineEdit.html#PySide6.QtWidgets.QLineEdit.placeholderText>`_
         on_change:
             Event handler for when the value of the text input changes, but
             only when the user is editing the text, not when the text prop
             changes.
         on_edit_finish:
             Callback for the
-            `editingFinished <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QLineEdit.html#PySide6.QtWidgets.PySide6.QtWidgets.QLineEdit.editingFinished>`_
+            `editingFinished <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QLineEdit.html#PySide6.QtWidgets.QLineEdit.editingFinished>`_
             event, when the Return or Enter key is pressed, or if the line edit
             loses focus and its contents have changed
     """
@@ -908,7 +908,7 @@ class Slider(QtWidgetElement[QtWidgets.QSlider]):
         orientation:
             The orientation of the slider,
             either :code:`Horizontal` or :code:`Vertical`.
-            See `Orientation <https://doc.qt.io/qtforpython-6/PySide6/QtCore/Qt.html#PySide6.QtCore.PySide6.QtCore.Qt.Orientation>`_.
+            See `Orientation <https://doc.qt.io/qtforpython-6/PySide6/QtCore/Qt.html#PySide6.QtCore.Qt.Orientation>`_.
         on_change:
             Event handler for when the value of the slider changes,
             but only when the slider is being move by the user,
@@ -2020,11 +2020,11 @@ class ProgressBar(QtWidgetElement[QtWidgets.QProgressBar]):
             The ending progress.
         format:
             The descriptive text format.
-            See `format <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QProgressBar.html#PySide6.QtWidgets.PySide6.QtWidgets.QProgressBar.format>`_.
+            See `format <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QProgressBar.html#PySide6.QtWidgets.QProgressBar.format>`_.
         orientation:
             The orientation of the bar,
             either :code:`Horizontal` or :code:`Vertical`.
-            See `Orientation <https://doc.qt.io/qtforpython-6/PySide6/QtCore/Qt.html#PySide6.QtCore.PySide6.QtCore.Qt.Orientation>`_.
+            See `Orientation <https://doc.qt.io/qtforpython-6/PySide6/QtCore/Qt.html#PySide6.QtCore.Qt.Orientation>`_.
     """
 
     def __init__(

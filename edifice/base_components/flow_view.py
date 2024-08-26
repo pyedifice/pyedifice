@@ -56,7 +56,7 @@ class FlowLayout(QLayout):
         return None
 
     # We need insertWidget like the one in QBoxLayout to support Edifice.
-    # https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QBoxLayout.html#PySide6.QtWidgets.PySide6.QtWidgets.QBoxLayout.insertWidget
+    # https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QBoxLayout.html#PySide6.QtWidgets.QBoxLayout.insertWidget
     #
     # But the QLayout API gives us only addWidget and removeWidget.
     # https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QLayout.html

@@ -111,7 +111,7 @@ class NumpyImage(ed.QtWidgetElement):
 
             * :code:`None` for a fixed image which doesn’t scale.
             * An
-              `AspectRatioMode <https://doc.qt.io/qtforpython-6/PySide6/QtCore/Qt.html#PySide6.QtCore.PySide6.QtCore.Qt.AspectRatioMode>`_
+              `AspectRatioMode <https://doc.qt.io/qtforpython-6/PySide6/QtCore/Qt.html#PySide6.QtCore.Qt.AspectRatioMode>`_
               to specify how the image should scale.
 
     """

@@ -89,7 +89,7 @@ class SpinInput(QtWidgetElement[EdSpinBox]):
               with more input.
             * :code:`QValidator.State.Invalid` if the text is invalid.
 
-            See `QValidator.State <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QValidator.html#PySide6.QtGui.PySide6.QtGui.QValidator.State>`_.
+            See `QValidator.State <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QValidator.html#PySide6.QtGui.QValidator.State>`_.
         enable_mouse_scroll:
             Whether mouse scroll events should be able to change the value.
     """
