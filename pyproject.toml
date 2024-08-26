@@ -32,7 +32,7 @@ ruff = ">= 0.1.3" # for dev environment
 ruff-lsp = ">= 0.0.42" # for dev environment
 watchdog = ">= 1.0.2" # for hot-reload https://pyedifice.github.io/developer_tools.html#dynamic-hot-reload
 
-sphinx-book-theme = "*" # sphinx packages for make docs
+pydata-sphinx-theme = "*" # sphinx packages for make docs
 sphinx-autodoc-typehints = "*" # sphinx packages for make docs
 
 numpy = ">= 1.19.4" # for examples
