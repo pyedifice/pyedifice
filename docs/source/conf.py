@@ -8,27 +8,27 @@
 
 import os
 import sys
-sys.path.append(os.path.abspath('../..'))
-sys.path.append(os.path.abspath('./image'))
+sys.path.append(os.path.abspath("../.."))
+sys.path.append(os.path.abspath("./image"))
 
-project = 'Edifice'
-release = '0.8.0'
+project = "Edifice"
+release = "0.8.0"
 # Copyright is broken, renders as '1980, David Ding' for some reason
 # project_copyright = '2021, David Ding'
-author = 'David Ding, James D. Brock, Viktor Kronvall'
+author = "David Ding, James D. Brock, Viktor Kronvall"
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
 extensions = [
-'sphinx.ext.autodoc',
-'sphinx.ext.autosummary',
-'sphinx.ext.napoleon',
-'sphinx_autodoc_typehints',
-'sphinx.ext.viewcode'
+"sphinx.ext.autodoc",
+"sphinx.ext.autosummary",
+"sphinx.ext.napoleon",
+"sphinx_autodoc_typehints",
+"sphinx.ext.viewcode",
 ]
 
-templates_path = ['_templates', 'sphinx_book_theme_override']
+templates_path = ["_templates"]
 exclude_patterns = []
 
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#confval-toc_object_entries
@@ -37,19 +37,44 @@ toc_object_entries=False
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
-html_theme = 'sphinx_book_theme'
+html_theme = "pydata_sphinx_theme"
 html_theme_options = {
-    "repository_url": "https://github.com/pyedifice/pyedifice",
-    "use_repository_button": True,
-}
+    # https://pydata-sphinx-theme.readthedocs.io/en/stable/user_guide/navigation.html#control-the-number-of-navigation-levels
+    "navigation_depth": 1,
 
-# The globaltoc_maxdepth option doesn't work.
-# Override this sbt-sidebar-nav.html file so that we can set maxdepth=2.
-# https://github.com/executablebooks/sphinx-book-theme/issues/757
-# https://sphinx-book-theme.readthedocs.io/en/latest/sections/sidebar-primary.html#control-the-left-sidebar-items
-html_sidebars = {
-    "**": ["navbar-logo.html", "sbt-sidebar-nav-override.html"]
+    # https://pydata-sphinx-theme.readthedocs.io/en/stable/user_guide/header-links.html#icon-links
+    "icon_links": [
+        {
+            # Label for this link
+            "name": "GitHub",
+            # URL where the link will redirect
+            "url": "https://github.com/pyedifice/pyedifice",
+            # Icon class (if "type": "fontawesome"), or path to local image (if "type": "local")
+            "icon": "fa-brands fa-github",
+            # The type of image to be used (see below for details)
+            "type": "fontawesome",
+        },
+   ],
+
 }
 
 html_logo = "image/EdificePyramid.svg"
 html_favicon = "image/EdificePyramid.ico"
+
+# https://github.com/pydata/pydata-sphinx-theme/issues/1238#issuecomment-1463465620
+# https://docs.readthedocs.io/en/stable/guides/adding-custom-css.html
+html_static_path = ["_static"]
+html_css_files = [ "css/custom.css" ]
+
+# https://pydata-sphinx-theme.readthedocs.io/en/stable/user_guide/layout.html#remove-the-primary-sidebar-from-pages
+html_sidebars = {
+    "tutorial": [],
+    "examples": [],
+    "styling": [],
+    "developer_tools": [],
+    "versions": [],
+    "future": [],
+}
+
+# https://pydata-sphinx-theme.readthedocs.io/en/stable/user_guide/source-buttons.html#view-source-link
+html_show_sourcelink = False
