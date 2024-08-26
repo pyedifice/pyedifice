@@ -65,17 +65,17 @@ class TableGridView(QtWidgetElement[QWidget]):
         row_stretch:
             *n*:sup:`th` row stretch size in proportion to the *n*:sup:`th`
             :code:`int` in this list.
-            See `setRowStretch <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGridLayout.html#PySide6.QtWidgets.PySide6.QtWidgets.QGridLayout.setRowStretch>`_
+            See `setRowStretch <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGridLayout.html#PySide6.QtWidgets.QGridLayout.setRowStretch>`_
         column_stretch:
             *n*:sup:`th` column stretch size in proportion to the *n*:sup:`th`
             :code:`int` in this list.
-            See `setColumnStretch <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGridLayout.html#PySide6.QtWidgets.PySide6.QtWidgets.QGridLayout.setColumnStretch>`_
+            See `setColumnStretch <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGridLayout.html#PySide6.QtWidgets.QGridLayout.setColumnStretch>`_
         row_minheight:
             *n*:sup:`th` row minimum height is the *n*:sup:`th` :code:`int` in this list.
-            See `setRowMinimumHeight <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGridLayout.html#PySide6.QtWidgets.PySide6.QtWidgets.QGridLayout.setRowMinimumHeight>`_
+            See `setRowMinimumHeight <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGridLayout.html#PySide6.QtWidgets.QGridLayout.setRowMinimumHeight>`_
         column_minwidth:
             *n*:sup:`th` column minimum width is the *n*:sup:`th` :code:`int` in this list.
-            See `setColumnMinimumWidth <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGridLayout.html#PySide6.QtWidgets.PySide6.QtWidgets.QGridLayout.setColumnMinimumWidth>`_
+            See `setColumnMinimumWidth <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGridLayout.html#PySide6.QtWidgets.QGridLayout.setColumnMinimumWidth>`_
 
     """
 
@@ -127,7 +127,7 @@ class TableGridView(QtWidgetElement[QWidget]):
             pass
 
     def _add_child(self, child_component: QtWidgetElement, row: int, column: int):
-        # https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGridLayout.html#PySide6.QtWidgets.PySide6.QtWidgets.QGridLayout.addWidget
+        # https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGridLayout.html#PySide6.QtWidgets.QGridLayout.addWidget
         assert child_component.underlying is not None
         self.underlying_layout.addWidget(child_component.underlying, row, column)
         if len(self._row_stretch) > row:
