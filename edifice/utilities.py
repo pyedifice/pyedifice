@@ -37,8 +37,8 @@ def alert(message: str, choices: tp.Sequence[str] | None = None) -> int | None:
 
 
 def file_dialog(
-    caption: tp.Text = "", directory: tp.Text = "", file_filter: tp.Optional[tp.Sequence[tp.Text]] = None
-) -> tp.Optional[tp.Text]:
+    caption: str = "", directory: str = "", file_filter: tp.Sequence[str] | None = None,
+) -> str | None:
     """Displays a file choice dialog.
 
     Args:
@@ -64,7 +64,14 @@ def file_dialog(
 
 
 def set_trace():
-    """Set a tracepoint in the Python debugger that works with Qt"""
+    """Set a tracepoint in the Python debugger that works with PyQt.
+
+    PDB does not work well with PyQt applications. :code:`edifice.set_trace()` is
+    equivalent to :code:`pdb.set_trace()`,
+    but it can properly pause the PyQt event loop
+    to enable use of the debugger
+    (users of PySide need not worry about this)."""
+
     import pdb
 
     if QT_VERSION == "PyQt6":

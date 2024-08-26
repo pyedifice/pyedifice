@@ -132,14 +132,6 @@ Similar to the Inspect Elements tool of a browser, the Element inspector will sh
 Since the UI is specified as a (pure) function of state, the state you see completely describes your application,
 and you can even do things like rewinding to a previous state.
 
-### set_trace()
-
-PDB does not work well with PyQt applications. `edifice.set_trace()` is
-equivalent to `pdb.set_trace()`,
-but it can properly pause the PyQt event loop
-to enable use of the debugger
-(users of PySide need not worry about this).
-
 ## License
 Edifice is [MIT Licensed](https://en.wikipedia.org/wiki/MIT_License).
 
