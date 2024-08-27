@@ -21,8 +21,6 @@ Python instead of JavaScript, and [Qt Widgets](https://doc.qt.io/qt-6/qtwidgets-
 If you have React experience, you'll find Edifice to be easy to learn.
 Edifice has function components, props, and Hooks just like React.
 
-<img src="https://raw.githubusercontent.com/pyedifice/pyedifice/master/examples/example_calculator.png" width=200 /><img src="https://raw.githubusercontent.com/pyedifice/pyedifice/master/examples/example_harmonic_oscillator.gif" width=200 />
-
 ## Getting Started
 
 * **Installation**
@@ -100,6 +98,8 @@ and a diffing algorithm will determine which components previously existed and w
 (the algorithm behaves similarly to the React diffing algorithm).
 Components that previously existed will maintain their **state**, whereas their **props** will be updated.
 Finally, Edifice will issue the minimal update commands to update the UI.
+
+![MANUFACIA-Vision_capture1](https://github.com/user-attachments/assets/eab9ec8e-1334-4d79-ae0e-f1ecd7f8adac)
 
 ## Development Tools
 
