@@ -547,7 +547,7 @@ class Label(QtWidgetElement[QtWidgets.QLabel]):
 
 
 class ImageSvg(QtWidgetElement[QtSvgWidgets.QSvgWidget]):
-    """An SVG Image container.
+    """Render an SVG image.
 
     * Underlying Qt Widget
       `QSvgWidget <https://doc.qt.io/qtforpython-6/PySide6/QtSvgWidgets/QSvgWidget.html>`_

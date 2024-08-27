@@ -1,17 +1,15 @@
+from __future__ import annotations
+
 import typing as tp
 
-from ..qt import QT_VERSION
+from edifice.qt import QT_VERSION
 
 if QT_VERSION == "PyQt6" and not tp.TYPE_CHECKING:
-    import PyQt6.QtCore as QtCore
-    import PyQt6.QtGui as QtGui
-    import PyQt6.QtWidgets as QtWidgets
+    from PyQt6 import QtCore, QtGui, QtWidgets
 else:
-    import PySide6.QtCore as QtCore
-    import PySide6.QtGui as QtGui
-    import PySide6.QtWidgets as QtWidgets
+    from PySide6 import QtCore, QtGui, QtWidgets
 
-from .base_components import QtWidgetElement, _image_descriptor_to_pixmap, CommandType, Element, _WidgetTree
+from .base_components import CommandType, Element, QtWidgetElement, _image_descriptor_to_pixmap, _WidgetTree
 
 
 class _ScaledLabel(QtWidgets.QLabel):
@@ -39,7 +37,7 @@ class _ScaledLabel(QtWidgets.QLabel):
                             self.frameSize(),
                             aspect_ratio_mode,
                             QtCore.Qt.TransformationMode.SmoothTransformation,
-                        )
+                        ),
                     )
 
     def _setPixmap(self, pixmap: QtGui.QPixmap):
@@ -54,16 +52,13 @@ class _ScaledLabel(QtWidgets.QLabel):
 
 
 class Image(QtWidgetElement):
-    """An image container.
+    """Render an image.
 
     * Underlying Qt Widget
       `QLabel <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QLabel.html>`_
 
-    If you want to display a 3-dimensional :code:`uint8` :code:`numpy` array as an image,
-    checkout:
-
-    * `<https://pyedifice.github.io/stubs/edifice.extra.NumpyImage.html>`_
-    * `<https://pyedifice.github.io/stubs/edifice.extra.NumpyArray_to_QImage.html>`_
+    To render a 3-dimensional :code:`uint8` :code:`numpy` array as an image,
+    see :class:`edifice.extra.NumpyImage`.
 
     Args:
         src:
@@ -93,9 +88,8 @@ class Image(QtWidgetElement):
             {
                 "src": src,
                 "aspect_ratio_mode": aspect_ratio_mode,
-            }
+            },
         )
-        # self._register_props(kwargs)
         self.underlying: _ScaledLabel | None = None
 
     def _initialize(self):
