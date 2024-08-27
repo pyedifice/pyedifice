@@ -11,7 +11,7 @@ interfaces.
 
 - Modern **declarative** UI paradigm from web development.
 - **100% Python** application development, no language inter-op.
-- A **native** desktop app instead of a bundled web browser.
+- A **native** Qt desktop app instead of a bundled web browser.
 - Fast iteration via **hot-reloading**.
 
 Edifice uses `PySide6 <https://doc.qt.io/qtforpython-6/>`_
@@ -87,11 +87,8 @@ and Edifice will handle updating the GUI.
 
 **Developer Tools**
 
-Declarative UIs are also easier for developer tools to work with.
-Edifice provides two key features to make development easier:
-
-- Dynamic hot-reloading of changed source code.
-- Element inspector.
+- Dynamic hot-reloading of source code changes.
+- Element Inspector.
 
 See :doc:`developer_tools` for more details.
 
@@ -157,7 +154,7 @@ Support
 Submit bug reports or feature requests on
 `Github Issues <https://github.com/pyedifice/pyedifice/issues>`_.
 
-Submit any questions on
+Submit questions on
 `Github Discussions <https://github.com/pyedifice/pyedifice/discussions>`_.
 
 Indices and tables

@@ -9,7 +9,7 @@ interfaces.
 
 - Modern **declarative** UI paradigm from web development.
 - **100% Python** application development, no language inter-op.
-- A **native** desktop app instead of a bundled web browser.
+- A **native** Qt desktop app instead of a bundled web browser.
 - Fast iteration via **hot-reloading**.
 
 Edifice uses [PySide6](https://doc.qt.io/qtforpython-6/)
@@ -109,28 +109,11 @@ Dyanamic hot-reload is very useful for fine-tuning the presentation styles
 of Elements deep within your application.
 You can test if the margin should be *10px* or *15px* instantly without closing the app, reopening it, and waiting for everything to load.
 
-To run your application with dynamic hot-reload, run:
-
-```
-python -m edifice path/to/app.py MyRootElement
-```
-
-This will run `app.py` with `MyRootElement` mounted as the root.
-A separate thread will listen to changes in all Python files in the directory containing `app.py` (recursing into subdirectories).
-You can customize which directory to listen to using the `--dir` flag.
-
-When a file in your application is changed, the loader will reload all components in that file
-with preserved props (since that state comes from the caller), reset state,
-and trigger a re-render in the main thread.
-
-Because rendering is abstracted away, it is simple to diff the UI trees and have
-the Edifice renderer figure out what to do using its normal logic.
-
 ### Element Inspector
 
-Similar to the Inspect Elements tool of a browser, the Element inspector will show you all Elements in your application along with the props and state, allowing you to examine the internal state of your complex component without writing a million print statements.
-Since the UI is specified as a (pure) function of state, the state you see completely describes your application,
-and you can even do things like rewinding to a previous state.
+Similar to the Inspect Elements tool of a browser, the Element Inspector will
+show you the tree of Elements in a running Edifice application, along with all of the props
+and state of the Elements.
 
 ## License
 Edifice is [MIT Licensed](https://en.wikipedia.org/wiki/MIT_License).
