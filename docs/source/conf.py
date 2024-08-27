@@ -12,7 +12,7 @@ sys.path.append(os.path.abspath("../.."))
 sys.path.append(os.path.abspath("./image"))
 
 project = "Edifice"
-release = "0.8.1"
+release = "1.0.0"
 # Copyright is broken, renders as '1980, David Ding' for some reason
 # project_copyright = '2021, David Ding'
 author = "David Ding, James D. Brock, Viktor Kronvall"

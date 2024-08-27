@@ -4,6 +4,13 @@
 Release Notes
 =============
 
+1.0.0
+-----
+Released: 2024-08-27
+
+The API and features are pretty stable and reliable now, so this is
+version 1.
+
 0.8.1
 -----
 Released: 2024-08-27
