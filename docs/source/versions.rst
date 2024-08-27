@@ -4,6 +4,13 @@
 Release Notes
 =============
 
+0.8.1
+-----
+Released: 2024-08-27
+
+* Bugfix for the Harmonic Oscillator example.
+* Change Sphinx theme to :code:`pydata-sphinx-theme` for documentation.
+
 0.8.0
 -----
 Released: 2024-07-27
