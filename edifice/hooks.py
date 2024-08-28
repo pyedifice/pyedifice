@@ -66,9 +66,10 @@ def use_state(
     unmodified so that it can be compared to the new state variable during
     the next render.
     Instead create a shallow `copy <https://docs.python.org/3/library/copy.html#copy.copy>`_
-    of the state, modify the copy, then call the **setter function** with the modified copy.
+    of the state, modify the copy, then call the **setter function** with the modified copy::
 
         from copy import copy
+        from typing import cast
 
         def Stateful(self):
             x, x_setter = use_state(cast(list[str], []))
