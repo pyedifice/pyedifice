@@ -140,7 +140,6 @@ text input changes due to user action::
             with HBoxView(style={"padding": 10}):
                 Label("Measurement in meters:", style=meters_label_style)
                 TextInput(meters, style=input_style, on_change=meters_set)
-                Label(f"Measurement in feet: {feet}", style=feet_label_style)
                 try:
                     feet = "%.3f" % (float(meters) * METERS_TO_FEET)
                     Label(f"Measurement in feet: {feet}", style=feet_label_style)
