@@ -5,6 +5,7 @@ Release Notes
 =============
 
 1.1.0
+-----
 Released: 2025-09-05
 
 * :class:`SpinInput` new prop :code:`single_step`.
