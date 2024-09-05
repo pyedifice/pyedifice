@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 import typing as tp
 
 import edifice as ed
@@ -76,11 +77,14 @@ def Main(self):
             )
             def text_to_meters(text: str) -> int | tp.Literal[QValidator.State.Intermediate, QValidator.State.Invalid]:
                 try:
-                    # numtext is only the numeric part of text, or the decimal point
-                    numtext = "".join(c for c in text if c.isdigit() or c == ".")
-                    return int(float(numtext) * 1000)
+                    #search for a decimal number in the text
+                    matches = re.search(r"(\d*\.\d*)", text)
+                    if matches is not None and len(matches.groups()) > 0:
+                        return int(float(matches.groups()[0]) * 1000)
                 except ValueError:
-                    return QValidator.State.Invalid
+                    return QValidator.State.Intermediate
+                else:
+                    return QValidator.State.Intermediate
             def meters_to_text(millimeters: int) -> str:
                 return f"{(float(millimeters) / 1000):.3f} meters"
             ed.SpinInput(
