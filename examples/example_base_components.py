@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import typing as tp
 
 import edifice as ed
@@ -5,9 +7,10 @@ from edifice.qt import QT_VERSION
 
 if QT_VERSION == "PyQt6" and not tp.TYPE_CHECKING:
     from PyQt6.QtCore import Qt
+    from PyQt6.QtGui import QValidator
 else:
     from PySide6.QtCore import Qt
-
+    from PySide6.QtGui import QValidator
 
 @ed.component
 def Main(self):
@@ -16,6 +19,7 @@ def Main(self):
     ddoptions2, ddoptions2_set = ed.use_state(0)
     ddoptions3, ddoptions3_set = ed.use_state(0)
     sival, sival_set = ed.use_state(0)
+    smillimeters, smillimeters_set = ed.use_state(0)
     radio_value1, radio_value1_set = ed.use_state(tp.cast(tp.Literal["op1", "op2", "op3"], "op1"))
     radio_value2, radio_value2_set = ed.use_state(tp.cast(tp.Literal["op1", "op2", "op3"], "op1"))
     check_value1, check_value1_set = ed.use_state(True)
@@ -62,13 +66,34 @@ def Main(self):
                 },
             )
             ed.Button("Exclaim text", on_click=lambda _: mltext_set("!" + mltext + "!"))
+
         with ed.VBoxView():
             ed.SpinInput(
                 value=sival,
                 min_value=10,
                 max_value=20,
-                on_change=lambda v: (sival_set(v)),
+                on_change=sival_set,
             )
+            def text_to_meters(text: str) -> int | tp.Literal[QValidator.State.Intermediate, QValidator.State.Invalid]:
+                try:
+                    # numtext is only the numeric part of text, or the decimal point
+                    numtext = "".join(c for c in text if c.isdigit() or c == ".")
+                    return int(float(numtext) * 1000)
+                except ValueError:
+                    return QValidator.State.Invalid
+            def meters_to_text(millimeters: int) -> str:
+                return f"{(float(millimeters) / 1000):.3f} meters"
+            ed.SpinInput(
+                value=smillimeters,
+                min_value=0,
+                max_value=100000,
+                on_change=smillimeters_set,
+                text_to_value=text_to_meters,
+                value_to_text=meters_to_text,
+                single_step=1000,
+            )
+
+
         with ed.HBoxView():
             with ed.VBoxView():
                 # RadioButtons with the same parent

@@ -25,8 +25,7 @@ class EdSpinBox(QSpinBox):
     def textFromValue(self, val: int) -> str:
         if self._textFromValue is not None:
             return self._textFromValue(val)
-        else:
-            return super().textFromValue(val)
+        return super().textFromValue(val)
 
     def valueFromText(self, text: str) -> int:
         if self._valueFromText is not None:
@@ -40,7 +39,7 @@ class EdSpinBox(QSpinBox):
         else:
             return super().valueFromText(text)
 
-    def validate(self, input: str, pos: int) -> object:
+    def validate(self, input: str, pos: int) -> object:  # noqa: A002
         if self._valueFromText is not None:
             match self._valueFromText(input):
                 case QValidator.State.Intermediate:
@@ -89,6 +88,11 @@ class SpinInput(QtWidgetElement[EdSpinBox]):
             * :code:`QValidator.State.Invalid` if the text is invalid.
 
             See `QValidator.State <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QValidator.html#PySide6.QtGui.QValidator.State>`_.
+
+            (At the time of this writing, the PySide6.QValidator.State Enum cannot
+            be correctly typechecked as a Literal by Pyright for some reason.)
+        single_step:
+            The value step size for the up/down buttons.
         enable_mouse_scroll:
             Whether mouse scroll events should be able to change the value.
     """
@@ -107,6 +111,7 @@ class SpinInput(QtWidgetElement[EdSpinBox]):
             int | tp.Literal[QValidator.State.Intermediate, QValidator.State.Invalid],
         ]
         | None = None,
+        single_step: int = 1,
         enable_mouse_scroll: bool = True,
         **kwargs,
     ):
@@ -119,8 +124,9 @@ class SpinInput(QtWidgetElement[EdSpinBox]):
                 "on_change": on_change,
                 "value_to_text": value_to_text,
                 "text_to_value": text_to_value,
+                "single_step": single_step,
                 "enable_mouse_scroll": enable_mouse_scroll,
-            }
+            },
         )
 
     def _initialize(self):
@@ -160,18 +166,19 @@ class SpinInput(QtWidgetElement[EdSpinBox]):
         if self.underlying is None:
             self._initialize()
         assert self.underlying is not None
-        widget = self.underlying
 
         commands = super()._qt_update_commands_super(widget_trees, newprops, self.underlying)
 
         if "value_to_text" in newprops:
-            commands.append(CommandType(setattr, widget, "_textFromValue", newprops.value_to_text))
+            commands.append(CommandType(setattr, self.underlying, "_textFromValue", newprops.value_to_text))
         if "text_to_value" in newprops:
-            commands.append(CommandType(setattr, widget, "_valueFromText", newprops.text_to_value))
+            commands.append(CommandType(setattr, self.underlying, "_valueFromText", newprops.text_to_value))
         if "min_value" in newprops:
             commands.append(CommandType(self._set_min_value, newprops.min_value))
         if "max_value" in newprops:
             commands.append(CommandType(self._set_max_value, newprops.max_value))
         if "value" in newprops:
             commands.append(CommandType(self._set_value, newprops.value))
+        if "single_step" in newprops:
+            commands.append(CommandType(self.underlying.setSingleStep, newprops.single_step))
         return commands
