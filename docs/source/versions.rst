@@ -7,7 +7,7 @@ Release Notes
 .. _v1.1.0:
 v1.1.0
 -----
-Released: 2025-09-05
+Released: 2024-09-05
 
 * :class:`SpinInput` new prop :code:`single_step`.
 
