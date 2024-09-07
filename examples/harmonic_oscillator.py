@@ -95,7 +95,10 @@ def Oscillator(self):
             with ed.HBoxView(style={"margin": 10}):
                 ed.Label("Angular Frequency")
                 ed.Slider(
-                    value=int(angular_frequency * 20.0), min_value=20, max_value=200, on_change=freq_slider_change,
+                    value=int(angular_frequency * 20.0),
+                    min_value=20,
+                    max_value=200,
+                    on_change=freq_slider_change,
                 )
                 ed.Label("Damping Factor")
                 ed.Slider(value=int(damping * 100.0), min_value=-300, max_value=0, on_change=damp_slider_change)

@@ -10,6 +10,7 @@ logging.getLogger("Edifice").setLevel(logging.INFO)
 
 METERS_TO_FEET = 3.28084
 
+
 @component
 def ConversionWidget(self, from_unit, to_unit, factor):
     current_text, current_text_set = use_state("0.0")
@@ -23,8 +24,8 @@ def ConversionWidget(self, from_unit, to_unit, factor):
         try:
             to_text = "%.3f" % (float(current_text) * factor)
             Label(f"Measurement in {to_unit}: {to_text}", style=to_label_style)
-        except ValueError: # Could not convert string to float
-            pass # So don't render the Label
+        except ValueError:  # Could not convert string to float
+            pass  # So don't render the Label
 
 
 @component
