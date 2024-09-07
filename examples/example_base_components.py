@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import datetime as dt
 import re
 import typing as tp
 
@@ -13,6 +14,7 @@ else:
     from PySide6.QtCore import Qt
     from PySide6.QtGui import QValidator
 
+
 @ed.component
 def Main(self):
     mltext, mltext_set = ed.use_state("Hello World")
@@ -24,6 +26,12 @@ def Main(self):
     radio_value1, radio_value1_set = ed.use_state(tp.cast(tp.Literal["op1", "op2", "op3"], "op1"))
     radio_value2, radio_value2_set = ed.use_state(tp.cast(tp.Literal["op1", "op2", "op3"], "op1"))
     check_value1, check_value1_set = ed.use_state(True)
+    n = dt.datetime.now()
+    n = dt.datetime(n.year, n.month, n.day, n.hour, n.minute, n.second)  # remove microseconds
+    date_value, date_value_set = ed.use_state(tp.cast(dt.date | ValueError, n.date()))
+    date_text, date_text_set = ed.use_state(n.date().isoformat())
+    time_value, time_value_set = ed.use_state(tp.cast(dt.time | ValueError, n.time()))
+    time_text, time_text_set = ed.use_state(n.time().isoformat())
 
     with ed.Window():
         ed.Label("Hello")
@@ -75,9 +83,10 @@ def Main(self):
                 max_value=20,
                 on_change=sival_set,
             )
+
             def text_to_meters(text: str) -> int | tp.Literal[QValidator.State.Intermediate, QValidator.State.Invalid]:
                 try:
-                    #search for a decimal number in the text
+                    # search for a decimal number in the text
                     matches = re.search(r"(\d*\.\d*)", text)
                     if matches is not None and len(matches.groups()) > 0:
                         return int(float(matches.groups()[0]) * 1000)
@@ -85,8 +94,10 @@ def Main(self):
                     return QValidator.State.Intermediate
                 else:
                     return QValidator.State.Intermediate
+
             def meters_to_text(millimeters: int) -> str:
                 return f"{(float(millimeters) / 1000):.3f} meters"
+
             ed.SpinInput(
                 value=smillimeters,
                 min_value=0,
@@ -96,7 +107,6 @@ def Main(self):
                 value_to_text=meters_to_text,
                 single_step=1000,
             )
-
 
         with ed.HBoxView():
             with ed.VBoxView():
@@ -196,6 +206,65 @@ def Main(self):
                         "background-color": "pink",
                     },
                 )
+        with ed.TableGridView(style={"padding": 10}) as tgv_date:
+            with tgv_date.row():
+
+                def handle_date(text: str):
+                    date_text_set(text)
+                    matches = re.findall(r"(\d+)", text)
+                    if matches is not None and len(matches) == 3:
+                        try:
+                            date_value_set(dt.date(int(matches[0]), int(matches[1]), int(matches[2])))
+                        except ValueError as ex:
+                            date_value_set(ex)
+                    else:
+                        date_value_set(ValueError("Need year-month-day"))
+
+                ed.Label(text="Date")
+                ed.TextInput(
+                    text=date_text,
+                    on_change=handle_date,
+                )
+                match date_value:
+                    case ValueError():
+                        ed.Label(
+                            text=str(date_value),
+                            style={"background-color": "red"},
+                        )
+                    case dt.date():
+                        ed.Label(
+                            text=date_value.strftime("%Y %B %d %A"),
+                            word_wrap=False,
+                        )
+            with tgv_date.row():
+
+                def handle_time(text: str):
+                    time_text_set(text)
+                    matches = re.findall(r"(\d+)", text)
+                    if matches is not None and len(matches) == 3:
+                        try:
+                            time_value_set(dt.time(int(matches[0]), int(matches[1]), int(matches[2])))
+                        except ValueError as ex:
+                            time_value_set(ex)
+                    else:
+                        time_value_set(ValueError("Need hour:minute:second"))
+
+                ed.Label(text="Time")
+                ed.TextInput(
+                    text=time_text,
+                    on_change=handle_time,
+                )
+                match time_value:
+                    case ValueError():
+                        ed.Label(
+                            text=str(time_value),
+                            style={"background-color": "red"},
+                        )
+                    case dt.time():
+                        ed.Label(
+                            text=time_value.strftime("%H:%M:%S"),
+                            word_wrap=False,
+                        )
 
 
 if __name__ == "__main__":
