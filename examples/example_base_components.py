@@ -87,7 +87,7 @@ def Main(self):
             def text_to_meters(text: str) -> int | tp.Literal[QValidator.State.Intermediate, QValidator.State.Invalid]:
                 try:
                     # search for a decimal number in the text
-                    matches = re.search(r"(\d*\.\d*)", text)
+                    matches = re.search(r"(\d*\.?\d*)", text)
                     if matches is not None and len(matches.groups()) > 0:
                         return int(float(matches.groups()[0]) * 1000)
                 except ValueError:
