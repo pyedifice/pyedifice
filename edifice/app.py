@@ -146,8 +146,6 @@ class App(object):
             However, if the QApplication is already created (e.g. in a test suite or if you just want Edifice
             to make a widget to plug into an existing Qt application),
             you can set this to False.
-        application_name: DEPRECATED the Qt application name to set when creating a new QApplication.
-            This option is only relevant if create_application is True.
         qapplication: (default None)
             The `QtWidgets.QApplication <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QApplication.html>`_.
             If you do not provide one, it will be created for you.
@@ -158,13 +156,12 @@ class App(object):
         root_element: Element,
         inspector: bool = False,
         create_application: bool = True,
-        application_name: str | None = None,
         qapplication: QtWidgets.QApplication | None = None,
     ):
         if qapplication is None:
             if create_application:
                 if QtWidgets.QApplication.instance() is None:
-                    self.app = QtWidgets.QApplication([application_name] if application_name is not None else [])
+                    self.app = QtWidgets.QApplication()
                 else:
                     raise RuntimeError("There is already an instance of QtWidgets.QApplication")
             else:

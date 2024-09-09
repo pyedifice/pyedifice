@@ -7,7 +7,7 @@ from collections import OrderedDict
 from dataclasses import dataclass
 from typing import cast
 
-from PySide6 import QtCore, QtGui
+from PySide6 import QtCore, QtGui, QtWidgets
 
 from edifice import (
     App,
@@ -64,7 +64,7 @@ def TodoItem(self, key: int, todo: Todo, table_grid_view, set_complete, delete_t
             on_click=lambda _ev: delete_todo(key),
             style={"padding": 5},
         ):
-            Icon(name="trash-alt", sub_collection="regular", size=15, color=(200,100,100,150))
+            Icon(name="trash-alt", sub_collection="regular", size=15, color=(200, 100, 100, 150))
 
 
 @component
@@ -210,9 +210,15 @@ def TodoMVC(self):
 
 @component
 def Main(self):
-    with Window(title="todos"):
+    def on_open(qapp: QtWidgets.QApplication):
+        qapp.setApplicationName("TodoMVC")
+
+    with Window(
+        title="todos",
+        on_open=on_open,
+    ):
         TodoMVC()
 
 
 if __name__ == "__main__":
-    App(Main(), application_name="TodoMVC").start()
+    App(Main()).start()
