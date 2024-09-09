@@ -9,14 +9,25 @@ from edifice.qt import QT_VERSION
 
 if QT_VERSION == "PyQt6" and not tp.TYPE_CHECKING:
     from PyQt6.QtCore import Qt
-    from PyQt6.QtGui import QValidator
+    from PyQt6.QtGui import QCloseEvent, QFont, QValidator
+    from PyQt6.QtWidgets import QApplication
 else:
     from PySide6.QtCore import Qt
-    from PySide6.QtGui import QValidator
+    from PySide6.QtGui import QCloseEvent, QFont, QValidator
+    from PySide6.QtWidgets import QApplication
 
 
 @ed.component
 def Main(self):
+    def handle_open(qapp: QApplication):
+        print("Opening window")
+        qapp.setApplicationName("Example Base Components")
+        QApplication.setStyle("fusion")
+        qapp.setFont(QFont("Yu Gothic UI", 20))
+
+    def handle_close(ev: QCloseEvent):
+        print("Closing window")
+
     mltext, mltext_set = ed.use_state("Hello World")
     ddoptions, ddoptionss_set = ed.use_state(0)
     ddoptions2, ddoptions2_set = ed.use_state(0)
@@ -33,7 +44,11 @@ def Main(self):
     time_value, time_value_set = ed.use_state(tp.cast(dt.time | ValueError, n.time()))
     time_text, time_text_set = ed.use_state(n.time().isoformat())
 
-    with ed.Window():
+    with ed.Window(
+        on_open=handle_open,
+        on_close=handle_close,
+        title="Example Base Components",
+    ):
         ed.Label("Hello")
         ed.Label(
             text="World",
