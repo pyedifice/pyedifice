@@ -37,7 +37,7 @@ COLOR_SEQ = "\033[1;%dm"
 BOLD_SEQ = "\033[1m"
 
 
-class _TimingAvg(object):
+class _TimingAvg:
     def __init__(self):
         self.total_time = 0
         self.total_count = 0
@@ -59,7 +59,7 @@ class _TimingAvg(object):
         return self.max_time
 
 
-class _RateLimitedLogger(object):
+class _RateLimitedLogger:
     def __init__(self, gap):
         self._last_log_time = 0
         self._gap = gap
@@ -71,7 +71,7 @@ class _RateLimitedLogger(object):
             self._last_log_time = cur_time
 
 
-class App(object):
+class App:
     """The main application object.
 
     Start
@@ -187,7 +187,7 @@ class App(object):
                         try:
                             self._render_engine._refresh_by_class(classes)
                         except Exception as exception:
-                            logger.error("Encountered exception while reloading: %s", exception)
+                            logger.exception("Encountered exception while reloading")
                             self._class_rerender_response_queue.put_nowait(False)
                             etype, evalue, tb = sys.exc_info()
                             stack_trace = traceback.extract_tb(tb)
@@ -224,8 +224,7 @@ class App(object):
                         self._class_rerender_response_queue.put_nowait(True)
                         logger.info("Rerendering Elements in %s due to source change", file_name)
                     return True
-                else:
-                    return super().event(e)
+                return super().event(e)
 
         self._event_receiver = EventReceiverWidget()
         self._class_rerender_queue = queue.Queue()
@@ -288,20 +287,6 @@ class App(object):
         if len(self._rerender_wanted) > 0 and not self._rerender_called_soon:
             asyncio.get_event_loop().call_soon(self._rerender_callback)
 
-    def set_stylesheet(self, stylesheet: str) -> "App":
-        """Adds a global stylesheet for the app.
-
-        See
-        `Qt Style Sheets <https://doc.qt.io/qtforpython-6/overviews/stylesheet.html-style-sheets>`_.
-
-        Args:
-            stylesheet: String containing the contents of the stylesheet
-        Returns:
-            self
-        """
-        self.app.setStyleSheet(stylesheet)
-        return self
-
     def export_widgets(self) -> list[QtWidgets.QWidget]:
         """Exports the underlying Qt :code:`QWidgets` s from the Edifice
         Elements in the :class:`ExportList`.
@@ -338,8 +323,7 @@ class App(object):
                 if isinstance(e, QtWidgetElement):
                     widgets.append(e.underlying)
             return widgets
-        else:
-            raise RuntimeError("The root element of the App for export_widgets() must be an ExportList")
+        raise RuntimeError("The root element of the App for export_widgets() must be an ExportList")
 
     def start(self) -> None:
         """
@@ -392,11 +376,11 @@ class App(object):
                             self._root,
                             self._render_engine._hook_state,
                         )
-                    )
+                    ),
                 )
                 icon_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), "inspector/icon.png")
                 component = Window(title="Element Inspector", on_close=cleanup, icon=icon_path)(
-                    self._inspector_component
+                    self._inspector_component,
                 )
                 self._request_rerender([component])
 
