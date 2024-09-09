@@ -1369,10 +1369,13 @@ class Window(VBoxView):
                         qapp.setApplicationName("My App")
                         QApplication.setStyle("fusion")
                         qapp.setFont(QFont("Yu Gothic UI", 10))
+                        qapp.setStyleSheet("QLabel { font-size: 12pt; }")
 
                     with Window(on_open=init):
                         Label("Hello, World!")
 
+            For more information on global style sheets, see
+            `Qt Style Sheet Syntax <https://doc.qt.io/qtforpython-6/overviews/stylesheet-syntax.html>`_
 
         on_close:
             Event handler for when this window is closing. This event handler
