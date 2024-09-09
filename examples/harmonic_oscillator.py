@@ -4,6 +4,7 @@
 
 import asyncio
 import logging
+import typing as tp
 
 import numpy as np
 
@@ -12,10 +13,10 @@ import edifice as ed
 # Import edifice before importing pyqtgraph so that pyqtgraph detects the same version of PyQt
 from edifice.qt import QT_VERSION
 
-if QT_VERSION == "PyQt6":
-    pass
+if QT_VERSION == "PyQt6" and not tp.TYPE_CHECKING:
+    from PyQt6 import QtWidgets
 else:
-    pass
+    from PySide6 import QtWidgets
 
 import pyqtgraph as pg
 
@@ -119,7 +120,17 @@ def Oscillator(self):
 
 @ed.component
 def Main(self):
-    with ed.Window("Harmonic Oscillator"):
+    def on_open(qapp: QtWidgets.QApplication):
+        qapp.setApplicationName("Harmonic Oscillator")
+        if ed.utilities.theme_is_light():
+            qapp.setPalette(ed.utilities.palette_edifice_light())
+        else:
+            qapp.setPalette(ed.utilities.palette_edifice_dark())
+
+    with ed.Window(
+        title="Harmonic Oscillator",
+        on_open=on_open,
+    ):
         Oscillator()
 
 

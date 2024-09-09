@@ -3,12 +3,19 @@
 #
 
 
+import typing as tp
 from collections import OrderedDict
 from dataclasses import dataclass
 from typing import cast
 
-from PySide6 import QtCore, QtGui, QtWidgets
+from edifice.qt import QT_VERSION
 
+if QT_VERSION == "PyQt6" and not tp.TYPE_CHECKING:
+    from PyQt6 import QtCore, QtGui, QtWidgets
+else:
+    from PySide6 import QtCore, QtGui, QtWidgets
+
+import edifice as ed
 from edifice import (
     App,
     Button,
@@ -212,6 +219,10 @@ def TodoMVC(self):
 def Main(self):
     def on_open(qapp: QtWidgets.QApplication):
         qapp.setApplicationName("TodoMVC")
+        if ed.utilities.theme_is_light():
+            qapp.setPalette(ed.utilities.palette_edifice_light())
+        else:
+            qapp.setPalette(ed.utilities.palette_edifice_dark())
 
     with Window(
         title="todos",

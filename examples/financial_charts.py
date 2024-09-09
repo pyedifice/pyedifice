@@ -8,17 +8,25 @@ Everything is reactive -- changes will automatically be reflected in the entire 
 #
 # python examples/financial_charts.py
 #
+from __future__ import annotations
 
 import typing as tp
 from collections import OrderedDict
 
 import matplotlib.colors
+import matplotlib.pyplot as plt
 import pandas as pd
 import yfinance as yf
 
 import edifice as ed
 from edifice import Dropdown, HBoxView, IconButton, Label, Slider, TextInput, VBoxView
 from edifice.extra.matplotlib_figure import MatplotlibFigure
+from edifice.qt import QT_VERSION
+
+if QT_VERSION == "PyQt6" and not tp.TYPE_CHECKING:
+    from PyQt6 import QtWidgets
+else:
+    from PySide6 import QtWidgets
 
 
 def _create_state_for_plot() -> dict[str, tp.Any]:
@@ -218,7 +226,23 @@ def App(self):
 
 @ed.component
 def Main(self):
-    with ed.Window(title="Financial Charts"):
+    # Set Matplotlib to dark_background theme
+    # We should do this inside on_open but that doesn't work. It's okay
+    # to do it here because Main never re-renders.
+    if not ed.utilities.theme_is_light():
+        plt.style.use("dark_background")
+
+    def on_open(qapp: QtWidgets.QApplication):
+        qapp.setApplicationName("Financial Charts")
+        if ed.utilities.theme_is_light():
+            qapp.setPalette(ed.utilities.palette_edifice_light())
+        else:
+            qapp.setPalette(ed.utilities.palette_edifice_dark())
+
+    with ed.Window(
+        title="Financial Charts",
+        on_open=on_open,
+    ):
         App()
 
 
