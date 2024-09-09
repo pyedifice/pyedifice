@@ -1345,16 +1345,49 @@ class Window(VBoxView):
         menu:
             The window’s menu bar. In some GUI settings, for example Mac OS,
             this menu will appear seperately from the window.
+        on_open:
+            Event handler for when this window is opening. This event handler
+            function will be called exactly once, before the children are mounted.
+
+            Instead of calling application initialization code from the
+            :code:`__main__` function, it should be called here, because this
+            function will run when the app is started by the Edifice Runner.
+
+            The event handler function will be passed the application’s
+            `QApplication <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QApplication.html>`_
+            object.
+
+            Example::
+
+                from PySide6.QtWidgets import QApplication
+                from PySide6.QtGui import QFont
+
+                @component
+                def Main(self):
+
+                    def init(qapp: QApplication):
+                        qapp.setApplicationName("My App")
+                        QApplication.setStyle("fusion")
+                        qapp.setFont(QFont("Yu Gothic UI", 10))
+
+                    with Window(on_open=init):
+                        Label("Hello, World!")
+
+
         on_close:
             Event handler for when this window is closing. This event handler
             will fire before the children are unmounted.
+
+            The event handler function will be passed a
+            `QCloseEvent <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QCloseEvent.html>`_.
     """
 
     def __init__(
         self,
         title: str = "Edifice Application",
-        icon: tp.Union[tp.Text, tp.Sequence] | None = None,
+        icon: str | tp.Sequence | None = None,
         menu=None,
+        on_open: tp.Callable[[QtWidgets.QApplication], None] | None = None,
         on_close: tp.Callable[[QtGui.QCloseEvent], None | tp.Awaitable[None]] | None = None,
         **kwargs,
     ):
@@ -1370,6 +1403,8 @@ class Window(VBoxView):
 
         self._menu_bar = None
         self._on_close: tp.Callable[[QtGui.QCloseEvent], None | tp.Awaitable[None]] | None = None
+
+        self._on_open = on_open
 
     def _set_on_close(self, on_close):
         self._on_close = on_close
@@ -1395,6 +1430,12 @@ class Window(VBoxView):
         newprops,
     ):
         if self.underlying is None:
+            # We want on_open to be called exactly once only for this Window
+            # instance before any Qt Widgets are created.
+            if self._on_open is not None:
+                qapp = tp.cast(QtWidgets.QApplication, QtWidgets.QApplication.instance())
+                self._on_open(qapp)
+
             super()._initialize()
             assert isinstance(self.underlying, QtWidgets.QWidget)
             self.underlying.closeEvent = self._handle_close
