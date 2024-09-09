@@ -94,7 +94,8 @@ class MatplotlibFigure(QtWidgetElement):
                     self.underlying.mpl_disconnect(self.on_mouse_move_connect_id)
                 if newprops["on_figure_mouse_move"] is not None:
                     self.on_mouse_move_connect_id = self.underlying.mpl_connect(
-                        "motion_notify_event", newprops["on_figure_mouse_move"],
+                        "motion_notify_event",
+                        newprops["on_figure_mouse_move"],
                     )
                 else:
                     self.on_mouse_move_connect_id = None
