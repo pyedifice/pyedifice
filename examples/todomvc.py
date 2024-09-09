@@ -12,8 +12,10 @@ from PySide6 import QtCore, QtGui
 from edifice import (
     App,
     Button,
+    ButtonView,
     CheckBox,
     HBoxView,
+    Icon,
     Label,
     RadioButton,
     TableGridView,
@@ -58,11 +60,11 @@ def TodoItem(self, key: int, todo: Todo, table_grid_view, set_complete, delete_t
                 style={"align": "left", "font-size": 20},
                 on_click=lambda _ev: set_editing(key, True),
             ).set_key(str(key) + "label")
-        Button(
-            title="⌫",
+        with ButtonView(
             on_click=lambda _ev: delete_todo(key),
-            style={"color": "rgba(200,100,100,150)"},
-        ).set_key(str(key) + "del")
+            style={"padding": 5},
+        ):
+            Icon(name="trash-alt", sub_collection="regular", size=15, color=(200,100,100,150))
 
 
 @component
