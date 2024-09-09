@@ -37,7 +37,9 @@ def alert(message: str, choices: tp.Sequence[str] | None = None) -> int | None:
 
 
 def file_dialog(
-    caption: str = "", directory: str = "", file_filter: tp.Sequence[str] | None = None,
+    caption: str = "",
+    directory: str = "",
+    file_filter: tp.Sequence[str] | None = None,
 ) -> str | None:
     """Displays a file choice dialog.
 
