@@ -162,7 +162,15 @@ merge operator::
 Style Advice
 ------------
 
-Set global application styles:
+Set global application styles during the
+:class:`Window<edifice.Window>` :code:`on_open` event.
 
 - `QApplication.setStyleSheet <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QApplication.html#PySide6.QtWidgets.QApplication.setStyleSheet>`_
 - `QApplication.setStyle <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QApplication.html#PySide6.QtWidgets.QApplication.setStyle>`_
+
+If you think that Qt’s default color palette has weird choices, you can try
+the Edifice color palettes
+:func:`palette_edifice_light <edifice.utilities.palette_edifice_light>` and
+:func:`palette_edifice_dark <edifice.utilities.palette_edifice_dark>`.
+See :func:`theme_is_light<edifice.utilities.theme_is_light>` for instructions
+on how to use them.
