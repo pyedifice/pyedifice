@@ -4,7 +4,16 @@
 Release Notes
 =============
 
-.. _v1.1.0:
+
+v1.2.0
+------
+Released: 2024-09-10
+
+* :class:`Window` new prop :code:`on_open`.
+* New utility functions :func:`utilities.theme_is_light`,
+  :func:`utilities.palette_edifice_light`, :func:`utilities.palette_edifice_dark`.
+* Delete deprecated method :code:`App.set_stylesheet`.
+
 
 v1.1.0
 ------
@@ -12,7 +21,6 @@ Released: 2024-09-05
 
 * :class:`SpinInput` new prop :code:`single_step`.
 
-.. _v1.0.0:
 
 v1.0.0
 ------
@@ -21,7 +29,6 @@ Released: 2024-08-27
 The API and features are pretty stable and reliable now, so this is
 version 1.
 
-.. _v0.8.1:
 
 v0.8.1
 ------
@@ -30,7 +37,6 @@ Released: 2024-08-27
 * Bugfix for the Harmonic Oscillator example.
 * Change Sphinx theme to :code:`pydata-sphinx-theme` for documentation.
 
-.. _v0.8.0:
 
 v0.8.0
 ------
