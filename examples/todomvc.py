@@ -70,8 +70,9 @@ def TodoItem(self, key: int, todo: Todo, table_grid_view, set_complete, delete_t
         with ButtonView(
             on_click=lambda _ev: delete_todo(key),
             style={"padding": 5},
+            tool_tip="Delete " + todo.text,
         ):
-            Icon(name="trash-alt", sub_collection="regular", size=15, color=(200, 100, 100, 150))
+            Icon(name="trash-alt", sub_collection="regular", size=15)
 
 
 @component
@@ -180,16 +181,19 @@ def TodoMVC(self):
                             checked=item_filter == "All",
                             text="All",
                             on_click=lambda _ev: item_filter_set("All"),
+                            style = {} if item_filter == "All" else {"color": "grey"},
                         )
                         RadioButton(
                             checked=item_filter == "Active",
                             text="Active",
                             on_click=lambda _ev: item_filter_set("Active"),
+                            style = {} if item_filter == "Active" else {"color": "grey"},
                         )
                         RadioButton(
                             checked=item_filter == "Completed",
                             text="Completed",
                             on_click=lambda _ev: item_filter_set("Completed"),
+                            style = {} if item_filter == "Completed" else {"color": "grey"},
                         )
                     with VBoxView(style={"min-width": 180, "margin-left": 10, "align": "right"}):
                         if len(todos) > items_left:
