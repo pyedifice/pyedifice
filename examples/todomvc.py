@@ -73,7 +73,7 @@ def TodoItem(self, key: int, todo: Todo, table_grid_view, set_complete, delete_t
             style={
                 "padding-left": 5,
             } | ({"background-color": "rgba(0,0,0,0.2)"} if hover1 else {}),
-        ).set_key(str(key) + "comp"):
+        ):
             CheckBox(
                 checked=todo.completed,
                 on_click=lambda _ev: set_complete(key, not todo.completed),
@@ -92,7 +92,7 @@ def TodoItem(self, key: int, todo: Todo, table_grid_view, set_complete, delete_t
                     on_change=lambda t: set_text(key, t),
                     on_edit_finish=lambda: set_editing(key, False),
                     style={"font-size": 20},
-                ).set_key(str(key) + "input")
+                )
             else:
                 Label(
                     text=(
@@ -102,7 +102,7 @@ def TodoItem(self, key: int, todo: Todo, table_grid_view, set_complete, delete_t
                     ),
                     style={"align": "left", "font-size": 20},
                     on_click=lambda _ev: set_editing(key, True),
-                ).set_key(str(key) + "label")
+                )
             if hover1:
                 with ButtonView(
                     on_click=lambda _ev: delete_todo(key),
