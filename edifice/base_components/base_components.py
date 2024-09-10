@@ -53,17 +53,16 @@ def _image_descriptor_to_pixmap(inp: str | QtGui.QImage | QtGui.QPixmap) -> QtGu
 
 
 @functools.lru_cache(100)
-def _get_svg_image_raw(icon_path, size):
+def _get_svg_image_raw(icon_path, size: int) -> QtGui.QPixmap:
     svg_renderer = QtSvg.QSvgRenderer(icon_path)
     image = QtGui.QImage(size, size, QtGui.QImage.Format.Format_ARGB32)
     image.fill(0x00000000)
     svg_renderer.render(QtGui.QPainter(image))
-    pixmap = QtGui.QPixmap.fromImage(image)
-    return pixmap
+    return QtGui.QPixmap.fromImage(image)
 
 
 @functools.lru_cache(100)
-def _get_svg_image(icon_path, size, rotation=0, color=(0, 0, 0, 255)):
+def _get_svg_image(icon_path, size: int, rotation=0, color=(0, 0, 0, 255)) -> QtGui.QPixmap:
     pixmap = _get_svg_image_raw(icon_path, size)
     if color == (0, 0, 0, 255) and rotation == 0:
         return pixmap
@@ -590,13 +589,13 @@ class ImageSvg(QtWidgetElement[QtSvgWidgets.QSvgWidget]):
 # TODO
 # It seems to me that the type for Completer should be
 #
-#     Callable[[str], str]
+# >   Callable[[str], str]
 #
-# But Qt doesn’t like higher-order functions and they’ve done something
+# But Qt doesn't like higher-order functions and they've done something
 # much weirder and more complicated.
 # https://doc.qt.io/qtforpython-5/PySide2/QtWidgets/QCompleter.html
 # https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QCompleter.html
-class Completer(object):
+class Completer:
     # """
     # Parameters for a `QCompleter <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QCompleter.html>`_.
     # """
@@ -657,9 +656,9 @@ class TextInput(QtWidgetElement[QtWidgets.QLineEdit]):
         self,
         text: str = "",
         placeholder_text: str | None = None,
-        on_change: tp.Callable[[tp.Text], None | tp.Awaitable[None]] | None = None,
+        on_change: tp.Callable[[str], None | tp.Awaitable[None]] | None = None,
         on_edit_finish: tp.Callable[[], None | tp.Awaitable[None]] | None = None,
-        # completer: tp.Optional[Completer] = None,
+        # > completer: tp.Optional[Completer] = None,
         **kwargs,
     ):
         super().__init__(**kwargs)
@@ -689,13 +688,13 @@ class TextInput(QtWidgetElement[QtWidgets.QLineEdit]):
         if self.props.on_edit_finish is not None:
             _ensure_future(self.props.on_edit_finish)()
 
-    # def _set_completer(self, completer):
-    #     if completer:
-    #         qt_completer = QtWidgets.QCompleter(completer.options)
-    #         qt_completer.setCompletionMode(completer.mode)
-    #         self.underlying.setCompleter(qt_completer)
-    #     else:
-    #         self.underlying.setCompleter(None)
+    # > def _set_completer(self, completer):
+    # >     if completer:
+    # >         qt_completer = QtWidgets.QCompleter(completer.options)
+    # >         qt_completer.setCompletionMode(completer.mode)
+    # >         self.underlying.setCompleter(qt_completer)
+    # >     else:
+    # >         self.underlying.setCompleter(None)
 
     def _qt_update_commands(
         self,
@@ -846,7 +845,7 @@ class Dropdown(QtWidgetElement[QtWidgets.QComboBox]):
 
     def _on_select(self, text):
         if self.props.on_select is not None:
-            return _ensure_future(self.props.on_select)(text)
+            _ensure_future(self.props.on_select)(text)
 
     def _set_current_index(self, index: int):
         widget = tp.cast(QtWidgets.QComboBox, self.underlying)
@@ -948,10 +947,10 @@ class Slider(QtWidgetElement[QtWidgets.QSlider]):
         self.underlying = QtWidgets.QSlider(orientation)
 
         # TODO: figure out what's the right default height and width
-        # if self.orientation == QtCore.Qt.Horizontal:
-        #     self._set_size(size * len(self.props.text), size)
-        # else:
-        #     self._set_size(size * len(self.props.text), size)
+        # > if self.orientation == QtCore.Qt.Horizontal:
+        # >     self._set_size(size * len(self.props.text), size)
+        # > else:
+        # >     self._set_size(size * len(self.props.text), size)
 
         self.underlying.setObjectName(str(id(self)))
         self.underlying.valueChanged.connect(self._on_change_handle)
@@ -1679,7 +1678,7 @@ def npany(arr):
     """
     List replacement for numpy.any()
     """
-    return any([any(x) for x in arr])
+    return any(any(x) for x in arr)
 
 
 def set_slice2(arr, x0, x1, y0, y1, val):
