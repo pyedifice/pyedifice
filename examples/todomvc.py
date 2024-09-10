@@ -2,6 +2,7 @@
 # python examples/todomvc.py
 #
 
+from __future__ import annotations
 
 import typing as tp
 from collections import OrderedDict
@@ -34,6 +35,27 @@ from edifice import (
 )
 
 
+def use_hover() -> tuple[bool, tp.Callable[[QtGui.QMouseEvent], None], tp.Callable[[QtGui.QMouseEvent], None]]:
+    """
+    Hook to track if the mouse is hovering over an Element.
+
+    Returns:
+        hover:
+            True if the mouse is hovering over the :class:`QtWidgetElement`, False otherwise.
+        on_mouse_enter:
+            Pass this function to the :code:`on_mouse_enter` prop
+            of the :class:`QtWidgetElement`
+        on_mouse_leave:
+            Pass this function to the :code:`on_mouse_leave` prop
+            of the :class:`QtWidgetElement`.
+    """
+    hover, hover_set = ed.use_state(False)
+    def on_mouse_enter(_ev: QtGui.QMouseEvent):
+        hover_set(True)
+    def on_mouse_leave(_ev: QtGui.QMouseEvent):
+        hover_set(False)
+    return hover, on_mouse_enter, on_mouse_leave
+
 @dataclass(frozen=True)
 class Todo:
     completed: bool = False
@@ -43,36 +65,52 @@ class Todo:
 
 @component
 def TodoItem(self, key: int, todo: Todo, table_grid_view, set_complete, delete_todo, set_editing, set_text):
+    hover1, on_mouse_enter1, on_mouse_leave1 = use_hover()
     with table_grid_view.row():
         with VBoxView(
+            on_mouse_enter=on_mouse_enter1,
+            on_mouse_leave=on_mouse_leave1,
             style={
-                "margin-right": 10,
-            },
+                "padding-left": 5,
+            } | ({"background-color": "rgba(0,0,0,0.2)"} if hover1 else {}),
         ).set_key(str(key) + "comp"):
-            CheckBox(checked=todo.completed, on_click=lambda _ev: set_complete(key, not todo.completed))
-        if todo.editing:
-            TextInput(
-                text=todo.text,
-                on_change=lambda t: set_text(key, t),
-                on_edit_finish=lambda: set_editing(key, False),
-                style={"font-size": 20},
-            ).set_key(str(key) + "input")
-        else:
-            Label(
-                text=(
-                    f"""<span style='text-decoration:line-through;color:grey'>{todo.text}</span>"""
-                    if todo.completed
-                    else todo.text
-                ),
-                style={"align": "left", "font-size": 20},
-                on_click=lambda _ev: set_editing(key, True),
-            ).set_key(str(key) + "label")
-        with ButtonView(
-            on_click=lambda _ev: delete_todo(key),
-            style={"padding": 5},
-            tool_tip="Delete " + todo.text,
+            CheckBox(
+                checked=todo.completed,
+                on_click=lambda _ev: set_complete(key, not todo.completed),
+                style={"margin": 5},
+            )
+        with HBoxView(
+            on_mouse_enter=on_mouse_enter1,
+            on_mouse_leave=on_mouse_leave1,
+            style={
+                "padding-right": 10,
+            } | ({"background-color": "rgba(0,0,0,0.2)"} if hover1 else {}),
         ):
-            Icon(name="trash-alt", sub_collection="regular", size=15)
+            if todo.editing:
+                TextInput(
+                    text=todo.text,
+                    on_change=lambda t: set_text(key, t),
+                    on_edit_finish=lambda: set_editing(key, False),
+                    style={"font-size": 20},
+                ).set_key(str(key) + "input")
+            else:
+                Label(
+                    text=(
+                        f"""<span style='text-decoration:line-through;color:grey'>{todo.text}</span>"""
+                        if todo.completed
+                        else todo.text
+                    ),
+                    style={"align": "left", "font-size": 20},
+                    on_click=lambda _ev: set_editing(key, True),
+                ).set_key(str(key) + "label")
+            if hover1:
+                with ButtonView(
+                    on_click=lambda _ev: delete_todo(key),
+                    style={"padding": 5},
+                    tool_tip="Delete " + todo.text,
+                    size_policy=QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Policy.Fixed, QtWidgets.QSizePolicy.Policy.Fixed),
+                ):
+                    Icon(name="trash-alt", sub_collection="regular", size=12)
 
 
 @component
@@ -140,28 +178,29 @@ def TodoMVC(self):
         if not todo.completed:
             items_left += 1
 
-    with VBoxView(style={"align": "top", "margin": 10}):
+    with VBoxView(style={"align": "top", "padding-top": 10}):
         with TableGridView() as tgv:
             with tgv.row():
                 with VBoxView(
-                    style={"margin-right": 10, "width": 30},
+                    style={"padding-left": 5},
                 ):
                     if len(todos) > 0:
                         CheckBox(
                             checked=complete_all_toggle,
                             on_change=set_complete_all,
+                            style={"margin": 5},
                         )
                 TextInput(
                     text=item_text,
                     on_change=handle_change,
                     on_key_up=handle_key_up,
                     placeholder_text="What needs to be done?",
-                    style={"font-size": 20},
+                    style={"font-size": 20, "margin-right": 10},
                 )
             for key, todo in todos.items():
                 if item_filter == "All" or (item_filter == "Completed") == todo.completed:
                     TodoItem(key, todo, tgv, set_complete, delete_todo, set_editing, set_text)
-        with VBoxView(style={"margin-top": 10}):
+        with VBoxView(style={"padding": 10}):
             if len(todos) > 0:
                 with HBoxView(
                     style={
