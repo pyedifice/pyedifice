@@ -1,10 +1,11 @@
 from __future__ import annotations
 
+import typing as tp
 from asyncio import get_event_loop
 from collections.abc import Awaitable, Callable, Coroutine
 from typing import Any, Generic, ParamSpec, TypeVar, cast
 
-from edifice.engine import Reference, _T_use_state, get_render_context_maybe
+from edifice.engine import Reference, _T_Element, _T_use_state, get_render_context_maybe
 
 
 def use_state(
@@ -279,7 +280,7 @@ def use_async(
     return context.engine.use_async(context.current_element, fn_coroutine, dependencies)
 
 
-def use_ref() -> Reference:
+def use_ref() -> Reference[tp.Generic[_T_Element]]:
     """
     Hook for creating a :class:`Reference` inside a :func:`edifice.component`
     function.
