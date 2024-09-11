@@ -151,12 +151,34 @@ Whenever a parent has many children which are added and removed,
 it is recommended to use :func:`Element.set_key`
 to tell the diffing algorithm which child Elements are identical so that it
 doesn’t have to guess.
+
+
+Substitutional :code:`__eq__` relation
+-----------------------
+
+The Python
+`__eq__ relation <https://docs.python.org/3/reference/datamodel.html#object.__eq__>`_
+is important for everything in Edifice. It is used, for example:
+
+1. To compare **props** for deciding when an :class:`Element` must be re-rendered.
+2. To compare :func:`use_state` **state** variables for deciding when a :func:`component` must be re-rendered.
+3. To compare **dependencies** for deciding when a :func:`use_effect` must be re-run.
+
+For the :code:`__eq__` relation to work properly, it should mean that if two
+objects are :code:`__eq__`, then *one can be substituted for the other*.
+This is not true for many Python types, especially object types
+for which :code:`__eq__` defaults to identity.
+
+    By default, :code:`object` implements :code:`__eq__()` by using :code:`is`
+
+Every value used as a **prop** or **state** or **dependency** in Edifice should
+have a *substitutional* :code:`__eq__` relation.
 """
 
 from .engine import QtWidgetElement, Element, component, Reference, child_place, qt_component
 from .app import App
 from .utilities import alert, file_dialog, set_trace
-from .hooks import use_state, use_effect, use_async, use_ref, use_async_call, use_effect_final
+from .hooks import use_state, use_effect, use_async, use_ref, use_async_call, use_effect_final, use_hover
 
 from .base_components import (
     Window,
@@ -238,4 +260,5 @@ __all__ = [
     "use_effect_final",
     "use_ref",
     "use_state",
+    "use_hover",
 ]

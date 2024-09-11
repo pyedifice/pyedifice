@@ -23,62 +23,9 @@ in exactly the same order on every call to a :func:`component` function.
     * In a conditional statement.
     * In a loop.
 
-:code:`__eq__` relation
------------------------
 
-The :code:`__eq__` relation is important for all Hooks. It is used to decide
-when state has changed which determines when components need re-rendering.
-It is used to decide when dependencies have changed which determines when
-effects need re-running.
-
-For the :code:`__eq__` relation to work properly, it must mean that if two
-objects are :code:`__eq__`, then *one can be substituted for the other*.
-This relation is not true for many Python types, especially object types
-for which :code:`__eq__`
-`defaults to identity <https://docs.python.org/3/reference/datamodel.html#object.__eq__>`_.
-
-Here is an example of a wrapper type for numpy arrays which implements
-:code:`__eq__` so that the numpy arrays can be used in Hooks::
-
-    T_Array_co = TypeVar("T_Array_co", bound=np.generic, covariant=True)
-
-    class NumpyArray(Generic[T_Numpy_Array_co]):
-        """Wrapper for :code:`numpy` arrays.
-
-        This wrapper class provides the :code:`__eq__` relation for the wrapped
-        :code:`numpy` array such that if two wrapped arrays are :code:`__eq__`,
-        then one can be substituted for the other. This class may be used as a
-        **prop** or a **state**.
-        """
-
-        np_array: npt.NDArray[T_Numpy_Array_co]
-
-        def __init__(self, np_array: npt.NDArray[T_Numpy_Array_co]) -> None:
-            super().__init__()
-            self.dtype = np_array.dtype
-            self.np_array = np_array
-
-        def __eq__(self, other: NumpyArray[T_Numpy_Array_co]) -> bool:
-            return np.array_equal(self.np_array, other.np_array, equal_nan=True)
-
-Custom Hooks
-------------
-
-A “custom Hook” is just a function that calls other Hooks. For example, here
-is a custom Hook which runs an effect exactly once, without providing
-dependencies to trigger re-running the effect, and without running a cleanup
-function::
-
-    def use_effect_once(f):
-        def f_wrapped():
-            f()
-            def no_cleanup():
-                  pass
-            return no_cleanup
-        use_effect(f_wrapped, 0)
-
-Hooks
------
+Base Hooks
+----------
 
 .. autosummary::
    :toctree: stubs
@@ -87,7 +34,48 @@ Hooks
 
    use_state
    use_effect
-   use_effect_final
    use_async
-   use_async_call
    use_ref
+
+Derived Hooks
+-------------
+
+Derived Hooks are functions which are written in terms of other Hooks.
+
+These Derived Hooks are provided by Edifice.
+
+.. autosummary::
+   :toctree: stubs
+   :recursive:
+   :template: custom-class.rst
+
+   use_effect_final
+   use_async_call
+   use_hover
+
+Custom Hooks
+------------
+
+A “Custom Hook” is just a Derived Hook that is defined in user code.
+
+For example, here is a Custom Hook which provides a clock value. Using this
+Hook will cause the :func:`component` to re-render every second with the
+clock value incremented each time::
+
+    def use_clocktick() -> int:
+        tick, tick_set = use_state(0)
+
+        async def increment():
+            await asyncio.sleep(1)
+            tick_set(tick + 1)
+
+        use_async(increment, tick)
+
+        return tick
+
+Use it in a :func:`component` Element like this::
+
+    @component
+    def Clock(self):
+        tick = use_clocktick()
+        Label(str(tick))

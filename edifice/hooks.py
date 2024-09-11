@@ -1,10 +1,17 @@
 from __future__ import annotations
 
+import typing as tp
 from asyncio import get_event_loop
 from collections.abc import Awaitable, Callable, Coroutine
 from typing import Any, Generic, ParamSpec, TypeVar, cast
 
 from edifice.engine import Reference, _T_use_state, get_render_context_maybe
+from edifice.qt import QT_VERSION
+
+if QT_VERSION == "PyQt6" and not tp.TYPE_CHECKING:
+    from PyQt6 import QtGui
+else:
+    from PySide6 import QtGui  # noqa: TCH002
 
 
 def use_state(
@@ -464,3 +471,45 @@ def use_effect_final(
         return internal_cleanup
 
     use_effect(unmount, dependencies)
+
+
+def use_hover() -> tuple[bool, tp.Callable[[QtGui.QMouseEvent], None], tp.Callable[[QtGui.QMouseEvent], None]]:
+    """
+    Hook to track mouse hovering.
+
+    Use this hook to track if the mouse is hovering over a :class:`QtWidgetElement`.
+
+    Example::
+
+            hover, on_mouse_enter, on_mouse_leave = use_hover()
+
+            with VBoxView(
+                on_mouse_enter=on_mouse_enter,
+                on_mouse_leave=on_mouse_leave,
+                style={"background-color": "green"} if hover else {},
+            ):
+                if hover:
+                    Label(text="hovering")
+
+    Returns:
+        A tuple of three values:
+            1. :code:`bool`
+                True if the mouse is hovering over the
+                :class:`QtWidgetElement`, False otherwise.
+            2. :code:`Callable[[QtGui.QMouseEvent], None]`
+                Pass this function
+                to the :code:`on_mouse_enter` prop of the :class:`QtWidgetElement`
+            3. :code:`Callable[[QtGui.QMouseEvent], None]`
+                Pass this function
+                to the :code:`on_mouse_leave` prop of the :class:`QtWidgetElement`.
+
+    """
+    hover, hover_set = use_state(False)
+
+    def on_mouse_enter(_ev: QtGui.QMouseEvent):
+        hover_set(True)
+
+    def on_mouse_leave(_ev: QtGui.QMouseEvent):
+        hover_set(False)
+
+    return hover, on_mouse_enter, on_mouse_leave

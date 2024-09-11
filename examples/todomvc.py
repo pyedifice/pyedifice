@@ -23,7 +23,6 @@ from edifice import (
     ButtonView,
     CheckBox,
     HBoxView,
-    Icon,
     Label,
     RadioButton,
     TableGridView,
@@ -31,33 +30,9 @@ from edifice import (
     VBoxView,
     Window,
     component,
+    use_hover,
     use_state,
 )
-
-
-def use_hover() -> tuple[bool, tp.Callable[[QtGui.QMouseEvent], None], tp.Callable[[QtGui.QMouseEvent], None]]:
-    """
-    Hook to track if the mouse is hovering over an Element.
-
-    Returns:
-        hover:
-            True if the mouse is hovering over the :class:`QtWidgetElement`, False otherwise.
-        on_mouse_enter:
-            Pass this function to the :code:`on_mouse_enter` prop
-            of the :class:`QtWidgetElement`
-        on_mouse_leave:
-            Pass this function to the :code:`on_mouse_leave` prop
-            of the :class:`QtWidgetElement`.
-    """
-    hover, hover_set = ed.use_state(False)
-
-    def on_mouse_enter(_ev: QtGui.QMouseEvent):
-        hover_set(True)
-
-    def on_mouse_leave(_ev: QtGui.QMouseEvent):
-        hover_set(False)
-
-    return hover, on_mouse_enter, on_mouse_leave
 
 
 @dataclass(frozen=True)
