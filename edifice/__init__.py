@@ -5,10 +5,9 @@ Declaring Element Trees
 
 An edifice application is created by rendering a :class:`Element` with an
 :class:`App`.
-Let's examine what these objects are to understand what this statement means.
 
 The rendering for an Edifice application is done by declaring a tree of Elements
-starting with a single root Element, and then declaring its children.
+starting with a single root :func:`component`, and then declaring its children.
 
 An Element may be either a
 :doc:`Base Element <base_components>`
@@ -27,7 +26,7 @@ The external properties, **props**, are passed into the Element::
 
 These values are owned by the external caller and should not be modified by this Element.
 
-The internal state, henceforth referred to as the **state**, belong to the Element.
+The internal **state**, belongs to the Element.
 In a :func:`component` Element, the internal state is managed by :doc:`hooks`.
 
 Changes in **state** or **props** will automatically trigger a re-render.
@@ -65,12 +64,20 @@ In HTML/XML, this would be written as:
         </VBoxView>
     </Window>
 
-You can thus describe your entire application as a single root Element,
-which is composed of various sub-Elements representing different parts of your application.
+You describe your entire application as a single root Element,
+which has child Elements representing different parts of your application.
 Each Element is responsible for managing its own state,
-updating it as necessary given user interactions and events.
-Because state is self-contained, you can compose Elements arbitarily,
-including across projects.
+
+An :class:`App` provides the rendering engine that's responsible
+for issuing the commands necessary to render the each of the declared Elements.
+The :class:`App` object is created by passing in the root :class:`Element`,
+and it tracks all state changes in the Element tree with the given root.
+Calling the :func:`App.start` method on the App object will run your application
+and display the GUI you created::
+
+    if __name__ == "__main__":
+        App(MyApp()).start()
+
 
 Model-View-Update
 -----------------
@@ -92,28 +99,35 @@ this style of GUI programming scale up well to complicated user interfaces.
 Rendering
 ---------
 
-An :class:`App` provides the rendering engine that's responsible
-for issuing the commands necessary to render the each of the declared Elements.
-The :class:`App` object is created by passing in the root :class:`Element`,
-and it tracks all state changes in the Element tree with the given root.
-Calling the :func:`App.start` method on the App object will run your application
-and display the GUI you created::
+Conceptually, Edifice (and ReactJS) works like this: Every time there is a
+change (Update) to the **state** (Model), the render function (View) is
+called and it renders the entire Element tree of Qt Widgets from scratch.
 
-    if __name__ == "__main__":
-        App(MyApp()).start()
+That sounds expensive and slow, and it would be if it weren't for the diffing
+algorithm.
+The diffing algorithm compares the new Element tree with the old Element tree
+and makes minimal changes to the Qt Widgets.
+
+The diffing algorithm
+---------------------
 
 When Elements are rendered,
 the result is then compared against the result
-of the previous render (if that exists). The two renders are diffed,
+of the previous render. The two renders are diffed,
 and on certain conditions, the Element objects from the previous render
 are updated with new props.
+
+The diffing algorithm will compare a parents Element’s children
+from the previous render with the children from the new render.
+
 Two Elements belonging to different classes will always be re-rendered,
 and Elements belonging to the same class are assumed to be the same
 and thus maintained (preserving the old state).
 
-When parent Element has many child Elements of the same class,
+When a parent Element has many child Elements of the same class,
 a more complex procedure (the same as in ReactJS)
 will determine which Elements to maintain and which to replace.
+
 When comparing the child Elements, the Element’s
 :code:`_key` attribute will
 be compared. Elements with the same :code:`_key` and same class are assumed to be
