@@ -50,11 +50,15 @@ def use_hover() -> tuple[bool, tp.Callable[[QtGui.QMouseEvent], None], tp.Callab
             of the :class:`QtWidgetElement`.
     """
     hover, hover_set = ed.use_state(False)
+
     def on_mouse_enter(_ev: QtGui.QMouseEvent):
         hover_set(True)
+
     def on_mouse_leave(_ev: QtGui.QMouseEvent):
         hover_set(False)
+
     return hover, on_mouse_enter, on_mouse_leave
+
 
 @dataclass(frozen=True)
 class Todo:
@@ -72,7 +76,8 @@ def TodoItem(self, key: int, todo: Todo, table_grid_view, set_complete, delete_t
             on_mouse_leave=on_mouse_leave1,
             style={
                 "padding-left": 5,
-            } | ({"background-color": "rgba(0,0,0,0.2)"} if hover1 else {}),
+            }
+            | ({"background-color": "rgba(0,0,0,0.2)"} if hover1 else {}),
         ):
             CheckBox(
                 checked=todo.completed,
@@ -84,7 +89,9 @@ def TodoItem(self, key: int, todo: Todo, table_grid_view, set_complete, delete_t
             on_mouse_leave=on_mouse_leave1,
             style={
                 "padding-right": 10,
-            } | ({"background-color": "rgba(0,0,0,0.2)"} if hover1 else {}),
+                "min-height": 30,
+            }
+            | ({"background-color": "rgba(0,0,0,0.2)"} if hover1 else {}),
         ):
             if todo.editing:
                 TextInput(
@@ -106,11 +113,20 @@ def TodoItem(self, key: int, todo: Todo, table_grid_view, set_complete, delete_t
             if hover1:
                 with ButtonView(
                     on_click=lambda _ev: delete_todo(key),
-                    style={"padding": 5},
-                    tool_tip="Delete " + todo.text,
-                    size_policy=QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Policy.Fixed, QtWidgets.QSizePolicy.Policy.Fixed),
+                    style={
+                        "padding-left": 4,
+                        "width": 24,
+                        "height": 24,
+                    },
+                    tool_tip="Clear " + todo.text,
+                    size_policy=QtWidgets.QSizePolicy(
+                        QtWidgets.QSizePolicy.Policy.Fixed, QtWidgets.QSizePolicy.Policy.Fixed
+                    ),
                 ):
-                    Icon(name="trash-alt", sub_collection="regular", size=12)
+                    Label(
+                        text="×",
+                        style={"font-size": 30},
+                    )
 
 
 @component
@@ -220,19 +236,19 @@ def TodoMVC(self):
                             checked=item_filter == "All",
                             text="All",
                             on_click=lambda _ev: item_filter_set("All"),
-                            style = {} if item_filter == "All" else {"color": "grey"},
+                            style={} if item_filter == "All" else {"color": "grey"},
                         )
                         RadioButton(
                             checked=item_filter == "Active",
                             text="Active",
                             on_click=lambda _ev: item_filter_set("Active"),
-                            style = {} if item_filter == "Active" else {"color": "grey"},
+                            style={} if item_filter == "Active" else {"color": "grey"},
                         )
                         RadioButton(
                             checked=item_filter == "Completed",
                             text="Completed",
                             on_click=lambda _ev: item_filter_set("Completed"),
-                            style = {} if item_filter == "Completed" else {"color": "grey"},
+                            style={} if item_filter == "Completed" else {"color": "grey"},
                         )
                     with VBoxView(style={"min-width": 180, "margin-left": 10, "align": "right"}):
                         if len(todos) > items_left:
