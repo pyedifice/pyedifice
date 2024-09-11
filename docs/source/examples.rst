@@ -17,7 +17,12 @@ The code is available at `calculator.py <https://github.com/pyedifice/pyedifice/
 .. code-block:: shell
    :caption: Run in Python environment
 
-   python -m edifice examples/calculator.py Main
+   python examples/calculator.py
+
+.. code-block:: shell
+   :caption: Run in Python environment with :doc:`Edifice Runner<developer_tools>`
+
+   python -m edifice --inspect examples/calculator.py Main
 
 .. code-block:: shell
    :caption: Run with `Nix <https://determinate.systems/posts/nix-run>`__
@@ -53,7 +58,12 @@ The code is available at `financial_charts.py <https://github.com/pyedifice/pyed
 .. code-block:: shell
    :caption: Run in Python environment
 
-   python -m edifice examples/financial_charts.py Main
+   python examples/financial_charts.py
+
+.. code-block:: shell
+   :caption: Run in Python environment with :doc:`Edifice Runner<developer_tools>`
+
+   python -m edifice --inspect examples/financial_charts.py Main
 
 .. code-block:: shell
    :caption: Run with `Nix <https://determinate.systems/posts/nix-run>`__
@@ -79,7 +89,12 @@ For comparison, the Edifice **TodoMVC** program is available at
 .. code-block:: shell
    :caption: Run in Python environment
 
-   python -m edifice examples/todomvc.py Main
+   python examples/todomvc.py
+
+.. code-block:: shell
+   :caption: Run in Python environment with :doc:`Edifice Runner<developer_tools>`
+
+   python -m edifice --inspect examples/todomvc.py Main
 
 .. code-block:: shell
    :caption: Run with `Nix <https://determinate.systems/posts/nix-run>`__
@@ -102,7 +117,12 @@ The code is available at `harmonic_oscillator.py <https://github.com/pyedifice/p
 .. code-block:: shell
    :caption: Run in Python environment
 
-   python -m edifice examples/harmonic_oscillator.py Main
+   python examples/harmonic_oscillator.py
+
+.. code-block:: shell
+   :caption: Run in Python environment with :doc:`Edifice Runner<developer_tools>`
+
+   python -m edifice --inspect examples/harmonic_oscillator.py Main
 
 .. code-block:: shell
    :caption: Run with `Nix <https://determinate.systems/posts/nix-run>`__
