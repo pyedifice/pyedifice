@@ -124,7 +124,7 @@ def TodoItem(self, key: int, todo: Todo, table_grid_view, set_complete, delete_t
                     ),
                 ):
                     Label(
-                        text="×",
+                        text="×",  # noqa: RUF001
                         style={"font-size": 30},
                     )
 
