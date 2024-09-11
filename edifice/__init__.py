@@ -173,6 +173,61 @@ for which :code:`__eq__` defaults to identity.
 
 Every value used as a **prop** or **state** or **dependency** in Edifice should
 have a *substitutional* :code:`__eq__` relation.
+
+
+Element initialization is a render side-effect
+----------------------------------------------
+
+Each :class:`Element` is implemented as the constructor function
+for a Python class. The :class:`Element` constructor function also has
+the side-effect of inserting itself to the rendered :class:`Element` tree,
+as a child of the :code:`with` context layout Element.
+
+We like this style of declaring Element trees in Python code because it forces
+the indentation structure of the Python code to reflect the structure of the
+Element tree.
+
+Because Element initialization is a render side-effect,
+we have to be careful about binding Elements to variables
+and passing them around. They will insert themselves at the time they are
+created. This code will **NOT** declare the intended Element tree::
+
+    @component
+    def MySimpleComp(self, prop1, prop2, prop3):
+        label3 = Label(text=prop3)
+        with VBoxView():
+            Label(text=prop1)
+            Label(text=prop2)
+            label3
+
+To solve this, defer the construction of the Element with a lambda function.
+This code will declare the same intended Element tree as the code above::
+
+    @component
+    def MySimpleComp(self, prop1, prop2, prop3):
+        label3 = lambda: Label(text=prop3)
+        with VBoxView():
+            Label(text=prop1)
+            Label(text=prop2)
+            label3()
+
+If these component Elements are render functions, then why couldn’t we just write
+a normal render function with no decorator instead::
+
+    # No decorator
+    def MySimpleComp(prop1, prop2, prop3):
+        with VBoxView():
+            Label(text=prop1)
+            Label(text=prop2)
+            Label(text=prop3)
+
+The difference is, with the :func:`component` decorator, an
+actual :class:`Element` object is created,
+which means that subsequent renders will be skipped if the **props** didn’t change.
+Also we need an :func:`component` to
+be able to use Hooks such as :func:`use_state`, because those are bound to
+an :class:`Element`.
+
 """
 
 from .engine import QtWidgetElement, Element, component, Reference, child_place, qt_component
