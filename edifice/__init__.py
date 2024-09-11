@@ -17,16 +17,19 @@ A :func:`component` Element is a function which renders an
 :class:`Element` tree.
 
 Elements have both internal state and external properties.
-The external properties, **props**, are passed into the Element::
+The external properties, **props**, are passed as arguments to the Element::
 
     @component
     def Foo(self, a, b, c): # a, b, c are the props
 
-    Foo(a=1, b=2, c=3)  # Render a Foo with props a=1, b=2, c=3.
+The **props** are owned by the external caller and must not be modified by
+this :func:`component` Element.
 
-These values are owned by the external caller and should not be modified by this Element.
+Render a :code:`Foo` with props :code:`a=1, b=2, c=3`::
 
-The internal **state**, belongs to the Element.
+    Foo(a=1, b=2, c=3)
+
+The internal **state** belongs to the Element.
 In a :func:`component` Element, the internal state is managed by :doc:`hooks`.
 
 Changes in **state** or **props** will automatically trigger a re-render.
@@ -112,19 +115,23 @@ The diffing algorithm
 ---------------------
 
 When Elements are rendered,
-the result is then compared against the result
-of the previous render. The two renders are diffed,
-and on certain conditions, the Element objects from the previous render
+the Element tree is then compared against the result
+of the previous render. The two Element trees are diffed
+and the Elements from the previous render
 are updated with new props.
 
 The diffing algorithm will compare a parents Element’s children
-from the previous render with the children from the new render.
+from the previous render with the children from the new render, to try
+to update the old children instead of replacing them.
 
-Two Elements belonging to different classes will always be re-rendered,
-and Elements belonging to the same class are assumed to be the same
-and thus maintained (preserving the old state).
+If a new Element is a different class than the old Element, the old Element
+is replaced with the new Element.
 
-When a parent Element has many child Elements of the same class,
+If a new Element is the same class as the old Element, they are assumed to
+be the same and the old Element will be updated with new **props** and the same
+**state**.
+
+When a parent Element has many peer child Elements of the same class,
 a more complex procedure (the same as in ReactJS)
 will determine which Elements to maintain and which to replace.
 
@@ -137,10 +144,13 @@ the same. You can set the key using the :func:`Element.set_key` method::
         MyElement("Hello").set_key("hello")
         MyElement("World").set_key("world")
 
-If the :code:`_key` is not provided, the diff algorithm will guess which
+If the :code:`_key` is not provided, the diffing algorithm will guess which
 Elements to maintain based on the order of the children.
-To ensure control over the rerender process, it is recommended to :func:`Element.set_key`
-whenever you have many children of the same class.
+
+Whenever a parent has many children which are added and removed,
+it is recommended to use :func:`Element.set_key`
+to tell the diffing algorithm which child Elements are identical so that it
+doesn’t have to guess.
 """
 
 from .engine import QtWidgetElement, Element, component, Reference, child_place, qt_component

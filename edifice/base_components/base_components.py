@@ -1373,9 +1373,7 @@ class Window(VBoxView):
                     with Window(on_open=init):
                         Label("Hello, World!")
 
-            For more information on global style sheets, see
-            `Qt Style Sheet Syntax <https://doc.qt.io/qtforpython-6/overviews/stylesheet-syntax.html>`_
-
+            For more information about global styles, see :doc:`Styling<../styling>`.
         on_close:
             Event handler for when this window is closing. This event handler
             will fire before the children are unmounted.

@@ -4,12 +4,11 @@ Styling
 Edfice supports
 `Qt Widget Style Sheet Syntax <https://doc.qt.io/qtforpython-6/overviews/stylesheet-syntax.html>`_.
 
-The :code:`style` **prop** of Edifice :class:`QtWidgetElement <edifice.QtWidgetElement>` allows
-you to set the style for that Element.
-It is either a dictionary or a list of dictionaries, in which case the
-dictionaries are merged from left to right.
-The keys of the dictionary are the supported style name, and the values
-are the value of that style name which are usually either strings or numbers.
+The :code:`style` **prop** of every :class:`QtWidgetElement <edifice.QtWidgetElement>` is
+a dictionary of style properties.
+
+The keys of the :code:`style` dictionary are the style name, and the values
+are usually either strings or numbers.
 
 For example, if you want to make a label with *10px* margins, with *red* text
 in a *16pt* font on a *beige* *semi-transparent* background::
@@ -27,7 +26,7 @@ All style properties supported by Qt will also work with Edifice.
 See `Qt Stylesheet Reference List of Properties <https://doc.qt.io/qtforpython-6/overviews/stylesheet-reference.html#list-of-properties>`_.
 
 Note that sometimes Qt styling behaves differently from CSS styling
-(despite similar syntax and naming) and is not supported by all widgets.
+(despite similar syntax and naming) and is not supported by all Widgets.
 
 Currently, the following styles are tested to be supported.
 
@@ -37,7 +36,7 @@ Widget Styling
 Widgets follow the
 `Qt Style Sheet Box Model <https://doc.qt.io/qtforpython-6/overviews/stylesheet-syntax.html#box-model>`_.
 
-- **color**: :code:`"rgba(r, g, b, a)"` or named colors.
+- **color**: :code:`"rgba(red, green, blue, alpha)"` range *0—255* or named colors like :code:`"red"`.
 - **font-size**: Font size in points.
 - **font-weight**: A number indicating how bold the font should be.
 - **font-family**: Font family name.
