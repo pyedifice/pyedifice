@@ -44,5 +44,14 @@
 			"justMyCode": true,
 			"args": ["--inspect", "examples/todomvc.py", "Main"]
 		},
+		{
+			"name": "Runner --inspect todomvc.py Adwaita:light",
+			"type": "debugpy",
+			"request": "launch",
+			"module": "edifice",
+			"justMyCode": true,
+			"args": ["--inspect", "examples/todomvc.py", "Main"],
+			"env": {"GTK_THEME":"Adwaita:light"}
+		},
 	]
 }
