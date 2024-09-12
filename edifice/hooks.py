@@ -491,6 +491,9 @@ def use_hover() -> tuple[bool, tp.Callable[[QtGui.QMouseEvent], None], tp.Callab
                 if hover:
                     Label(text="hovering")
 
+    The :code:`on_mouse_enter` and :code:`on_mouse_leave` functions can be
+    passed to more than one :class:`QtWidgetElement`.
+
     Returns:
         A tuple of three values:
             1. :code:`bool`
