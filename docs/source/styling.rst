@@ -161,8 +161,9 @@ merge operator::
 Style Advice
 ------------
 
-Set global application styles during the
-:class:`Window<edifice.Window>` :code:`on_open` event.
+Set global application styles in a root Element
+:func:`use_state<edifice.use_state>` **initializer function**.
+For more information see :class:`App<edifice.App>`.
 
 - `QApplication.setStyleSheet <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QApplication.html#PySide6.QtWidgets.QApplication.setStyleSheet>`_
 - `QApplication.setStyle <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QApplication.html#PySide6.QtWidgets.QApplication.setStyle>`_

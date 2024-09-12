@@ -77,19 +77,57 @@ class App:
     Start
     -----
 
-    To start the application, call the :func:`App.start` method::
+    To start the application, construct an :class:`App` with a root Element
+    and call the :func:`App.start` method::
 
         App(MyRootElement()).start()
 
-    If the application is normal application in an operating
+    If the application is a normal application in an operating
     system window, then the root Element rendered by :code:`MyRootElement`
     must be a :class:`Window`.
+
+    The :func:`App.start` method will:
 
     1. Create the application event loop
        `qasync.QEventLoop <https://github.com/CabbageDevelopment/qasync>`_.
     2. Start the application event loop.
     3. Render the root Element.
 
+    Instead of calling application initialization code from the
+    :code:`__main__` function, call the initialization code from a
+    :func:`use_state` **initializer function** in the root Element
+    because this function will run when the app is started by the Edifice
+    Runner.
+
+    Example::
+
+        from PySide6.QtWidgets import QApplication
+        from PySide6.QtGui import QFont
+
+        @component
+        def Main(self):
+
+            def initalizer():
+                qapp = cast(QApplication, QApplication.instance())
+                QApplication.setStyle("fusion")
+                qapp.setApplicationName("My App")
+                qapp.setFont(QFont("Yu Gothic UI", 10))
+                qapp.setStyleSheet("QLabel { font-size: 12pt; }")
+                if theme_is_light():
+                    qapp.setPalette(palette_edifice_light())
+                else:
+                    qapp.setPalette(palette_edifice_dark())
+
+            _, _ = use_state(initalizer)
+
+            with Window():
+                Label("Hello, World!")
+
+
+        if __name__ == "__main__":
+            App(Main()).start()
+
+    For more information about global styles, see :doc:`Styling<../styling>`.
 
     Stop
     ----
@@ -136,17 +174,21 @@ class App:
     instance.
 
     Args:
-        root_element: the root Element of the application.
+        root_element:
+            The root Element of the application.
             It must render to an instance of :class:`Window` or
             :class:`ExportList`.
-        inspector: whether or not to run an instance of the Edifice Inspector
-            alongside the main app. Defaults to False
-        create_application: (default True) whether or not to create an instance of QApplication.
+        inspector:
+            Whether or not to run an instance of the Edifice Inspector
+            alongside the main app. Defaults to :code:`False`.
+        create_application:
+            (Default :code:`True`) Whether or not to create an instance of QApplication.
             Usually you want to use the default setting.
             However, if the QApplication is already created (e.g. in a test suite or if you just want Edifice
             to make a widget to plug into an existing Qt application),
             you can set this to False.
-        qapplication: (default None)
+        qapplication:
+            (Default :code:`None`)
             The `QtWidgets.QApplication <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QApplication.html>`_.
             If you do not provide one, it will be created for you.
     """

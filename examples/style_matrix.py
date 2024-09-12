@@ -9,25 +9,26 @@ if QT_VERSION == "PyQt6" and not tp.TYPE_CHECKING:
     from PyQt6 import QtWidgets
     from PyQt6.QtGui import QPalette
 else:
-    from PySide6 import QtWidgets  # noqa: TCH002
+    from PySide6 import QtWidgets
     from PySide6.QtGui import QPalette
 
 
 @ed.component
 def Main(self):
-    palette = (
-        ed.utilities.palette_edifice_light() if ed.utilities.theme_is_light() else ed.utilities.palette_edifice_dark()
-    )
+    def initializer():
+        palette = (
+            ed.utilities.palette_edifice_light()
+            if ed.utilities.theme_is_light()
+            else ed.utilities.palette_edifice_dark()
+        )
+        tp.cast(QtWidgets.QApplication, QtWidgets.QApplication.instance()).setPalette(palette)
+        return palette
 
-    def handle_open(qapp: QtWidgets.QApplication):
-        qapp.setPalette(palette)
+    palette, _ = ed.use_state(initializer)
 
     somestate, somestate_set = ed.use_state(0)
 
-    with ed.Window(
-        on_open=handle_open,
-        title="Style Matrix",
-    ):
+    with ed.Window(title="Style Matrix"):
         with ed.TableGridView(style={"padding": 10}) as tgv:
             with tgv.row():
                 ed.Label("Label")
@@ -99,7 +100,7 @@ def Main(self):
             with tgv.row():
                 ed.Label("ButtonView")
                 with ed.ButtonView():
-                    ed.Icon("home", size=20 )
+                    ed.Icon("home", size=20)
                     ed.Label("ButtonView")
                 with ed.ButtonView(enabled=False):
                     ed.Icon("home", size=20)
@@ -124,7 +125,9 @@ def Main(self):
                     ed.Label("ScrollBar")
                     ed.Label("ScrollBar")
                     ed.Label("ScrollBar")
+                    ed.Label("ScrollBar")
                 with ed.VScrollView(enabled=False):
+                    ed.Label("ScrollBar")
                     ed.Label("ScrollBar")
                     ed.Label("ScrollBar")
                     ed.Label("ScrollBar")
@@ -149,10 +152,6 @@ def Main(self):
                 )
             with tgv.row():
                 ed.Label("Light")
-                # This is troubling but I'm not sure what to do about it.
-                # We can't use the QApplication.palette() because it's not
-                # set until the Window on_open callback is called before
-                # the first render.
                 with ed.VBoxView(
                     style={
                         "background-color": palette.color(QPalette.ColorGroup.Active, QPalette.ColorRole.Light).name(),
@@ -164,7 +163,8 @@ def Main(self):
                 with ed.VBoxView(
                     style={
                         "background-color": palette.color(
-                            QPalette.ColorGroup.Active, QPalette.ColorRole.Midlight,
+                            QPalette.ColorGroup.Active,
+                            QPalette.ColorRole.Midlight,
                         ).name(),
                     },
                 ):
@@ -180,7 +180,9 @@ def Main(self):
             with tgv.row():
                 ed.Label("Mid")
                 with ed.VBoxView(
-                    style={"background-color": palette.color(QPalette.ColorGroup.Active, QPalette.ColorRole.Mid).name()},
+                    style={
+                        "background-color": palette.color(QPalette.ColorGroup.Active, QPalette.ColorRole.Mid).name(),
+                    },
                 ):
                     ed.Label("Between Button and Dark.")
             with tgv.row():

@@ -161,8 +161,12 @@ def PlotDescriptor(self, plot: dict[str, tp.Any], plot_change: tp.Callable[[dict
 # and the actual Matplotlib figure.
 @ed.component
 def App(self):
-    next_i, next_i_set = ed.use_state(int(1))
-    plots, plots_set = ed.use_state(OrderedDict([(int(0), _create_state_for_plot())]))
+    next_i, next_i_set = ed.use_state(1)
+
+    def initializer() -> OrderedDict[int, dict[str, tp.Any]]:
+        return OrderedDict([(0, _create_state_for_plot())])
+
+    plots, plots_set = ed.use_state(initializer)
 
     # Adding a plot is very simple conceptually (and in Edifice).
     # Just add new state for the new plot!
@@ -196,27 +200,27 @@ def App(self):
             xdf = yf.Ticker(xticker).history("1y")
             ydf = yf.Ticker(yticker).history("1y")
 
-            df = pd.DataFrame({"xdata": get_data(xdf, xdata, xtransform, xparam)}, index=xdf.index)
-            df = df.merge(
+            d = pd.DataFrame({"xdata": get_data(xdf, xdata, xtransform, xparam)}, index=xdf.index)
+            d = d.merge(
                 pd.DataFrame({"ydata": get_data(ydf, ydata, ytransform, yparam)}, index=ydf.index),
                 left_index=True,
                 right_index=True,
             )
             if plot_type == "line":
-                ax.plot(df.xdata, df.ydata, color=color)
+                ax.plot(d.xdata, d.ydata, color=color)
             elif plot_type == "scatter":
-                ax.scatter(df.xdata, df.ydata, color=color)
+                ax.scatter(d.xdata, d.ydata, color=color)
 
     with VBoxView(style={"margin": 10, "align": "top"}):
         with VBoxView():
             for key, plot in plots.items():
 
-                def plot_change(p: dict[str, tp.Any]) -> None:
+                def plot_change(p: dict[str, tp.Any], key=key) -> None:
                     plots_ = plots.copy()
                     plots_.update([(key, p)])
                     plots_set(plots_)
 
-                add_divider(lambda: PlotDescriptor(plot, plot_change))
+                add_divider(lambda plot=plot: PlotDescriptor(plot, plot_change))
             # Edifice comes with Font-Awesome icons for your convenience
             IconButton(name="plus", title="Add Plot", on_click=add_plot)
 
@@ -226,23 +230,18 @@ def App(self):
 
 @ed.component
 def Main(self):
-    # Set Matplotlib to dark_background theme
-    # We should do this inside on_open but that doesn't work. It's okay
-    # to do it here because Main never re-renders.
-    if not ed.utilities.theme_is_light():
-        plt.style.use("dark_background")
-
-    def on_open(qapp: QtWidgets.QApplication):
+    def initializer():
+        qapp = tp.cast(QtWidgets.QApplication, QtWidgets.QApplication.instance())
         qapp.setApplicationName("Financial Charts")
         if ed.utilities.theme_is_light():
             qapp.setPalette(ed.utilities.palette_edifice_light())
         else:
             qapp.setPalette(ed.utilities.palette_edifice_dark())
+            plt.style.use("dark_background")
 
-    with ed.Window(
-        title="Financial Charts",
-        on_open=on_open,
-    ):
+    _, _ = ed.use_state(initializer)
+
+    with ed.Window(title="Financial Charts"):
         App()
 
 

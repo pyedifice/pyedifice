@@ -148,7 +148,7 @@ def ElementView(
     lineno = None
     try:
         lineno = inspect.getsourcelines(cls)[1]
-    except Exception:
+    except Exception:  # noqa: S110, BLE001
         pass
     heading_style = {"font-size": "16px", "margin": 10, "margin-bottom": 0}
 
@@ -176,15 +176,15 @@ def Inspector(
 ):
     setattr(self, "__edifice_inspector_element", True)
     component_tree, component_tree_set = ed.use_state(tp.cast(dict[ed.Element, list[ed.Element]], {}))
-    root_component, root_component_set = ed.use_state(tp.cast(ed.Element | None, None))
+    (root_component,), root_component_set = ed.use_state(tp.cast(tuple[ed.Element | None], (None,)))
     hook_state, hook_state_set = ed.use_state(tp.cast(dict[ed.Element, list[_HookState]] | None, None))
-    selected, selected_set = ed.use_state(tp.cast(ed.Element | None, None))
+    (selected,), selected_set = ed.use_state(tp.cast(tuple[ed.Element | None], (None,)))
     refresh_trigger, refresh_trigger_set = ed.use_state(False)
 
     def _force_refresh():
         component_tree_, root_component_, hook_state_ = refresh()
         component_tree_set(component_tree_)
-        root_component_set(root_component_)
+        root_component_set((root_component_,))
         hook_state_set(hook_state_)
         refresh_trigger_set(lambda t: not t)
 
@@ -199,11 +199,11 @@ def Inspector(
             TreeView(
                 root=root,
                 current_selection=selected,
-                on_click=lambda: selected_set(root),
+                on_click=lambda: selected_set((root,)),
                 load_fun=[(lambda child=child: _build_tree(child, recurse_level + 1)) for child in children],
             )
         else:
-            ElementLabel(root, current_selection=selected, on_click=lambda: selected_set(root))
+            ElementLabel(root, current_selection=selected, on_click=lambda: selected_set((root,)))
 
     with ed.HBoxView():
         if component_tree is not None and root_component is not None and hook_state is not None:

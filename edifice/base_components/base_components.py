@@ -1348,32 +1348,9 @@ class Window(VBoxView):
             Event handler for when this window is opening. This event handler
             function will be called exactly once, before the children are mounted.
 
-            Instead of calling application initialization code from the
-            :code:`__main__` function, it should be called here, because this
-            function will run when the app is started by the Edifice Runner.
-
             The event handler function will be passed the application’s
             `QApplication <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QApplication.html>`_
             object.
-
-            Example::
-
-                from PySide6.QtWidgets import QApplication
-                from PySide6.QtGui import QFont
-
-                @component
-                def Main(self):
-
-                    def init(qapp: QApplication):
-                        qapp.setApplicationName("My App")
-                        QApplication.setStyle("fusion")
-                        qapp.setFont(QFont("Yu Gothic UI", 10))
-                        qapp.setStyleSheet("QLabel { font-size: 12pt; }")
-
-                    with Window(on_open=init):
-                        Label("Hello, World!")
-
-            For more information about global styles, see :doc:`Styling<../styling>`.
         on_close:
             Event handler for when this window is closing. This event handler
             will fire before the children are unmounted.
