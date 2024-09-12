@@ -2086,7 +2086,9 @@ class RenderEngine(object):
         return RenderResult(all_commands)
 
     def use_state(
-        self, element: Element, initial_state: _T_use_state
+        self,
+        element: Element,
+        initial_state: _T_use_state | tp.Callable[[], _T_use_state],
     ) -> tuple[
         _T_use_state,  # current value
         tp.Callable[[_T_use_state | tp.Callable[[_T_use_state], _T_use_state]], None],  # updater
@@ -2097,8 +2099,11 @@ class RenderEngine(object):
         element._hook_state_index += 1
 
         if len(hooks) <= h_index:
-            # then this is the first render
-            hook = _HookState(initial_state, list())
+            # Then this is the first render.
+            # Call the initializer function if it is a function.
+            hook = _HookState(initial_state() if callable(initial_state) else initial_state, [])
+            if callable(hook.state):
+                raise ValueError("The state value of use_state cannot be Callable.")
             hooks.append(hook)
         else:
             hook = hooks[h_index]

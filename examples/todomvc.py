@@ -251,17 +251,17 @@ def TodoMVC(self):
 
 @component
 def Main(self):
-    def on_open(qapp: QtWidgets.QApplication):
+    def initializer():
+        qapp = tp.cast(QtWidgets.QApplication, QtWidgets.QApplication.instance())
         qapp.setApplicationName("TodoMVC")
         if ed.utilities.theme_is_light():
             qapp.setPalette(ed.utilities.palette_edifice_light())
         else:
             qapp.setPalette(ed.utilities.palette_edifice_dark())
 
-    with Window(
-        title="todos",
-        on_open=on_open,
-    ):
+    _, _ = ed.use_state(initializer)
+
+    with Window(title="todos"):
         TodoMVC()
 
 

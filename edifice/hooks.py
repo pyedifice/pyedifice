@@ -15,7 +15,7 @@ else:
 
 
 def use_state(
-    initial_state: _T_use_state,
+    initial_state: _T_use_state | Callable[[], _T_use_state],
 ) -> tuple[
     _T_use_state,  # current value
     Callable[[_T_use_state | Callable[[_T_use_state], _T_use_state]], None],  # updater
@@ -25,14 +25,16 @@ def use_state(
 
     Behaves like `React useState <https://react.dev/reference/react/useState>`_.
 
-    When :func:`use_state` is called, it returns a **state value** and a
+    :func:`use_state` is called with an **initial state**.
+    It returns a **state value** and a
     **setter function**.
 
     The **state value** will be the value of the state at the beginning of
     the render for this component.
 
-    The **setter function** will, when called, set the **state value** before
-    the next render. If the new **state value** is not :code:`__eq__` to the
+    The **setter function** will, when called, set the **state value** before the
+    beginning of the next render.
+    If the new **state value** is not :code:`__eq__` to the
     old **state value**, then the component will be re-rendered.
 
     Example::
@@ -46,9 +48,46 @@ def use_state(
                 on_click = lambda _event: x_setter(x + 1)
             )
 
-    If an **updater function** is passed to the **setter function**, then at the end of
-    the render the state will be modified by calling all of the
-    **updater functions** in this order in which they were passed.
+
+    .. warning::
+
+        The **state value** must not be a
+        `Callable <https://docs.python.org/3/library/collections.abc.html#collections.abc.Callable>`_,
+        so that Edifice does not mistake it for an **initializer function**
+        or an **updater function**.
+
+        If you want to store a :code:`Callable` value, like a function, then wrap
+        it in a :code:`tuple` or some other non-:code:`Callable` data structure.
+
+    Initialization
+    --------------
+
+    If an **initializer function** is passed to :func:`use_state`, then the
+    **initializer function** will be called once before
+    this :func:`components`’s first render to get the **initial state**.
+
+    This is useful for one-time construction of **initial state** if the
+    **initial state** is expensive to compute.
+
+    If an **initializer function** raises an exception then Edifice will crash.
+
+    Do not perform observable side effects inside the **initializer function**.
+
+    * Do not do any file or network I/O.
+    * Do not call a **setter function** of another :func:`use_state` Hook.
+
+    For these kinds of initialization side effects, use :func:`use_effect` instead.
+
+    Using the **initializer function** for initial side effects is good for
+    some cases where the side effect has a predictable result and cannot fail,
+    like for example setting global styles in the root Element.
+
+    Update
+    ------
+
+    If an **updater function** is passed to the **setter function**, then before the
+    beginning of the next render the **state value** will be modified by calling all of the
+    **updater functions** in the order in which they were set.
     An **updater function** is a function from the previous state to the new state.
 
     Example::
@@ -65,9 +104,11 @@ def use_state(
                 on_click = lambda _event: x_setter(updater)
             )
 
-    If any of the **updater functions** raises an exception, then all state
-    updates will be cancelled and the state value will be unchanged for the
-    next render.
+    If any of the **updater functions** raises an exception then Edifice will
+    crash.
+
+    State must not be mutated
+    -------------------------
 
     Do not mutate the state variable. The old state variable must be left
     unmodified so that it can be compared to the new state variable during
@@ -100,18 +141,12 @@ def use_state(
     `replace() <https://docs.python.org/3/library/dataclasses.html#dataclasses.replace>`_
     function to update the dataclass.
 
-    .. warning::
-        You can't store a :code:`callable` value in :code:`use_state`,
-        because it will be mistaken for an **updater function**. If you
-        want to store a :code:`callable` value, like a function, then wrap
-        it in a :code:`tuple` or some other non-:code:`callable` data structure.
-
     Args:
-        initial_state: The initial state value.
+        initial_state: The initial **state value** or **initializer function**.
     Returns:
         A tuple pair containing
 
-        1. The current state value.
+        1. The current **state value**.
         2. A **setter function** for setting or updating the state value.
     """
     context = get_render_context_maybe()
@@ -291,8 +326,8 @@ def use_ref() -> Reference:
     Hook for creating a :class:`Reference` inside a :func:`edifice.component`
     function.
     """
-    r, _ = use_state(Reference())
-    return r
+    r, _ = use_state((Reference(),))
+    return r[0]
 
 
 _P_async = ParamSpec("_P_async")
@@ -346,14 +381,6 @@ def use_async_call(
     but because it uses
     :func:`use_async`, it will cancel the Task
     when this :func:`edifice.component` is unmounted, or when the function is called again.
-
-    We can
-    `“debounce”
-    <https://stackoverflow.com/questions/25991367/difference-between-throttling-and-debouncing-a-function>`_
-    a function by using this Hook on an async function
-    which has an
-    `await asyncio.sleep() <https://docs.python.org/3/library/asyncio-task.html#asyncio.sleep>`_
-    delay at the beginning of it.
 
     Args:
         fn_coroutine:
@@ -428,8 +455,9 @@ def use_effect_final(
     Debounce
     --------
 
-    We can use this Hook together with :func:`use_async` to “debounce” an effect
-    which must always finally run when the component unmounts.
+    We can use this Hook together with :func:`use_async` to
+    `“debounce” <https://stackoverflow.com/questions/25991367/difference-between-throttling-and-debouncing-a-function>`_
+    an effect which must always finally run when the component unmounts.
 
     Example::
 
@@ -444,7 +472,7 @@ def use_effect_final(
             await asyncio.sleep(1.0)
             save_to_file(x)
 
-        use_async(save_x_debouce, x)
+        use_async(save_x_debounce, x)
 
         # And we want to make sure that the final value of x is saved to
         # the file when the component unmounts.

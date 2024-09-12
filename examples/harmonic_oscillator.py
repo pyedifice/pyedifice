@@ -120,17 +120,17 @@ def Oscillator(self):
 
 @ed.component
 def Main(self):
-    def on_open(qapp: QtWidgets.QApplication):
+    def initializer():
+        qapp = tp.cast(QtWidgets.QApplication, QtWidgets.QApplication.instance())
         qapp.setApplicationName("Harmonic Oscillator")
         if ed.utilities.theme_is_light():
             qapp.setPalette(ed.utilities.palette_edifice_light())
         else:
             qapp.setPalette(ed.utilities.palette_edifice_dark())
 
-    with ed.Window(
-        title="Harmonic Oscillator",
-        on_open=on_open,
-    ):
+    _, _ = ed.use_state(initializer)
+
+    with ed.Window(title="Harmonic Oscillator"):
         Oscillator()
 
 

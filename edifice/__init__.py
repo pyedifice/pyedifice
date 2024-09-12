@@ -154,7 +154,7 @@ doesn’t have to guess.
 
 
 Substitutional :code:`__eq__` relation
------------------------
+--------------------------------------
 
 The Python
 `__eq__ relation <https://docs.python.org/3/reference/datamodel.html#object.__eq__>`_

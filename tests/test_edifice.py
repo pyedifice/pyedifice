@@ -1,10 +1,8 @@
 import unittest
 import unittest.mock
-from edifice import Element, Reference, component, use_ref
-from edifice.engine import CommandType, PropsDict, _dereference_tree, _WidgetTree, QtWidgetElement
-import edifice.engine as engine
-import edifice.base_components as base_components
 
+from edifice import Element, Reference, base_components, component, engine, use_ref
+from edifice.engine import CommandType, PropsDict, QtWidgetElement, _dereference_tree, _WidgetTree
 from edifice.qt import QT_VERSION
 
 if QT_VERSION == "PyQt6":
