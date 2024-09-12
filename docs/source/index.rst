@@ -98,10 +98,8 @@ See :doc:`developer_tools` for more details.
 
 - Edifice programs are written in Python, whereas Qt Quick programs are written
   in Python + the special `QML <https://doc.qt.io/qtforpython-6/overviews/qmlapplications.html>`_ language + JavaScript.
-- Because Edifice interfaces are declared in Python code, binding the code to the declared UI is much more
-straightforward.
-- Edifice makes it easy to create dynamic applications. It's easy to create, shuffle, and destroy widgets
-because the interface is written in Python code. QML assumes a much more static interface.
+- Because Edifice interfaces are declared in Python code, binding the code to the declared UI is much more straightforward.
+- Edifice makes it easy to create dynamic applications. It's easy to create, shuffle, and destroy widgets because the interface is written in Python code. QML assumes a much more static interface.
 
 By analogy, Qt Quick is like DOM + HTML + JavaScript, whereas Edifice is like React.js.
 While QML and HTML are both declarative UI languages,
