@@ -6,7 +6,7 @@ Release Notes
 
 v1.3.0
 ------
-Released: 2024-09-10
+Released: 2024-09-12
 
 * New Hook :func:`use_hover`.
 
