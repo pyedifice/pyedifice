@@ -21,7 +21,7 @@ def use_state(
     Callable[[_T_use_state | Callable[[_T_use_state], _T_use_state]], None],  # updater
 ]:
     """
-    Persistent mutable state Hook inside a :func:`edifice.component` function.
+    Persistent mutable state Hook inside a :func:`@component<edifice.component>` function.
 
     Behaves like `React useState <https://react.dev/reference/react/useState>`_.
 
@@ -37,7 +37,7 @@ def use_state(
     If the new **state value** is not :code:`__eq__` to the
     old **state value**, then the component will be re-rendered.
 
-    Example::
+    .. code-block:: python
 
         @component
         def Stateful(self):
@@ -48,6 +48,11 @@ def use_state(
                 on_click = lambda _event: x_setter(x + 1)
             )
 
+    The **setter function** should be called inside of an event handler
+    or a :func:`use_effect` function.
+
+    Never call the **setter function**
+    directly during a :func:`@component<edifice.component>` render function.
 
     .. warning::
 
@@ -65,6 +70,14 @@ def use_state(
     If an **initializer function** is passed to :func:`use_state`, then the
     **initializer function** will be called once before
     this :func:`components`’s first render to get the **initial state**.
+
+    .. code-block:: python
+        :caption: Initializer function
+
+        def initializer() -> tuple[int]:
+            return tuple(range(1000000))
+
+        intlist, intlist_set = use_state(initializer)
 
     This is useful for one-time construction of **initial state** if the
     **initial state** is expensive to compute.
@@ -90,13 +103,14 @@ def use_state(
     **updater functions** in the order in which they were set.
     An **updater function** is a function from the previous state to the new state.
 
-    Example::
+    .. code-block:: python
+        :caption: Updater function
 
         @component
         def Stateful(self):
             x, x_setter = use_state(0)
 
-            def updater(x_previous):
+            def updater(x_previous:int) -> int:
                 return x_previous + 1
 
             Button(
@@ -114,7 +128,10 @@ def use_state(
     unmodified so that it can be compared to the new state variable during
     the next render.
     Instead create a shallow `copy <https://docs.python.org/3/library/copy.html#copy.copy>`_
-    of the state, modify the copy, then call the **setter function** with the modified copy::
+    of the state, modify the copy, then call the **setter function** with the modified copy.
+
+    .. code-block:: python
+        :caption: Updater function with shallow copy
 
         from copy import copy
         from typing import cast
@@ -122,7 +139,7 @@ def use_state(
         def Stateful(self):
             x, x_setter = use_state(cast(list[str], []))
 
-            def updater(x_previous):
+            def updater(x_previous:list[str]) -> list[str]:
                 x_new = copy(x_previous)
                 x_new.append("Label Text " + str(len(x_previous)))
                 return x_new
@@ -160,7 +177,7 @@ def use_effect(
     dependencies: Any = None,
 ) -> None:
     """
-    Side-effect Hook inside a :func:`edifice.component` function.
+    Side-effect Hook inside a :func:`@component<edifice.component>` function.
 
     Behaves like `React useEffect <https://react.dev/reference/react/useEffect>`_.
 
@@ -189,7 +206,8 @@ def use_effect(
     The **setup function** can return :code:`None` if there is no
     **cleanup function**.
 
-    Example::
+    .. code-block:: python
+        :caption: use_effect to attach and remove an event handler
 
         @component
         def Effective(self, handler):
@@ -226,7 +244,7 @@ def use_async(
     dependencies: Any,
 ) -> Callable[[], None]:
     """
-    Asynchronous side-effect Hook inside a :func:`edifice.component` function.
+    Asynchronous side-effect Hook inside a :func:`@component<edifice.component>` function.
 
     Will create a new
     `Task <https://docs.python.org/3/library/asyncio-task.html#asyncio.Task>`_
@@ -234,7 +252,8 @@ def use_async(
 
     The :code:`fn_coroutine` will be called every time the :code:`dependencies` change.
 
-    Example::
+    .. code-block:: python
+        :caption: use_async to fetch from the network
 
         @component
         def Asynchronous(self):
@@ -323,7 +342,7 @@ def use_async(
 
 def use_ref() -> Reference:
     """
-    Hook for creating a :class:`Reference` inside a :func:`edifice.component`
+    Hook for creating a :class:`Reference` inside a :func:`@component<edifice.component>`
     function.
     """
     r, _ = use_state((Reference(),))
@@ -360,7 +379,8 @@ def use_async_call(
        the :code:`fn_coroutine` Task manually. This cancellation function is
        safe to call from any thread.
 
-    Example::
+    .. code-block:: python
+        :caption: use_async_call to delay print
 
         async def delay_print_async(message:str):
             await asyncio.sleep(1)
@@ -370,7 +390,11 @@ def use_async_call(
 
         delay_print("Hello World")
 
-        # some time later, if we want to manually cancel the delayed print:
+    Some time later, if we want to manually cancel the delayed print:
+
+    .. code-block:: python
+        :caption: cancel the delayed print
+
         cancel_print()
 
     This Hook is similar to :code:`useAsyncCallback` from
@@ -380,7 +404,7 @@ def use_async_call(
     `create_task() <https://docs.python.org/3/library/asyncio-eventloop.html#asyncio.loop.create_task>`_ ,
     but because it uses
     :func:`use_async`, it will cancel the Task
-    when this :func:`edifice.component` is unmounted, or when the function is called again.
+    when this :func:`@component<edifice.component>` is unmounted, or when the function is called again.
 
     Args:
         fn_coroutine:
@@ -427,7 +451,7 @@ def use_effect_final(
     dependencies: Any = (),
 ):
     """
-    Side-effect Hook for when a :func:`edifice.component` unmounts.
+    Side-effect Hook for when a :func:`@component<edifice.component>` unmounts.
 
     This Hook will call the :code:`cleanup` side-effect function with the latest
     local state from :func:`use_state` Hooks.
@@ -443,7 +467,8 @@ def use_effect_final(
     The optional :code:`dependencies` argument can be used to trigger the
     Hook to call the :code:`cleanup` function before the component unmounts.
 
-    Example::
+    .. code-block:: python
+        :caption: use_effect_final
 
         x, set_x = ed.use_state(0)
 
@@ -459,13 +484,14 @@ def use_effect_final(
     `“debounce” <https://stackoverflow.com/questions/25991367/difference-between-throttling-and-debouncing-a-function>`_
     an effect which must always finally run when the component unmounts.
 
-    Example::
+    .. code-block:: python
+        :caption: Debounce
 
         x, set_x = ed.use_state(0)
 
         # We want to save the value of x to a file whenever the value of
         # x changes. But we don't want to do this too often because it would
-        # lag the GUI responses. Each :func:`use_async` call will cancel prior
+        # lag the GUI responses. Each use_async call will cancel prior
         # awaiting calls. So this will save 1 second after the last change to x.
 
         async def save_x_debounce():
@@ -476,6 +502,8 @@ def use_effect_final(
 
         # And we want to make sure that the final value of x is saved to
         # the file when the component unmounts.
+        # Unmounting the component will cancel the save_x_debounce Task,
+        # then the use_effect_final will save the final value of x.
 
         use_effect_final(lambda: save_to_file(x))
 
@@ -507,17 +535,18 @@ def use_hover() -> tuple[bool, tp.Callable[[QtGui.QMouseEvent], None], tp.Callab
 
     Use this hook to track if the mouse is hovering over a :class:`QtWidgetElement`.
 
-    Example::
+    .. code-block:: python
+        :caption: use_hover
 
-            hover, on_mouse_enter, on_mouse_leave = use_hover()
+        hover, on_mouse_enter, on_mouse_leave = use_hover()
 
-            with VBoxView(
-                on_mouse_enter=on_mouse_enter,
-                on_mouse_leave=on_mouse_leave,
-                style={"background-color": "green"} if hover else {},
-            ):
-                if hover:
-                    Label(text="hovering")
+        with VBoxView(
+            on_mouse_enter=on_mouse_enter,
+            on_mouse_leave=on_mouse_leave,
+            style={"background-color": "green"} if hover else {},
+        ):
+            if hover:
+                Label(text="hovering")
 
     The :code:`on_mouse_enter` and :code:`on_mouse_leave` functions can be
     passed to more than one :class:`QtWidgetElement`.

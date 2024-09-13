@@ -14,10 +14,10 @@ and follow the React
 `Rules of Hooks <https://legacy.reactjs.org/docs/hooks-rules.html>`_:
 
 The exact same Hooks must be called
-in exactly the same order on every call to a :func:`component` function.
+in exactly the same order on every call to a :func:`@component<component>` function.
 
 1. Only call Hooks
-    * In the top level of a :func:`component` Element function.
+    * In the top level of a :func:`@component<component>` Element function.
     * In the body of a custom Hook.
 2. Never call Hooks
     * In a conditional statement.
@@ -59,8 +59,11 @@ Custom Hooks
 A “Custom Hook” is just a Derived Hook that is defined in user code.
 
 For example, here is a Custom Hook which provides a clock value. Using this
-Hook will cause the :func:`component` to re-render every second with the
-clock value incremented each time::
+Hook will cause the :func:`@component<component>` to re-render every second with the
+clock value incremented each time.
+
+.. code-block:: python
+    :caption: Custom Hook use_clocktick
 
     def use_clocktick() -> int:
         tick, tick_set = use_state(0)
@@ -73,7 +76,10 @@ clock value incremented each time::
 
         return tick
 
-Use it in a :func:`component` Element like this::
+Use it in a :func:`@component<component>` Element like this.
+
+.. code-block:: python
+    :caption: Custom Hook use_clocktick usage
 
     @component
     def Clock(self):
