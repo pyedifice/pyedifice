@@ -20,9 +20,8 @@ as a backend. Edifice is like
 `React <https://react.dev/>`_, but with
 Python instead of JavaScript, and `Qt Widgets <https://doc.qt.io/qt-6/qtwidgets-index.html>`_
 instead of the HTML DOM.
-If you have experience with React,
-you will find Edifice easy to learn.
-Edifice has function components, props, and Hooks just like React.
+If you have React experience, you’ll find Edifice easy to learn.
+Edifice has function Components, Props, and Hooks just like React.
 
 Getting Started
 ---------------
@@ -54,23 +53,19 @@ Why Edifice?
 
 **Declarative**
 
-The premise of Edifice is that
-GUI designers should only need to worry about *what* is rendered on the screen,
-not *how* the content is rendered.
-
 Most existing GUI libraries in Python, such as Tkinter and Qt, operate imperatively.
 To create a dynamic application using these libraries,
-you must not only think about *what* to display to the user given state changes,
-but also *how* to issue the commands to achieve the desired display.
+you must not only think about *what* widgets to display to the user,
+but also *how* to issue the commands to modify the widgets.
 
-Edifice allows you to declare *what* should be rendered given the current state,
-leaving the *how* to the library.
+With Edifice the developer
+need only declare *what* is rendered,
+not *how* the content is rendered.
 
-User interactions update the state, and state changes update the GUI.
-You only need to specify what is to be displayed given the current state and how
-user interactions modify this state.
+User interactions update the application state, the state renders to a widget tree,
+and Edifice modifies the existing widget tree to reflect the new state.
 
-With Edifice you write code like:
+Edifice code looks like this:
 
 .. code-block:: python
 
@@ -79,11 +74,13 @@ With Edifice you write code like:
     with VBoxView():
         Button("Add 5", on_click=lambda event: set_number(number+5))
         Label(str(number))
+        if number > 30 and number < 70:
+            Label("Number is mid")
 
-and get the expected result: the GUI always displays
-a button and a label displaying the current value of :code:`number`.
-Clicking the button adds 5 to the :code:`number`,
-and Edifice will handle updating the GUI.
+The GUI displays
+a button and a label with the current value of :code:`number`.
+Clicking the button will add 5 to the :code:`number`.
+If the :code:`number` is “mid” then another label will reveal that fact.
 
 **Developer Tools**
 
@@ -96,20 +93,26 @@ See :doc:`developer_tools` for more details.
 
 `Qt Quick <https://doc.qt.io/qtforpython-6/PySide6/QtQuick/>`_ is Qt’s declarative GUI framework for Qt.
 
-- Edifice programs are written in Python, whereas Qt Quick programs are written
-  in Python + the special `QML <https://doc.qt.io/qtforpython-6/overviews/qmlapplications.html>`_ language + JavaScript.
-- Because Edifice interfaces are declared in Python code, binding the code to the declared UI is much more straightforward.
-- Edifice makes it easy to create dynamic applications. It's easy to create, shuffle, and destroy widgets because the interface is written in Python code. QML assumes a much more static interface.
+Edifice programs are written in Python.
 
-By analogy, Qt Quick is like DOM + HTML + JavaScript, whereas Edifice is like React.js.
-While QML and HTML are both declarative UI languages,
+Qt Quick programs are written in Python + the
+special `QML <https://doc.qt.io/qtforpython-6/overviews/qmlapplications.html>`_ language + JavaScript.
+
+Because Edifice programs are only Python, binding to the
+UI is much more straightforward.
+Edifice makes it easy to dynamically create, mutate, shuffle, and destroy sections of the UI.
+Qt Quick assumes a much more static interface.
+
+Qt Quick is like DOM + HTML + JavaScript, whereas Edifice is like React.
+QML and HTML are both declarative UI languages but
 they require imperative logic in another language for dynamism.
-Edifice and React.js allow fully dynamic applications to be specified declaratively in one language.
+Edifice and React allow fully dynamic applications to be specified
+declaratively in one language.
 
 **Extendable**
 
-Edifice is still currently under development, and some Qt widgets/functionality are not supported.
-However, it is easy to interface with Qt, either :ref:`incorporating a Qt Widget<custom_widget>` into an Edifice component,
+Edifice does not support every feature of Qt,
+but it is easy to interface with Qt, either :ref:`incorporating a Qt Widget<custom_widget>` into an Edifice component,
 :doc:`use Qt commands directly<stubs/edifice.Reference>` with an existing Edifice component,
 or :doc:`incorporating Edifice components<stubs/stubs/edifice.App.export_widgets>` in a Qt application.
 
