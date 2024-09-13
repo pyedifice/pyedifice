@@ -71,10 +71,10 @@ If the `number` is “mid” then another label will reveal that fact.
 
 [Qt Quick](https://doc.qt.io/qtforpython-6/PySide6/QtQuick/) is Qt’s declarative GUI framework for Qt.
 
-Edifice programs are written in Python.
-
 Qt Quick programs are written in Python + the
 special [QML](https://doc.qt.io/qtforpython-6/overviews/qmlapplications.html) language + JavaScript.
+
+Edifice programs are written in Python.
 
 Because Edifice programs are only Python, binding to the
 UI is much more straightforward.
