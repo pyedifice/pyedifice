@@ -34,7 +34,7 @@ Widget Styling
 --------------
 
 Widgets follow the
-`Qt Style Sheet Box Model <https://doc.qt.io/qtforpython-6/overviews/stylesheet-syntax.html#box-model>`_.
+`Qt Style Sheet Box Model <https://doc.qt.io/qtforpython-6/overviews/stylesheet-customizing.html#the-box-model>`_.
 
 - **color**: :code:`"rgba(red, green, blue, alpha)"` range *0—255* or named colors like :code:`"red"`.
 - **font-size**: Font size in points.
@@ -81,7 +81,7 @@ Layout View Styling
 Every Layout Base Element named :code:`View` has an underlying
 `QLayout <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QLayout.html>`_
 and follows slightly different rules than the
-`Qt Style Sheet Box Model <https://doc.qt.io/qtforpython-6/overviews/stylesheet-syntax.html#box-model>`_.
+`Qt Style Sheet Box Model <https://doc.qt.io/qtforpython-6/overviews/stylesheet-customizing.html#the-box-model>`_.
 
 Note especially that there is no :code:`margin` style for :code:`View` Layout
 Elements. (Currently we allow setting the :code:`padding` with the
