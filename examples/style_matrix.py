@@ -26,8 +26,6 @@ def Main(self):
 
     palette, _ = ed.use_state(initializer)
 
-    somestate, somestate_set = ed.use_state(0)
-
     with ed.Window(title="Style Matrix"):
         with ed.TableGridView(style={"padding": 10}) as tgv:
             with tgv.row():
@@ -71,7 +69,7 @@ def Main(self):
                 ed.TextInputMultiline("TextInputMultiline", enabled=False)
             with tgv.row():
                 ed.Label("Button")
-                ed.Button("Button", on_click=lambda _: somestate_set(somestate + 1))
+                ed.Button("Button")
                 ed.Button("Button", enabled=False)
             with tgv.row():
                 ed.Label("CheckBox")
