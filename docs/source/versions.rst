@@ -4,6 +4,13 @@
 Release Notes
 =============
 
+v1.4.0
+------
+Released: 2024-09-13
+
+* Hook :func:`use_state` new feature **initializer function**.
+
+
 v1.3.0
 ------
 Released: 2024-09-12
