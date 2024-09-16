@@ -221,7 +221,7 @@ class Reference(tp.Generic[_T_Element]):
             use_effect(did_render, ())
 
             with VBoxView():
-                Label("Before").register_ref(ref)
+                Label("Before").register_ref(label_ref)
     """
 
     def __init__(self):
@@ -446,9 +446,8 @@ class Element:
     def register_ref(self: Self, reference: Reference[Self]) -> Self:
         """Registers provided :class:`Reference` to this Element.
 
-        During render, the provided reference will be set to point to the currently rendered instance of this Element
-        (i.e. if another instance of the Element is rendered and the RenderEngine decides to reconcile the existing
-        and current instances, the reference will eventually point to that previously existing Element.
+        During render, the provided reference will be set to point to the
+        currently rendered instance of this Element.
 
         Args:
             reference: the Reference to register
