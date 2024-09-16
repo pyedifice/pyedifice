@@ -35,14 +35,16 @@ Getting Started
 .. code-block:: python
     :caption: *Hello World* in Edifice
 
-    from edifice import App, Window, Label, component
+    from edifice import App, Label, Window, component
 
     @component
     def HelloWorld(self):
         with Window():
             Label("Hello World!")
 
-    App(HelloWorld()).start()
+    if __name__ == "__main__":
+        App(HelloWorld()).start()
+
 
 For more, see the :doc:`tutorial`.
 To understand the core concepts behind Edifice,
