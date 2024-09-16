@@ -5,7 +5,7 @@
 import asyncio
 from typing import TYPE_CHECKING, cast
 
-from edifice.engine import QtWidgetElement, Reference
+import edifice as ed
 from edifice.qt import QT_VERSION
 
 if QT_VERSION == "PyQt6" and not TYPE_CHECKING:
@@ -13,26 +13,21 @@ if QT_VERSION == "PyQt6" and not TYPE_CHECKING:
 else:
     from PySide6.QtWidgets import QLabel
 
-from edifice import App, Label, VBoxView, Window, component, use_effect, use_ref
-
-
-@component
+@ed.component
 def MyComp(self):
-    ref: Reference[QtWidgetElement[QLabel]] = use_ref()
+    ref:ed.Reference[ed.Label] = ed.use_ref()
 
     def did_render():
         element = ref()
-        if element is not None:
-            if element.underlying is not None:
-                element.underlying.setText("After")
+        if element and element.underlying:
+            # Set the text of the underlying QLabel
+            element.underlying.setText("After")
 
-    use_effect(did_render, ref)
+    ed.use_effect(did_render, ())
 
-    with Window():
-        with VBoxView():
-            Label("Before").register_ref(ref)
-
+    with ed.Window():
+        with ed.VBoxView():
+            ed.Label("Before").register_ref(ref)
 
 if __name__ == "__main__":
-    my_app = App(MyComp())
-    my_app.start()
+    ed.App(MyComp()).start()

@@ -177,59 +177,48 @@ class PropsDict(object):
 
 
 class Reference(tp.Generic[_T_Element]):
-    """Reference to a :class:`Element` to allow imperative modifications.
+    """Reference to an :class:`Element` for imperative commands.
 
-    While Edifice is a declarative library and tries to abstract away the need to issue
-    imperative commands to widgets,
-    this is not always possible, either due to limitations with the underlying backened,
-    or because some feature implemented by the backend is not yet supported by the declarative layer.
-    In these cases, you might need to issue imperative commands to the underlying Widgets and Elements,
-    and :class:`Reference` gives you a handle to the currently rendered :class:`Element`.
+    Edifice tries to abstract away the need to issue
+    imperative commands to widgets but this is not always possible and not
+    every feature of Qt Widgets is supported by Edifice.
+    In some cases, we might need to issue imperative commands to the
+    Elements and their underlying Qt Widgets.
+    :class:`Reference` gives us access to a rendered :class:`Element`.
 
-    Create a :class:`Reference` with the :func:`use_ref` Hook::
+    Create a :class:`Reference` with the :func:`use_ref` Hook.
 
-        @component
-        def MyComp(self):
-            ref = use_ref()
+    :func:`Element.register_ref` registers the :class:`Reference` object
+    to the :class:`Element`.
 
-            def issue_command(e):
-                ref().command()
+    :class:`Reference` can be dereferenced by calling it. An instance of
+    type :code:`Reference[Label]` will dereference to an instance of
+    :code:`Label` when called.
 
-            AnotherElement(on_click=issue_command).register_ref(ref)
-
-    Under the hood, :func:`Element.register_ref` registers the :class:`Reference` object
-    to the :class:`Element` returned by the :code:`render` function.
-    While rendering, Edifice will examine all requested references and attaches
-    them to the correct :class:`Element`.
-
-    Initially, a :class:`Reference` object will point to :code:`None`.
-    After the first render, it will point to the rendered :class:`Element`.
+    Initially, a :class:`Reference` object will dereference to :code:`None`.
+    After the first render, it will dereference to the rendered :class:`Element`.
     When the rendered :class:`Element` dismounts, the reference will once again
-    point to :code:`None`.
-    You may assume that :class:`Reference` is valid whenever it is
-    not :code:`None`.
-    :class:`Reference` will evaluate false if the underlying value is :code:`None`.
+    dereference to :code:`None`.
+    :class:`Reference` is valid whenever it is not :code:`None`.
+    :class:`Reference` will evaluate false if the :class:`Element` is :code:`None`.
 
-    :class:`Reference` can be dereferenced by calling it. An idiomatic way of using references is::
+    Access the QWidget underlying a :class:`QtWidgetElement`,
+    through the :code:`underlying` attribute of the :class:`QtWidgetElement`.
+    :func:`use_effect` Hooks always run after the Elements are fully rendered.
 
-        if ref:
-            ref().do_something()
-
-    If you want to access the QWidget underlying a Base Element,
-    you can use the :code:`underlying` attribute of the Element.
-    :func:`use_effect` Hooks always run after the Elements are fully rendered::
+    .. code-block:: python
 
         @component
         def MyComp(self):
-            ref = use_ref()
+            label_ref:Reference[Label] = use_ref()
 
             def did_render():
-                element = ref()
-                assert isinstance(element, Label)
-                element.underlying.setText("After")
-                return lambda:None
+                label = label_ref()
+                if label and label.underlying:
+                    # Set the text of the Label’s underlying QLabel widget.
+                    label.underlying.setText("After")
 
-            use_effect(did_render, ref)
+            use_effect(did_render, ())
 
             with VBoxView():
                 Label("Before").register_ref(ref)
