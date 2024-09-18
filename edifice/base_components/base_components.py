@@ -69,7 +69,7 @@ def _get_svg_image(icon_path, size: int, rotation=0, color=(0, 0, 0, 255)) -> Qt
     pixmap = pixmap.copy()
     if color != (0, 0, 0, 255):
         mask = pixmap.mask()
-        pixmap.fill(QtGui.QColor(*color))
+        pixmap.fill(QtGui.QColor(*color)) # TODO this messes up the alpha channel edges
         pixmap.setMask(mask)
     if rotation != 0:
         w, h = pixmap.width(), pixmap.height()
@@ -1151,7 +1151,7 @@ class VBoxView(_LinearView[QtWidgets.QWidget]):
         self,
         widget_trees: dict[Element, _WidgetTree],
         newprops,
-    ):
+    ) -> list[CommandType]:
         if self.underlying is None:
             self._initialize()
         assert self.underlying is not None
@@ -1166,11 +1166,10 @@ class VBoxView(_LinearView[QtWidgets.QWidget]):
         commands.extend(self._qt_stateless_commands(widget_trees, newprops))
         return commands
 
-    def _qt_stateless_commands(self, widget_trees: dict[Element, _WidgetTree], newprops):
+    def _qt_stateless_commands(self, widget_trees: dict[Element, _WidgetTree], newprops) -> list[CommandType]:
         # This stateless render command is used to test rendering
         assert self.underlying is not None
-        commands = super()._qt_update_commands_super(widget_trees, newprops, self.underlying, self.underlying_layout)
-        return commands
+        return super()._qt_update_commands_super(widget_trees, newprops, self.underlying, self.underlying_layout)
 
 
 class HBoxView(_LinearView[QtWidgets.QWidget]):
@@ -1341,6 +1340,9 @@ class Window(VBoxView):
             The window title.
         icon:
             The window icon image.
+
+            See caveats in `windowIcon <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.windowIcon>`_.
+            This prop is not supported on all platforms.
         menu:
             The window’s menu bar. In some GUI settings, for example Mac OS,
             this menu will appear seperately from the window.
@@ -1362,7 +1364,7 @@ class Window(VBoxView):
     def __init__(
         self,
         title: str = "Edifice Application",
-        icon: str | tp.Sequence | None = None,
+        icon: str | QtGui.QImage | QtGui.QPixmap | None = None,
         menu=None,
         on_open: tp.Callable[[QtWidgets.QApplication], None] | None = None,
         on_close: tp.Callable[[QtGui.QCloseEvent], None | tp.Awaitable[None]] | None = None,
@@ -1424,7 +1426,7 @@ class Window(VBoxView):
             commands.append(CommandType(self.underlying.setWindowTitle, newprops.title))
         if "on_close" in newprops:
             commands.append(CommandType(self._set_on_close, newprops.on_close))
-        if "icon" in newprops and newprops.icon:
+        if "icon" in newprops and newprops.icon is not None:
             pixmap = _image_descriptor_to_pixmap(newprops.icon)
             commands.append(CommandType(self.underlying.setWindowIcon, QtGui.QIcon(pixmap)))
         if "menu" in newprops and newprops.menu:
@@ -1432,6 +1434,151 @@ class Window(VBoxView):
                 self._menu_bar.setParent(None)
             self._menu_bar = QtWidgets.QMenuBar()
             commands.append(CommandType(self._attach_menubar, self._menu_bar, newprops.menu))
+
+        return commands
+
+class WindowPopView(VBoxView):
+    """
+    Pop-up Window.
+
+    This Element will render as a new operating system window instead
+    of appearing in its parent’s layout. It will occupy a zero-size position
+    in its parent’s layout.
+
+
+    .. code-block:: python
+        :caption: Pop-up Window Example
+
+        @component
+        def Main(self):
+
+            popshow, popshow_set = use_state(False)
+
+            with Window(
+                title="Main Window",
+            ):
+                CheckBox(
+                    checked=popshow,
+                    text="Show Pop-up Window",
+                    on_change=popshow_set,
+                )
+                if popshow:
+                    with WindowPopView(
+                        title="Pop-up Window",
+                        on_close=lambda _: popshow_set(False),
+                    ):
+                        Label(
+                            text="This is a Pop-up Window",
+                        )
+
+
+    Args:
+        title:
+            The window title.
+        icon:
+            The window icon image.
+
+            See caveats in `windowIcon <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.windowIcon>`_.
+            This prop is not supported on all platforms.
+        on_close:
+            When the user tries to close this window, the window will not close.
+            Instead, this event handler will be called.
+
+            The only way to close a :class:`WindowPopView` is to remove it from
+            its parent’s layout. This event handler should set some state which causes the
+            :class:`WindowPopView` to be removed from the parent layout.
+            See the example above.
+
+            The event handler function will be passed a
+            `QCloseEvent <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QCloseEvent.html>`_.
+    """
+
+    def __init__(
+        self,
+        title: str = "",
+        icon: str | QtGui.QImage | QtGui.QPixmap | None = None,
+        on_close: tp.Callable[[QtGui.QCloseEvent], None | tp.Awaitable[None]] | None = None,
+        **kwargs,
+    ):
+        super().__init__(**kwargs)
+        self._register_props(
+            {
+                "title": title,
+                "icon": icon,
+                "on_close": on_close,
+            },
+        )
+
+        self._on_close: tp.Callable[[QtGui.QCloseEvent], None | tp.Awaitable[None]] | None = None
+
+        self.underlying_noparent: QtWidgets.QWidget | None = None
+        """
+        Special widget that is not a child of any parent widget.
+        The layout of this Element is set to this widget, and all Element
+        children are children of this widget.
+        """
+
+    def _set_on_close(self, on_close):
+        self._on_close = on_close
+
+    def _handle_close(self, event: QtGui.QCloseEvent):
+        event.ignore()
+        if self._on_close:
+            _ensure_future(self._on_close)(event)
+
+    def _handle_destroyed(self):
+        assert self.underlying_noparent is not None
+        self.underlying_noparent.deleteLater()
+        if self._on_close:
+            _ensure_future(self._on_close)(QtGui.QCloseEvent())
+
+    def _initialize(self):
+        # The self.underlying is an invisible placeholder widget that will
+        # occupy a position in its parent's layout, but will have zero size.
+        self.underlying = QtWidgets.QWidget()
+        self.underlying.setFixedSize(0,0)
+        self.underlying_layout = QtWidgets.QVBoxLayout()
+        # The self.underlying_noparent is the widget that will be shown
+        # to the user as a new pop-up window and which will be the parent
+        # of all this Element's children.
+        self.underlying_noparent = QtWidgets.QWidget()
+        self.underlying_noparent.setObjectName(str(id(self))) # this is for CSS style selection
+        self.underlying_noparent.setLayout(self.underlying_layout)
+        self.underlying_layout.setContentsMargins(0, 0, 0, 0)
+        self.underlying_layout.setSpacing(0)
+        self.underlying.destroyed.connect(self._handle_destroyed)
+        self.underlying_noparent.closeEvent = self._handle_close
+        self.underlying_noparent.show()
+
+    def _qt_update_commands(
+        self,
+        widget_trees: dict[Element, _WidgetTree],
+        newprops,
+    ) -> list[CommandType]:
+        if self.underlying is None:
+            self._initialize()
+
+        assert self.underlying_noparent is not None
+        children = _get_widget_children(widget_trees, self)
+        commands = []
+        # Should we run the child commands after the View commands?
+        # No because children must be able to delete themselves before parent
+        # deletes them.
+        # https://doc.qt.io/qtforpython-6/PySide6/QtCore/QObject.html#detailed-description
+        # “The parent takes ownership of the object; i.e., it will automatically delete its children in its destructor.”
+        commands.extend(self._recompute_children(children))
+
+        # Important to note that the QtWidgetElement underlying is the underlying_noparent.
+        # This is so that all styles and event handlers are attached to the underlying_noparent.
+        commands.extend(super()._qt_update_commands_super(widget_trees, newprops, self.underlying_noparent, self.underlying_layout))
+
+        if "title" in newprops:
+            commands.append(CommandType(self.underlying_noparent.setWindowTitle, newprops.title))
+        if "on_close" in newprops:
+            commands.append(CommandType(self._set_on_close, newprops.on_close))
+        if "icon" in newprops and newprops.icon is not None:
+            pixmap = _image_descriptor_to_pixmap(newprops.icon)
+            commands.append(CommandType(self.underlying_noparent.setWindowIcon, QtGui.QIcon(pixmap)))
 
         return commands
 
