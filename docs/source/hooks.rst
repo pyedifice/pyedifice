@@ -4,21 +4,21 @@
 Hooks
 =====
 
-Hooks introduce various features into stateless :func:`component` Elements.
+Hooks introduce various features into stateless :func:`@component<component>` Elements.
 
 Rules of Hooks
 --------------
 
-Hooks are inspired by `React Hooks <https://react.dev/reference/react/hooks>`_,
+Edifice Hooks imitate `React Hooks <https://react.dev/reference/react/hooks>`_,
 and follow the React
-`Rules of Hooks <https://legacy.reactjs.org/docs/hooks-rules.html>`_:
+`Rules of Hooks <https://react.dev/reference/rules/rules-of-hooks>`_.
 
 The exact same Hooks must be called
 in exactly the same order on every call to a :func:`@component<component>` function.
 
 1. Only call Hooks
-    * In the top level of a :func:`@component<component>` Element function.
-    * In the body of a custom Hook.
+    * In the top level of a :func:`@component<component>` Element render function.
+    * In the body of a Custom Hook.
 2. Never call Hooks
     * In a conditional statement.
     * In a loop.

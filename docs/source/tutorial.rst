@@ -1,6 +1,8 @@
 Tutorial
 ========
 
+.. currentmodule:: edifice
+
 .. figure:: /image/example_tutorial.png
 
 This tutorial will help you create your first Edifice app.
@@ -47,11 +49,11 @@ Copy this code into a new file, for example tutorial.py::
 
 What does this code do?
 First we define a function :code:`MyApp` which is decorated by
-:func:`component<edifice.component>`.
+:func:`@component<component>`.
 The :code:`MyApp` component is the top-level Element of our application.
 
-:class:`HBoxView<edifice.HBoxView>` is an example of
-a base :class:`QtWidgetElement <edifice.QtWidgetElement>`.
+:class:`HBoxView<HBoxView>` is an example of
+a base :class:`QtWidgetElement <QtWidgetElement>`.
 The HBoxView can have children. To establish the HBoxView as a parent Element and
 then declare its children, we use a
 `with statement <https://docs.python.org/3/reference/compound_stmts.html#with>`_
@@ -70,7 +72,7 @@ In HTML or XML, we might have written it as:
     </Window>
 
 We pass the component :code:`MyApp`
-to an :class:`App<edifice.App>`,
+to an :class:`App<App>`,
 which is responsible for actually doing the rendering.
 It takes the description of each Element, and it decides when and how to render it and its children.
 It does so by monitoring the **state** of each Element, and it will re-render
@@ -89,7 +91,7 @@ then do::
 
 You should see a basic form emerge. However, it's not pretty, and it doesn't really do anything.
 
-We can change the formatting of the :class:`Label<edifice.Label>`, :class:`TextInput<edifice.TextInput>`, and
+We can change the formatting of the :class:`Label<Label>`, :class:`TextInput<edifice.TextInput>`, and
 :class:`HBoxView<edifice.HBoxView>` using Qt :doc:`styling<styling>`,
 which is similar to CSS styling.
 Here, we want to add padding between the HBoxView and Window boundary,

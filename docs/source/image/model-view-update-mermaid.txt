@@ -1,0 +1,20 @@
+---
+config:
+  theme: dark
+  look: classic
+---
+flowchart TD
+subgraph Model-View-Update
+%% Nodes
+    A("<b>Model</b>
+    fa:fa-file-code use_state")
+    B("<b>View</b>
+    fa:fa-diagram-project Qt Widgets
+    ")
+%% Edge connections between nodes
+    A -- <b>Render</b> 
+    @component Function --> B
+    B -- <b>Update</b>
+    Event Handler Function --> A
+end
+
