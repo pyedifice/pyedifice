@@ -1213,7 +1213,7 @@ class QtWidgetElement(Element, tp.Generic[_T_widget]):
                         new_padding[1],
                         new_padding[2],
                         new_padding[3],
-                    )
+                    ),
                 )
             if set_align:
                 commands.append(CommandType(underlying_layout.setAlignment, set_align))
@@ -1278,6 +1278,9 @@ class QtWidgetElement(Element, tp.Generic[_T_widget]):
         if set_move:
             commands.append(CommandType(underlying.move, move_coords[0], move_coords[1]))
 
+        # CSS style selection is matched by setting underlying.setObjectName(str(id(self)))
+        # In Element initialization.
+        # https://doc.qt.io/qtforpython-6/PySide6/QtCore/QObject.html#PySide6.QtCore.QObject.setObjectName
         css_string = _dict_to_style(style, "QWidget#" + str(id(self)))
         commands.append(CommandType(underlying.setStyleSheet, css_string))
         return commands
@@ -1298,14 +1301,14 @@ class QtWidgetElement(Element, tp.Generic[_T_widget]):
 
     def _qt_update_commands(
         self,
-        widget_trees: dict[Element, "_WidgetTree"],
+        widget_trees: dict[Element, _WidgetTree],
         newprops: PropsDict,
     ) -> list[CommandType]:
         raise NotImplementedError
 
     def _qt_update_commands_super(
         self,
-        widget_trees: dict[Element, "_WidgetTree"],
+        widget_trees: dict[Element, _WidgetTree],
         # We must pass all of the widget_trees because some elements
         # like TableGridView need to know the children of the children.
         newprops: PropsDict,

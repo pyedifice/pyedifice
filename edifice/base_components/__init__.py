@@ -12,6 +12,7 @@ from .base_components import (
     FixScrollView,
     TabView,
     GridView,
+    WindowPopView,
     Label,
     ImageSvg,
     Icon,
@@ -47,6 +48,7 @@ __all__ = [
     "FixScrollView",
     "TabView",
     "GridView",
+    "WindowPopView"
     "Label",
     "ImageSvg",
     "Icon",

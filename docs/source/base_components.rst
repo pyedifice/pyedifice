@@ -75,6 +75,7 @@ All of the Layout Base Elements have the name suffix :code:`View`.
    GridView
    TableGridView
    FlowView
+   WindowPopView
 
 Content Base Elements
 ---------------------

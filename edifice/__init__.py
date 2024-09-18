@@ -16,6 +16,7 @@ from .base_components import (
     GridView,
     HBoxView,
     HScrollView,
+    WindowPopView,
     Icon,
     IconButton,
     Image,
@@ -70,6 +71,7 @@ __all__ = [
     "VBoxView",
     "HBoxView",
     "FixView",
+    "WindowPopView"
     "Window",
     "alert",
     "child_place",
