@@ -357,7 +357,7 @@ class Element:
     """The base class for Edifice Elements.
 
     In user code you should almost never use :class:`Element` directly. Instead
-    use :doc:`Base Elements <../base_components>` and :func:`component` Elements.
+    use :doc:`Base Elements <../base_components>` and :func:`@component<component>` Elements.
 
     A :class:`Element` is a stateful container wrapping a render function.
     Elements have both internal and external properties.
@@ -555,7 +555,7 @@ def not_ignored(arg: tuple[str, tp.Any]) -> bool:
 
 def component(f: Callable[tp.Concatenate[selfT, P], None]) -> Callable[P, Element]:
     """
-    Decorator turning a render function of **props** into an :class:`Element`.
+    Decorator which turns a render function of **props** into an :class:`Element`.
 
     The first argument of the render function must be :code:`self`, for
     internal technical reasons.
@@ -563,19 +563,19 @@ def component(f: Callable[tp.Concatenate[selfT, P], None]) -> Callable[P, Elemen
     Props
     -----
 
-    The **props** are the arguments passed to the :func:`component` function.
+    The **props** are the arguments passed to the :func:`@component<component>` function.
 
-    The component will be re-rendered when some of its **props** are not
-    :code:`__eq__` to the **props** from the last time the component rendered.
-    If the **props** are all :code:`__eq__`, the component will not re-render.
+    The @component will be re-rendered when some of its **props** are not
+    :code:`__eq__` to the **props** from the last time the @component rendered.
+    If the **props** are all :code:`__eq__`, the @component will not re-render.
 
     Arguments with a leading underscore :code:`_` will not count as **props**.
 
     Render
     ------
 
-    The component function must render exactly one :class:`Element`.
-    In the component function, declare a tree of :class:`Element` with a
+    The @component function must render exactly one :class:`Element`.
+    In the @component function, declare a tree of :class:`Element` with a
     single root::
 
         @component
@@ -588,15 +588,15 @@ def component(f: Callable[tp.Concatenate[selfT, P], None]) -> Callable[P, Elemen
     State
     -----
 
-    The :func:`component` function is a stateless function from **props**
+    The :func:`@component<component>` function is a stateless function from **props**
     to an :class:`Element`.
-    To introduce **state** into a :func:`component`, use :doc:`Hooks <../hooks>`.
+    To introduce **state** into a :func:`@component<component>`, use :doc:`Hooks <../hooks>`.
 
     Composition
     -----------
 
-    An :func:`component`’s children can be passed to it as **props**. This allows a
-    :func:`component` to act as a parent container for other :class:`Element` s,
+    An :func:`@component<component>`’s children can be passed to it as **props**. This allows a
+    :func:`@component<component>` to act as a parent container for other :class:`Element` s,
     and to render them in a specific layout.
 
     There are two features to accomplish this.
@@ -606,12 +606,12 @@ def component(f: Callable[tp.Concatenate[selfT, P], None]) -> Callable[P, Elemen
        with a default value.
 
        Do not explicitly pass the :code:`children` **prop** when calling
-       the :func:`component`. The children will be passed implicitly.
+       the :func:`@component<component>`. The children will be passed implicitly.
     2. The :func:`child_place` function is used to place the :code:`children`
-       in the parent :func:`component`’s render function.
+       in the parent :func:`@component<component>`’s render function.
 
     With these two features, you can declare how the parent
-    container :func:`component` will render its children::
+    container :func:`@component<component>` will render its children::
 
         @component
         def ContainerComponent(self:Element, children:tuple[Element, ...]=()):
