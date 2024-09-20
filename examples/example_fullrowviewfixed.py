@@ -13,6 +13,7 @@ from edifice import (
     Label,
     Reference,
     Slider,
+    TableGridRow,
     TableGridView,
     VBoxView,
     Window,
@@ -90,7 +91,7 @@ def FullRowViewFixed(
             def cleanup():
                 assert type(view_element) == HBoxView
                 assert isinstance(view_element.underlying, QtWidgets.QWidget)
-                view_element.underlying.resizeEvent = lambda _event: None
+                view_element.underlying.resizeEvent = lambda event: None
 
             return cleanup
         else:
@@ -158,15 +159,15 @@ def Main(self):
                 style={"max-width": "500px"},
             )
             with TableGridView(
-                column_stretch=[0, 1],
-            ) as tgv:
-                with tgv.row():
+                column_stretch=(0, 1),
+            ):
+                with TableGridRow():
                     Label(
                         text="Row One",
                         style={"margin-right": 20},
                     )
                     MyComponent(x)
-                with tgv.row():
+                with TableGridRow():
                     Label(
                         text="Row Two",
                         style={"margin-right": 20},

@@ -4,6 +4,26 @@
 Release Notes
 =============
 
+
+* Delete method :class:`TableGridView` :code:`row()`.
+* New Element :class:`TableGridRow`.
+* :class:`TableGridView` props type change from :code:`list` to :code:`tuple`.
+* :class:`Label` delete prop :code:`editable`.
+
+.. code-block:: python
+    :caption: Old TableGridView API
+
+    with TableGridView() as tgv:
+        with tgv.row():
+            Label("row 1")
+
+.. code-block:: python
+    :caption: New TableGridView API
+
+    with TableGridView():
+        with TableGridRow():
+            Label("row 1")
+
 v1.5.0
 ------
 Released: 2024-09-20

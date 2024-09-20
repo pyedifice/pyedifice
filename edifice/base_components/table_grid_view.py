@@ -15,11 +15,15 @@ from .base_components import CommandType, Element, PropsDict, QtWidgetElement, _
 logger = logging.getLogger("Edifice")
 
 
-class _TableGridViewRow(QtWidgetElement):
+class TableGridRow(QtWidgetElement):
     """
     Row Element of a :class:`TableGridView`.
 
-    Do not create this Element directly. Instead, use the :func:`TableGridView.row` method.
+    This Element’s parent must be a :class:`TableGridView`.
+
+    This Element may have children of any type of :class:`Element`.
+
+    This Element has no Qt underlying, and no props.
     """
 
     def __init__(self):
@@ -27,8 +31,8 @@ class _TableGridViewRow(QtWidgetElement):
 
     def _qt_update_commands(
         self,
-        children: list[_WidgetTree],
-        newprops: PropsDict,
+        widget_trees: dict[Element, _WidgetTree],  # noqa: ARG002
+        newprops: PropsDict,  # noqa: ARG002
     ) -> list[CommandType]:
         # This element has no Qt underlying so it has nothing to do except store
         # the children of the row.
@@ -48,19 +52,19 @@ class TableGridView(QtWidgetElement[QWidget]):
     height of its tallest child.
 
     The only type of child :class:`Element` allowed in a :class:`TableGridView` is
-    the row Element returned by the :func:`row` method. The :func:`row`
-    Element establishes a row in the table, and may have children of
-    any type of :class:`Element`.
+    :class:`TableGridRow`.
+    Each :class:`TableGridRow` establishes a row in the table, and may have
+    children of any type of :class:`Element`.
 
     Example::
 
         with TableGridView() as tgv:
-            with tgv.row():
+            with TableGridRow():
                 Label(text="row 0 column 0")
                 Label(text="row 0 column 1")
-            with tgv.row():
+            with TableGridRow():
                 Label(text="row 1 column 0")
-                with ButtonView():
+                with VBoxView():
                     Label(text="row 1 column 1")
 
     Args:
@@ -83,10 +87,10 @@ class TableGridView(QtWidgetElement[QWidget]):
 
     def __init__(
         self,
-        row_stretch: list[int] = [],
-        column_stretch: list[int] = [],
-        row_minheight: list[int] = [],
-        column_minwidth: list[int] = [],
+        row_stretch: tuple[int,...] = (),
+        column_stretch: tuple[int,...] = (),
+        row_minheight: tuple[int,...] = (),
+        column_minwidth: tuple[int,...] = (),
         **kwargs,
     ):
         super().__init__(**kwargs)
@@ -96,7 +100,7 @@ class TableGridView(QtWidgetElement[QWidget]):
                 "column_stretch": column_stretch,
                 "row_minheight": row_minheight,
                 "column_minwidth": column_minwidth,
-            }
+            },
         )
         self.underlying = None
         self._old_children: dict[QtWidgetElement, tuple[int, int]] = {}
@@ -106,16 +110,6 @@ class TableGridView(QtWidgetElement[QWidget]):
         self._column_stretch = column_stretch
         self._row_minheight = row_minheight
         self._column_minwidth = column_minwidth
-
-    def row(self) -> Element:
-        """
-        Returns an :class:`Element` that represents a new row in
-        this :class:`TableGridView`. Each child of the new row element
-        will be rendered in columns aligned with the other rows.
-        """
-        return _TableGridViewRow()
-        # TODO since the _TableGridViewRow doesn't need a reference to the
-        # parent TableGridView anymore, we don't need this row() method?
 
     def _initialize(self):
         self.underlying = QWidget()
@@ -175,14 +169,14 @@ class TableGridView(QtWidgetElement[QWidget]):
 
         # The following is equivalent to _LinearView._recompute_children().
         #
-        # The direct children of this Element are _TableGridViewRow, but
-        # the _TableGridViewRow doesn't have a Qt instantiation so we
-        # want to treat the _TableGridViewRow children as the children of
+        # The direct children of this Element are TableGridRow, but
+        # the TableGridRow doesn't have a Qt instantiation so we
+        # want to treat the TableGridRow children as the children of
         # the TableGridView.
 
         children = _get_widget_children(widget_trees, self)
         new_children: dict[QtWidgetElement, tuple[int, int]] = {}
-        children_of_rows: list[QtWidgetElement] = list()
+        children_of_rows: list[QtWidgetElement] = []
         for row, c in enumerate(children):
             children_of_row = _get_widget_children(widget_trees, c)
             children_of_rows.extend(children_of_row)
@@ -206,36 +200,36 @@ class TableGridView(QtWidgetElement[QWidget]):
         self._old_children = new_children
 
         if "row_stretch" in newprops:
-            commands.append(CommandType(self._set_row_stretch, newprops["row_stretch"]))
+            commands.append(CommandType(self._set_row_stretch, newprops.row_stretch))
         if "column_stretch" in newprops:
-            commands.append(CommandType(self._set_column_stretch, newprops["column_stretch"]))
+            commands.append(CommandType(self._set_column_stretch, newprops.column_stretch))
         if "row_minheight" in newprops:
-            commands.append(CommandType(self._set_row_minheight, newprops["row_minheight"]))
+            commands.append(CommandType(self._set_row_minheight, newprops.row_minheight))
         if "column_minwidth" in newprops:
-            commands.append(CommandType(self._set_column_minwidth, newprops["column_minwidth"]))
+            commands.append(CommandType(self._set_column_minwidth, newprops.column_minwidth))
 
         commands.extend(
-            super()._qt_update_commands_super(widget_trees, newprops, self.underlying, self.underlying_layout)
+            super()._qt_update_commands_super(widget_trees, newprops, self.underlying, self.underlying_layout),
         )
 
         return commands
 
-    def _set_row_stretch(self, row_stretch):
+    def _set_row_stretch(self, row_stretch: tuple[int,...]):
         self._row_stretch = row_stretch
         for i, stretch in enumerate(row_stretch[: self.underlying_layout.rowCount()]):
             self.underlying_layout.setRowStretch(i, stretch)
 
-    def _set_column_stretch(self, column_stretch):
+    def _set_column_stretch(self, column_stretch: tuple[int,...]):
         self._column_stretch = column_stretch
         for i, stretch in enumerate(column_stretch[: self.underlying_layout.columnCount()]):
             self.underlying_layout.setColumnStretch(i, stretch)
 
-    def _set_row_minheight(self, row_minheight):
+    def _set_row_minheight(self, row_minheight: tuple[int,...]):
         self._row_minheight = row_minheight
         for i, minheight in enumerate(row_minheight[: self.underlying_layout.rowCount()]):
             self.underlying_layout.setRowMinimumHeight(i, minheight)
 
-    def _set_column_minwidth(self, column_minwidth):
+    def _set_column_minwidth(self, column_minwidth: tuple[int,...]):
         self._column_minwidth = column_minwidth
         for i, minwidth in enumerate(column_minwidth[: self.underlying_layout.columnCount()]):
             self.underlying_layout.setColumnMinimumWidth(i, minwidth)

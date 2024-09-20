@@ -15,6 +15,7 @@ from edifice import (
     Label,
     Slider,
     TableGridView,
+    TableGridRow,
     VBoxView,
     Window,
     component,
@@ -48,12 +49,12 @@ def MyComponent3(self):
 
     with VBoxView():
         Label(text=str(resize_event))
-        with TableGridView() as tgv:
-            with tgv.row():
+        with TableGridView():
+            with TableGridRow():
                 Slider(x, min_value=0, max_value=100, on_change=x_set).set_key("row1")
-            with tgv.row():
+            with TableGridRow():
                 Slider(x_minus, min_value=0, max_value=100, on_change=x_minus_set).set_key("row2")
-            with tgv.row():
+            with TableGridRow():
                 with HBoxView(on_resize=handle_resize).set_key("row3"):
                     for i in range(x_minus, x):
                         with VBoxView(style={"align": "center"}).set_key("view" + str(i)):

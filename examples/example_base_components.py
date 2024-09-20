@@ -21,6 +21,12 @@ else:
 def Main(self):
     def handle_open(qapp: QApplication):
         print("Opening window")
+
+    def handle_close(ev: QCloseEvent):
+        print("Closing window")
+
+    def initializer():
+        qapp = tp.cast(QApplication, QApplication.instance())
         qapp.setApplicationName("Example Base Components")
         QApplication.setStyle("fusion")
         qapp.setFont(QFont("Yu Gothic UI", 20))
@@ -29,8 +35,7 @@ def Main(self):
         else:
             qapp.setPalette(ed.utilities.palette_edifice_dark())
 
-    def handle_close(ev: QCloseEvent):
-        print("Closing window")
+    ed.use_state(initializer)
 
     mltext, mltext_set = ed.use_state("Hello World")
     ddoptions, ddoptionss_set = ed.use_state(0)
@@ -225,8 +230,8 @@ def Main(self):
                         "background-color": "pink",
                     },
                 )
-        with ed.TableGridView(style={"padding": 10}) as tgv_date:
-            with tgv_date.row():
+        with ed.TableGridView(style={"padding": 10}):
+            with ed.TableGridRow():
 
                 def handle_date(text: str):
                     date_text_set(text)
@@ -255,7 +260,7 @@ def Main(self):
                             text=date_value.strftime("%Y %B %d %A"),
                             word_wrap=False,
                         )
-            with tgv_date.row():
+            with ed.TableGridRow():
 
                 def handle_time(text: str):
                     time_text_set(text)
