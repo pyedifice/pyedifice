@@ -25,6 +25,7 @@ from edifice import (
     HBoxView,
     Label,
     RadioButton,
+    TableGridRow,
     TableGridView,
     TextInput,
     VBoxView,
@@ -43,9 +44,9 @@ class Todo:
 
 
 @component
-def TodoItem(self, key: int, todo: Todo, table_grid_view, set_complete, delete_todo, set_editing, set_text):
+def TodoItem(self, key: int, todo: Todo, set_complete, delete_todo, set_editing, set_text):
     hover1, on_mouse_enter1, on_mouse_leave1 = use_hover()
-    with table_grid_view.row():
+    with TableGridRow():
         with VBoxView(
             on_mouse_enter=on_mouse_enter1,
             on_mouse_leave=on_mouse_leave1,
@@ -170,8 +171,8 @@ def TodoMVC(self):
             items_left += 1
 
     with VBoxView(style={"align": "top", "padding-top": 10}):
-        with TableGridView() as tgv:
-            with tgv.row():
+        with TableGridView():
+            with TableGridRow():
                 with VBoxView(
                     style={"padding-left": 5},
                 ):
@@ -190,7 +191,7 @@ def TodoMVC(self):
                 )
             for key, todo in todos.items():
                 if item_filter == "All" or (item_filter == "Completed") == todo.completed:
-                    TodoItem(key, todo, tgv, set_complete, delete_todo, set_editing, set_text)
+                    TodoItem(key, todo, set_complete, delete_todo, set_editing, set_text)
         with VBoxView(style={"padding": 10}):
             if len(todos) > 0:
                 with HBoxView(

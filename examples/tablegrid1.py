@@ -3,14 +3,12 @@
 #
 
 import edifice as ed
-from edifice import ButtonView, TableGridView
-from edifice.hooks import use_state
 
 
 @ed.component
 def myComponent(self):
-    row_key, set_row_key = use_state(1)
-    rows, set_rows = use_state([])
+    row_key, set_row_key = ed.use_state(1)
+    rows, set_rows = ed.use_state([])
 
     def add_key():
         new_rows = rows.copy()
@@ -26,18 +24,18 @@ def myComponent(self):
     with ed.Window():
         with ed.VBoxView(style={"align": "top"}):
             with ed.VBoxView(style={"margin": 10}):
-                with ButtonView(
+                with ed.ButtonView(
                     on_click=lambda _ev: add_key(),
                     style={"width": 100, "height": 30, "margin": 10},
                 ):
                     ed.Label(text="Add Row")
 
-            with TableGridView() as tgv:
+            with ed.TableGridView():
                 for rkey in rows:
-                    with tgv.row():
+                    with ed.TableGridRow():
                         ed.Label(text="Key " + str(rkey) + " Column 0")
                         ed.Label(text="Key " + str(rkey) + " Column 1")
-                        with ButtonView(on_click=lambda _ev, rkey=rkey: del_key(rkey)):
+                        with ed.ButtonView(on_click=lambda _ev, rkey=rkey: del_key(rkey)):
                             ed.Label(text="Delete Key " + str(rkey))
 
 

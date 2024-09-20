@@ -49,11 +49,11 @@ def Main(self):
                     "height": 1 + play_count % 20,
                 },
             )
-            with ed.TableGridView() as tgv:
+            with ed.TableGridView():
                 for i in range(1 + play_count % 4):
-                    with tgv.row():
+                    with ed.TableGridRow():
                         ed.Label("tgv " + str(i))
-                with tgv.row():
+                with ed.TableGridRow():
                     ed.Label("tgv 1")
             with ed.ButtonView():
                 ed.Label("ButtonView")
@@ -72,11 +72,11 @@ def Main(self):
                     "height": 1 + play_count % 20,
                 },
             )
-            with ed.TableGridView() as tgv:
+            with ed.TableGridView():
                 for i in range(1 + play_count % 4):
-                    with tgv.row():
+                    with ed.TableGridRow():
                         ed.Label("tgv " + str(i))
-                with tgv.row():
+                with ed.TableGridRow():
                     ed.Label("tgv 1")
             with ed.ButtonView():
                 ed.Label("ButtonView")

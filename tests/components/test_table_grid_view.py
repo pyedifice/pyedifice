@@ -1,6 +1,6 @@
 import unittest
 
-import edifice
+import edifice as ed
 
 from edifice.qt import QT_VERSION
 
@@ -15,16 +15,16 @@ if QtWidgets.QApplication.instance() is None:
 
 class FormTest(unittest.TestCase):
     def test_TableGridView_render(self):
-        @edifice.component
+        @ed.component
         def myComponent(self):
-            with edifice.TableGridView() as tgv:
-                with tgv.row():
-                    edifice.Label(text="row 0 column 0").set_key("k1")
-                    edifice.Label(text="row 0 column 1").set_key("k2")
-                with tgv.row():
-                    edifice.Label(text="row 1 column 0").set_key("k3")
-                    edifice.Label(text="row 1 column 1").set_key("k4")
+            with ed.TableGridView():
+                with ed.TableGridRow():
+                    ed.Label(text="row 0 column 0").set_key("k1")
+                    ed.Label(text="row 0 column 1").set_key("k2")
+                with ed.TableGridRow():
+                    ed.Label(text="row 1 column 0").set_key("k3")
+                    ed.Label(text="row 1 column 1").set_key("k4")
 
-        my_app = edifice.App(myComponent(), create_application=False)
+        my_app = ed.App(myComponent(), create_application=False)
         with my_app.start_loop() as loop:
             loop.call_later(0.1, my_app.stop)
