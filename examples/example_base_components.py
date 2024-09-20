@@ -85,7 +85,7 @@ def Main(self):
                         on_select=ddoptions3_set,
                         enable_mouse_scroll=False,
                     )
-        with ed.HBoxView(style={"margin": 10}):
+        with ed.HBoxView(style={"padding": 10}):
             ed.TextInputMultiline(
                 text=mltext,
                 on_change=mltext_set,

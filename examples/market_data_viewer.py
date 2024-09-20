@@ -68,7 +68,7 @@ def PriceLevel(self, price, size, side, last=False):
 def Book(self, book):
     sizes = book["sizes"]
     market_price = book["price"]
-    with ed.VBoxView(style={"margin": "10px", "padding": "0px", "width": 360}):
+    with ed.VBoxView(style={"padding": "10px", "width": 360}):
         for p in range(20, 0, -1):
             PriceLevel(price=p, size=sizes[p], side="bid" if p < market_price else "ask", last=(p == 1)).set_key(str(p))
 

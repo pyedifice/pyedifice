@@ -1140,32 +1140,8 @@ class QtWidgetElement(Element, tp.Generic[_T_widget]):
             # The "padding" style will not work, but we can fake it by
             # using QLayout.setContentsMargins().
             # https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QLayout.html#PySide6.QtWidgets.QLayout.setContentsMargins
-            #
-            # Also we keep the "margin" style for the QLayout because
-            # that's how PyEdifice has always worked and we don't want to
-            # break backwards compatibility for that yet.
             set_padding = False
             new_padding = [0, 0, 0, 0]
-            if "margin" in style:
-                new_padding = [int(_css_to_number(style["margin"]))] * 4
-                style.pop("margin")
-                set_padding = True
-            if "margin-left" in style:
-                new_padding[0] = int(_css_to_number(style["margin-left"]))
-                style.pop("margin-left")
-                set_padding = True
-            if "margin-right" in style:
-                new_padding[2] = int(_css_to_number(style["margin-right"]))
-                style.pop("margin-right")
-                set_padding = True
-            if "margin-top" in style:
-                new_padding[1] = int(_css_to_number(style["margin-top"]))
-                style.pop("margin-top")
-                set_padding = True
-            if "margin-bottom" in style:
-                new_padding[3] = int(_css_to_number(style["margin-bottom"]))
-                style.pop("margin-bottom")
-                set_padding = True
             if "padding" in style:
                 new_padding = [int(_css_to_number(style["padding"]))] * 4
                 style.pop("padding")
@@ -1187,7 +1163,6 @@ class QtWidgetElement(Element, tp.Generic[_T_widget]):
                 style.pop("padding-bottom")
                 set_padding = True
 
-            set_align = None
             if "align" in style:
                 if style["align"] == "left":
                     set_align = QtCore.Qt.AlignmentFlag.AlignLeft
@@ -1202,8 +1177,9 @@ class QtWidgetElement(Element, tp.Generic[_T_widget]):
                 elif style["align"] == "bottom":
                     set_align = QtCore.Qt.AlignmentFlag.AlignBottom
                 else:
-                    logger.warning("Unknown alignment: %s", style["align"])
+                    raise ValueError(f"Unknown style align: {style['align']}")
                 style.pop("align")
+                commands.append(CommandType(underlying_layout.setAlignment, set_align))
 
             if set_padding:
                 commands.append(
@@ -1215,8 +1191,6 @@ class QtWidgetElement(Element, tp.Generic[_T_widget]):
                         new_padding[3],
                     ),
                 )
-            if set_align:
-                commands.append(CommandType(underlying_layout.setAlignment, set_align))
         else:
             if "align" in style:
                 if style["align"] == "left":
@@ -1232,11 +1206,9 @@ class QtWidgetElement(Element, tp.Generic[_T_widget]):
                 elif style["align"] == "bottom":
                     set_align = "AlignBottom"
                 else:
-                    logger.warning("Unknown alignment: %s", style["align"])
-                    set_align = None
+                    raise ValueError(f"Unknown style align: {style['align']}")
                 style.pop("align")
-                if set_align is not None:
-                    style["qproperty-alignment"] = set_align
+                style["qproperty-alignment"] = set_align
 
         if "font-size" in style:
             font_size = _css_to_number(style["font-size"])

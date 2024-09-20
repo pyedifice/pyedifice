@@ -41,7 +41,7 @@ Widgets follow the
 - **font-weight**: A number indicating how bold the font should be.
 - **font-family**: Font family name.
 - **font-style**: Font style, i.e. :code:`"italic"`.
-- **background-color**: :code:`"rgba(r, g, b, a)"` or named colors.
+- **background-color**: :code:`"rgba(red, green, blue, alpha)"` range *0—255* or named colors like :code:`"red"`.
 - **margin**: Exterior margin in pixels.
 
   - **margin-left**, **margin-right**, **margin-top**, **margin-bottom**: Exterior margin in pixels.
@@ -83,18 +83,15 @@ Every Layout Base Element named :code:`View` has an underlying
 and follows slightly different rules than the
 `Qt Style Sheet Box Model <https://doc.qt.io/qtforpython-6/overviews/stylesheet-customizing.html#the-box-model>`_.
 
-Note especially that there is no :code:`margin` style for :code:`View` Layout
-Elements. (Currently we allow setting the :code:`padding` with the
-:code:`margin` keyword, but probably this will be deprecated in the future.)
+.. note::
+    There is no :code:`margin` style for Layout :code:`View` Elements.
 
-Also note that the padding of a :code:`View` includes the border, so
-if you want a *2px* border around the :code:`View` then you should also
-set at least *2px* of padding so that the content does not obscure the border.
+.. note::
+    The padding of a :code:`View` includes the border, so
+    if you want a *2px* border around the :code:`View` then you should also
+    set at least *2px* of padding so that the content does not obscure the border.
 
-- **background-color**: :code:`"rgba(r, g, b, a)"` or named colors.
-- **margin**: Alias for **padding**. Interior padding in pixels.
-
-  - **margin-left**, **margin-right**, **margin-top**, **margin-bottom**: Interior padding in pixels.
+- **background-color**: :code:`"rgba(red, green, blue, alpha)"` range *0—255* or named colors like :code:`"red"`.
 
 - **padding**: Interior padding in pixels.
 

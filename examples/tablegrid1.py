@@ -23,10 +23,10 @@ def myComponent(self):
 
     with ed.Window():
         with ed.VBoxView(style={"align": "top"}):
-            with ed.VBoxView(style={"margin": 10}):
+            with ed.VBoxView(style={"padding": 10}):
                 with ed.ButtonView(
                     on_click=lambda _ev: add_key(),
-                    style={"width": 100, "height": 30, "margin": 10},
+                    style={"width": 100, "height": 30, "padding": 10},
                 ):
                     ed.Label(text="Add Row")
 

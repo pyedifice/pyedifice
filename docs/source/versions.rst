@@ -9,21 +9,22 @@ Release Notes
 * New Element :class:`TableGridRow`.
 * :class:`TableGridView` props type change from :code:`list` to :code:`tuple`.
 * :class:`Label` delete prop :code:`editable`.
-* Delete depprecated :code:`View` and :code:`ScrollView`.
+* Delete deprecated :code:`View` and :code:`ScrollView`.
+* Delete deprecated :code:`"margin"` alias for :code:`"padding"` in Views.
 
 .. code-block:: python
     :caption: Old TableGridView API
 
     with TableGridView() as tgv:
         with tgv.row():
-            Label("row 1")
+            Label("row")
 
 .. code-block:: python
     :caption: New TableGridView API
 
     with TableGridView():
         with TableGridRow():
-            Label("row 1")
+            Label("row")
 
 v1.5.0
 ------

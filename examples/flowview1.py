@@ -16,8 +16,8 @@ def Main(self):
         ):
             with ed.FlowView():
                 for i in range(100):
-                    with ed.VBoxView(style={"margin": 5}):
-                        with ed.ButtonView(style={"margin": 5}):
+                    with ed.VBoxView(style={"padding": 5}):
+                        with ed.ButtonView(style={"padding": 5}):
                             ed.Label(
                                 text="<div style='font-size:20px'>Label " + chr(ord("🦄") + i) + "</>",
                                 style={"margin": 5},

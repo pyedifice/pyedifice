@@ -146,7 +146,7 @@ def PlotDescriptor(self, plot: dict[str, tp.Any], plot_change: tp.Callable[[dict
         plot_["color"] = plot_colors[color_index]
         plot_change(plot_)
 
-    with HBoxView(style={"margin": 5, "align": "left"}):
+    with HBoxView(style={"padding": 5, "align": "left"}):
         with VBoxView(style={"align": "top", "width": 400}):
             AxisDescriptor("x-axis", "xaxis", plot, plot_change)
             AxisDescriptor("y-axis", "yaxis", plot, plot_change)
@@ -211,7 +211,7 @@ def App(self):
             elif plot_type == "scatter":
                 ax.scatter(d.xdata, d.ydata, color=color)
 
-    with VBoxView(style={"margin": 10, "align": "top"}):
+    with VBoxView(style={"padding": 10, "align": "top"}):
         with VBoxView():
             for key, plot in plots.items():
 

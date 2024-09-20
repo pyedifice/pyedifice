@@ -87,13 +87,13 @@ def Oscillator(self):
         plot_fun_set((lambda figure: plot(figure),))
 
     with ed.HBoxView():
-        with ed.VBoxView(style={"margin": 10}):
+        with ed.VBoxView(style={"padding": 10}):
             with ed.HBoxView():
                 ed.IconButton("pause" if is_playing else "play", on_click=lambda _: is_playing_set(lambda p: not p))
                 ed.Button("Reset", on_click=lambda _: simulation_time_set(0))
             with ed.VBoxView():
                 PyQtPlot(plot_fun=plot_fun[0])
-            with ed.HBoxView(style={"margin": 10}):
+            with ed.HBoxView(style={"padding": 10}):
                 ed.Label("Angular Frequency")
                 ed.Slider(
                     value=int(angular_frequency * 20.0),

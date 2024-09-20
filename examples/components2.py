@@ -18,10 +18,10 @@ def Main(self):
 
     with Window():
         with VBoxView():
-            with VBoxView(style={"margin": 30}):
+            with VBoxView(style={"padding": 30}):
                 with ButtonView(
                     on_click=lambda _event: None,
-                    style={"margin": 10},
+                    style={"padding": 10},
                 ):
                     Icon(name="share", style={"margin": 10})
                     Label(text="<i>Share the Content<i>")

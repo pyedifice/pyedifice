@@ -43,7 +43,7 @@ def Component(self):
             style={
                 "width": "200px",
                 "height": "50px",
-                "margin": "10px",
+                "padding": "10px",
             },
         ):
             ed.Label("Increment x_min")

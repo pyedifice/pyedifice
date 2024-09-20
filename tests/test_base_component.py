@@ -66,13 +66,13 @@ class StyleTestCase(unittest.TestCase):
             setAlignment = "setAlignment"
 
         style = {
-            "margin-left": "10px",
-            "margin": 5,
+            "padding-left": "10px",
+            "padding": 5,
         }
         layout = Layout()
         comp = MockElement(style=style)
         commands = comp._gen_styling_commands(style, comp.underlying, layout)
-        self.assertTrue("margin" not in style)
+        self.assertTrue("padding" not in style)
         self.assertCountEqual(
             commands,
             [
@@ -82,15 +82,15 @@ class StyleTestCase(unittest.TestCase):
         )
 
         style = {
-            "margin-left": "10px",
-            "margin-right": 8,
-            "margin-top": 9.0,
-            "margin-bottom": "9.0",
+            "padding-left": "10px",
+            "padding-right": 8,
+            "padding-top": 9.0,
+            "padding-bottom": "9.0",
         }
         layout = Layout()
         comp = MockElement(style=style)
         commands = comp._gen_styling_commands(style, comp.underlying, layout)
-        self.assertTrue("margin" not in style)
+        self.assertTrue("padding" not in style)
         self.assertCountEqual(
             commands,
             [
