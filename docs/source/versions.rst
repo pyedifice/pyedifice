@@ -4,6 +4,13 @@
 Release Notes
 =============
 
+v1.5.0
+------
+Released: 2024-09-20
+
+* New Base Element :class:`WindowPopView`.
+
+
 v1.4.0
 ------
 Released: 2024-09-13
