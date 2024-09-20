@@ -9,6 +9,7 @@ Release Notes
 * New Element :class:`TableGridRow`.
 * :class:`TableGridView` props type change from :code:`list` to :code:`tuple`.
 * :class:`Label` delete prop :code:`editable`.
+* Delete depprecated :code:`View` and :code:`ScrollView`.
 
 .. code-block:: python
     :caption: Old TableGridView API

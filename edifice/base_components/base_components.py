@@ -5,9 +5,6 @@ import importlib.resources
 import logging
 import re
 import typing as tp
-import warnings
-
-from typing_extensions import deprecated
 
 import edifice.icons
 from edifice.engine import (
@@ -1304,23 +1301,6 @@ class FixView(_LinearView[QtWidgets.QWidget]):
         return super()._qt_update_commands_super(widget_trees, newprops, self.underlying)
 
 
-@deprecated("Instead of View use VBoxView, HBoxView, or FixView")
-def View(
-    layout: tp.Literal["row", "column", "none"] = "column",
-    **kwargs,
-):
-    match layout:
-        case "column":
-            warnings.warn('Use VBoxView instead of View(layout="column")', DeprecationWarning)
-            return VBoxView(**kwargs)
-        case "row":
-            warnings.warn('Use HBoxView instead of View(layout="row")', DeprecationWarning)
-            return HBoxView(**kwargs)
-        case "none":
-            warnings.warn('Use FixView instead of View(layout="none")', DeprecationWarning)
-            return FixView(**kwargs)
-
-
 class Window(VBoxView):
     """
     The root :class:`View` element of an :class:`App` which runs in an
@@ -1765,23 +1745,6 @@ class FixScrollView(_LinearView[QtWidgets.QScrollArea]):
             super()._qt_update_commands_super(widget_trees, newprops, self.underlying),
         )
         return commands
-
-
-@deprecated("Instead of ScrollView use VScrollView, HScrollView, or FixScrollView")
-def ScrollView(
-    layout: tp.Literal["row", "column", "none"] = "column",
-    **kwargs,
-):
-    match layout:
-        case "column":
-            warnings.warn('Use VScrollView instead of ScrollView(layout="column")', DeprecationWarning)
-            return VScrollView(**kwargs)
-        case "row":
-            warnings.warn('Use HScrollView instead of ScrollView(layout="row")', DeprecationWarning)
-            return HScrollView(**kwargs)
-        case "none":
-            warnings.warn('Use FixScrollView instead of ScrollView(layout="none")', DeprecationWarning)
-            return FixScrollView(**kwargs)
 
 
 def npones(num_rows, num_cols):
