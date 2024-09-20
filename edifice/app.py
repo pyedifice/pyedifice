@@ -74,6 +74,10 @@ class _RateLimitedLogger:
 class App:
     """The main application object.
 
+    The :class:`App` provides the rendering engine that’s responsible
+    for issuing the commands necessary to render each
+    :class:`Element` as Qt Widgets.
+
     Start
     -----
 
@@ -103,6 +107,7 @@ class App:
 
         from PySide6.QtWidgets import QApplication
         from PySide6.QtGui import QFont
+        from edifice import App, Window, Label, component, use_state
 
         @component
         def Main(self):

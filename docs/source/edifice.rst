@@ -72,17 +72,7 @@ In HTML/XML/JSX, this would be written as:
 
 You describe your entire application as a single root Element,
 which has child Elements representing different parts of your application.
-Each Element is responsible for managing its own state,
-
-An :class:`App` provides the rendering engine that's responsible
-for issuing the commands necessary to render the each of the declared Elements.
-The :class:`App` object is created by passing in the root :class:`Element`,
-and it tracks all state changes in the Element tree with the given root.
-Calling the :func:`App.start` method on the App object will run your application
-and display the GUI you created::
-
-    if __name__ == "__main__":
-        App(MyApp()).start()
+Each Element is responsible for managing its own state.
 
 
 Model-View-Update
@@ -90,20 +80,23 @@ Model-View-Update
 
 Edifice, like React, uses the `Elm Architecture <https://guide.elm-lang.org/architecture/>`_,
 also known as Model-View-Update.
-This means that there is a one-way information flow from Model to View to
+This means that there is a *one-way information flow* from Model to View to
 Update and then back to Model.
 
-====== =======
-Model  The **state** of the application declared with :func:`use_state`.
-View   The :func:`@component <component>` render function takes the **state** and renders an Element tree.
-Update Event handlers which change the **state**.
-====== =======
+========== =======
+**Model**  The **state** of the application declared with :func:`use_state`.
+**View**   The :func:`@component <component>` render function takes the **state** and renders an Element tree of Qt Widgets.
+**Update** Qt Widget event handlers which change the **state**.
+========== =======
 
 .. figure:: /image/model-view-update.svg
     :width: 600
 
-It is the one-way information flow of Model-View-Update which makes
-this style of GUI programming scale up well to complicated user interfaces.
+It is the *one-way information flow* of Model-View-Update which
+differentiates it from Model-View-Controller, and which makes the
+Model-View-Update style
+of GUI programming scale up well to complicated user interfaces
+while remaining well-organized and bug-free.
 
 Compare this to the
 `Models and Views in Qt Quick <https://doc.qt.io/qtforpython-6/overviews/qtquick-modelviewsdata-modelview.html>`_
