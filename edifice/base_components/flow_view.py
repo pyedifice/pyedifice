@@ -136,8 +136,10 @@ class FlowLayout(QLayout):
 
 class FlowView(_LinearView[QWidget]):
     """
-    Flow-style layout widget. Displays its children in a row which wraps onto
-    multiple lines.
+    Flow-style layout widget. Displays its children horizonally left-to-right
+    and wraps into multiple rows.
+
+    The height of each row is determined by the tallest child in that row.
 
     This component has similar behavior to an `HTML CSS
     wrap flex container <https://developer.mozilla.org/en-US/docs/Web/CSS/flex-wrap>`_.
