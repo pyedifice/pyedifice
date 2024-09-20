@@ -459,24 +459,28 @@ class Label(QtWidgetElement[QtWidgets.QLabel]):
     * Underlying Qt Widget
       `QLabel <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QLabel.html>`_
 
+    Render rich text with the
+    `Qt supported HTML subset <https://doc.qt.io/qtforpython-6/overviews/richtext-html-subset.html>`_.
+
     .. figure:: /image/label.png
        :width: 500
 
+    .. note::
+        The combination of rich text and :code:`word_wrap` can sometimes cause
+        `Qt Layout Issues <https://doc.qt.io/qtforpython-6/overviews/layout.html#layout-issues>`_.
+
     Args:
-        text: The text to display. You can render rich text with the
-            `Qt supported HTML subset <https://doc.qt.io/qtforpython-6/overviews/richtext-html-subset.html>`_.
+        text: The text to display.
         word_wrap: Enable/disable word wrapping.
         link_open: Whether hyperlinks will open to the operating system. Defaults to False.
             `PySide6.QtWidgets.QLabel.setOpenExternalLinks <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QLabel.html#PySide6.QtWidgets.QLabel.setOpenExternalLinks>`_
         selectable: Whether the content of the label can be selected. Defaults to False.
-        editable: Whether the content of the label can be edited. Defaults to False.
     """
 
     def __init__(
         self,
         text: str = "",
         selectable: bool = False,
-        editable: bool = False,
         word_wrap: bool = True,
         link_open: bool = False,
         **kwargs,
@@ -486,7 +490,6 @@ class Label(QtWidgetElement[QtWidgets.QLabel]):
             {
                 "text": text,
                 "selectable": selectable,
-                "editable": editable,
                 "word_wrap": word_wrap,
                 "link_open": link_open,
             },
@@ -516,32 +519,24 @@ class Label(QtWidgetElement[QtWidgets.QLabel]):
         widget = tp.cast(QtWidgets.QLabel, self.underlying)
         commands = super()._qt_update_commands_super(widget_trees, newprops, self.underlying, None)
         if "text" in newprops:
-            commands.append(CommandType(widget.setText, newprops["text"]))
+            commands.append(CommandType(widget.setText, newprops.text))
         if "word_wrap" in newprops:
-            commands.append(CommandType(widget.setWordWrap, newprops["word_wrap"]))
+            commands.append(CommandType(widget.setWordWrap, newprops.word_wrap))
         if "link_open" in newprops:
-            commands.append(CommandType(widget.setOpenExternalLinks, newprops["link_open"]))
-        if "selectable" in newprops or "editable" in newprops:
-            interaction_flags = 0
-            change_cursor = False
+            commands.append(CommandType(widget.setOpenExternalLinks, newprops.link_open))
+        if "selectable" in newprops:
             if self.props.selectable:
-                change_cursor = True
                 interaction_flags = (
                     QtCore.Qt.TextInteractionFlag.TextSelectableByMouse
                     | QtCore.Qt.TextInteractionFlag.TextSelectableByKeyboard
                 )
-            if self.props.editable:
-                change_cursor = True
-                # PyQt5 doesn't support bitwise or with ints
-                # TODO What about PyQt6?
-                if interaction_flags:
-                    interaction_flags |= QtCore.Qt.TextInteractionFlag.TextEditable
-                else:
-                    interaction_flags = QtCore.Qt.TextInteractionFlag.TextEditable
-            if change_cursor and self.props.cursor is None:
-                commands.append(CommandType(widget.setCursor, _CURSORS["text"]))
-            if interaction_flags:
                 commands.append(CommandType(widget.setTextInteractionFlags, interaction_flags))
+                if "cursor" not in self.props or self.props.cursor is None:
+                    commands.append(CommandType(widget.setCursor, _CURSORS["text"]))
+            else:
+                if "cursor" not in self.props or self.props.cursor is None:
+                    commands.append(CommandType(widget.setCursor, _CURSORS["default"]))
+
         return commands
 
 

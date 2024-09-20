@@ -30,27 +30,36 @@ def Main(self):
         with ed.TableGridView(style={"padding": 10}) as tgv:
             with tgv.row():
                 ed.Label("Label")
-                ed.Label(
-                    text="""<h1>Heading 1</h1>
-                        <h2>Heading 2</h2>
-                        <h3>Heading 3</h3>
-                        <p>Normal<p>
-                        <a href='https://pyedifice.github.io'>https://pyedifice.github.io</a>
-                        """,
-                    link_open=True,
-                    word_wrap=False,
-                )
-                ed.Label(
-                    text="""<h1>Heading 1</h1>
-                        <h2>Heading 2</h2>
-                        <h3>Heading 3</h3>
-                        <p>Normal<p>
-                        <a href='https://pyedifice.github.io'>https://pyedifice.github.io</a>
-                        """,
-                    link_open=True,
-                    word_wrap=False,
-                    enabled=False,
-                )
+                with ed.VBoxView():
+                    ed.Label(
+                        text="""<h1>Heading 1</h1>
+                            <h2>Heading 2</h2>
+                            <h3>Heading 3</h3>
+                            <p>Normal</p>""",
+                        word_wrap=False,
+                        selectable=True,
+                    )
+                    ed.Label(
+                        text="""<a href='https://pyedifice.github.io'>https://pyedifice.github.io</a>""",
+                        link_open=True,
+                        word_wrap=False,
+                    )
+                with ed.VBoxView():
+                    ed.Label(
+                        text="""<h1>Heading 1</h1>
+                            <h2>Heading 2</h2>
+                            <h3>Heading 3</h3>
+                            <p>Normal</p>""",
+                        word_wrap=False,
+                        selectable=True,
+                        enabled=False,
+                    )
+                    ed.Label(
+                        text="""<a href='https://pyedifice.github.io'>https://pyedifice.github.io</a>""",
+                        link_open=True,
+                        word_wrap=False,
+                        enabled=False,
+                    )
             with tgv.row():
                 ed.Label("Icon")
                 ed.Icon("home", size=20)
