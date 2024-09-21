@@ -133,21 +133,20 @@ Style Merging
 -------------
 
 If you want to make all :class:`Labels <edifice.Label>` be *red* but have labels of different
-font sizes, you can create a common style object encoding shared styles::
+font sizes, you can create a common style dict for shared styles…
+
+.. code-block:: python
 
     LABEL_STYLE = {
         "color": "red"
         "font-size": 12,  # Default font size
         "background-color": "rgba(245, 245, 220, 100)",
     }
-    ...
-    with VBoxView():
-        Label("foo", style=[LABEL_STYLE, {"font-size": 16}])
-        Label("foo", style=LABEL_STYLE)
-        Label("foo", style=[LABEL_STYLE, {"font-size": 8}])
 
-You can also accomplish the same style merging with the Python dictionary
-merge operator::
+…and adjust the common style dict with :code:`|`, the
+`Python dictionary merge operator <https://docs.python.org/3/library/stdtypes.html#mapping-types-dict>`_.
+
+.. code-block:: python
 
     with VBoxView():
         Label("foo", style=LABEL_STYLE | {"font-size": 16})

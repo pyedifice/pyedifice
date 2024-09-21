@@ -28,9 +28,6 @@ logger = logging.getLogger("Edifice")
 
 P = tp.ParamSpec("P")
 
-StyleType = tp.Optional[tp.Union[tp.Mapping[str, tp.Any], tp.Sequence[tp.Mapping[str, tp.Any]]]]
-
-
 def _dict_to_style(d, prefix="QWidget"):
     d = d or {}
     stylesheet = prefix + "{%s}" % (";".join("%s: %s" % (k, v) for (k, v) in d.items()))
@@ -854,7 +851,7 @@ class QtWidgetElement(Element, tp.Generic[_T_widget]):
 
     def __init__(
         self,
-        style: StyleType = None,
+        style: tp.Mapping[str, tp.Any] | None = None,
         tool_tip: str | None = None,
         cursor: str | None = None,
         context_menu: ContextMenuType | None = None,
@@ -1290,15 +1287,7 @@ class QtWidgetElement(Element, tp.Generic[_T_widget]):
         commands: list[CommandType] = []
         for prop in newprops:
             if prop == "style":
-                style = newprops[prop] or {}
-                if isinstance(style, list):
-                    # style is nonempty since otherwise the or statement would make it a dict
-                    first_style = style[0].copy()
-                    for next_style in style[1:]:
-                        first_style.update(next_style)
-                    style = first_style
-                else:
-                    style = dict(style)
+                style = newprops.style or {}
                 commands.extend(self._gen_styling_commands(style, underlying, underlying_layout))
             elif prop == "size_policy":
                 if newprops.size_policy is not None:
