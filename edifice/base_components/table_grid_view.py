@@ -56,7 +56,7 @@ class TableGridView(QtWidgetElement[QWidget]):
     Each :class:`TableGridRow` establishes a row in the table, and may have
     children of any type of :class:`Element`.
 
-    Example::
+    .. code-block:: python
 
         with TableGridView():
             with TableGridRow():
@@ -66,6 +66,9 @@ class TableGridView(QtWidgetElement[QWidget]):
                 Label(text="row 1 column 0")
                 with VBoxView():
                     Label(text="row 1 column 1")
+
+    If the :class:`TableGridRow` s are added and removed dynamically then
+    it’s a good idea to :func:`Element.set_key` each row.
 
     Args:
         row_stretch:
