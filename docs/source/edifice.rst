@@ -110,12 +110,10 @@ Rendering
 
 Conceptually, Edifice (and React) works like this: Every time there is a
 change (Update) to the **state** (Model), the render function (View) is
-called and it renders the entire Element tree of Qt Widgets from scratch.
+called and it renders the entire :class:`Element` tree of Qt Widgets from scratch.
 
-That sounds expensive and slow, and it would be if it weren't for the diffing
-algorithm.
-The diffing algorithm compares the new Element tree with the old Element tree
-and makes minimal changes to the Qt Widgets.
+That sounds expensive and slow, and it would be if it weren't for
+the diffing algorithm.
 
 The diffing algorithm
 ---------------------
@@ -137,21 +135,29 @@ If a new Element is the same class as the old Element, they are assumed to
 be the same and the old Element will be updated with new **props** and the same
 **state**.
 
+If the **props** and **state** of an Element are the same as the previous
+render, then the Element from the previous render will be re-used and not
+rendered.
+
 When a parent Element has many peer child Elements of the same class,
-a more complex procedure (the same as in ReactJS)
+a more complex procedure (the same as in React)
 will determine which Elements to maintain and which to replace.
 
 When comparing the child Elements, the Element’s
 :code:`_key` attribute will
 be compared. Elements with the same :code:`_key` and same class are assumed to be
-the same. You can set the key using the :func:`Element.set_key` method::
+the same. You can set the key using the :func:`Element.set_key` method.
+
+.. code-block:: python
 
     with HBoxView():
-        MyElement("Hello").set_key("hello")
-        MyElement("World").set_key("world")
+        if some_condition:
+            MyElement("Hello").set_key("hello")
+        if other_condition:
+            MyElement("World").set_key("world")
 
 If the :code:`_key` is not provided, the diffing algorithm will guess which
-Elements to maintain based on the order of the children.
+child Elements are identical based on the order of the children.
 
 Whenever a parent has many children which are added and removed,
 it is recommended to use :func:`Element.set_key`

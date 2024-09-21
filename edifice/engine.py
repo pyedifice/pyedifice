@@ -414,28 +414,36 @@ class Element:
         self._props.update(props)
 
     def set_key(self: Self, key: str | None) -> Self:
-        """Sets the key of the Element.
+        """Set the key of an :class:`Element`.
 
-        The key is used by the re-rendering logic to match a new list of Elements
-        with an existing list of Elements.
-        The algorithm will assume that Elements with the same key are logically the same.
-        If the key is not provided, the list index will be used as the key;
-        however, providing the key may provide more accurate results, leading to efficiency gains.
+        The key is used when re-rendering to match new child Elements
+        with old child Elements.
+        The diffing algorithm will assume that child Elements with the same key
+        are identical.
+
+        Each key must be unique and persistent. The **Edifice Rules
+        of Keys** are the same as the
+        `React Rules of Keys <https://react.dev/learn/rendering-lists#rules-of-keys>`_.
+
+        - **Keys must be unique among siblings.** However, it’s okay to use the same keys for Elements of different parents.
+        - **Keys must not change** or that defeats their purpose! Don’t generate them while rendering.
 
         Returns the Element to allow for chaining.
 
         Example::
 
-            # inside a render call
             with VBoxView():
-                Label("Hello").set_key("en")
-                Label("Bonjour").set_key("fr")
-                Label("Hola").set_key("es")
+                if english:
+                    Label("Hello").set_key("en")
+                if french:
+                    Label("Bonjour").set_key("fr")
+                if spanish:
+                    Label("Hola").set_key("es")
 
         Args:
-            key: The key to label the Element with.
+            key: The Element unique key string.
         Returns:
-            The Element itself.
+            The Element.
         """
         self._key = key
         return self
