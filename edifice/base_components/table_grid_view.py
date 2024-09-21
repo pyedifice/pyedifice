@@ -58,7 +58,7 @@ class TableGridView(QtWidgetElement[QWidget]):
 
     Example::
 
-        with TableGridView() as tgv:
+        with TableGridView():
             with TableGridRow():
                 Label(text="row 0 column 0")
                 Label(text="row 0 column 1")
