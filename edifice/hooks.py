@@ -193,7 +193,7 @@ def use_effect(
     then the new **setup function** is called.
 
     If the dependencies are :code:`None`, then the new effect
-    **setup function** will always be called.
+    **setup function** will always be called on every render.
 
     If you want to call the **setup function** only once, then pass an empty
     tuple :code:`()` as the dependencies.
@@ -205,6 +205,9 @@ def use_effect(
 
     The **setup function** can return :code:`None` if there is no
     **cleanup function**.
+
+    The **setup function** and **cleanup function** can call the setter of
+    a :func:`use_state` Hook to update the application state.
 
     .. code-block:: python
         :caption: use_effect to attach and remove an event handler
