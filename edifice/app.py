@@ -477,4 +477,5 @@ def use_stop() -> tp.Callable[[], None]:
     """
     render_context = get_render_context_maybe()
     assert render_context is not None
+    assert render_context.engine._app is not None
     return render_context.engine._app.stop

@@ -1526,7 +1526,7 @@ class RenderEngine:
         "is_stopped",
     )
 
-    def __init__(self, root: Element, app: AppProtocol):
+    def __init__(self, root: Element, app: AppProtocol | None = None):
         self._component_tree: dict[Element, list[Element]] = {}
         """
         The _component_tree maps an Element to its children.
@@ -1536,7 +1536,7 @@ class RenderEngine:
         Map of an Element to its rendered widget tree.
         """
         self._root = root
-        self._app: AppProtocol = app
+        self._app: AppProtocol | None = app
 
         self._hook_state: defaultdict[Element, list[_HookState]] = defaultdict(list)
         """
