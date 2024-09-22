@@ -24,9 +24,9 @@ else:
 
 from qasync import QEventLoop
 
-from .base_components import ExportList, Window
-from .engine import Element, QtWidgetElement, RenderEngine
-from .inspector import inspector as inspector_module
+from edifice.base_components import ExportList, Window
+from edifice.engine import Element, QtWidgetElement, RenderEngine, get_render_context_maybe
+from edifice.inspector import inspector as inspector_module
 
 logger = _logger_module.logger
 
@@ -456,5 +456,25 @@ class App:
     def stop(self) -> None:
         """
         Stop the application.
+
+        See :func:`use_stop` for a way to stop the :class:`App` from within a
+        :func:`@component<component>`.
         """
         self._app_close_event.set()
+
+
+def use_stop() -> tp.Callable[[], None]:
+    """
+    This Hook returns a function which will stop the application by calling
+    :func:`App.stop`.
+
+    .. code-block:: python
+
+        stop = use_stop()
+
+        Button("Exit", on_click=lambda _: stop())
+
+    """
+    render_context = get_render_context_maybe()
+    assert render_context is not None
+    return render_context.engine._app.stop

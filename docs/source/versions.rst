@@ -13,6 +13,7 @@ Release Notes
 * Delete deprecated :code:`"margin"` alias for :code:`"padding"` in Views.
 * Remove :code:`style` prop :code:`Sequence` type. (:code:`style` must be a :code:`dict`, not a :code:`list[dict]`.)
 * Dependency :code:`PySide6-Essentials` tested.
+* New Hook :func:`use_stop`.
 
 .. code-block:: python
     :caption: Old TableGridView API

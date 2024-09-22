@@ -237,13 +237,13 @@ class Reference(tp.Generic[_T_Element]):
 T = tp.TypeVar("T")
 
 
-class ControllerProtocol(tp.Protocol):
+class AppProtocol(tp.Protocol):
     """Protocol for App"""
 
     def _request_rerender(self, components: Iterable[Element], kwargs: dict[str, tp.Any]):
         pass
 
-    def _defer_rerender(self, components: list[Element]):
+    def _defer_rerender(self, element: Element):
         pass
 
     def stop(self):
@@ -366,7 +366,7 @@ class Element:
 
     _render_changes_context: dict | None = None
     _render_unwind_context: dict | None = None
-    _controller: ControllerProtocol | None = None
+    _controller: AppProtocol | None = None
     _edifice_internal_references: set[Reference[Self]] | None = None
 
     def __init__(self):
@@ -1509,7 +1509,7 @@ def elements_match(a: Element, b: Element) -> bool:
     return (a.__class__ == b.__class__) and (a.__class__.__name__ == b.__class__.__name__) and (a._key == b._key)
 
 
-class RenderEngine(object):
+class RenderEngine:
     """
     One RenderEngine instance persists across the life of the App.
     """
@@ -1526,7 +1526,7 @@ class RenderEngine(object):
         "is_stopped",
     )
 
-    def __init__(self, root: Element, app=None):
+    def __init__(self, root: Element, app: AppProtocol):
         self._component_tree: dict[Element, list[Element]] = {}
         """
         The _component_tree maps an Element to its children.
@@ -1536,7 +1536,7 @@ class RenderEngine(object):
         Map of an Element to its rendered widget tree.
         """
         self._root = root
-        self._app = app
+        self._app: AppProtocol = app
 
         self._hook_state: defaultdict[Element, list[_HookState]] = defaultdict(list)
         """

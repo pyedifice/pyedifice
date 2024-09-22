@@ -1,6 +1,6 @@
 
 from .engine import Element, QtWidgetElement, Reference, child_place, component, qt_component
-from .app import App
+from .app import App, use_stop
 from .hooks import use_async, use_async_call, use_effect, use_effect_final, use_hover, use_ref, use_state
 from .utilities import alert, file_dialog, set_trace
 from .base_components import (
@@ -84,4 +84,5 @@ __all__ = [
     "use_ref",
     "use_state",
     "use_hover",
+    "use_stop",
 ]

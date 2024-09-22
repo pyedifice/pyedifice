@@ -4,7 +4,7 @@
 
 import asyncio
 
-from edifice import App, Button, Label, VBoxView, Window, component, use_state
+from edifice import App, Button, Label, VBoxView, Window, component, use_state, use_stop
 
 
 @component
@@ -25,6 +25,7 @@ def UseState1(self):
 def TestComp(self):
     print("TestComp instance " + str(id(self)))
     x, x_setter = use_state(0)
+    stop = use_stop()
 
     async def handle_click(_):
         x_setter(x + 1)
@@ -36,11 +37,10 @@ def TestComp(self):
     with VBoxView(style={"align": "top"}):
         Button(title="State " + str(x) + " + 1", on_click=handle_click)
         Button(title="State " + str(x) + " + 10", on_click=click10)
-        Button(title="Exit", on_click=lambda _ev: asyncio.get_event_loop().call_soon(my_app.stop))
+        Button(title="Exit", on_click=lambda _ev: stop())
         for i in range(x):
             Label(text=str(i))
 
 
 if __name__ == "__main__":
-    my_app = App(UseState1())
-    my_app.start()
+    App(UseState1()).start()

@@ -35,7 +35,6 @@ Base Hooks
    use_state
    use_effect
    use_async
-   use_ref
 
 Derived Hooks
 -------------
@@ -49,9 +48,11 @@ These Derived Hooks are provided by Edifice.
    :recursive:
    :template: custom-class.rst
 
+   use_ref
    use_effect_final
    use_async_call
    use_hover
+   use_stop
 
 Custom Hooks
 ------------
