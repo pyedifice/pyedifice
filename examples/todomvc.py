@@ -199,7 +199,7 @@ def TodoMVC(self):
                         "border-top-width": "2px",
                         "border-top-style": "solid",
                         "border-top-color": "rgba(0,0,0,50)",
-                        "margin-top": 10,
+                        "padding-top": 10,
                     },
                 ):
                     Label(
@@ -207,7 +207,7 @@ def TodoMVC(self):
                         word_wrap=False,
                         style={"margin-right": 10},
                     )
-                    with HBoxView(style={"margin-left": 10}):
+                    with HBoxView(style={"padding-left": 10}):
                         RadioButton(
                             checked=item_filter == "All",
                             text="All",
@@ -226,7 +226,7 @@ def TodoMVC(self):
                             on_click=lambda _ev: item_filter_set("Completed"),
                             style={} if item_filter == "Completed" else {"color": "grey"},
                         )
-                    with VBoxView(style={"min-width": 180, "margin-left": 10, "align": "right"}):
+                    with VBoxView(style={"min-width": 180, "padding-left": 10, "align": "right"}):
                         if len(todos) > items_left:
                             Button(
                                 title="Clear completed (" + str(len(todos) - items_left) + ")",
