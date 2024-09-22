@@ -4,6 +4,9 @@
 Release Notes
 =============
 
+v2.0.0
+------
+Released: 2024-09-22
 
 * Delete method :class:`TableGridView` :code:`row()`.
 * New Element :class:`TableGridRow`.
