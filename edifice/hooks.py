@@ -442,13 +442,6 @@ def use_async_call(
 T = TypeVar("T")
 
 
-def use_singleton(constructor: Callable[[], T]) -> T:
-    internal_mutable, _ = use_state(cast(list[T], []))
-    if len(internal_mutable) == 0:
-        internal_mutable.append(constructor())
-    return internal_mutable[0]
-
-
 def use_effect_final(
     cleanup: Callable[[], None],
     dependencies: Any = (),
