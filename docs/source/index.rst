@@ -29,7 +29,7 @@ Getting Started
 .. code-block:: shell
     :caption: Installation from `pypi.org/project/pyedifice <https://pypi.org/project/pyedifice/>`_
 
-    pip install PySide6
+    pip install PySide6-Essentials
     pip install pyedifice
 
 .. code-block:: python

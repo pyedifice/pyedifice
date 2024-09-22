@@ -1380,41 +1380,6 @@ files = [
 numpy = ">=1.20.0"
 
 [[package]]
-name = "pyside6"
-version = "6.6.2"
-description = "Python bindings for the Qt cross-platform application and UI framework"
-optional = false
-python-versions = "<3.13,>=3.8"
-files = [
-    {file = "PySide6-6.6.2-cp38-abi3-macosx_11_0_universal2.whl", hash = "sha256:5bdaa27d1a921c35764d82a2ec86943488c818cb33b9e16b2784d539b45f6171"},
-    {file = "PySide6-6.6.2-cp38-abi3-manylinux_2_28_x86_64.whl", hash = "sha256:3b6266fb29bab66526f2bbab2a6610f9f47a4df42ae6fb3713cd8329f593a561"},
-    {file = "PySide6-6.6.2-cp38-abi3-manylinux_2_31_aarch64.whl", hash = "sha256:a8200b2a1f02e42adfd1f41bc60d52d157398778b6ba232d46ad7402bc6f91ec"},
-    {file = "PySide6-6.6.2-cp38-abi3-win_amd64.whl", hash = "sha256:e359ebccd3f90fba85ebd5b93bdeadfa9e5d2fd06b3b5e8985aa5da50ca6243b"},
-]
-
-[package.dependencies]
-PySide6-Addons = "6.6.2"
-PySide6-Essentials = "6.6.2"
-shiboken6 = "6.6.2"
-
-[[package]]
-name = "pyside6-addons"
-version = "6.6.2"
-description = "Python bindings for the Qt cross-platform application and UI framework (Addons)"
-optional = false
-python-versions = "<3.13,>=3.8"
-files = [
-    {file = "PySide6_Addons-6.6.2-cp38-abi3-macosx_11_0_universal2.whl", hash = "sha256:4fb00bc98bc8335177eaa8f6d70ba687ab9bf00b3ee343abbc7156040f3e586d"},
-    {file = "PySide6_Addons-6.6.2-cp38-abi3-manylinux_2_28_x86_64.whl", hash = "sha256:cbdb7393de88a916ed1e9bd8407149f911717d1e06aee04119e26042679d8cce"},
-    {file = "PySide6_Addons-6.6.2-cp38-abi3-manylinux_2_31_aarch64.whl", hash = "sha256:90f20dcf2caf69307e20d3d682cbe2b1a38e7ddb1f50f4f0e3ae4306219f8883"},
-    {file = "PySide6_Addons-6.6.2-cp38-abi3-win_amd64.whl", hash = "sha256:748151fb49d5fe760b7cf6c88c4ec851e68d66a119939567407115948bf8a08f"},
-]
-
-[package.dependencies]
-PySide6-Essentials = "6.6.2"
-shiboken6 = "6.6.2"
-
-[[package]]
 name = "pyside6-essentials"
 version = "6.6.2"
 description = "Python bindings for the Qt cross-platform application and UI framework (Essentials)"
@@ -1913,4 +1878,4 @@ repair = ["scipy (>=1.6.3)"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10, <3.13"
-content-hash = "6cf533962cfb361950c49c23bd4d31ebe704768ece31d75b26cf454a537e1228"
+content-hash = "a74dc480f832ad68fb3b66f1e92cf0c68a9845ad6825001c05005276abca5d5c"

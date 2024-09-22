@@ -23,7 +23,7 @@ typing-extensions = ">=4.0.0"
 
 [tool.poetry.group.dev.dependencies]
 PyQt6 = ">= 6.0"
-PySide6 = ">= 6.0.0"
+PySide6-Essentials = ">= 6.0.0"
 
 matplotlib = ">= 3.3.3" # for https://pyedifice.github.io/stubs/edifice.extra.MatplotlibFigure.html
 pyqtgraph = ">= 0.13.0" # for https://pyedifice.github.io/stubs/edifice.extra.PyQtPlot.html
