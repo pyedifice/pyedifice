@@ -262,7 +262,7 @@ def Main(self):
 
     _, _ = ed.use_state(initializer)
 
-    with Window(title="todos"):
+    with Window(title="todos", _size_open=(520, 200)):
         TodoMVC()
 
 

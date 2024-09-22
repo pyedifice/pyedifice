@@ -130,7 +130,7 @@ def Main(self):
 
     _, _ = ed.use_state(initializer)
 
-    with ed.Window(title="Harmonic Oscillator"):
+    with ed.Window(title="Harmonic Oscillator", _size_open=(1, 500)):
         Oscillator()
 
 

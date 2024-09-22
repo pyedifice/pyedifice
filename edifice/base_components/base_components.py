@@ -1334,6 +1334,9 @@ class Window(VBoxView):
 
             The event handler function will be passed a
             `QCloseEvent <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QCloseEvent.html>`_.
+        _size_open:
+            This argument is not a **prop** and will not cause re-render when changed.
+            It will only be used once to set width and height of the window when it is opened.
     """
 
     def __init__(
@@ -1343,6 +1346,7 @@ class Window(VBoxView):
         menu=None,
         on_open: tp.Callable[[QtWidgets.QApplication], None] | None = None,
         on_close: tp.Callable[[QtGui.QCloseEvent], None | tp.Awaitable[None]] | None = None,
+        _size_open: tuple[int, int] | None = None,
         **kwargs,
     ):
         super().__init__(**kwargs)
@@ -1359,6 +1363,7 @@ class Window(VBoxView):
         self._on_close: tp.Callable[[QtGui.QCloseEvent], None | tp.Awaitable[None]] | None = None
 
         self._on_open = on_open
+        self._size_open = _size_open
 
     def _set_on_close(self, on_close):
         self._on_close = on_close
@@ -1394,6 +1399,8 @@ class Window(VBoxView):
             assert isinstance(self.underlying, QtWidgets.QWidget)
             self.underlying.closeEvent = self._handle_close
             self.underlying.show()
+            if self._size_open is not None:
+                self.underlying.resize(*self._size_open)
 
         commands: list[CommandType] = super()._qt_update_commands(widget_trees, newprops)
 
@@ -1466,6 +1473,9 @@ class WindowPopView(VBoxView):
 
             The event handler function will be passed a
             `QCloseEvent <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QCloseEvent.html>`_.
+        _size_open:
+            This argument is not a **prop** and will not cause re-render when changed.
+            It will only be used once to set width and height of the window when it is opened.
     """
 
     def __init__(
@@ -1473,6 +1483,7 @@ class WindowPopView(VBoxView):
         title: str = "",
         icon: str | QtGui.QImage | QtGui.QPixmap | None = None,
         on_close: tp.Callable[[QtGui.QCloseEvent], None | tp.Awaitable[None]] | None = None,
+        _size_open: tuple[int, int] | None = None,
         **kwargs,
     ):
         super().__init__(**kwargs)
@@ -1492,6 +1503,7 @@ class WindowPopView(VBoxView):
         The layout of this Element is set to this widget, and all Element
         children are children of this widget.
         """
+        self._size_open = _size_open
 
     def _set_on_close(self, on_close):
         self._on_close = on_close
@@ -1524,6 +1536,8 @@ class WindowPopView(VBoxView):
         self.underlying.destroyed.connect(self._handle_destroyed)
         self.underlying_noparent.closeEvent = self._handle_close
         self.underlying_noparent.show()
+        if self._size_open is not None:
+            self.underlying_noparent.resize(*self._size_open)
 
     def _qt_update_commands(
         self,

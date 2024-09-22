@@ -14,6 +14,7 @@ Release Notes
 * Remove :code:`style` prop :code:`Sequence` type. (:code:`style` must be a :code:`dict`, not a :code:`list[dict]`.)
 * Dependency :code:`PySide6-Essentials` tested.
 * New Hook :func:`use_stop`.
+* :class:`Window` :class:`WindowPopView` new arg :code:`_size_open`.
 
 .. code-block:: python
     :caption: Old TableGridView API
@@ -28,6 +29,7 @@ Release Notes
     with TableGridView():
         with TableGridRow():
             Label("row")
+
 
 v1.5.0
 ------

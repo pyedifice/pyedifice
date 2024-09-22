@@ -36,6 +36,7 @@ def Main(self):
             "background-color": "black",
             "padding": 20,
         },
+        _size_open=(400, 200),
     ):
         ed.CheckBox(
             checked=popshow,
@@ -50,6 +51,7 @@ def Main(self):
                     "background-color": "green",
                     "padding": 20,
                 },
+                _size_open=(400, 200),
             ):
                 ed.Label(
                     text="This is a Pop-up Window",
@@ -69,6 +71,7 @@ def Main(self):
                             "background-color": "blue",
                             "padding": 20,
                         },
+                        _size_open=(400, 200),
                     ):
                         ed.Label(
                             text="This is a Pop-up Window 2",
@@ -82,6 +85,7 @@ def Main(self):
                             "background-color": "blue",
                             "padding": 20,
                         },
+                        _size_open=(400, 200),
                     ):
                         ed.Label(
                             text="This is the second Pop-up Window 2",
