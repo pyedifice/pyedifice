@@ -1300,7 +1300,15 @@ class FixView(_LinearView[QtWidgets.QWidget]):
         assert self.underlying is not None
         return super()._qt_update_commands_super(widget_trees, newprops, self.underlying)
 
-
+def _window_state_string(state: QtCore.Qt.WindowState) -> tp.Literal["Normal", "Maximized", "Minimized", "FullScreen"]:
+    if state & QtCore.Qt.WindowState.WindowMaximized:
+        return "Maximized"
+    elif state & QtCore.Qt.WindowState.WindowMinimized:
+        return "Minimized"
+    elif state & QtCore.Qt.WindowState.WindowFullScreen:
+        return "FullScreen"
+    else:
+        return "Normal"
 class Window(VBoxView):
     """
     The root :class:`View` element of an :class:`App` which runs in an
@@ -1309,6 +1317,25 @@ class Window(VBoxView):
     The children of this :class:`Window` are the visible Elements of the
     :class:`App`. When this :class:`Window` closes, all of the children
     are unmounted and then the :class:`App` stops.
+
+    .. code-block:: python
+        :caption: Example Window with F11 Full Screen Toggle
+
+        @component
+        def Main(self):
+            full_screen, full_screen_set = use_state(False)
+
+            def handle_key_down(event: PySide6.QtGui.QKeyEvent):
+                if event.key() == PySide6.QtGui.Qt.Key.Key_F11:
+                    full_screen_set(not full_screen)
+
+            with Window(
+                title="Full Screen Example",
+                _size_open=(800, 600),
+                full_screen=full_screen,
+                on_key_down=handle_key_down,
+            ):
+                Label("Press F11 to toggle full screen mode")
 
     Args:
         title:
@@ -1321,7 +1348,9 @@ class Window(VBoxView):
         menu:
             The window’s menu bar. In some GUI settings, for example Mac OS,
             this menu will appear seperately from the window.
-        on_open:
+        _on_open:
+            This argument is not a **prop** and will not cause re-render when changed.
+
             Event handler for when this window is opening. This event handler
             function will be called exactly once, before the children are mounted.
 
@@ -1334,9 +1363,22 @@ class Window(VBoxView):
 
             The event handler function will be passed a
             `QCloseEvent <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QCloseEvent.html>`_.
+        on_window_state_change:
+            Event handler for when the window state changes.
+
+            This event handler will be passed the old window state and the
+            new window state.
+        full_screen:
+            Whether the window is in full screen mode.
         _size_open:
             This argument is not a **prop** and will not cause re-render when changed.
+
             It will only be used once to set width and height of the window when it is opened.
+
+            If the value :code:`"Maximized"` is passed, the window will be
+            opened maximized (does not work on X11, see
+            `showMaximized <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.showMaximized>`_
+            ).
     """
 
     def __init__(
@@ -1344,9 +1386,11 @@ class Window(VBoxView):
         title: str = "Edifice Application",
         icon: str | QtGui.QImage | QtGui.QPixmap | None = None,
         menu=None,
-        on_open: tp.Callable[[QtWidgets.QApplication], None] | None = None,
+        _on_open: tp.Callable[[QtWidgets.QApplication], None] | None = None,
         on_close: tp.Callable[[QtGui.QCloseEvent], None | tp.Awaitable[None]] | None = None,
-        _size_open: tuple[int, int] | None = None,
+        on_window_state_change: tp.Callable[[tp.Literal["Normal", "Maximized", "Minimized", "FullScreen"], tp.Literal["Normal", "Maximized", "Minimized", "FullScreen"]], None | tp.Awaitable[None]] | None = None,
+        full_screen: bool = False,
+        _size_open: tuple[int, int] | tp.Literal["Maximized"] | None = None,
         **kwargs,
     ):
         super().__init__(**kwargs)
@@ -1356,17 +1400,42 @@ class Window(VBoxView):
                 "icon": icon,
                 "menu": menu,
                 "on_close": on_close,
+                "on_window_state_change": on_window_state_change,
+                "full_screen": full_screen,
             },
         )
 
         self._menu_bar = None
         self._on_close: tp.Callable[[QtGui.QCloseEvent], None | tp.Awaitable[None]] | None = None
+        self._on_window_state_change: tp.Callable[[tp.Literal["Normal", "Maximized", "Minimized", "FullScreen"], tp.Literal["Normal", "Maximized", "Minimized", "FullScreen"]], None | tp.Awaitable[None]] | None = None
 
-        self._on_open = on_open
+        self._on_open = _on_open
         self._size_open = _size_open
+        self._window_old_state : tp.Literal["Normal", "Maximized", "Minimized", "FullScreen"] | None = None
+        """
+        Store the old window state so that we can restore to the old state
+        after FullScreen.
+        None means that the window has not been opened yet.
+        """
 
     def _set_on_close(self, on_close):
         self._on_close = on_close
+
+    def _set_on_window_state_change(self, on_window_state_change):
+        self._on_window_state_change = on_window_state_change
+
+    def _handle_change(self, event: QtCore.QEvent):
+        match event:
+            case QtGui.QWindowStateChangeEvent():
+                if self.underlying is not None:
+                    window_new_state = _window_state_string(self.underlying.windowState())
+                    window_old_state = _window_state_string(event.oldState())
+                    if self._window_old_state is not None:
+                        # Disregard the first window state change event so that
+                        # we can start FullScreen or Maximized
+                        self._window_old_state = window_old_state
+                    if self._on_window_state_change:
+                        _ensure_future(self._on_window_state_change)(window_old_state, window_new_state)
 
     def _handle_close(self, event: QtGui.QCloseEvent):
         event.ignore()  # Don't kill the app yet, instead stop the app after the children are unmounted.
@@ -1389,6 +1458,8 @@ class Window(VBoxView):
         newprops,
     ):
         if self.underlying is None:
+            # Inialization for the first time
+
             # We want on_open to be called exactly once only for this Window
             # instance before any Qt Widgets are created.
             if self._on_open is not None:
@@ -1398,9 +1469,29 @@ class Window(VBoxView):
             super()._initialize()
             assert isinstance(self.underlying, QtWidgets.QWidget)
             self.underlying.closeEvent = self._handle_close
-            self.underlying.show()
-            if self._size_open is not None:
-                self.underlying.resize(*self._size_open)
+            self.underlying.changeEvent = self._handle_change
+
+            match self._size_open, newprops.full_screen:
+                case None, False:
+                    self.underlying.show()
+                case None, True:
+                    self.underlying.showFullScreen()
+                case (width, height), False:
+                    self.underlying.resize(width, height)
+                    self.underlying.show()
+                case (width, height), True:
+                    self.underlying.resize(width, height)
+                    self.underlying.showFullScreen()
+                case "Maximized", False:
+                    self.underlying.showMaximized()
+                    # https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.showMaximized
+                    #
+                    # > On X11, this function may not work properly with certain window managers.
+                    #
+                    # Does not work on X11 for opening the window Maximized.
+                    # But from FullScreen, this function will change window to Maximized.
+                case "Maximized", True:
+                    self.underlying.showFullScreen()
 
         commands: list[CommandType] = super()._qt_update_commands(widget_trees, newprops)
 
@@ -1416,6 +1507,22 @@ class Window(VBoxView):
                 self._menu_bar.setParent(None)
             self._menu_bar = QtWidgets.QMenuBar()
             commands.append(CommandType(self._attach_menubar, self._menu_bar, newprops.menu))
+
+        if self._window_old_state is None:
+            self._window_old_state = _window_state_string(self.underlying.windowState())
+        elif "full_screen" in newprops:
+            if newprops.full_screen:
+                commands.append(CommandType(self.underlying.showFullScreen))
+            else:
+                match self._window_old_state:
+                    case "Maximized":
+                        commands.append(CommandType(self.underlying.showMaximized))
+                    # We don't restore from FullScreen to "Minimized":
+                    case _:
+                        commands.append(CommandType(self.underlying.showNormal))
+
+        if "on_window_state_change" in newprops:
+            commands.append(CommandType(self._set_on_window_state_change, newprops.on_window_state_change))
 
         return commands
 

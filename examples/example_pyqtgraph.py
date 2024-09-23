@@ -2,11 +2,13 @@
 # python examples/example_pyqtgraph.py
 #
 
+import typing as tp
+
 import numpy as np
 
 from edifice.qt import QT_VERSION
 
-if QT_VERSION == "PyQt6":
+if QT_VERSION == "PyQt6" and not tp.TYPE_CHECKING:
     from PyQt6 import QtGui
 else:
     from PySide6 import QtGui
@@ -52,9 +54,23 @@ def Component(self):
 
 @ed.component
 def Main(self):
-    with ed.Window("PyQtPlot Example"):
-        with ed.VBoxView():
-            Component()
+    full_screen, full_screen_set = ed.use_state(False)
+
+    def handle_key_down(event: QtGui.QKeyEvent):
+        if event.key() == QtGui.Qt.Key.Key_F11:
+            full_screen_set(not full_screen)
+
+    def handle_window_state(old_state, new_state):
+        print(f"Window state changed from {old_state} to {new_state}")
+
+    with ed.Window(
+        title="PyQtPlot Example",
+        _size_open=(800, 600),
+        full_screen=full_screen,
+        on_key_down=handle_key_down,
+        on_window_state_change=handle_window_state,
+    ):
+        Component()
 
 
 if __name__ == "__main__":

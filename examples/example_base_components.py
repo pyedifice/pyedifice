@@ -54,7 +54,7 @@ def Main(self):
     time_text, time_text_set = ed.use_state(n.time().isoformat())
 
     with ed.Window(
-        on_open=handle_open,
+        _on_open=handle_open,
         on_close=handle_close,
         title="Example Base Components",
     ):
