@@ -1490,6 +1490,10 @@ class Window(VBoxView):
                     #
                     # Does not work on X11 for opening the window Maximized.
                     # But from FullScreen, this function will change window to Maximized.
+                    #
+                    # By the way this works on X11 but its obviously very stupid:
+                    # > self.underlying.show()
+                    # > asyncio.get_event_loop().call_later(0.1, self.underlying.showMaximized)
                 case "Maximized", True:
                     self.underlying.showFullScreen()
 
