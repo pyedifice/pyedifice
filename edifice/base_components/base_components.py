@@ -1584,9 +1584,22 @@ class WindowPopView(VBoxView):
 
             The event handler function will be passed a
             `QCloseEvent <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QCloseEvent.html>`_.
+        on_window_state_change:
+            Event handler for when the window state changes.
+
+            This event handler will be passed the old window state and the
+            new window state.
+        full_screen:
+            Whether the window is in full screen mode.
         _size_open:
             This argument is not a **prop** and will not cause re-render when changed.
+
             It will only be used once to set width and height of the window when it is opened.
+
+            If the value :code:`"Maximized"` is passed, the window will be
+            opened maximized (does not work on X11, see
+            `showMaximized <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.showMaximized>`_
+            ).
     """
 
     def __init__(
@@ -1594,7 +1607,9 @@ class WindowPopView(VBoxView):
         title: str = "",
         icon: str | QtGui.QImage | QtGui.QPixmap | None = None,
         on_close: tp.Callable[[QtGui.QCloseEvent], None | tp.Awaitable[None]] | None = None,
-        _size_open: tuple[int, int] | None = None,
+        on_window_state_change: tp.Callable[[tp.Literal["Normal", "Maximized", "Minimized", "FullScreen"], tp.Literal["Normal", "Maximized", "Minimized", "FullScreen"]], None | tp.Awaitable[None]] | None = None,
+        full_screen: bool = False,
+        _size_open: tuple[int, int] | tp.Literal["Maximized"] | None = None,
         **kwargs,
     ):
         super().__init__(**kwargs)
@@ -1603,6 +1618,8 @@ class WindowPopView(VBoxView):
                 "title": title,
                 "icon": icon,
                 "on_close": on_close,
+                "on_window_state_change": on_window_state_change,
+                "full_screen": full_screen,
             },
         )
 
@@ -1614,7 +1631,32 @@ class WindowPopView(VBoxView):
         The layout of this Element is set to this widget, and all Element
         children are children of this widget.
         """
+
+        self._on_window_state_change: tp.Callable[[tp.Literal["Normal", "Maximized", "Minimized", "FullScreen"], tp.Literal["Normal", "Maximized", "Minimized", "FullScreen"]], None | tp.Awaitable[None]] | None = None
+
         self._size_open = _size_open
+        self._window_old_state : tp.Literal["Normal", "Maximized", "Minimized", "FullScreen"] | None = None
+        """
+        Store the old window state so that we can restore to the old state
+        after FullScreen.
+        None means that the window has not been opened yet.
+        """
+
+    def _set_on_window_state_change(self, on_window_state_change):
+        self._on_window_state_change = on_window_state_change
+
+    def _handle_change(self, event: QtCore.QEvent):
+        match event:
+            case QtGui.QWindowStateChangeEvent():
+                if self.underlying_noparent is not None:
+                    window_new_state = _window_state_string(self.underlying_noparent.windowState())
+                    window_old_state = _window_state_string(event.oldState())
+                    if self._window_old_state is not None:
+                        # Disregard the first window state change event so that
+                        # we can start FullScreen or Maximized
+                        self._window_old_state = window_old_state
+                    if self._on_window_state_change:
+                        _ensure_future(self._on_window_state_change)(window_old_state, window_new_state)
 
     def _set_on_close(self, on_close):
         self._on_close = on_close
@@ -1630,33 +1672,56 @@ class WindowPopView(VBoxView):
         if self._on_close:
             _ensure_future(self._on_close)(QtGui.QCloseEvent())
 
-    def _initialize(self):
-        # The self.underlying is an invisible placeholder widget that will
-        # occupy a position in its parent's layout, but will have zero size.
-        self.underlying = QtWidgets.QWidget()
-        self.underlying.setFixedSize(0,0)
-        self.underlying_layout = QtWidgets.QVBoxLayout()
-        # The self.underlying_noparent is the widget that will be shown
-        # to the user as a new pop-up window and which will be the parent
-        # of all this Element's children.
-        self.underlying_noparent = QtWidgets.QWidget()
-        self.underlying_noparent.setObjectName(str(id(self))) # this is for CSS style selection
-        self.underlying_noparent.setLayout(self.underlying_layout)
-        self.underlying_layout.setContentsMargins(0, 0, 0, 0)
-        self.underlying_layout.setSpacing(0)
-        self.underlying.destroyed.connect(self._handle_destroyed)
-        self.underlying_noparent.closeEvent = self._handle_close
-        self.underlying_noparent.show()
-        if self._size_open is not None:
-            self.underlying_noparent.resize(*self._size_open)
-
     def _qt_update_commands(
         self,
         widget_trees: dict[Element, _WidgetTree],
         newprops,
     ) -> list[CommandType]:
         if self.underlying is None:
-            self._initialize()
+
+            # The self.underlying is an invisible placeholder widget that will
+            # occupy a position in its parent's layout, but will have zero size.
+            self.underlying = QtWidgets.QWidget()
+            self.underlying.setFixedSize(0,0)
+            self.underlying_layout = QtWidgets.QVBoxLayout()
+            # The self.underlying_noparent is the widget that will be shown
+            # to the user as a new pop-up window and which will be the parent
+            # of all this Element's children.
+            self.underlying_noparent = QtWidgets.QWidget()
+            self.underlying_noparent.setObjectName(str(id(self))) # this is for CSS style selection
+            self.underlying_noparent.setLayout(self.underlying_layout)
+            self.underlying_layout.setContentsMargins(0, 0, 0, 0)
+            self.underlying_layout.setSpacing(0)
+            self.underlying.destroyed.connect(self._handle_destroyed)
+            self.underlying_noparent.closeEvent = self._handle_close
+
+
+            assert isinstance(self.underlying, QtWidgets.QWidget)
+            self.underlying_noparent.changeEvent = self._handle_change
+
+            match self._size_open, newprops.full_screen:
+                case None, False:
+                    self.underlying_noparent.show()
+                case None, True:
+                    self.underlying_noparent.showFullScreen()
+                case (width, height), False:
+                    self.underlying_noparent.resize(width, height)
+                    self.underlying_noparent.show()
+                case (width, height), True:
+                    self.underlying_noparent.resize(width, height)
+                    self.underlying_noparent.showFullScreen()
+                case "Maximized", False:
+                    self.underlying_noparent.showMaximized()
+                    # https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.showMaximized
+                    #
+                    # > On X11, this function may not work properly with certain window managers.
+                    #
+                    # Does not work on X11 for opening the window Maximized.
+                    # But from FullScreen, this function will change window to Maximized.
+                case "Maximized", True:
+                    self.underlying_noparent.showFullScreen()
+
+
 
         assert self.underlying_noparent is not None
         children = _get_widget_children(widget_trees, self)
@@ -1679,6 +1744,22 @@ class WindowPopView(VBoxView):
         if "icon" in newprops and newprops.icon is not None:
             pixmap = _image_descriptor_to_pixmap(newprops.icon)
             commands.append(CommandType(self.underlying_noparent.setWindowIcon, QtGui.QIcon(pixmap)))
+
+        if self._window_old_state is None:
+            self._window_old_state = _window_state_string(self.underlying_noparent.windowState())
+        elif "full_screen" in newprops:
+            if newprops.full_screen:
+                commands.append(CommandType(self.underlying_noparent.showFullScreen))
+            else:
+                match self._window_old_state:
+                    case "Maximized":
+                        commands.append(CommandType(self.underlying_noparent.showMaximized))
+                    # We don't restore from FullScreen to "Minimized":
+                    case _:
+                        commands.append(CommandType(self.underlying_noparent.showNormal))
+
+        if "on_window_state_change" in newprops:
+            commands.append(CommandType(self._set_on_window_state_change, newprops.on_window_state_change))
 
         return commands
 
