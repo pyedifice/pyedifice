@@ -44,7 +44,7 @@ __all__ = [
     "FixScrollView",
     "TabView",
     "GridView",
-    "WindowPopView"
+    "WindowPopView",
     "Label",
     "ImageSvg",
     "Icon",

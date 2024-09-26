@@ -1303,12 +1303,12 @@ class FixView(_LinearView[QtWidgets.QWidget]):
 def _window_state_string(state: QtCore.Qt.WindowState) -> tp.Literal["Normal", "Maximized", "Minimized", "FullScreen"]:
     if state & QtCore.Qt.WindowState.WindowMaximized:
         return "Maximized"
-    elif state & QtCore.Qt.WindowState.WindowMinimized:
+    if state & QtCore.Qt.WindowState.WindowMinimized:
         return "Minimized"
-    elif state & QtCore.Qt.WindowState.WindowFullScreen:
+    if state & QtCore.Qt.WindowState.WindowFullScreen:
         return "FullScreen"
-    else:
-        return "Normal"
+    return "Normal"
+
 class Window(VBoxView):
     """
     The root :class:`View` element of an :class:`App` which runs in an

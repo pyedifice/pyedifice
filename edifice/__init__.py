@@ -69,7 +69,7 @@ __all__ = [
     "VBoxView",
     "HBoxView",
     "FixView",
-    "WindowPopView"
+    "WindowPopView",
     "Window",
     "alert",
     "child_place",
