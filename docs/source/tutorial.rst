@@ -8,9 +8,12 @@ Tutorial
 This tutorial will help you create your first Edifice app.
 We will create an app that converts measurements in different units.
 
-First, install Qt and Edifice::
+First, install Qt and Edifice.
 
-    pip install PySide6
+.. code-block:: shell
+    :caption: Installation from `pypi.org/project/pyedifice <https://pypi.org/project/pyedifice/>`_
+
+    pip install PySide6-Essentials
     pip install pyedifice
 
 .. note::
