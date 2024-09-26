@@ -13,6 +13,7 @@ if QT_VERSION == "PyQt6" and not tp.TYPE_CHECKING:
 else:
     from PySide6 import QtGui
 
+
 def use_clocktick() -> int:
     tick, tick_set = ed.use_state(0)
 
@@ -24,14 +25,15 @@ def use_clocktick() -> int:
 
     return tick
 
+
 @ed.component
 def Clock(self):
     tick = use_clocktick()
     ed.Label(text=f"Tick: {tick}")
 
+
 @ed.component
 def Main(self):
-
     popshow, popshow_set = ed.use_state(False)
 
     popshow2, popshow2_set = ed.use_state(False)
@@ -107,6 +109,7 @@ def Main(self):
                             word_wrap=False,
                         )
                         Clock()
+
 
 if __name__ == "__main__":
     ed.App(Main()).start()

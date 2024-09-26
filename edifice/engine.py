@@ -28,6 +28,7 @@ logger = logging.getLogger("Edifice")
 
 P = tp.ParamSpec("P")
 
+
 def _dict_to_style(d, prefix="QWidget"):
     d = d or {}
     stylesheet = prefix + "{%s}" % (";".join("%s: %s" % (k, v) for (k, v) in d.items()))

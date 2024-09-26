@@ -66,7 +66,7 @@ def _get_svg_image(icon_path, size: int, rotation=0, color=(0, 0, 0, 255)) -> Qt
     pixmap = pixmap.copy()
     if color != (0, 0, 0, 255):
         mask = pixmap.mask()
-        pixmap.fill(QtGui.QColor(*color)) # TODO this messes up the alpha channel edges
+        pixmap.fill(QtGui.QColor(*color))  # TODO this messes up the alpha channel edges
         pixmap.setMask(mask)
     if rotation != 0:
         w, h = pixmap.width(), pixmap.height()
@@ -1300,6 +1300,7 @@ class FixView(_LinearView[QtWidgets.QWidget]):
         assert self.underlying is not None
         return super()._qt_update_commands_super(widget_trees, newprops, self.underlying)
 
+
 def _window_state_string(state: QtCore.Qt.WindowState) -> tp.Literal["Normal", "Maximized", "Minimized", "FullScreen"]:
     if state & QtCore.Qt.WindowState.WindowMaximized:
         return "Maximized"
@@ -1308,6 +1309,7 @@ def _window_state_string(state: QtCore.Qt.WindowState) -> tp.Literal["Normal", "
     if state & QtCore.Qt.WindowState.WindowFullScreen:
         return "FullScreen"
     return "Normal"
+
 
 class Window(VBoxView):
     """
@@ -1388,7 +1390,14 @@ class Window(VBoxView):
         menu=None,
         _on_open: tp.Callable[[QtWidgets.QApplication], None] | None = None,
         on_close: tp.Callable[[QtGui.QCloseEvent], None | tp.Awaitable[None]] | None = None,
-        on_window_state_change: tp.Callable[[tp.Literal["Normal", "Maximized", "Minimized", "FullScreen"], tp.Literal["Normal", "Maximized", "Minimized", "FullScreen"]], None | tp.Awaitable[None]] | None = None,
+        on_window_state_change: tp.Callable[
+            [
+                tp.Literal["Normal", "Maximized", "Minimized", "FullScreen"],
+                tp.Literal["Normal", "Maximized", "Minimized", "FullScreen"],
+            ],
+            None | tp.Awaitable[None],
+        ]
+        | None = None,
         full_screen: bool = False,
         _size_open: tuple[int, int] | tp.Literal["Maximized"] | None = None,
         **kwargs,
@@ -1407,11 +1416,20 @@ class Window(VBoxView):
 
         self._menu_bar = None
         self._on_close: tp.Callable[[QtGui.QCloseEvent], None | tp.Awaitable[None]] | None = None
-        self._on_window_state_change: tp.Callable[[tp.Literal["Normal", "Maximized", "Minimized", "FullScreen"], tp.Literal["Normal", "Maximized", "Minimized", "FullScreen"]], None | tp.Awaitable[None]] | None = None
+        self._on_window_state_change: (
+            tp.Callable[
+                [
+                    tp.Literal["Normal", "Maximized", "Minimized", "FullScreen"],
+                    tp.Literal["Normal", "Maximized", "Minimized", "FullScreen"],
+                ],
+                None | tp.Awaitable[None],
+            ]
+            | None
+        ) = None
 
         self._on_open = _on_open
         self._size_open = _size_open
-        self._window_old_state : tp.Literal["Normal", "Maximized", "Minimized", "FullScreen"] | None = None
+        self._window_old_state: tp.Literal["Normal", "Maximized", "Minimized", "FullScreen"] | None = None
         """
         Store the old window state so that we can restore to the old state
         after FullScreen.
@@ -1530,6 +1548,7 @@ class Window(VBoxView):
 
         return commands
 
+
 class WindowPopView(VBoxView):
     """
     Pop-up Window.
@@ -1607,7 +1626,14 @@ class WindowPopView(VBoxView):
         title: str = "",
         icon: str | QtGui.QImage | QtGui.QPixmap | None = None,
         on_close: tp.Callable[[QtGui.QCloseEvent], None | tp.Awaitable[None]] | None = None,
-        on_window_state_change: tp.Callable[[tp.Literal["Normal", "Maximized", "Minimized", "FullScreen"], tp.Literal["Normal", "Maximized", "Minimized", "FullScreen"]], None | tp.Awaitable[None]] | None = None,
+        on_window_state_change: tp.Callable[
+            [
+                tp.Literal["Normal", "Maximized", "Minimized", "FullScreen"],
+                tp.Literal["Normal", "Maximized", "Minimized", "FullScreen"],
+            ],
+            None | tp.Awaitable[None],
+        ]
+        | None = None,
         full_screen: bool = False,
         _size_open: tuple[int, int] | tp.Literal["Maximized"] | None = None,
         **kwargs,
@@ -1632,10 +1658,19 @@ class WindowPopView(VBoxView):
         children are children of this widget.
         """
 
-        self._on_window_state_change: tp.Callable[[tp.Literal["Normal", "Maximized", "Minimized", "FullScreen"], tp.Literal["Normal", "Maximized", "Minimized", "FullScreen"]], None | tp.Awaitable[None]] | None = None
+        self._on_window_state_change: (
+            tp.Callable[
+                [
+                    tp.Literal["Normal", "Maximized", "Minimized", "FullScreen"],
+                    tp.Literal["Normal", "Maximized", "Minimized", "FullScreen"],
+                ],
+                None | tp.Awaitable[None],
+            ]
+            | None
+        ) = None
 
         self._size_open = _size_open
-        self._window_old_state : tp.Literal["Normal", "Maximized", "Minimized", "FullScreen"] | None = None
+        self._window_old_state: tp.Literal["Normal", "Maximized", "Minimized", "FullScreen"] | None = None
         """
         Store the old window state so that we can restore to the old state
         after FullScreen.
@@ -1678,23 +1713,21 @@ class WindowPopView(VBoxView):
         newprops,
     ) -> list[CommandType]:
         if self.underlying is None:
-
             # The self.underlying is an invisible placeholder widget that will
             # occupy a position in its parent's layout, but will have zero size.
             self.underlying = QtWidgets.QWidget()
-            self.underlying.setFixedSize(0,0)
+            self.underlying.setFixedSize(0, 0)
             self.underlying_layout = QtWidgets.QVBoxLayout()
             # The self.underlying_noparent is the widget that will be shown
             # to the user as a new pop-up window and which will be the parent
             # of all this Element's children.
             self.underlying_noparent = QtWidgets.QWidget()
-            self.underlying_noparent.setObjectName(str(id(self))) # this is for CSS style selection
+            self.underlying_noparent.setObjectName(str(id(self)))  # this is for CSS style selection
             self.underlying_noparent.setLayout(self.underlying_layout)
             self.underlying_layout.setContentsMargins(0, 0, 0, 0)
             self.underlying_layout.setSpacing(0)
             self.underlying.destroyed.connect(self._handle_destroyed)
             self.underlying_noparent.closeEvent = self._handle_close
-
 
             assert isinstance(self.underlying, QtWidgets.QWidget)
             self.underlying_noparent.changeEvent = self._handle_change
@@ -1721,8 +1754,6 @@ class WindowPopView(VBoxView):
                 case "Maximized", True:
                     self.underlying_noparent.showFullScreen()
 
-
-
         assert self.underlying_noparent is not None
         children = _get_widget_children(widget_trees, self)
         commands = []
@@ -1735,7 +1766,9 @@ class WindowPopView(VBoxView):
 
         # Important to note that the QtWidgetElement underlying is the underlying_noparent.
         # This is so that all styles and event handlers are attached to the underlying_noparent.
-        commands.extend(super()._qt_update_commands_super(widget_trees, newprops, self.underlying_noparent, self.underlying_layout))
+        commands.extend(
+            super()._qt_update_commands_super(widget_trees, newprops, self.underlying_noparent, self.underlying_layout)
+        )
 
         if "title" in newprops:
             commands.append(CommandType(self.underlying_noparent.setWindowTitle, newprops.title))

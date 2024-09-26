@@ -90,10 +90,10 @@ class TableGridView(QtWidgetElement[QWidget]):
 
     def __init__(
         self,
-        row_stretch: tuple[int,...] = (),
-        column_stretch: tuple[int,...] = (),
-        row_minheight: tuple[int,...] = (),
-        column_minwidth: tuple[int,...] = (),
+        row_stretch: tuple[int, ...] = (),
+        column_stretch: tuple[int, ...] = (),
+        row_minheight: tuple[int, ...] = (),
+        column_minwidth: tuple[int, ...] = (),
         **kwargs,
     ):
         super().__init__(**kwargs)
@@ -217,22 +217,22 @@ class TableGridView(QtWidgetElement[QWidget]):
 
         return commands
 
-    def _set_row_stretch(self, row_stretch: tuple[int,...]):
+    def _set_row_stretch(self, row_stretch: tuple[int, ...]):
         self._row_stretch = row_stretch
         for i, stretch in enumerate(row_stretch[: self.underlying_layout.rowCount()]):
             self.underlying_layout.setRowStretch(i, stretch)
 
-    def _set_column_stretch(self, column_stretch: tuple[int,...]):
+    def _set_column_stretch(self, column_stretch: tuple[int, ...]):
         self._column_stretch = column_stretch
         for i, stretch in enumerate(column_stretch[: self.underlying_layout.columnCount()]):
             self.underlying_layout.setColumnStretch(i, stretch)
 
-    def _set_row_minheight(self, row_minheight: tuple[int,...]):
+    def _set_row_minheight(self, row_minheight: tuple[int, ...]):
         self._row_minheight = row_minheight
         for i, minheight in enumerate(row_minheight[: self.underlying_layout.rowCount()]):
             self.underlying_layout.setRowMinimumHeight(i, minheight)
 
-    def _set_column_minwidth(self, column_minwidth: tuple[int,...]):
+    def _set_column_minwidth(self, column_minwidth: tuple[int, ...]):
         self._column_minwidth = column_minwidth
         for i, minwidth in enumerate(column_minwidth[: self.underlying_layout.columnCount()]):
             self.underlying_layout.setColumnMinimumWidth(i, minwidth)

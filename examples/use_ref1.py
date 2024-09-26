@@ -13,9 +13,10 @@ if QT_VERSION == "PyQt6" and not TYPE_CHECKING:
 else:
     from PySide6.QtWidgets import QLabel
 
+
 @ed.component
 def MyComp(self):
-    ref:ed.Reference[ed.Label] = ed.use_ref()
+    ref: ed.Reference[ed.Label] = ed.use_ref()
 
     def did_render():
         element = ref()
@@ -28,6 +29,7 @@ def MyComp(self):
     with ed.Window():
         with ed.VBoxView():
             ed.Label("Before").register_ref(ref)
+
 
 if __name__ == "__main__":
     ed.App(MyComp()).start()
