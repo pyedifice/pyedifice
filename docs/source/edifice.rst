@@ -13,9 +13,13 @@ Class overview
 
    App
    Element
+   Reference
+
+.. autosummary::
+   :toctree: stubs
+
    component
    child_place
-   Reference
 
 Declaring Element Trees
 -----------------------

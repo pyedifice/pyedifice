@@ -29,8 +29,6 @@ Base Hooks
 
 .. autosummary::
    :toctree: stubs
-   :recursive:
-   :template: custom-class.rst
 
    use_state
    use_effect
@@ -45,8 +43,6 @@ These Derived Hooks are provided by Edifice.
 
 .. autosummary::
    :toctree: stubs
-   :recursive:
-   :template: custom-class.rst
 
    use_ref
    use_effect_final

@@ -346,7 +346,7 @@ def get_render_context_maybe() -> _RenderContext | None:
 def child_place(element: Element) -> None:
     """
     Place a child passed through the special :code:`children` **props** into
-    the layout of a parent :func:`component`.
+    the layout of a parent :func:`@component<component>`.
     """
     get_render_context().trackers[-1].append_child(element)
 
