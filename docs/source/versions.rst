@@ -4,6 +4,11 @@
 Release Notes
 =============
 
+
+v2.1.0
+------
+Released: 2024-09-27
+
 * :class:`Window` new **props** :code:`_size_open`, :code:`full_screen`.
 * :class:`Window` renamed argument :code:`on_open` to :code:`_on_open`.
 * :class:`WindowPopView` new **props** :code:`_size_open`, :code:`full_screen`.
