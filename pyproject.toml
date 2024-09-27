@@ -34,6 +34,7 @@ watchdog = ">= 1.0.2" # for hot-reload https://pyedifice.github.io/developer_too
 
 pydata-sphinx-theme = "*" # sphinx packages for make docs
 sphinx-autodoc-typehints = "*" # sphinx packages for make docs
+sphinx-copybutton = "*" # sphinx packages for make docs
 
 numpy = ">= 1.19.4" # for examples
 pandas = ">= 1.2.0" # for examples/financial_charts.py
