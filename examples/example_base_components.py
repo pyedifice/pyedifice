@@ -30,10 +30,10 @@ def Main(self):
         qapp.setApplicationName("Example Base Components")
         QApplication.setStyle("fusion")
         qapp.setFont(QFont("Yu Gothic UI", 20))
-        if ed.utilities.theme_is_light():
-            qapp.setPalette(ed.utilities.palette_edifice_light())
+        if ed.theme_is_light():
+            qapp.setPalette(ed.palette_edifice_light())
         else:
-            qapp.setPalette(ed.utilities.palette_edifice_dark())
+            qapp.setPalette(ed.palette_edifice_dark())
 
     ed.use_state(initializer)
 

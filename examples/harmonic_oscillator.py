@@ -123,10 +123,10 @@ def Main(self):
     def initializer():
         qapp = tp.cast(QtWidgets.QApplication, QtWidgets.QApplication.instance())
         qapp.setApplicationName("Harmonic Oscillator")
-        if ed.utilities.theme_is_light():
-            qapp.setPalette(ed.utilities.palette_edifice_light())
+        if ed.theme_is_light():
+            qapp.setPalette(ed.palette_edifice_light())
         else:
-            qapp.setPalette(ed.utilities.palette_edifice_dark())
+            qapp.setPalette(ed.palette_edifice_dark())
 
     _, _ = ed.use_state(initializer)
 

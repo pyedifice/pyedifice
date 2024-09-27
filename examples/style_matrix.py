@@ -17,9 +17,9 @@ else:
 def Main(self):
     def initializer():
         palette = (
-            ed.utilities.palette_edifice_light()
-            if ed.utilities.theme_is_light()
-            else ed.utilities.palette_edifice_dark()
+            ed.palette_edifice_light()
+            if ed.theme_is_light()
+            else ed.palette_edifice_dark()
         )
         tp.cast(QtWidgets.QApplication, QtWidgets.QApplication.instance()).setPalette(palette)
         return palette
