@@ -50,6 +50,22 @@ For more, see the :doc:`tutorial`.
 To understand the core concepts behind Edifice,
 see :doc:`edifice`.
 
+Table of Contents
+-----------------
+
+.. toctree::
+   :maxdepth: 2
+
+   tutorial
+   examples
+   api
+   developer_tools
+
+.. toctree::
+   :maxdepth: 1
+
+   versions
+
 Why Edifice?
 ------------
 
@@ -166,15 +182,3 @@ Indices and tables
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
-
-Table of Contents
------------------
-
-.. toctree::
-   :maxdepth: 2
-
-   tutorial
-   examples
-   api
-   developer_tools
-   versions
