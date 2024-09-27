@@ -3,6 +3,20 @@ Edifice Core
 
 .. currentmodule:: edifice
 
+Class overview
+--------------
+
+.. autosummary::
+   :toctree: stubs
+   :recursive:
+   :template: custom-class.rst
+
+   App
+   Element
+   component
+   child_place
+   Reference
+
 Declaring Element Trees
 -----------------------
 
@@ -262,17 +276,3 @@ predictable, easy to debug, and allows Edifice to automatically optimize your co
 - **Values are immutable after being passed to an Element** – Don’t mutate
   values after they’ve been used in an Element. Move the mutation before the
   Element is created.
-
-Class overview
---------------
-
-.. autosummary::
-   :toctree: stubs
-   :recursive:
-   :template: custom-class.rst
-
-   Element
-   component
-   child_place
-   App
-   Reference

@@ -68,12 +68,12 @@ html_css_files = [ "css/custom.css" ]
 
 # https://pydata-sphinx-theme.readthedocs.io/en/stable/user_guide/layout.html#remove-the-primary-sidebar-from-pages
 html_sidebars = {
-    "tutorial": [],
-    "examples": [],
-    "styling": [],
-    "developer_tools": [],
-    "versions": [],
-    "future": [],
+    # "tutorial": [],
+    # "examples": [],
+    # "styling": [],
+    # "developer_tools": [],
+    # "versions": [],
+    "**": [],
 }
 
 # https://pydata-sphinx-theme.readthedocs.io/en/stable/user_guide/source-buttons.html#view-source-link

@@ -175,11 +175,6 @@ Table of Contents
 
    tutorial
    examples
-   edifice
-   base_components
-   hooks
-   styling
-   extra
-   utilities
+   api
    developer_tools
    versions
