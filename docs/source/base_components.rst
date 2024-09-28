@@ -118,6 +118,9 @@ and text input.
 When the event occurs the callback function will be called with an argument
 describing the event.
 
+Usually, what you want to do in an event handler callback is to update some
+state with a :func:`use_state() <edifice.use_state>` **setter function**.
+
 These callbacks run in the same thread as the main application.
 This is handy, as you don't have to worry about locking and race conditions.
 However, a lengthy operation will block the application from interacting with the user,
