@@ -39,6 +39,34 @@ If you structure your program in a modular way across multiple files,
 only a few components would need to be reloaded,
 saving you the time of navigating through your app to get to the changed widget.
 
+.. caution::
+    Dynamic hot-reload currently will not work for the root
+    :func:`@component<component>` which contains the :class:`Window`.
+
+    It will only work for child components of the root component.
+
+    So it’s a good idea to structure your application with a
+    root Main :func:`@component<component>` that only contains the :class:`Window`,
+    like this.
+
+    .. code-block:: python
+
+        @component
+        def HelloWorld(self):
+            Label("Hello, World!")
+
+        @component
+        def Main(self):
+            with Window():
+                HelloWorld()
+
+        if __name__ == "__main__":
+            App(Main()).start()
+
+You will find there are other limitations to dynamic hot-reload. It will work
+for changes to style and layout and text, but if you make more drastic changes
+like introducing new component types or changing the Hooks then the hot-reloader
+often fail and then you will need to restart the application.
 
 Element Inspector
 -------------------
