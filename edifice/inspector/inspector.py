@@ -59,7 +59,7 @@ def TreeView(
 
     collapsed, collapsed_set = ed.use_state(True)
 
-    child_style = {"align": "top", "margin-left": 20}
+    child_style = {"align": "top", "padding-left": 20}
     if collapsed:
         child_style["height"] = 0
     with ed.VBoxView(style={"align": "top"}):
@@ -87,7 +87,7 @@ def StateView(
     setattr(self, "__edifice_inspector_element", True)
 
     with ed.VScrollView(
-        style={"align": "top", "margin-left": 15},
+        style={"align": "top", "padding-left": 15},
     ):
         for s in component_hook_state:
             with ed.HBoxView(
@@ -106,7 +106,7 @@ def StateView(
 @ed.component
 def PropsView(self, props: dict[str, tp.Any], refresh_trigger: bool):
     setattr(self, "__edifice_inspector_element", True)
-    with ed.VScrollView(style={"align": "top", "margin-left": 15}):
+    with ed.VScrollView(style={"align": "top", "padding-left": 15}):
         for k, v in props.items():
             if k != "children":
                 # It's weird and buggy that if we show the children prop, then
@@ -211,7 +211,7 @@ def Inspector(
                 with ed.HBoxView(style={"align": "left", "height": 30}):
                     ed.Label("Edifice Inspector", style={"font-size": 18, "margin-left": 10, "width": 160})
                     ed.Icon("sync-alt", size=20, on_click=lambda _e: _force_refresh(), tool_tip="Reload component tree")
-                with ed.VScrollView(style={"width": 250, "min-height": 450, "margin-top": 10}):
+                with ed.VScrollView(style={"width": 250, "min-height": 450, "padding-top": 10}):
                     if root_component is not None:
                         _build_tree(root_component)
             with ed.VBoxView(style={"min-width": 450, "min-height": 450}):

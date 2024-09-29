@@ -4,6 +4,7 @@
 Release Notes
 =============
 
+* Inspector style bugfix.
 
 v2.1.0
 ------
