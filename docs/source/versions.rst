@@ -4,6 +4,8 @@
 Release Notes
 =============
 
+* :class:`TextInput` new prop :code:`completer`.
+
 v2.2.0
 ------
 Released: 2024-09-29

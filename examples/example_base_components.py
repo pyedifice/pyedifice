@@ -10,11 +10,11 @@ from edifice.qt import QT_VERSION
 if QT_VERSION == "PyQt6" and not tp.TYPE_CHECKING:
     from PyQt6.QtCore import Qt
     from PyQt6.QtGui import QCloseEvent, QFont, QValidator
-    from PyQt6.QtWidgets import QApplication
+    from PyQt6.QtWidgets import QApplication, QCompleter
 else:
     from PySide6.QtCore import Qt
     from PySide6.QtGui import QCloseEvent, QFont, QValidator
-    from PySide6.QtWidgets import QApplication
+    from PySide6.QtWidgets import QApplication, QCompleter
 
 
 @ed.component
@@ -37,6 +37,7 @@ def Main(self):
 
     ed.use_state(initializer)
 
+    text1, text1_set = ed.use_state("")
     mltext, mltext_set = ed.use_state("Hello World")
     ddoptions, ddoptionss_set = ed.use_state(0)
     ddoptions2, ddoptions2_set = ed.use_state(0)
@@ -63,6 +64,23 @@ def Main(self):
             text="World",
             selectable=True,
         )
+        with ed.HBoxView():
+            ed.TextInput(
+                text=text1,
+                placeholder_text="TextInput with repetitive completions suggestions",
+                completer=(
+                    QCompleter.CompletionMode.UnfilteredPopupCompletion,
+                    # > QCompleter.CompletionMode.InlineCompletion,
+                    (
+                        text1 + text1,
+                        text1 + text1 + text1,
+                        text1 + text1 + text1 + text1,
+                    ),
+                )
+                if len(text1) > 0
+                else None,
+                on_change=text1_set,
+            )
         with ed.HBoxView():
             ed.Dropdown(
                 options=["Option set 1", "Option set 2"],

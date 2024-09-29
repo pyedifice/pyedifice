@@ -578,41 +578,6 @@ class ImageSvg(QtWidgetElement[QtSvgWidgets.QSvgWidget]):
         return commands
 
 
-# TODO
-# It seems to me that the type for Completer should be
-#
-# >   Callable[[str], str]
-#
-# But Qt doesn't like higher-order functions and they've done something
-# much weirder and more complicated.
-# https://doc.qt.io/qtforpython-5/PySide2/QtWidgets/QCompleter.html
-# https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QCompleter.html
-class Completer:
-    # """
-    # Parameters for a `QCompleter <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QCompleter.html>`_.
-    # """
-    def __init__(
-        self,
-        options,
-        # TODO In PySide6, there is no longer an options, instead its a model.
-        mode: str = "popup",
-        # TODO Should mode be this type instead? https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QCompleter.html#PySide6.QtWidgets.QCompleter.CompletionMode
-    ):
-        self.options = options
-        if mode == "popup":
-            self.mode = QtWidgets.QCompleter.CompletionMode.PopupCompletion
-        elif mode == "inline":
-            self.mode = QtWidgets.QCompleter.CompletionMode.InlineCompletion
-        else:
-            raise ValueError
-
-    def __eq__(self, other):
-        return (self.options == other.options) and (self.mode == other.mode)
-
-    def __ne__(self, other):
-        return (self.options != other.options) or (self.mode != other.mode)
-
-
 class TextInput(QtWidgetElement[QtWidgets.QLineEdit]):
     """Basic widget for a one line text input.
 
@@ -640,9 +605,22 @@ class TextInput(QtWidgetElement[QtWidgets.QLineEdit]):
             `editingFinished <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QLineEdit.html#PySide6.QtWidgets.QLineEdit.editingFinished>`_
             event, when the Return or Enter key is pressed, or if the line edit
             loses focus and its contents have changed
-    """
+        completer:
+            A suggested completion list based on the current :code:`text`.
 
-    # TODO Note that you can set an optional Completer, giving the dropdown for completion.
+            This **prop** is a tuple of two elements:
+
+            1. The `CompletionMode <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QCompleter.html#PySide6.QtWidgets.QCompleter.CompletionMode>`_
+               which indicates how the completions should be presented to the user.
+               :code:`UnfilteredPopupCompletion` works best.
+            2. A tuple of strings, the completion options. Calculate these
+               based on the current :code:`text`.
+
+            Or optionally you can pass in an instance of a
+            `QCompleter <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QCompleter.html>`_
+            (not recommended).
+
+    """
 
     def __init__(
         self,
@@ -650,7 +628,7 @@ class TextInput(QtWidgetElement[QtWidgets.QLineEdit]):
         placeholder_text: str | None = None,
         on_change: tp.Callable[[str], None | tp.Awaitable[None]] | None = None,
         on_edit_finish: tp.Callable[[], None | tp.Awaitable[None]] | None = None,
-        # > completer: tp.Optional[Completer] = None,
+        completer: tuple[QtWidgets.QCompleter.CompletionMode, tuple[str, ...]] | QtWidgets.QCompleter | None = None,
         **kwargs,
     ):
         super().__init__(**kwargs)
@@ -660,6 +638,7 @@ class TextInput(QtWidgetElement[QtWidgets.QLineEdit]):
                 "placeholder_text": placeholder_text,
                 "on_change": on_change,
                 "on_edit_finish": on_edit_finish,
+                "completer": completer,
             },
         )
         self._register_props(kwargs)
@@ -680,13 +659,18 @@ class TextInput(QtWidgetElement[QtWidgets.QLineEdit]):
         if self.props.on_edit_finish is not None:
             _ensure_future(self.props.on_edit_finish)()
 
-    # > def _set_completer(self, completer):
-    # >     if completer:
-    # >         qt_completer = QtWidgets.QCompleter(completer.options)
-    # >         qt_completer.setCompletionMode(completer.mode)
-    # >         self.underlying.setCompleter(qt_completer)
-    # >     else:
-    # >         self.underlying.setCompleter(None)
+    def _set_completer(self, completer):
+        assert self.underlying is not None
+        match completer:
+            case None:
+                self.underlying.setCompleter(None)  # type: ignore
+            case QtWidgets.QCompleter():
+                self.underlying.setCompleter(completer)
+            case mode, options:
+                qt_completer = QtWidgets.QCompleter(list(options))
+                qt_completer.setCompletionMode(mode)
+                self.underlying.setCompleter(qt_completer)
+                qt_completer.complete()
 
     def _qt_update_commands(
         self,
@@ -706,6 +690,9 @@ class TextInput(QtWidgetElement[QtWidgets.QLineEdit]):
             commands.append(CommandType(widget.setCursorPosition, widget.cursorPosition()))
         if "placeholder_text" in newprops:
             commands.append(CommandType(widget.setPlaceholderText, newprops.placeholder_text))
+        if "completer" in newprops:
+            commands.append(CommandType(self._set_completer, newprops.completer))
+
         return commands
 
 

@@ -16,11 +16,7 @@ else:
 @ed.component
 def Main(self):
     def initializer():
-        palette = (
-            ed.palette_edifice_light()
-            if ed.theme_is_light()
-            else ed.palette_edifice_dark()
-        )
+        palette = ed.palette_edifice_light() if ed.theme_is_light() else ed.palette_edifice_dark()
         tp.cast(QtWidgets.QApplication, QtWidgets.QApplication.instance()).setPalette(palette)
         return palette
 
@@ -66,8 +62,21 @@ def Main(self):
                 ed.Icon("home", size=20, enabled=False)
             with ed.TableGridRow():
                 ed.Label("TextInput")
-                ed.TextInput("TextInput")
-                ed.TextInput("TextInput", enabled=False)
+                ed.TextInput(
+                    text="TextInput",
+                    completer=(
+                        QtWidgets.QCompleter.CompletionMode.UnfilteredPopupCompletion,
+                        ("TextInput 1", "TextInput 2", "TextInput 3"),
+                    ),
+                )
+                ed.TextInput(
+                    text="TextInput",
+                    completer=(
+                        QtWidgets.QCompleter.CompletionMode.UnfilteredPopupCompletion,
+                        ("TextInput 1", "TextInput 2", "TextInput 3"),
+                    ),
+                    enabled=False,
+                )
             with ed.TableGridRow():
                 ed.Label("Placeholder")
                 ed.TextInput(placeholder_text="Placeholder")
