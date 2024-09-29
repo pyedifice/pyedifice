@@ -47,7 +47,7 @@ class ButtonView(HBoxView):
             on_click=handle_click,
         ):
             Icon(name="share")
-            Label(text="<i>Share the Content<i>")
+            Label(text="<i>Share the Content</i>")
 
     .. figure:: /image/button_view.png
 
