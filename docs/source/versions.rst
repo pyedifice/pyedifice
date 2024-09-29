@@ -4,7 +4,12 @@
 Release Notes
 =============
 
+v2.2.0
+------
+Released: 2024-09-29
+
 * Inspector style bugfix.
+
 
 v2.1.0
 ------
