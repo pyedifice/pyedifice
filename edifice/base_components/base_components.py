@@ -667,10 +667,14 @@ class TextInput(QtWidgetElement[QtWidgets.QLineEdit]):
             case QtWidgets.QCompleter():
                 self.underlying.setCompleter(completer)
             case mode, options:
+                # https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QCompleter.html
                 qt_completer = QtWidgets.QCompleter(list(options))
                 qt_completer.setCompletionMode(mode)
                 self.underlying.setCompleter(qt_completer)
-                qt_completer.complete()
+                # this if hasFocus() then complete() condition is needed
+                # to make the completer pop after new Completion is set
+                if self.underlying.hasFocus():
+                    qt_completer.complete()
 
     def _qt_update_commands(
         self,

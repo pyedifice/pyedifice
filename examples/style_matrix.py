@@ -68,6 +68,7 @@ def Main(self):
                         QtWidgets.QCompleter.CompletionMode.UnfilteredPopupCompletion,
                         ("TextInput 1", "TextInput 2", "TextInput 3"),
                     ),
+                    _focus_open=True,
                 )
                 ed.TextInput(
                     text="TextInput",

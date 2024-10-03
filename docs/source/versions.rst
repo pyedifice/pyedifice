@@ -5,6 +5,7 @@ Release Notes
 =============
 
 * :class:`TextInput` new prop :code:`completer`.
+* :class:`QtWidgetElement` new argument :code:`_focus_open`.
 
 v2.2.0
 ------

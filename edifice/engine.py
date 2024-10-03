@@ -764,6 +764,11 @@ class QtWidgetElement(Element, tp.Generic[_T_widget]):
             `FocusPolicy <https://doc.qt.io/qtforpython-6/PySide6/QtCore/Qt.html#PySide6.QtCore.Qt.FocusPolicy>`_.
 
             See also `QWidget.focusPolicy <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.focusPolicy>`_.
+        _focus_open:
+            Whether the Element should be focused when this Element is first rendered.
+
+            This argument is not a **prop** and will only focus the Element
+            one time on the first render.
         enabled:
             Whether the widget is
             `enabled <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.enabled>`_.
@@ -867,6 +872,7 @@ class QtWidgetElement(Element, tp.Generic[_T_widget]):
         css_class: tp.Any | None = None,
         size_policy: QtWidgets.QSizePolicy | None = None,
         focus_policy: QtCore.Qt.FocusPolicy | None = None,
+        _focus_open: bool = False,
         enabled: bool | None = None,
         on_click: tp.Callable[[QtGui.QMouseEvent], None | tp.Awaitable[None]] | None = None,
         on_key_down: tp.Callable[[QtGui.QKeyEvent], None | tp.Awaitable[None]] | None = None,
@@ -943,10 +949,11 @@ class QtWidgetElement(Element, tp.Generic[_T_widget]):
                 raise ValueError("Unrecognized cursor %s. Cursor must be one of %s" % (cursor, list(_CURSORS.keys())))
 
         self.underlying: _T_widget | None = None
-        self._mouse_pressed = False
         """
         The underlying QWidget, which may not exist if this Element has not rendered.
         """
+        self._mouse_pressed = False
+        self._focus_open_needed = _focus_open
 
     def _set_size(self, width, height, size_from_font=None):
         self._height = height
@@ -1358,6 +1365,14 @@ class QtWidgetElement(Element, tp.Generic[_T_widget]):
                     commands.append(
                         CommandType(underlying.setContextMenuPolicy, QtCore.Qt.ContextMenuPolicy.DefaultContextMenu),
                     )
+        if self._focus_open_needed:
+            # Only do this on first render
+            self._focus_open_needed = False
+            # call_soon() is the only way to get this to work.
+            # It doesn't work if you setFocus in the commands.
+            # Hopefully this does not cause a race condition where we setFocus on a destroyed QWidget.
+            asyncio.get_event_loop().call_soon(underlying.setFocus, QtCore.Qt.FocusReason.OtherFocusReason)
+
         return commands
 
 

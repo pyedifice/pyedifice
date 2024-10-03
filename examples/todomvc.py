@@ -75,6 +75,7 @@ def TodoItem(self, key: int, todo: Todo, set_complete, delete_todo, set_editing,
                     on_change=lambda t: set_text(key, t),
                     on_edit_finish=lambda: set_editing(key, False),
                     style={"font-size": 20},
+                    _focus_open=True,
                 )
             else:
                 Label(
