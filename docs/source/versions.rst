@@ -11,6 +11,7 @@ Released: 2024-10-05
 * :class:`TextInput` new prop :code:`completer`.
 * :class:`QtWidgetElement` new argument :code:`_focus_open`.
 * :class:`QtWidgetElement` :code:`on_key_down` and :code:`on_key_up` events will propagate to parent.
+* :code:`edifice.extra` module does not re-export extra Elements because that requires additional dependencies.
 
 
 v2.2.0
