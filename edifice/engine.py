@@ -1022,23 +1022,34 @@ class QtWidgetElement(Element, tp.Generic[_T_widget]):
             self._default_mouse_release_event = underlying.mouseReleaseEvent
         underlying.mouseReleaseEvent = self._mouse_release(underlying)
 
+    def _handle_key_down(self, event: QtGui.QKeyEvent):
+        if self._on_key_down is not None:
+            _ensure_future(self._on_key_down)(event)
+        if self._default_on_key_down is not None:
+            self._default_on_key_down(event)
+
     def _set_on_key_down(self, underlying: QtWidgets.QWidget, on_key_down):
+        # https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.keyPressEvent
+        # “If you reimplement this handler, it is very important that you call
+        # the base class implementation if you do not act upon the key.”
         if self._default_on_key_down is None:
+            # one-time setup
             self._default_on_key_down = underlying.keyPressEvent
-        if on_key_down is not None:
-            self._on_key_down = _ensure_future(on_key_down)
-        else:
-            self._on_key_down = self._default_on_key_down
-        underlying.keyPressEvent = self._on_key_down
+            underlying.keyPressEvent = self._handle_key_down
+        self._on_key_down = on_key_down
+
+    def _handle_key_up(self, event: QtGui.QKeyEvent):
+        if self._on_key_up is not None:
+            _ensure_future(self._on_key_up)(event)
+        if self._default_on_key_up is not None:
+            self._default_on_key_up(event)
 
     def _set_on_key_up(self, underlying: QtWidgets.QWidget, on_key_up):
         if self._default_on_key_up is None:
+            # one-time setup
             self._default_on_key_up = underlying.keyReleaseEvent
-        if on_key_up is not None:
-            self._on_key_up = _ensure_future(on_key_up)
-        else:
-            self._on_key_up = self._default_on_key_up
-        underlying.keyReleaseEvent = self._on_key_up
+            underlying.keyReleaseEvent = self._handle_key_up
+        self._on_key_up = on_key_up
 
     def _set_on_mouse_down(self, underlying: QtWidgets.QWidget, on_mouse_down):
         if on_mouse_down is not None:

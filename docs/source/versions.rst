@@ -6,6 +6,7 @@ Release Notes
 
 * :class:`TextInput` new prop :code:`completer`.
 * :class:`QtWidgetElement` new argument :code:`_focus_open`.
+* :class:`QtWidgetElement` :code:`on_key_down` and :code:`on_key_up` events will propagate to parent.
 
 v2.2.0
 ------

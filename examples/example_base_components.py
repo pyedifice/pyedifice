@@ -9,11 +9,11 @@ from edifice.qt import QT_VERSION
 
 if QT_VERSION == "PyQt6" and not tp.TYPE_CHECKING:
     from PyQt6.QtCore import Qt
-    from PyQt6.QtGui import QCloseEvent, QFont, QValidator
+    from PyQt6.QtGui import QCloseEvent, QFont, QValidator, QKeyEvent
     from PyQt6.QtWidgets import QApplication, QCompleter
 else:
     from PySide6.QtCore import Qt
-    from PySide6.QtGui import QCloseEvent, QFont, QValidator
+    from PySide6.QtGui import QCloseEvent, QFont, QValidator, QKeyEvent
     from PySide6.QtWidgets import QApplication, QCompleter
 
 
@@ -53,6 +53,10 @@ def Main(self):
     date_text, date_text_set = ed.use_state(n.date().isoformat())
     time_value, time_value_set = ed.use_state(tp.cast(dt.time | ValueError, n.time()))
     time_text, time_text_set = ed.use_state(n.time().isoformat())
+
+    float1, float1_set = ed.use_state(0.0)
+
+    upperlower, upperlower_set = ed.use_state("")
 
     with ed.Window(
         _on_open=handle_open,
@@ -134,8 +138,6 @@ def Main(self):
                         return int(float(matches.groups()[0]) * 1000)
                 except ValueError:
                     return QValidator.State.Intermediate
-                else:
-                    return QValidator.State.Intermediate
 
             def meters_to_text(millimeters: int) -> str:
                 return f"{(float(millimeters) / 1000):.3f} meters"
@@ -148,6 +150,24 @@ def Main(self):
                 text_to_value=text_to_meters,
                 value_to_text=meters_to_text,
                 single_step=1000,
+            )
+
+            def float1_to_text(value:int) -> str:
+                return f"{float(value)/100.0:.2f}"
+            def text_to_float1(text:str) -> int | QValidator.State:
+                try:
+                    return int(float(text)) * 100
+                except ValueError:
+                    return QValidator.State.Intermediate
+
+            ed.SpinInput(
+                min_value=100,
+                max_value=1000000,
+                value=int(float1 * 100.0),
+                on_change=lambda int1: float1_set(float(int1) / 100.0),
+                value_to_text=float1_to_text,
+                text_to_value=text_to_float1,
+                single_step=100,
             )
 
         with ed.HBoxView():
@@ -307,6 +327,20 @@ def Main(self):
                             text=time_value.strftime("%H:%M:%S"),
                             word_wrap=False,
                         )
+        def handle_updown(event: QKeyEvent):
+            # if event.modifiers() & Qt.KeyboardModifier.ControlModifier and event.key() == Qt.Key.Key_Up:
+            if event.key() == Qt.Key.Key_Up:
+               upperlower_set(upperlower.upper())
+            elif event.key() == Qt.Key.Key_Down:
+               upperlower_set(upperlower.lower())
+
+        with ed.VBoxView():
+            ed.TextInput(
+                text=upperlower,
+                on_change=upperlower_set,
+                placeholder_text="Press 🡅 🡇 to change uppercase/lowercase",
+                on_key_down=handle_updown,
+            )
 
 
 if __name__ == "__main__":
