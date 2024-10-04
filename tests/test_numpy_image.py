@@ -1,10 +1,9 @@
-import asyncio as asyncio
 import unittest
+
 import numpy as np
 
-from edifice import engine, Image
-from edifice.extra import NumpyArray_to_QImage, NumpyImage, NumpyArray
-
+from edifice import Image, engine
+from edifice.extra.numpy_image import NumpyArray, NumpyArray_to_QImage, NumpyImage
 from edifice.qt import QT_VERSION
 
 if QT_VERSION == "PyQt6":

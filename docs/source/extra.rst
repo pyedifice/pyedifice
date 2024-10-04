@@ -6,9 +6,13 @@ features.
 
 These Elements have additional dependencies, so they are
 not included in the :code:`edifice` module.
-To use them, you have to import from the module :code:`edifice.extra`::
 
-    from edifice.extra import MatplotlibFigure
+Importing one of these extra Elements will require the installation of the
+additional dependencies.
+
+.. code-block:: python
+
+    from edifice.extra.matplotlib_figure import MatplotlibFigure
 
 User contributions are of course welcome!
 
@@ -18,7 +22,12 @@ User contributions are of course welcome!
    :recursive:
    :template: custom-class.rst
 
-   ~PyQtPlot
-   ~MatplotlibFigure
-   ~NumpyImage
-   ~NumpyArray
+   pyqtgraph_plot.PyQtPlot
+   matplotlib_figure.MatplotlibFigure
+   numpy_image.NumpyImage
+   numpy_image.NumpyArray
+
+.. autosummary::
+   :toctree: stubs
+
+   numpy_image.NumpyArray_to_QImage

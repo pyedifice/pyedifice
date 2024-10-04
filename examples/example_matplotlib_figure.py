@@ -9,7 +9,7 @@ from matplotlib.axes import Axes
 from matplotlib.backend_bases import MouseEvent
 
 import edifice as ed
-from edifice.extra import MatplotlibFigure
+from edifice.extra.matplotlib_figure import MatplotlibFigure
 
 
 @ed.component
