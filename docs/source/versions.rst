@@ -4,6 +4,12 @@
 Release Notes
 =============
 
+v2.4.0
+------
+Released: 2024-10-06
+
+* :class:`TabView` bugfix
+
 v2.3.0
 ------
 Released: 2024-10-05
