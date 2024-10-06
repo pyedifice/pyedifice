@@ -342,6 +342,35 @@ def Main(self):
                 on_key_down=handle_updown,
             )
 
+        tab1, tab1_set = ed.use_state(True)
+        tab2, tab2_set = ed.use_state(True)
+        tab3, tab3_set = ed.use_state(True)
+        with ed.VBoxView():
+
+            with ed.HBoxView():
+                ed.CheckBox(checked = tab1, on_change = tab1_set, text = "Tab 1")
+                ed.CheckBox(checked = tab2, on_change = tab2_set, text = "Tab 2")
+                ed.CheckBox(checked = tab3, on_change = tab3_set, text = "Tab 3")
+            with ed.TabView(
+                labels=(
+                    (("Tab 1",) if tab1 else ())
+                    + (("Tab 2",) if tab2 else ())
+                    + (("Tab 3",) if tab3 else ())
+                ),
+            ):
+                if tab1:
+                    with ed.VBoxView().set_key("tab1"):
+                        ed.Label("Tab 1")
+                        ed.Label("Content 1")
+                if tab2:
+                    with ed.VBoxView().set_key("tab2"):
+                        ed.Label("Tab 2")
+                        ed.Label("Content 2")
+                if tab3:
+                    with ed.VBoxView().set_key("tab3"):
+                        ed.Label("Tab 3")
+                        ed.Label("Content 3")
+
 
 if __name__ == "__main__":
     ed.App(Main()).start()

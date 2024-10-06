@@ -2153,21 +2153,26 @@ class GridView(QtWidgetElement[QtWidgets.QWidget]):
 
 
 class TabView(_LinearView[QtWidgets.QTabWidget]):
-    """Widget with multiple tabs.
+    """Layout widget with multiple tabs.
 
     * Underlying Qt Widget
       `QTabWidget <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QTabWidget.html>`_
+
+    Each child of a TabView will be the content of one tab.
 
     .. figure:: /image/tab_view.png
        :width: 300
 
        A TabView with 2 children.
 
+    It’s important to :func:`Element.set_key` the child tabs if you add and
+    remove child tabs.
+
     Args:
         labels: The labels for the tabs. The number of labels must match the number of children.
     """
 
-    def __init__(self, labels=None, **kwargs):
+    def __init__(self, labels: tp.Sequence[str] | None = None, **kwargs):
         super().__init__(**kwargs)
         self._register_props(
             {
@@ -2176,15 +2181,15 @@ class TabView(_LinearView[QtWidgets.QTabWidget]):
         )
 
     def _delete_child(self, i, old_child):
-        assert self.underlying is QtWidgets.QTabWidget
+        assert self.underlying is not None
         self.underlying.removeTab(i)
 
     def _soft_delete_child(self, i, old_child: QtWidgetElement):
-        assert self.underlying is QtWidgets.QTabWidget
+        assert self.underlying is not None
         self.underlying.removeTab(i)
 
     def _add_child(self, i, child_component):
-        assert self.underlying is QtWidgets.QTabWidget
+        assert self.underlying is not None
         self.underlying.insertTab(i, child_component, self.props.labels[i])
 
     def _initialize(self):
