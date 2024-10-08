@@ -57,8 +57,20 @@ Table of Contents
    :maxdepth: 2
 
    tutorial
+
+.. toctree::
+   :maxdepth: 1
+
    examples
+
+.. toctree::
+   :maxdepth: 2
+
    api
+
+.. toctree::
+   :maxdepth: 2
+
    developer_tools
 
 .. toctree::
