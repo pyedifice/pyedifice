@@ -6,6 +6,8 @@
 
 """PySide6 port of the widgets/layouts/flowlayout example from Qt v6.x"""
 
+from __future__ import annotations
+
 import logging
 import typing
 
@@ -144,32 +146,31 @@ class FlowView(_LinearView[QWidget]):
 
     This component has similar behavior to an `HTML CSS
     wrap flex container <https://developer.mozilla.org/en-US/docs/Web/CSS/flex-wrap>`_.
-    """
+
+    .. note::
+
+        The :class:`FlowView` element is implemented in Python because Qt does not provide
+        any :code:`QLayout` which behaves this way. Currently the :class:`FlowView`
+        has O(N\ :sup:`2`) time complexity for adding children
+        because of technical limitation of the Qt API.
+        """
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.underlying = None
 
     def _delete_child(self, i, old_child: QtWidgetElement):
-        if self.underlying_layout is None:
-            logger.warning("_delete_child No underlying_layout " + str(self))
-        else:
-            if (child_node := self.underlying_layout.takeAt(i)) is None:
-                logger.warning("_delete_child takeAt failed " + str(i) + " " + str(self))
-            else:
-                if (w := child_node.widget()) is None:
-                    logger.warning("_delete_child widget is None " + str(i) + " " + str(self))
-                else:
-                    w.deleteLater()
+        assert self.underlying_layout is not None
+        child_node = self.underlying_layout.takeAt(i)
+        assert child_node is not None
+        child_node.widget().deleteLater()
 
     def _soft_delete_child(self, i, old_child: QtWidgetElement):
-        if self.underlying_layout is None:
-            logger.warning("_soft_delete_child No underlying_layout " + str(self))
-        else:
-            if self.underlying_layout.takeAt(i) is None:
-                logger.warning("_soft_delete_child takeAt failed " + str(i) + " " + str(self))
+        assert self.underlying_layout is not None
+        child_node = self.underlying_layout.takeAt(i)
+        assert child_node is not None
 
-    def _add_child(self, i, child_component):
+    def _add_child(self, i, child_component: QWidget):
         self.underlying_layout.insertWidget(i, child_component)
 
     def _initialize(self):
