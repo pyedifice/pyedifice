@@ -1,6 +1,6 @@
 from .engine import Element, QtWidgetElement, Reference, child_place, component, qt_component
 from .app import App, use_stop
-from .hooks import use_async, use_async_call, use_effect, use_effect_final, use_hover, use_ref, use_state
+from .hooks import use_async, use_async_call, use_effect, use_effect_final, use_hover, use_ref, use_state, use_callback
 from .utilities import alert, file_dialog, set_trace, theme_is_light, palette_edifice_dark, palette_edifice_light
 from .base_components import (
     Button,
@@ -82,6 +82,7 @@ __all__ = [
     "use_effect_final",
     "use_ref",
     "use_state",
+    "use_callback",
     "use_hover",
     "use_stop",
     "theme_is_light",

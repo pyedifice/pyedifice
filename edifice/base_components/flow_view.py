@@ -153,7 +153,7 @@ class FlowView(_LinearView[QWidget]):
         any :code:`QLayout` which behaves this way. Currently the :class:`FlowView`
         has O(N\ :sup:`2`) time complexity for adding children
         because of technical limitation of the Qt API.
-        """
+    """
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)

@@ -2,13 +2,38 @@
 # python examples/flowview1.py
 #
 
+import typing as tp
+
 import edifice as ed
 
 
 @ed.component
+def Thing(self, chrord:int, callback:tp.Callable[[], None]):
+    with ed.VBoxView(style={"padding": 5}):
+        # with ed.ButtonView(style={"padding": 5}):
+        with ed.ButtonView(style={"padding": 5}):
+            ed.Label(
+                text="Label " + chr(chrord),
+                style={
+                    "margin": 5,
+                    "font-size": 20,
+                    "font-family": "Segoe UI Emoji",
+                },
+            )
+
+@ed.component
 def Main(self):
     chars, chars_set = ed.use_state(50)
-    with ed.Window():
+    x, x_set = ed.use_state(0)
+
+    def bind_funcaller():
+        def funcaller():
+            pass
+        return funcaller
+
+    funcallback = ed.use_callback(bind_funcaller, ())
+
+    with ed.Window(style={"align":"top"}):
         ed.Slider(
             value=chars,
             on_change=chars_set,
@@ -20,19 +45,15 @@ def Main(self):
             },
         ):
             with ed.FlowView():
-                # for i in range(chars):
-                for i in range(100-chars, 100):
-                    with ed.VBoxView(style={"padding": 5}).set_key(chr(ord("🦄") + i)):
-                        with ed.ButtonView(style={"padding": 5}):
-                            ed.Label(
-                                text="Label " + chr(ord("🦄") + i),
-                                style={
-                                    "margin": 5,
-                                    "font-size": 20,
-                                    "font-family": "Segoe UI Emoji",
-                                },
-                            )
+                for i in range(chars):
+                # for i in range(100-chars, 100):
+                    chrord = ord("🦄") + i
+                    Thing(chrord, funcallback).set_key(chr(chrord))
         ed.Label("end", style={"align":"top"})
+        ed.Slider(
+            value=x,
+            on_change=x_set,
+        )
 
 
 if __name__ == "__main__":

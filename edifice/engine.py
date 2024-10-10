@@ -1496,6 +1496,23 @@ class RenderResult(object):
 class _HookState:
     state: tp.Any
     updaters: list[tp.Callable[[tp.Any], tp.Any]]
+    element: Element
+    engine: RenderEngine
+
+    # Stable setter function will always be the same function
+    # returned by repeated calls to use_state. So it can be used
+    # as a stable prop.
+    def setter(self, updater):
+        if self.element not in self.engine._hook_state:
+            # Then the component has been deleted and unmounted.
+            # This might happen if the setter is called during a
+            # a use_async CancelledError handler.
+            # In that case, we don't want to update the state.
+            return
+        self.updaters.append(updater)
+        self.engine._hook_state_setted.add(self.element)
+        assert self.engine._app is not None
+        self.engine._app._defer_rerender(self.element)
 
 
 @dataclass
@@ -1784,8 +1801,6 @@ class RenderEngine:
             render_context.mark_qt_rerender(rerendered_obj.component, True)
             return rerendered_obj
 
-        # TODO So _should_update returned False but then we call
-        # mark_props_change? What does mark_props_change mean then?
         render_context.mark_props_change(component, newprops)
         return self._widget_tree[component]
 
@@ -2087,27 +2102,20 @@ class RenderEngine:
 
         if len(hooks) <= h_index:
             # Then this is the first render.
-            # Call the initializer function if it is a function.
-            hook = _HookState(initial_state() if callable(initial_state) else initial_state, [])
+            hook = _HookState(
+                # Call the initializer function if it is a function.
+                initial_state() if callable(initial_state) else initial_state,
+                [],
+                element,
+                self,
+            )
             if callable(hook.state):
                 raise ValueError("The state value of use_state cannot be Callable.")
             hooks.append(hook)
         else:
             hook = hooks[h_index]
 
-        def setter(updater):
-            if element not in self._hook_state:
-                # Then the component has been deleted and unmounted.
-                # This might happen if the setter is called during a
-                # a use_async CancelledError handler.
-                # In that case, we don't want to update the state.
-                return
-            hook.updaters.append(updater)
-            self._hook_state_setted.add(element)
-            assert self._app is not None
-            self._app._defer_rerender(element)
-
-        return (hook.state, setter)
+        return (hook.state, hook.setter)
 
     def use_effect(
         self,
