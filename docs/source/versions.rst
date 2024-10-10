@@ -4,6 +4,10 @@
 Release Notes
 =============
 
+v2.5.0
+------
+Released: 2024-10-10
+
 * New Hook :func:`use_callback`.
 * Hook :func:`use_state` **setter function** will be stable across renders.
 
