@@ -5,6 +5,7 @@ description = "Declarative GUI framework for Python and Qt"
 authors = ["David Ding", "James D. Brock", "Viktor Kronvall"]
 requires-python = ">=3.10"
 dependencies = [
+  "pytest>=8.3.3",
   "qasync>=0.26.0",
   "typing-extensions>=4.0.0",
 ]

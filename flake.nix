@@ -8,6 +8,10 @@
       inputs.nixpkgs.follows = "nixpkgs";
       inputs.flake-utils.follows = "flake-utils";
     };
+    uv2nix = {
+      url = "github:considerate/uv2nix";
+      inputs.nixpkgs.follows = "nixpkgs-unstable";
+    };
   };
   outputs = inputs: inputs.flake-utils.lib.eachDefaultSystem (system:
     let
@@ -63,6 +67,134 @@
         ];
       };
       pkgs-unstable = inputs.nixpkgs-unstable.legacyPackages.${system};
+      uv2nix = inputs.uv2nix.lib.uv2nixFor { pkgs = pkgs-unstable; };
+      python-uv = uv2nix.uv2nix {
+        src = ./.;
+        modules = [
+          ({ python, ... }: {
+            distributions.pyedifice.extra-dev-dependencies.dev = [ python.pkgs.unittestCheckHook ];
+            uv.overlays = [
+              (final: prev: {
+                pyedifice = prev.pyedifice.overridePythonAttrs (old: {
+                  unittestFlagsArray = [ "-s" "tests" ];
+                  QT_QPA_PLATFORM_PLUGIN_PATH = "${final.pkgs.qt6.qtbase}/lib/qt-6/plugins/platforms";
+                  buildInputs = (old.buildInputs or [ ]) ++ [
+                    final.pkgs.qt6.qtbase
+                    final.pkgs.qt6.qtwayland
+                    final.pkgs.qt6.qtwayland.dev
+                    final.pkgs.libxkbcommon
+                    final.pkgs.gtk3
+                    final.pkgs.speechd
+                    final.pkgs.gst
+                    final.pkgs.gst_all_1.gst-plugins-base
+                    final.pkgs.gst_all_1.gstreamer
+                    final.pkgs.postgresql.lib
+                    final.pkgs.unixODBC
+                    final.pkgs.pcsclite
+                    final.pkgs.xorg.libxcb
+                    final.pkgs.xorg.xcbutil
+                    final.pkgs.xorg.xcbutilcursor
+                    final.pkgs.xorg.xcbutilerrors
+                    final.pkgs.xorg.xcbutilimage
+                    final.pkgs.xorg.xcbutilkeysyms
+                    final.pkgs.xorg.xcbutilrenderutil
+                    final.pkgs.xorg.xcbutilwm
+                    final.pkgs.libdrm
+                    final.pkgs.pulseaudio
+                  ];
+                  nativeBuildInputs = old.nativeBuildInputs ++ [
+                    final.pkgs.qt6.wrapQtAppsHook
+                  ];
+                });
+                pyside6-essentials = prev.pyside6-essentials.overridePythonAttrs (old: pkgs.lib.optionalAttrs pkgs.stdenv.isLinux {
+                  autoPatchelfIgnoreMissingDeps = [ "libmysqlclient.so.21" "libmimerapi.so" "libQt6EglFsKmsGbmSupport.so*" ];
+                  preFixup = ''
+                    addAutoPatchelfSearchPath ${final.shiboken6}/${final.python.sitePackages}/shiboken6
+                  '';
+                  buildInputs = old.buildInputs or [ ] ++ [
+                    final.pkgs.qt6.full
+                    final.pkgs.qt6.qtwayland
+                    final.pkgs.qt6.qtwayland.dev
+                    final.pkgs.libxkbcommon
+                    final.pkgs.gtk3
+                    final.pkgs.speechd
+                    final.pkgs.gst
+                    final.pkgs.gst_all_1.gst-plugins-base
+                    final.pkgs.gst_all_1.gstreamer
+                    final.pkgs.postgresql.lib
+                    final.pkgs.unixODBC
+                    final.pkgs.pcsclite
+                    final.pkgs.xorg.libxcb
+                    final.pkgs.xorg.xcbutil
+                    final.pkgs.xorg.xcbutilcursor
+                    final.pkgs.xorg.xcbutilerrors
+                    final.pkgs.xorg.xcbutilimage
+                    final.pkgs.xorg.xcbutilkeysyms
+                    final.pkgs.xorg.xcbutilrenderutil
+                    final.pkgs.xorg.xcbutilwm
+                    final.pkgs.libdrm
+                    final.pkgs.pulseaudio
+                  ];
+                  nativeBuildInputs = old.nativeBuildInputs ++ [
+                    final.pkgs.qt6.wrapQtAppsHook
+                  ];
+                  pythonImportsCheck = [
+                    "PySide6"
+                    "PySide6.QtCore"
+                  ];
+                  postInstall = ''
+                    python -c 'import PySide6; print(PySide6.__all__)'
+                  '';
+                });
+
+                pyside6-addons = prev.pyside6-addons.overridePythonAttrs (old: pkgs.lib.optionalAttrs pkgs.stdenv.isLinux {
+                  autoPatchelfIgnoreMissingDeps = [
+                    "libmysqlclient.so.21"
+                    "libmimerapi.so"
+                  ];
+                  preFixup = ''
+                    addAutoPatchelfSearchPath ${final.shiboken6}/${final.python.sitePackages}/shiboken6
+                    addAutoPatchelfSearchPath ${final.pyside6-essentials}/${final.python.sitePackages}/PySide6
+                    addAutoPatchelfSearchPath $out/${final.python.sitePackages}/PySide6
+                  '';
+                  buildInputs = (old.buildInputs or [ ]) ++ [
+                    final.pkgs.nss
+                    final.pkgs.xorg.libXtst
+                    final.pkgs.alsa-lib
+                    final.pkgs.xorg.libxshmfence
+                    final.pkgs.xorg.libxkbfile
+                    #
+                    final.pkgs.gtk3
+                    final.pkgs.speechd
+                    final.pkgs.gst
+                    final.pkgs.gst_all_1.gst-plugins-base
+                    final.pkgs.gst_all_1.gstreamer
+                    final.pkgs.pcsclite
+                  ];
+                });
+                pyside6 = prev.pyside6.overridePythonAttrs (_old: {
+                  # The PySide6/__init__.py script tries to find the Qt libraries
+                  # relative to its own path in the installed site-packages directory.
+                  # This then fails to find the paths from pyside6-essentials and
+                  # pyside6-addons because they are installed into different directories.
+                  #
+                  # To work around this issue we symlink all of the files resulting from
+                  # those packages into the aggregated `pyside6` output directories.
+                  #
+                  # See https://github.com/nix-community/poetry2nix/issues/1791 for more details.
+                  dontWrapQtApps = true;
+                  postFixup = ''
+                    ${pkgs.xorg.lndir}/bin/lndir ${final.pyside6-essentials}/${final.python.sitePackages}/PySide6 $out/${final.python.sitePackages}/PySide6
+                    ${pkgs.xorg.lndir}/bin/lndir ${final.pyside6-addons}/${final.python.sitePackages}/PySide6 $out/${final.python.sitePackages}/PySide6
+                  '';
+                });
+              })
+            ];
+          })
+        ];
+        python = pkgs-unstable.python313;
+        preferWheels = true;
+      };
 
       qasync_ = import ./nix/qasync/default.nix;
       pyedifice_ = import ./nix/pyedifice/default.nix;
@@ -230,6 +362,7 @@
         # in the README or somewhere.
         qasync = qasync_;
         pyedifice = pyedifice_;
+        inherit python-uv;
       };
 
       apps =
