@@ -1,0 +1,99 @@
+version = 1
+requires-python = ">=3.10"
+
+[[package]]
+name = "pyedifice"
+version = "2.5.0"
+source = { editable = "." }
+dependencies = [
+    { name = "qasync" },
+    { name = "typing-extensions" },
+]
+
+[package.dev-dependencies]
+dev = [
+    { name = "pyside6" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "qasync", specifier = ">=0.26.0" },
+    { name = "typing-extensions", specifier = ">=4.0.0" },
+]
+
+[package.metadata.requires-dev]
+dev = [{ name = "pyside6", specifier = ">=6.8.0" }]
+
+[[package]]
+name = "pyside6"
+version = "6.8.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "pyside6-addons" },
+    { name = "pyside6-essentials" },
+    { name = "shiboken6" },
+]
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/23/4a/bfad04cea602e28d5f43d752291cd539b6e64c82d15dfe7301a4fee9def6/PySide6-6.8.0-cp39-abi3-macosx_12_0_universal2.whl", hash = "sha256:d2d872075ab0340ca192594c57741c55c67bc82354dc0b69289e6a25ff3bc39b", size = 553990 },
+    { url = "https://files.pythonhosted.org/packages/d6/f7/78f18f855d87852a999f894d54b51a9f5574e9ea918562ff3196843e4491/PySide6-6.8.0-cp39-abi3-manylinux_2_28_x86_64.whl", hash = "sha256:c0cca7dbea891b4d342318cf21a4be17e111e9856c4c8dbd8c5966d4249d3778", size = 554049 },
+    { url = "https://files.pythonhosted.org/packages/6b/02/faffa025f3dc8c5bbaa94ba834ac2f932a5cbabf392edeb5e06dc8d0bdbb/PySide6-6.8.0-cp39-abi3-manylinux_2_31_aarch64.whl", hash = "sha256:cf2472b7d90713cc38ffdb0f02c1bccb06a515ecf553dedcad47d08d2c97db21", size = 554221 },
+    { url = "https://files.pythonhosted.org/packages/d9/ce/c3e77caff13ced2d6d15b1e3d2278b11af89088b1df99b623b836679c868/PySide6-6.8.0-cp39-abi3-win_amd64.whl", hash = "sha256:3be09e8a0239d1e47214b3bc6a9662a714795ff34ae6eac8e37cfc7c8db1bb72", size = 559860 },
+]
+
+[[package]]
+name = "pyside6-addons"
+version = "6.8.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "pyside6-essentials" },
+    { name = "shiboken6" },
+]
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/6a/eb/b0114fa92592de434bc9a1b0404a906ce47a46a18095c5d168e03693452c/PySide6_Addons-6.8.0-cp39-abi3-macosx_12_0_universal2.whl", hash = "sha256:aebab1e4fe63ebceccae4068768bf20959ab78f7fe01af832458837241334b5c", size = 302011369 },
+    { url = "https://files.pythonhosted.org/packages/00/21/c812cb0dda51cd88736f8b0ab7eb0a7acaf181c49221615a0a21e40bd506/PySide6_Addons-6.8.0-cp39-abi3-manylinux_2_28_x86_64.whl", hash = "sha256:4b3be260f9cc415d1a12b77a703ced18b8854f56985f4708cab5618a9554bbd6", size = 143714547 },
+    { url = "https://files.pythonhosted.org/packages/1e/a3/3cd779355c58314b1026d329deb33fff631b580f27e95aa83f21d6409ab5/PySide6_Addons-6.8.0-cp39-abi3-manylinux_2_31_aarch64.whl", hash = "sha256:7c153a685341683fac82d32926e2204747a83c13ef7b203db8ae9efe27f26a0f", size = 128861508 },
+    { url = "https://files.pythonhosted.org/packages/bf/c2/e9a2bd1d5d10f71257918bc4932694db3aff3f1381983e74587b32bdf1a3/PySide6_Addons-6.8.0-cp39-abi3-win_amd64.whl", hash = "sha256:8f7f20fb3758995580f1fb8342df3479be51958eca36db2d6f6a3304f31471de", size = 127834868 },
+]
+
+[[package]]
+name = "pyside6-essentials"
+version = "6.8.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "shiboken6" },
+]
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/29/8a/bc5c48e97b2bbeb74e762f957f0266ca65e55f9636dc9edb52351cc974af/PySide6_Essentials-6.8.0-cp39-abi3-macosx_12_0_universal2.whl", hash = "sha256:c2ad37de574ed911ac2dd392e95888ee7354c4bc475259dafc31978efb710a6a", size = 164669377 },
+    { url = "https://files.pythonhosted.org/packages/9d/fd/17510a0abd503a904ce3b9f1af87385435cf9340fb79c020a53d3a8385a5/PySide6_Essentials-6.8.0-cp39-abi3-manylinux_2_28_x86_64.whl", hash = "sha256:da99a94806416ec1e386426a474e7d1e514c1cdf8ad171c005376f4f633e7216", size = 95183796 },
+    { url = "https://files.pythonhosted.org/packages/db/3f/8347353a0980187820f065432870c68e614945b6782f11df41247866b7db/PySide6_Essentials-6.8.0-cp39-abi3-manylinux_2_31_aarch64.whl", hash = "sha256:ae0732228e93eb882c9a93fd510819fb64b7d09d8e500912b485a604537215d6", size = 92322296 },
+    { url = "https://files.pythonhosted.org/packages/9f/02/010425c35f64701979c679e1157e564c61e1d66b148dc4f7978393e26a0b/PySide6_Essentials-6.8.0-cp39-abi3-win_amd64.whl", hash = "sha256:2ef7138dc7efb9f1153c1dda7a7bd6ac02badad1aa1971cc140d0b9bf962c3dc", size = 72518318 },
+]
+
+[[package]]
+name = "qasync"
+version = "0.27.1"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/1c/e0/7c7c973f52e1765d6ddfc41e9272294f65d5d52b8f5f5eae92adf411ad46/qasync-0.27.1.tar.gz", hash = "sha256:8dc768fd1ee5de1044c7c305eccf2d39d24d87803ea71189d4024fb475f4985f", size = 14287 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/51/06/bc628aa2981bcfd452a08ee435b812fd3eee4ada8acb8a76c4a09d1a5a77/qasync-0.27.1-py3-none-any.whl", hash = "sha256:5d57335723bc7d9b328dadd8cb2ed7978640e4bf2da184889ce50ee3ad2602c7", size = 14866 },
+]
+
+[[package]]
+name = "shiboken6"
+version = "6.8.0"
+source = { registry = "https://pypi.org/simple" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/8c/65/2ac3c288846941e3f4dd87f2391d8e19e8906f94d2d26a02927eced507cc/shiboken6-6.8.0-cp39-abi3-macosx_12_0_universal2.whl", hash = "sha256:0d3171c496e7474ad29d73686e46e741317a9b29ae9fa30c421fa0360bc10af0", size = 393083 },
+    { url = "https://files.pythonhosted.org/packages/3b/92/9fa08c01ba811e2405059239e16d21b2e5c40b39de204c88fc35ac01c4ff/shiboken6-6.8.0-cp39-abi3-manylinux_2_28_x86_64.whl", hash = "sha256:ad88c0e73c9e4de3723c6e6b846e651729433ff9d9086bb2b4e6d49965477d97", size = 199879 },
+    { url = "https://files.pythonhosted.org/packages/a4/b1/2d14977e0d4d415ac0bfbb7e83b303cb48a2dd6e9ba7fcb95f81fdc85b49/shiboken6-6.8.0-cp39-abi3-manylinux_2_31_aarch64.whl", hash = "sha256:0f62ee7c34337e2c39fff0985694224f7503328c450245c399846b72cd71c410", size = 189142 },
+    { url = "https://files.pythonhosted.org/packages/59/18/ae235f553071efc149231c97583f961ba3624fa18c01f52c4db394132b88/shiboken6-6.8.0-cp39-abi3-win_amd64.whl", hash = "sha256:cb98424a1f0c2d6ebf7f6be99660a121b9b22601a058e6b7efeadbc60bcd2182", size = 1146156 },
+]
+
+[[package]]
+name = "typing-extensions"
+version = "4.12.2"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/df/db/f35a00659bc03fec321ba8bce9420de607a1d37f8342eee1863174c69557/typing_extensions-4.12.2.tar.gz", hash = "sha256:1a7ead55c7e559dd4dee8856e3a88b41225abfe1ce8df57b7c13915fe121ffb8", size = 85321 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/26/9f/ad63fc0248c5379346306f8668cda6e2e2e9c95e01216d2b8ffd9ff037d0/typing_extensions-4.12.2-py3-none-any.whl", hash = "sha256:04e5ca0351e0f3f85c6853954072df659d0d13fac324d0072316b67d7794700d", size = 37438 },
+]

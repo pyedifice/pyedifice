@@ -1,6 +1,7 @@
 {
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-24.05";
+    nixpkgs-unstable.url = "github:nixos/nixpkgs";
     flake-utils.url = "github:numtide/flake-utils";
     poetry2nix = {
       url = "github:nix-community/poetry2nix";
@@ -61,6 +62,7 @@
           })
         ];
       };
+      pkgs-unstable = inputs.nixpkgs-unstable.legacyPackages.${system};
 
       qasync_ = import ./nix/qasync/default.nix;
       pyedifice_ = import ./nix/pyedifice/default.nix;
@@ -144,6 +146,38 @@
 
         inherit pythonEnv;
 
+        uv =
+          let
+            libraries = [
+              pkgs.libGL
+              pkgs.stdenv.cc.cc
+              pkgs.glib
+              pkgs.zlib
+              "/run/opgengl-driver"
+              pkgs.libxkbcommon
+              pkgs.fontconfig
+              pkgs.xorg.libX11
+              pkgs.freetype
+              pkgs.dbus
+            ];
+            library-path = pkgs.lib.makeLibraryPath libraries;
+            python-base = pkgs.python313;
+            python = pkgs.callPackage "${pkgs.path}/pkgs/development/interpreters/python/wrapper.nix" {
+              python = python-base;
+              requiredPythonModules = python-base.pkgs.requiredPythonModules;
+              makeWrapperArgs = [
+                "--inherit-argv0"
+                "--prefix"
+                "LD_LIBRARY_PATH"
+                ":"
+                library-path
+              ];
+            };
+          in
+          pkgs.mkShell {
+            packages = [ python pkgs-unstable.uv ];
+          };
+
         poetry = pkgs.mkShell {
           packages = [ pkgs.python310 pkgs.poetry pkgs.qt6.qtbase ];
           shellHook =
@@ -177,7 +211,7 @@
           extras = [ "*" ];
           extraPackages = ps: with ps; [ ];
         })).env.overrideAttrs (oldAttrs: {
-          buildInputs = [ pkgs.nodePackages.pyright pkgs.nixd];
+          buildInputs = [ pkgs.nodePackages.pyright pkgs.nixd ];
           # Need LC_ALL for the `make html` command in the docs/ directory
           # because of https://github.com/sphinx-doc/sphinx/issues/11739
           LC_ALL = "C.UTF-8";
