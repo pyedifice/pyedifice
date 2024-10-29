@@ -130,8 +130,8 @@ def Main(self):
     with ed.VBoxView(style={"align": "top"}):
         with ed.VBoxView(
             style={
-                "margin-top": 20,
-                "margin-bottom": 20,
+                "padding-top": 20,
+                "padding-bottom": 20,
                 "border-top-width": "1px",
                 "border-top-style": "solid",
                 "border-top-color": "black",
@@ -147,8 +147,8 @@ def Main(self):
 
         with ed.VBoxView(
             style={
-                "margin-top": 20,
-                "margin-bottom": 20,
+                "padding-top": 20,
+                "padding-bottom": 20,
                 "border-top-width": "1px",
                 "border-top-style": "solid",
                 "border-top-color": "black",
@@ -160,8 +160,8 @@ def Main(self):
 
         with ed.VBoxView(
             style={
-                "margin-top": 20,
-                "margin-bottom": 20,
+                "padding-top": 20,
+                "padding-bottom": 20,
                 "border-top-width": "1px",
                 "border-top-style": "solid",
                 "border-top-color": "black",
@@ -172,8 +172,8 @@ def Main(self):
 
         with ed.VBoxView(
             style={
-                "margin-top": 20,
-                "margin-bottom": 20,
+                "padding-top": 20,
+                "padding-bottom": 20,
                 "border-top-width": "1px",
                 "border-top-style": "solid",
                 "border-top-color": "black",
