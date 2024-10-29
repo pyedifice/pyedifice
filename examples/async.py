@@ -83,6 +83,14 @@ def Main(self):
 
     ed.use_async(_on_change3, d)
 
+    ########## Test that async exceptions are silently thrown away
+
+    async def asyncthrow():
+        await asyncio.sleep(1)
+        raise ValueError("Test error")
+
+    callthrow, _ = ed.use_async_call(asyncthrow)
+
     ##########
 
     k, set_k = ed.use_state(cast(list[tuple[int, str]], []))
@@ -184,8 +192,18 @@ def Main(self):
 
         with ed.VBoxView(
             style={
-                "margin-top": 20,
-                "margin-bottom": 20,
+                "padding": 20,
+            },
+        ):
+            with ed.ButtonView(
+                on_trigger=lambda _ev: callthrow(),
+            ):
+                ed.Label(text="Async throw ValueError after 1 sec")
+
+        with ed.VBoxView(
+            style={
+                "padding-top": 20,
+                "padding-bottom": 20,
                 "border-top-width": "1px",
                 "border-top-style": "solid",
                 "border-top-color": "black",
