@@ -608,8 +608,9 @@ def component(f: Callable[tp.Concatenate[selfT, P], None]) -> Callable[P, Elemen
     There are two features to accomplish this.
 
     1. The special :code:`children` **prop** is a tuple of :class:`Element` s.
-       This special **prop** must always be declared as a **keyword argument**
-       with a default value.
+       The special :code:`children` **prop** must
+       be declared as a **keyword argument** with a default empty tuple,
+       like this :code:`children:tuple[Element, ...]=()`.
 
        Do not explicitly pass the :code:`children` **prop** when calling
        the :func:`@component<component>`. The children will be passed implicitly.
