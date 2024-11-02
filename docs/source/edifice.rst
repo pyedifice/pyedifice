@@ -196,10 +196,16 @@ is important for everything in Edifice. It is used, for example:
 
 For the :code:`__eq__` relation to work properly, it should mean that if two
 objects are :code:`__eq__`, then *one can be substituted for the other*.
-This is not true for many Python types, especially object types
-for which :code:`__eq__` defaults to identity.
+
+Keep in mind that for Python object types :code:`__eq__` defaults to
+referential identity.
 
     By default, :code:`object` implements :code:`__eq__()` by using :code:`is`
+
+Sometimes this referential identity :code:`__eq__` is what you want,
+for example with large objects like images or tensors, because it’s too expensive
+to compare the objects by value and you know that you don't have duplicate values
+in your program. But usually you want an :code:`__eq__` that compares values.
 
 Every value used as a **prop** or **state** or **dependency** in Edifice should
 have a *substitutional* :code:`__eq__` relation.

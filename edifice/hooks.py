@@ -67,6 +67,8 @@ def use_state(
     Initialization
     --------------
 
+    An **initializer function** is a function of no arguments.
+
     If an **initializer function** is passed to :func:`use_state`, then the
     **initializer function** will be called once before
     this :func:`components`’s first render to get the **initial state**.
@@ -86,22 +88,25 @@ def use_state(
 
     Do not perform observable side effects inside the **initializer function**.
 
-    * Do not do any file or network I/O.
+    * Do not write to files or network.
     * Do not call a **setter function** of another :func:`use_state` Hook.
 
-    For these kinds of initialization side effects, use :func:`use_effect` instead.
+    For these kinds of initialization side effects, use :func:`use_effect` instead,
+    or :func:`use_async` for very long-running initial side effects.
 
     Using the **initializer function** for initial side effects is good for
     some cases where the side effect has a predictable result and cannot fail,
-    like for example setting global styles in the root Element.
+    like for example setting global styles in the root Element, or reading
+    small configuration files.
 
     Update
     ------
 
+    An **updater function** is a function from the previous state to the new state.
+
     If an **updater function** is passed to the **setter function**, then before the
     beginning of the next render the **state value** will be modified by calling all of the
     **updater functions** in the order in which they were set.
-    An **updater function** is a function from the previous state to the new state.
 
     .. code-block:: python
         :caption: Updater function
@@ -184,19 +189,21 @@ def use_effect(
     The **setup function** will be called after render and after the underlying
     Qt Widgets are updated.
 
+    The **setup function** may return a **cleanup function**.
+    If the :code:`dependencies` in the next render are not :code:`__eq__` to
+    the dependencies from the last render, then the **cleanup function** is
+    called and then the new **setup function** is called.
+
     The **cleanup function** will be called by Edifice exactly once for
     each call to the **setup function**.
     The **cleanup function**
     is called after render and before the component is deleted.
 
-    If the dependencies change, then the old **cleanup function** is called and
-    then the new **setup function** is called.
-
-    If the dependencies are :code:`None`, then the new effect
-    **setup function** will always be called on every render.
+    If the :code:`dependencies` are :code:`None`, then the new effect
+    **setup function** will always be called after every render.
 
     If you want to call the **setup function** only once, then pass an empty
-    tuple :code:`()` as the dependencies.
+    tuple :code:`()` as the :code:`dependencies`.
 
     If the **setup function** raises an Exception then the
     **cleanup function** will not be called.
@@ -254,6 +261,7 @@ def use_async(
     with the :code:`fn_coroutine` coroutine.
 
     The :code:`fn_coroutine` will be called every time the :code:`dependencies` change.
+    Only one :code:`fn_coroutine` will be allowed to run at a time.
 
     .. code-block:: python
         :caption: use_async to fetch from the network
