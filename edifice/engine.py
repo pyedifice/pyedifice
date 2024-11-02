@@ -571,18 +571,25 @@ def component(f: Callable[tp.Concatenate[selfT, P], None]) -> Callable[P, Elemen
 
     The **props** are the arguments passed to the :func:`@component<component>` function.
 
-    The @component will be re-rendered when some of its **props** are not
+    The :func:`@component<component>` will be re-rendered when some of its **props** are not
     :code:`__eq__` to the **props** from the last time the @component rendered.
-    If the **props** are all :code:`__eq__`, the @component will not re-render.
+    If the **props** are all :code:`__eq__`, the :func:`@component<component>`
+    will not re-render.
 
     Arguments with a leading underscore :code:`_` will not count as **props**.
+    They are normal function arguments, and changing their value will not
+    cause the :func:`@component<component>` to re-render.
+
 
     Render
     ------
 
     The @component function must render exactly one :class:`Element`.
     In the @component function, declare a tree of :class:`Element` with a
-    single root::
+    single root.
+
+    .. code-block:: python
+        :caption: a tree with a single root
 
         @component
         def MySimpleComp(self, prop1, prop2, prop3):
@@ -618,7 +625,10 @@ def component(f: Callable[tp.Concatenate[selfT, P], None]) -> Callable[P, Elemen
        in the parent :func:`@component<component>`’s render function.
 
     With these two features, you can declare how the parent
-    container :func:`@component<component>` will render its children::
+    container :func:`@component<component>` will render its children.
+
+    .. code-block:: python
+        :caption: Example ContainerComponent with children props
 
         @component
         def ContainerComponent(self:Element, children:tuple[Element, ...]=()):
@@ -626,6 +636,9 @@ def component(f: Callable[tp.Concatenate[selfT, P], None]) -> Callable[P, Elemen
                 for child in children:
                     with VBoxView():
                         child_place(child)
+
+    .. code-block:: python
+        :caption: Example ContainerComponent usage
 
         with ContainerComponent():
             Label(text="First Child")
