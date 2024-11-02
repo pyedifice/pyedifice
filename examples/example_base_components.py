@@ -63,11 +63,28 @@ def Main(self):
         on_close=handle_close,
         title="Example Base Components",
     ):
-        ed.Label("Hello")
-        ed.Label(
-            text="World",
-            selectable=True,
-        )
+        with ed.HBoxView():
+            with ed.VBoxView():
+                ed.Label("Hello")
+                ed.Label(
+                    text="World",
+                    selectable=True,
+                )
+            with ed.VBoxView():
+                ed.Label(
+                    text="""<h2>Title</h2>
+                    <p><i>Para</i>graph</p>""",
+                    text_format=Qt.TextFormat.RichText,
+                    selectable=True,
+                )
+            with ed.VBoxView():
+                ed.Label(
+                    text="""## Title
+
+*Para*graph""",
+                    text_format=Qt.TextFormat.MarkdownText,
+                    selectable=True,
+                )
         with ed.HBoxView():
             ed.TextInput(
                 text=text1,

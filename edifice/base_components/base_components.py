@@ -472,6 +472,9 @@ class Label(QtWidgetElement[QtWidgets.QLabel]):
         link_open: Whether hyperlinks will open to the operating system. Defaults to False.
             `PySide6.QtWidgets.QLabel.setOpenExternalLinks <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QLabel.html#PySide6.QtWidgets.QLabel.setOpenExternalLinks>`_
         selectable: Whether the content of the label can be selected. Defaults to False.
+        text_format: The text format of the label.
+             Defaults to :code:`QtCore.Qt.TextFormat.AutoText`.
+             See `QtCore.Qt.TextFormat <https://doc.qt.io/qtforpython-6/PySide6/QtCore/Qt.html#PySide6.QtCore.Qt.TextFormat>`_.
     """
 
     def __init__(
@@ -480,6 +483,7 @@ class Label(QtWidgetElement[QtWidgets.QLabel]):
         selectable: bool = False,
         word_wrap: bool = True,
         link_open: bool = False,
+        text_format: QtCore.Qt.TextFormat = QtCore.Qt.TextFormat.AutoText,
         **kwargs,
     ):
         super().__init__(**kwargs)
@@ -489,6 +493,7 @@ class Label(QtWidgetElement[QtWidgets.QLabel]):
                 "selectable": selectable,
                 "word_wrap": word_wrap,
                 "link_open": link_open,
+                "text_format": text_format,
             },
         )
         self._register_props(kwargs)
@@ -533,6 +538,8 @@ class Label(QtWidgetElement[QtWidgets.QLabel]):
             else:
                 if "cursor" not in self.props or self.props.cursor is None:
                     commands.append(CommandType(widget.setCursor, _CURSORS["default"]))
+        if "text_format" in newprops:
+            commands.append(CommandType(widget.setTextFormat, newprops.text_format))
 
         return commands
 

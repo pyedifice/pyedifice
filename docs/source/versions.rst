@@ -4,6 +4,9 @@
 Release Notes
 =============
 
+
+* :class:`Label` new prop :code:`text_format`.
+
 v2.5.0
 ------
 Released: 2024-10-10
