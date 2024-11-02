@@ -177,8 +177,8 @@ the same. You can set the key using the :func:`Element.set_key` method.
 If the :code:`_key` is not provided, the diffing algorithm will guess which
 child Elements are identical based on the order of the children.
 
-Whenever a parent has many children which are added and removed,
-it is recommended to use :func:`Element.set_key`
+Whenever a parent has children which are added and removed,
+it is recommended to :func:`Element.set_key` on the children
 to tell the diffing algorithm which child Elements are identical so that it
 doesn’t have to guess.
 
