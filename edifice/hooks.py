@@ -267,19 +267,26 @@ def use_async(
         :caption: use_async to fetch from the network
 
         @component
-        def Asynchronous(self):
-            myword, myword_set = use_state("")
+        def WordDefinition(self, word:str):
+            definition, definition_set = use_state("")
 
             async def fetcher():
                 try:
-                    x = await fetch_word_from_the_internet()
-                    myword_set(x)
+                    definition_set("Fetch definition pending")
+                    x = await fetch_definition_from_the_internet(word)
+                    definition_set(x)
                 except asyncio.CancelledError:
-                    myword_set("Fetch word cancelled")
+                    definition_set("Fetch definition cancelled")
                     raise
+                except BaseException:
+                    defintion_set("Fetch definition failed")
 
-            _cancel_fetcher = use_async(fetcher, 0)
-            Label(text=myword)
+            cancel_fetcher = use_async(fetcher, word)
+
+            with VBoxView():
+                Label(text=word)
+                Label(text=definition)
+                Button(text="Cancel fetch", on_click=lambda _:cancel_fetcher())
 
     Cancellation
     ============
