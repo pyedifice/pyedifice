@@ -81,7 +81,8 @@ Table of Contents
 Why Edifice?
 ------------
 
-**Declarative**
+Declarative
+^^^^^^^^^^^
 
 Most existing GUI libraries in Python, such as Tkinter and Qt, operate imperatively.
 To create a dynamic application using these libraries,
@@ -112,14 +113,16 @@ a button and a label with the current value of :code:`number`.
 Clicking the button will add 5 to the :code:`number`.
 If the :code:`number` is “mid” then another label will reveal that fact.
 
-**Developer Tools**
+Developer Tools
+^^^^^^^^^^^^^^^
 
 - Dynamic hot-reloading of source code changes.
 - Element Inspector.
 
 See :doc:`developer_tools` for more details.
 
-**Edifice vs. Qt Quick**
+Edifice vs. Qt Quick
+^^^^^^^^^^^^^^^^^^^^
 
 `Qt Quick <https://doc.qt.io/qtforpython-6/PySide6/QtQuick/>`_ is Qt’s declarative GUI framework for Qt.
 
@@ -139,7 +142,8 @@ they require imperative logic in another language for dynamism.
 Edifice and React allow fully dynamic applications to be specified
 declaratively in one language.
 
-**Extendable**
+Extendable
+^^^^^^^^^^
 
 Edifice does not support every feature of Qt,
 but it is easy to interface with Qt, either :ref:`incorporating a Qt Widget<custom_widget>` into an Edifice component,

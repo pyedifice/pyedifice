@@ -572,7 +572,8 @@ def component(f: Callable[tp.Concatenate[selfT, P], None]) -> Callable[P, Elemen
     The **props** are the arguments passed to the :func:`@component<component>` function.
 
     The :func:`@component<component>` will be re-rendered when some of its **props** are not
-    :code:`__eq__` to the **props** from the last time the @component rendered.
+    :code:`__eq__` to the **props** from the last time the
+    :func:`@component<component>` rendered.
     If the **props** are all :code:`__eq__`, the :func:`@component<component>`
     will not re-render.
 

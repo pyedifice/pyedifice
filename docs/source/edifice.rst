@@ -59,17 +59,19 @@ Declaring an Element tree in a :func:`@component <component>` Element render fun
 like this.
 To declare an Element to be the parent of some other
 child Elements in the tree, use the parent as a
-`with statement context manager <https://docs.python.org/3/reference/datamodel.html#context-managers>`_::
+`with statement context manager <https://docs.python.org/3/reference/datamodel.html#context-managers>`_.
+
+.. code-block:: python
 
     @component
     def MyApp(self):
         with Window():
             with VBoxView():
                 with HBoxView():
-                    Label("Username: ")
+                    Label(text="Username: ")
                     TextInput()
                 with HBoxView():
-                    Label("Email: ")
+                    Label(text="Email: ")
                     TextInput()
 
 In HTML/XML/JSX, this would be written as:
@@ -85,6 +87,7 @@ In HTML/XML/JSX, this would be written as:
             <HBoxView>
                 <Label text="Email: " />
                 <TextInput />
+            </HBoxView>
         </VBoxView>
     </Window>
 
@@ -225,8 +228,10 @@ Element tree.
 
 Because Element initialization is a render side-effect,
 we have to be careful about binding Elements to variables
-and passing them around. They will insert themselves at the time they are
-created. This code will **NOT** declare the intended Element tree::
+and passing them around. They will insert themselves in the tree at the time
+they are initialized. This code will **NOT** declare the intended Element tree.
+
+.. code-block:: python
 
     @component
     def MySimpleComp(self, prop1, prop2, prop3):
@@ -234,10 +239,12 @@ created. This code will **NOT** declare the intended Element tree::
         with VBoxView():
             Label(text=prop1)
             Label(text=prop2)
-            label3
+            label3 # This will NOT render here as intended
 
 To solve this, defer the construction of the Element with a lambda function.
-This code will declare the same intended Element tree as the code above::
+This code will declare the same intended Element tree as the code above.
+
+.. code-block:: python
 
     @component
     def MySimpleComp(self, prop1, prop2, prop3):
@@ -248,7 +255,9 @@ This code will declare the same intended Element tree as the code above::
             label3()
 
 If these component Elements are render functions, then why couldn’t we just write
-a normal render function with no decorator instead::
+a normal render function with no decorator instead?
+
+.. code-block:: python
 
     # No decorator
     def MySimpleComp(prop1, prop2, prop3):

@@ -69,7 +69,8 @@ def use_state(
 
     An **initializer function** is a function of no arguments.
 
-    If an **initializer function** is passed to :func:`use_state`, then the
+    If an **initializer function** is passed to :func:`use_state` instead
+    of an initial value, then the
     **initializer function** will be called once before
     this :func:`components`’s first render to get the **initial state**.
 
@@ -132,11 +133,20 @@ def use_state(
     Do not mutate the state variable. The old state variable must be left
     unmodified so that it can be compared to the new state variable during
     the next render.
-    Instead create a shallow `copy <https://docs.python.org/3/library/copy.html#copy.copy>`_
-    of the state, modify the copy, then call the **setter function** with the modified copy.
+
+    If Python does not have an
+    `immutable <https://docs.python.org/3/glossary.html#term-immutable>`_
+    version of your state data structure,
+    like for example the :code:`dict`, then you just have to take care to never
+    mutate it.
+
+    Instead of mutating a state :code:`list`, create a
+    shallow `copy <https://docs.python.org/3/library/copy.html#copy.copy>`_
+    of the :code:`list`, modify the copy, then call the **setter function**
+    with the modified copy.
 
     .. code-block:: python
-        :caption: Updater function with shallow copy
+        :caption: Updater function with shallow copy of a list
 
         from copy import copy
         from typing import cast
@@ -157,12 +167,35 @@ def use_state(
                 for t in x:
                     Label(text=t)
 
-    A good technique for declaring immutable state datastructures is to use
-    `frozen dataclasses <https://docs.python.org/3/library/dataclasses.html#frozen-instances>`_.
-    Use the
-    `replace() <https://docs.python.org/3/library/dataclasses.html#dataclasses.replace>`_
-    function to update the dataclass.
+    Techniques for `immutable <https://docs.python.org/3/glossary.html#term-immutable>`_ datastructures in Python
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+    - `Shallow copy <https://docs.python.org/3/library/copy.html#copy.copy>`_.
+      We never need a deep copy because all the data structure items are also immutable.
+    - `Frozen dataclasses <https://docs.python.org/3/library/dataclasses.html#frozen-instances>`_.
+      Use the
+      `replace() <https://docs.python.org/3/library/dataclasses.html#dataclasses.replace>`_
+      function to update the dataclass.
+    - Tuples (:code:`my_list:tuple[str, ...]`) instead of lists (:code:`my_list:list[str]`).
+
+    .. code-block:: python
+        :caption: Updater function with shallow copy of a tuple
+
+        from typing import cast
+
+        def Stateful(self):
+            x, x_setter = use_state(cast(tuple[str, ...], ()))
+
+            def updater(x_previous:tuple[str, ...]) -> tuple[str, ...]:
+                return x_previous + ("Label Text " + str(len(x_previous)),)
+
+            with View():
+                Button(
+                    title="Add One",
+                    on_click = lambda _event: x_setter(updater)
+                )
+                for t in x:
+                    Label(text=t)
     Args:
         initial_state: The initial **state value** or **initializer function**.
     Returns:
