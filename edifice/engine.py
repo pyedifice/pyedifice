@@ -750,24 +750,22 @@ class QtWidgetElement(Element, tp.Generic[_T_widget]):
 
 
     Args:
-        style: style for the widget. Could either be a dictionary or a list of dictionaries.
-
-            See :doc:`../../styling` for a primer on styling.
+        style: Style dictionary. See :doc:`../../styling` for details.
         tool_tip:
-            the tool tip displayed when hovering over the widget.
+            The tool tip displayed when hovering over the widget.
         cursor:
-            the shape of the cursor when mousing over this widget. Must be one of:
+            The shape of the cursor when mousing over this widget. Must be one of:
             :code:`"default"`, :code:`"arrow"`, :code:`"pointer"`, :code:`"grab"`, :code:`"grabbing"`,
             :code:`"text"`, :code:`"crosshair"`, :code:`"move"`, :code:`"wait"`, :code:`"ew-resize"`,
             :code:`"ns-resize"`, :code:`"nesw-resize"`, :code:`"nwse-resize"`,
             :code:`"not-allowed"`, :code:`"forbidden"`
         context_menu:
-            the context menu to display when the user right clicks on the widget.
+            The context menu to display when the user right clicks on the widget.
             Expressed as a dict mapping the name of the context menu entry to either a function
             (which will be called when this entry is clicked) or to another sub context menu.
             For example, :code:`{"Copy": copy_fun, "Share": {"Twitter": twitter_share_fun, "Facebook": facebook_share_fun}}`
         css_class:
-            a string or a list of strings, which will be stored in the :code:`css_class` property of the Qt Widget.
+            A string or a list of strings, which will be stored in the :code:`css_class` property of the Qt Widget.
             This can be used in an application stylesheet, like:
 
                 QLabel[css_class="heading"] { font-size: 18px; }
