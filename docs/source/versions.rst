@@ -4,6 +4,12 @@
 Release Notes
 =============
 
+v2.6.1
+------
+Released: 2024-11-09
+
+* Bugfix :class:`QtWidgetElement` :code:`style` prop will not be mutated.
+
 
 v2.6.0
 ------
