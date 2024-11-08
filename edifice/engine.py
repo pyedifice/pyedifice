@@ -1164,6 +1164,9 @@ class QtWidgetElement(Element, tp.Generic[_T_widget]):
         underlying: QtWidgets.QWidget,
         underlying_layout: QtWidgets.QLayout | None = None,
     ):
+        # shallow copy the style because we will be modifying it
+        style = copy(style)
+
         commands: list[CommandType] = []
 
         if underlying_layout is not None:

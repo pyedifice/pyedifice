@@ -72,7 +72,6 @@ class StyleTestCase(unittest.TestCase):
         layout = Layout()
         comp = MockElement(style=style)
         commands = comp._gen_styling_commands(style, comp.underlying, layout)
-        self.assertTrue("padding" not in style)
         self.assertCountEqual(
             commands,
             [
@@ -113,7 +112,6 @@ class StyleTestCase(unittest.TestCase):
             layout = Layout()
             comp = MockElement(style=style)
             commands = comp._gen_styling_commands(style, comp.underlying, layout)
-            self.assertTrue("align" not in style)
             self.assertCountEqual(
                 commands,
                 [
@@ -135,9 +133,13 @@ class StyleTestCase(unittest.TestCase):
                 "align": align,
             }
             comp = MockElement(style=style)
-            comp._gen_styling_commands(style, comp.underlying, None)
-            self.assertTrue("align" not in style)
-            self.assertEqual(style["qproperty-alignment"], qt_align)
+            commands = comp._gen_styling_commands(style, comp.underlying, None)
+            self.assertEqual(
+                commands,
+                [CommandType(comp.underlying.setStyleSheet,
+                    f"QWidget#{id(comp)}{{qproperty-alignment: {qt_align}}}",
+                )],
+            )
 
         _test_for_align("left", "AlignLeft")
         _test_for_align("right", "AlignRight")
@@ -152,8 +154,14 @@ class StyleTestCase(unittest.TestCase):
         }
         comp = MockElement(style=style)
         comp._size_from_font = None
-        comp._gen_styling_commands(style, comp.underlying, None)
-        self.assertEqual(style["font-size"], "12px")
+        commands = comp._gen_styling_commands(style, comp.underlying, None)
+        # self.assertEqual(style["font-size"], "12px")
+        self.assertEqual(
+            commands,
+            [CommandType(comp.underlying.setStyleSheet,
+                f"QWidget#{id(comp)}{{font-size: 12px}}",
+            )],
+        )
 
     def test_top_left(self):
         style = {
