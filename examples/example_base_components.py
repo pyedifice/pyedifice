@@ -173,7 +173,7 @@ def Main(self):
                 return f"{float(value)/100.0:.2f}"
             def text_to_float1(text:str) -> int | QValidator.State:
                 try:
-                    return int(float(text)) * 100
+                    return int(float(text) * 100.0)
                 except ValueError:
                     return QValidator.State.Intermediate
 
