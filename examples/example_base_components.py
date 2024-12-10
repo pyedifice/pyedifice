@@ -9,11 +9,11 @@ from edifice.qt import QT_VERSION
 
 if QT_VERSION == "PyQt6" and not tp.TYPE_CHECKING:
     from PyQt6.QtCore import Qt
-    from PyQt6.QtGui import QCloseEvent, QFont, QValidator, QKeyEvent
+    from PyQt6.QtGui import QCloseEvent, QFont, QKeyEvent, QValidator
     from PyQt6.QtWidgets import QApplication, QCompleter
 else:
     from PySide6.QtCore import Qt
-    from PySide6.QtGui import QCloseEvent, QFont, QValidator, QKeyEvent
+    from PySide6.QtGui import QCloseEvent, QFont, QKeyEvent, QValidator
     from PySide6.QtWidgets import QApplication, QCompleter
 
 
