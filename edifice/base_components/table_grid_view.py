@@ -179,10 +179,8 @@ class TableGridView(QtWidgetElement[QWidget]):
 
         children = _get_widget_children(widget_trees, self)
         new_children: dict[QtWidgetElement, tuple[int, int]] = {}
-        children_of_rows: list[QtWidgetElement] = []
         for row, c in enumerate(children):
             children_of_row = _get_widget_children(widget_trees, c)
-            children_of_rows.extend(children_of_row)
             for col, child in enumerate(children_of_row):
                 new_children[child] = (row, col)
 
@@ -193,6 +191,7 @@ class TableGridView(QtWidgetElement[QWidget]):
 
         for w, (row, column) in old_deletions:
             if w in new_children:
+                # TODO this condition is never hit
                 commands.append(CommandType(self._soft_delete_child, w, row, column))
             else:
                 commands.append(CommandType(self._delete_child, w, row, column))

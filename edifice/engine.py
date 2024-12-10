@@ -1594,6 +1594,9 @@ class RenderEngine:
         self._widget_tree: dict[Element, _WidgetTree] = {}
         """
         Map of an Element to its rendered widget tree.
+
+        TODO This should actually be a map of each QtWidgetElement to its rendered
+        children, of type dict[QtWidgetElement, list[QtWidgetElement]].
         """
         self._root = root
         self._app: AppProtocol | None = app
@@ -1863,14 +1866,10 @@ class RenderEngine:
                     child_new,
                 ):
                     # then we have a match for reusing the old child
-                    self._update_old_component(child_old_bykey, child_new, render_context)
+                    child_wtree = self._update_old_component(child_old_bykey, child_new, render_context)
                     children_new[i_new] = child_old_bykey
-                    if (w := render_context.widget_tree.get(child_old_bykey, None)) is not None:
-                        # Try to get the cached WidgetTree from this render
-                        widgettree.children.append(w.component)
-                    else:
-                        # Get the cached WidgetTree from previous render
-                        widgettree.children.append(self._widget_tree[child_old_bykey].component)
+                    widgettree.children.append(child_wtree.component)
+                    render_context.widget_tree[child_wtree.component] = child_wtree
                     children_old.remove(child_old_bykey)
                 else:
                     # new child so render
@@ -1882,14 +1881,10 @@ class RenderEngine:
                 child_old = children_old[i_old]
                 if elements_match(child_old, child_new):
                     # then we have a match for reusing the old child
-                    self._update_old_component(child_old, child_new, render_context)
+                    child_wtree = self._update_old_component(child_old, child_new, render_context)
                     children_new[i_new] = child_old
-                    if (w := render_context.widget_tree.get(child_old, None)) is not None:
-                        # Try to get the cached WidgetTree from this render
-                        widgettree.children.append(w.component)
-                    else:
-                        # Get the cached WidgetTree from previous render
-                        widgettree.children.append(self._widget_tree[child_old].component)
+                    widgettree.children.append(child_wtree.component)
+                    render_context.widget_tree[child_wtree.component] = child_wtree
                     del children_old[i_old]
                 else:
                     # new child so render
@@ -1982,6 +1977,10 @@ class RenderEngine:
         old_rendering: list[Element] | None = self._component_tree.get(component, None)
 
         if old_rendering is not None and elements_match(old_rendering[0], sub_component):
+            # TODO Why do we set the key of the widget_tree to be a #component
+            # Element here? This is not used anywhere. This widget_tree[component]
+            # insertion should not happen. widget_tree key should be a QtWidgetElement.
+            # See _widget_tree.
             render_context.widget_tree[component] = self._update_old_component(
                 old_rendering[0],
                 sub_component,
@@ -1991,6 +1990,10 @@ class RenderEngine:
             if old_rendering is not None:
                 render_context.enqueued_deletions.extend(old_rendering)
             render_context.component_tree[component] = [sub_component]
+            # TODO Why do we set the key of the widget_tree to be a #component
+            # Element here? This is not used anywhere. This widget_tree[component]
+            # insertion should not happen. widget_tree key should be a QtWidgetElement.
+            # See _widget_tree.
             render_context.widget_tree[component] = self._render(sub_component, render_context)
 
         return render_context.widget_tree[component]
