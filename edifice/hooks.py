@@ -759,3 +759,43 @@ def use_hover() -> tuple[bool, tp.Callable[[QtGui.QMouseEvent], None], tp.Callab
         hover_set(False)
 
     return hover, on_mouse_enter, on_mouse_leave
+
+
+_T_use_memo = tp.TypeVar("_T_use_memo")
+
+def use_memo(
+    fn:  Callable[[], _T_use_memo],
+    dependencies: tp.Any,
+) -> _T_use_memo:
+    """
+    Hook to memoize the result of calling a function.
+
+    Behaves like `React useMemo <https://react.dev/reference/react/useMemo>`_.
+
+    Use this hook during a render to memoize a value which is pure and
+    non-side-effecting but expensive to compute.
+
+    .. code-block:: python
+        :caption: Example use_memo
+
+        x_factor, x_factor_set = use_state(1)
+
+        def expensive_computation():
+            return 1000000 * x_factor
+
+        bignumber = use_memo(expensive_computation, (x_factor,))
+
+    Args:
+        fn: A function of no arguments which returns a value.
+        dependencies: The value will be recomputed when the dependencies change. If :code:`None`, then the value will be recomputed every render.
+    Returns:
+        The memoized value from calling :code:`fn`.
+
+    """
+    stored, _ = use_state([None,None])
+    if dependencies is None:
+        stored[0] = fn() # type: ignore  # noqa: PGH003
+    elif stored[1] != dependencies:
+        stored[0] = fn() # type: ignore  # noqa: PGH003
+        stored[1] = dependencies
+    return stored[0] # type: ignore  # noqa: PGH003
