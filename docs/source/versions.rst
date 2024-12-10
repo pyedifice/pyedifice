@@ -4,6 +4,15 @@
 Release Notes
 =============
 
+v2.7.0
+------
+Released: 2024-12-10
+
+* New Hook :func:`use_memo`.
+* Bugfix :class:`QtWidgetElement` children.
+  Fix bug children disappeared when re-rendering with no changes.
+
+
 v2.6.1
 ------
 Released: 2024-11-09
