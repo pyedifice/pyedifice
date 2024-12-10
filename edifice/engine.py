@@ -29,10 +29,8 @@ logger = logging.getLogger("Edifice")
 P = tp.ParamSpec("P")
 
 
-def _dict_to_style(d, prefix="QWidget"):
-    d = d or {}
-    stylesheet = prefix + "{%s}" % (";".join("%s: %s" % (k, v) for (k, v) in d.items()))
-    return stylesheet
+def _dict_to_style(d: dict[str, tp.Any], prefix="QWidget") -> str:
+    return prefix + "{" + (";".join(f"{k}: {v}" for (k, v) in d.items())) + "}"
 
 
 # TODO
@@ -96,7 +94,7 @@ Deferred function call. A tuple with a Callable, and all of the values of its ar
 """
 
 
-class PropsDict(object):
+class PropsDict:
     """An immutable dictionary for storing props.
 
     Props may be accessed either by indexing
@@ -171,7 +169,7 @@ class PropsDict(object):
         return "PropsDict(" + str(self._d) + ")"
 
     def __setattr__(self, key, value) -> tp.NoReturn:
-        raise ValueError("Props are immutable")  # noqa: TRY003
+        raise ValueError("Props are immutable")
 
 
 class Reference(tp.Generic[_T_Element]):
@@ -265,7 +263,7 @@ class _Tracker:
         self.children.append(component)
 
 
-class _RenderContext(object):
+class _RenderContext:
     """
     Encapsulates various state that's needed for rendering.
 
@@ -336,7 +334,7 @@ local_state = threading.local()
 
 
 def get_render_context() -> _RenderContext:
-    return getattr(local_state, "render_context")
+    return getattr(local_state, "render_context")  # noqa: B009
 
 
 def get_render_context_maybe() -> _RenderContext | None:
@@ -523,10 +521,10 @@ class Element:
         classname = self.__class__.__name__
         return [
             f"<{classname} id=0x%x %s>"
-            % (id(self), " ".join("%s=%s" % (p, val) for (p, val) in self.props._items if p != "children")),
-            "</%s>" % (classname),
+            % (id(self), " ".join(f"{p}={val}" for (p, val) in self.props._items if p != "children")),
+            f"</{classname}>",
             f"<{classname} id=0x%x %s />"
-            % (id(self), " ".join("%s=%s" % (p, val) for (p, val) in self.props._items if p != "children")),
+            % (id(self), " ".join(f"{p}={val}" for (p, val) in self.props._items if p != "children")),
         ]
 
     def __str__(self):
@@ -684,8 +682,7 @@ def component(f: Callable[tp.Concatenate[selfT, P], None]) -> Callable[P, Elemen
             return f.__name__
 
     ComponentElement.__name__ = f.__name__
-    comp = tp.cast(Callable[P, Element], ComponentElement)
-    return comp
+    return tp.cast(Callable[P, Element], ComponentElement)
 
 
 @component
@@ -896,7 +893,8 @@ class QtWidgetElement(Element, tp.Generic[_T_widget]):
         on_mouse_leave: tp.Callable[[QtGui.QMouseEvent], None | tp.Awaitable[None]] | None = None,
         on_mouse_move: tp.Callable[[QtGui.QMouseEvent], None | tp.Awaitable[None]] | None = None,
         on_drop: tp.Callable[
-            [QtGui.QDragEnterEvent | QtGui.QDragMoveEvent | QtGui.QDragLeaveEvent | QtGui.QDropEvent], None
+            [QtGui.QDragEnterEvent | QtGui.QDragMoveEvent | QtGui.QDragLeaveEvent | QtGui.QDropEvent],
+            None,
         ]
         | None = None,
         on_resize: tp.Callable[[QtGui.QResizeEvent], None | tp.Awaitable[None]] | None = None,
@@ -959,7 +957,7 @@ class QtWidgetElement(Element, tp.Generic[_T_widget]):
         self._context_menu_connected = False
         if cursor is not None:
             if cursor not in _CURSORS:
-                raise ValueError("Unrecognized cursor %s. Cursor must be one of %s" % (cursor, list(_CURSORS.keys())))
+                raise ValueError(f"Unrecognized cursor {cursor}. Cursor must be one of {list(_CURSORS.keys())}")
 
         self.underlying: _T_widget | None = None
         """
@@ -1117,7 +1115,8 @@ class QtWidgetElement(Element, tp.Generic[_T_widget]):
         self,
         underlying: QtWidgets.QWidget,
         on_drop: tp.Callable[
-            [QtGui.QDragEnterEvent | QtGui.QDragMoveEvent | QtGui.QDragLeaveEvent | QtGui.QDropEvent], None
+            [QtGui.QDragEnterEvent | QtGui.QDragMoveEvent | QtGui.QDragLeaveEvent | QtGui.QDropEvent],
+            None,
         ]
         | None,
     ):
@@ -1134,10 +1133,10 @@ class QtWidgetElement(Element, tp.Generic[_T_widget]):
         if on_drop is not None:
             self._on_drop = on_drop
             underlying.setAcceptDrops(True)
-            underlying.dragEnterEvent = self._on_drop  # type: ignore
-            underlying.dragMoveEvent = self._on_drop  # type: ignore
-            underlying.dragLeaveEvent = self._on_drop  # type: ignore
-            underlying.dropEvent = self._on_drop  # type: ignore
+            underlying.dragEnterEvent = self._on_drop  # type: ignore  # noqa: PGH003
+            underlying.dragMoveEvent = self._on_drop  # type: ignore  # noqa: PGH003
+            underlying.dragLeaveEvent = self._on_drop  # type: ignore  # noqa: PGH003
+            underlying.dropEvent = self._on_drop  # type: ignore  # noqa: PGH003
         else:
             self._on_drop = None
             underlying.setAcceptDrops(False)
@@ -1160,7 +1159,7 @@ class QtWidgetElement(Element, tp.Generic[_T_widget]):
 
     def _gen_styling_commands(
         self,
-        style,
+        style: dict[str, tp.Any],
         underlying: QtWidgets.QWidget,
         underlying_layout: QtWidgets.QLayout | None = None,
     ):
@@ -1231,24 +1230,23 @@ class QtWidgetElement(Element, tp.Generic[_T_widget]):
                         new_padding[3],
                     ),
                 )
-        else:
-            if "align" in style:
-                if style["align"] == "left":
-                    set_align = "AlignLeft"
-                elif style["align"] == "center":
-                    set_align = "AlignCenter"
-                elif style["align"] == "right":
-                    set_align = "AlignRight"
-                elif style["align"] == "justify":
-                    set_align = "AlignJustify"
-                elif style["align"] == "top":
-                    set_align = "AlignTop"
-                elif style["align"] == "bottom":
-                    set_align = "AlignBottom"
-                else:
-                    raise ValueError(f"Unknown style align: {style['align']}")
-                style.pop("align")
-                style["qproperty-alignment"] = set_align
+        elif "align" in style:
+            if style["align"] == "left":
+                set_align = "AlignLeft"
+            elif style["align"] == "center":
+                set_align = "AlignCenter"
+            elif style["align"] == "right":
+                set_align = "AlignRight"
+            elif style["align"] == "justify":
+                set_align = "AlignJustify"
+            elif style["align"] == "top":
+                set_align = "AlignTop"
+            elif style["align"] == "bottom":
+                set_align = "AlignBottom"
+            else:
+                raise ValueError(f"Unknown style align: {style['align']}")
+            style.pop("align")
+            style["qproperty-alignment"] = set_align
 
         if "font-size" in style:
             font_size = _css_to_number(style["font-size"])
@@ -1425,7 +1423,7 @@ def qt_component(
             name_to_val = defaults.copy()
             name_to_val.update(filter(not_ignored, zip(varnames, args, strict=False)))
             # kwards prefixed with _ are excluded from props
-            name_to_val.update(((k, v) for (k, v) in kwargs.items() if k[0] != "_"))
+            name_to_val.update((k, v) for (k, v) in kwargs.items() if k[0] != "_")
             self._register_props(name_to_val)
 
         def _qt_update_commands(
@@ -1438,24 +1436,24 @@ def qt_component(
             newkeys = list(newprops._d.keys())
 
             def super_commands(underlying: QtWidgets.QWidget, layout: QtWidgets.QLayout | None):
-                commands = super(ComponentElement, self)._qt_update_commands_super(
-                    widget_trees, newprops, underlying, layout
+                return super(ComponentElement, self)._qt_update_commands_super(
+                    widget_trees,
+                    newprops,
+                    underlying,
+                    layout,
                 )
-                return commands
 
             me = tp.cast(qtT, self)
-            commands = f(me, newkeys, super_commands, **params)
-            return commands
+            return f(me, newkeys, super_commands, **params)
 
         def __repr__(self):
             return f.__name__
 
     ComponentElement.__name__ = f.__name__
-    comp = tp.cast(Callable[P, QtWidgetElement], ComponentElement)
-    return comp
+    return tp.cast(Callable[P, QtWidgetElement], ComponentElement)
 
 
-class _WidgetTree(object):
+class _WidgetTree:
     """
     A QtWidgetElement and its QtWidgetElement children.
     """
@@ -1486,15 +1484,15 @@ def print_tree(widget_trees: dict[Element, _WidgetTree], element: Element, inden
     t = widget_trees[element]
     tags = t.component._tags()
     if t.children:
-        print("  " * indent + tags[0])
+        print("  " * indent + tags[0])  # noqa: T201
         for child in t.children:
             print_tree(widget_trees, child, indent=indent + 1)
-        print("  " * indent + tags[1])
+        print("  " * indent + tags[1])  # noqa: T201
     else:
-        print("  " * indent + tags[2])
+        print("  " * indent + tags[2])  # noqa: T201
 
 
-class RenderResult(object):
+class RenderResult:
     """Encapsulates the results of a render.
 
     Concretely, it stores information such as commands,
@@ -1652,7 +1650,7 @@ class RenderEngine:
                     # or that there is no cleanup function.
                     try:
                         hook.cleanup()
-                    except Exception:
+                    except Exception:  # noqa: S110, BLE001
                         pass
             del self._hook_effect[component]
         # Clean up use_async for the component
@@ -1705,9 +1703,9 @@ class RenderEngine:
 
         def traverse(comp, parent):
             if comp.__class__ in old_components and parent is not None:  # We can't replace the unparented root
-                new_component_class = [new_cls for old_cls, new_cls in classes if old_cls == comp.__class__][0]
+                new_component_class = next(new_cls for old_cls, new_cls in classes if old_cls == comp.__class__)
                 if new_component_class is None:
-                    raise ValueError("Error after updating code: cannot find class %s" % comp.__class__)
+                    raise ValueError(f"Error after updating code: cannot find class {comp.__class__}")
                 components_to_replace.append([comp, new_component_class, parent, None])
                 return
             sub_components = self._component_tree[comp]
@@ -1732,14 +1730,14 @@ class RenderEngine:
             # We don't actually need all the kwargs, just enough
             # to construct new_comp_class.
             # The other kwargs will be set with _props.update.
-            except KeyError:
+            except KeyError as err:
                 k = None
                 for k, _ in parameters[1:]:
                     if k not in old_comp.props:
                         break
                 raise ValueError(
-                    f"Error while reloading {old_comp}: " f"New class expects prop ({k}) not present in old class"
-                )
+                    f"Error while reloading {old_comp}: New class expects prop ({k}) not present in old class",
+                ) from err
             parts[3] = new_comp_class(**kwargs)
             parts[3]._props.update(old_comp._props)
             parts[3]._key = old_comp._key
@@ -1785,11 +1783,11 @@ class RenderEngine:
             )
             logger.info("Rerendering: %s", [parent for _, _, parent, _ in components_to_replace])
             self._request_rerender([parent_comp for _, _, parent_comp, _ in components_to_replace])
-        except Exception as e:
+        except Exception:
             # Restore components
             for parent_comp, backup_val in backup.items():
                 parent_comp._props["children"] = backup_val
-            raise e
+            raise
 
     def _update_old_component(
         self,
@@ -1930,12 +1928,12 @@ class RenderEngine:
             assert component._edifice_internal_references is not None
             for ref in component._edifice_internal_references:
                 ref._value = component
-        except TypeError:
+        except TypeError as err:
             raise ValueError(
                 f"{component.__class__} is not correctly initialized. "
                 "Did you remember to call super().__init__() in the constructor? "
-                "(alternatively, the register_props decorator will also correctly initialize the component)"
-            )
+                "(alternatively, the register_props decorator will also correctly initialize the component)",
+            ) from err
         component._controller = self._app
 
         if isinstance(component, QtWidgetElement):
@@ -2075,8 +2073,8 @@ class RenderEngine:
             for command in commands:
                 try:
                     command.fn(*command.args, **command.kwargs)
-                except Exception as ex:
-                    logger.exception("Exception while running command:\n" + str(command) + "\n" + str(ex) + "\n")
+                except Exception:  # noqa: PERF203
+                    logger.exception(f"Exception while running command:\n{command}")  # noqa: G004
             all_commands.extend(commands)
 
             # Delete components that should be deleted (and call the respective unmounts)
@@ -2092,13 +2090,13 @@ class RenderEngine:
                     if hook.cleanup is not None:
                         try:
                             hook.cleanup()
-                        except Exception:
+                        except Exception:  # noqa: S110, BLE001
                             pass
                         finally:
                             hook.cleanup = None
                     try:
                         hook.cleanup = hook.setup()
-                    except Exception:
+                    except Exception:  # noqa: BLE001
                         hook.cleanup = None
                     finally:
                         hook.setup = None
@@ -2206,7 +2204,7 @@ class RenderEngine:
 
             return cancel
 
-        elif dependencies != (hook := hooks[h_index]).dependencies:
+        if dependencies != (hook := hooks[h_index]).dependencies:
             # then this is not the first render and deps changed
             hook.dependencies = dependencies
             if hook.task is not None:
@@ -2241,14 +2239,13 @@ class RenderEngine:
 
             return cancel
 
-        else:
-            # not first render, dependencies did not change
-            hook = hooks[h_index]
+        # not first render, dependencies did not change
+        hook = hooks[h_index]
 
-            def cancel():
-                if hook.task is not None:
-                    hook.task.cancel()
-                else:
-                    hook.queue.clear()
+        def cancel():
+            if hook.task is not None:
+                hook.task.cancel()
+            else:
+                hook.queue.clear()
 
-            return cancel
+        return cancel
