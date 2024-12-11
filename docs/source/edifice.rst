@@ -295,3 +295,10 @@ predictable, easy to debug, and allows Edifice to automatically optimize your co
 - **Values are immutable after being passed to an Element** – Don’t mutate
   values after they’ve been used in an Element. Move the mutation before the
   Element is created.
+
+Functional Programming
+----------------------
+
+Edifice works best when you follow the principles of functional programming.
+For advice, see the
+`Python Functional Programming HOWTO <https://docs.python.org/3/howto/functional.html>`_.
