@@ -65,7 +65,16 @@ def Main(self):
     ):
         with ed.HBoxView():
             with ed.VBoxView():
-                ed.Label("Hello")
+                ed.Label(
+                    text="Hello",
+                    # context_menu={
+                    #     "Print Hello": lambda: print("Hello"),
+                    #     "World": {
+                    #         "Print Hello": lambda: print("Hello"),
+                    #         "Print World": lambda: print("World"),
+                    #     },
+                    # },
+                )
                 ed.Label(
                     text="World",
                     selectable=True,
