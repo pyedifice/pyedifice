@@ -4,6 +4,14 @@
 Release Notes
 =============
 
+v2.7.1
+------
+Released: 2024-12-12
+
+* Bugfix :class:`VScrollView` :class:`HScrollView` :code:`on_resize` event handler
+  will not interfere with the resizing behavior of :code:`QScrollArea`.
+
+
 v2.7.0
 ------
 Released: 2024-12-10
