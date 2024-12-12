@@ -1144,6 +1144,11 @@ class QtWidgetElement(Element, tp.Generic[_T_widget]):
     def _resizeEvent(self, event: QtGui.QResizeEvent):
         if self._on_resize is not None:
             self._on_resize(event)
+            # In the case of QScrollArea (and possibly other widgets), the resizeEvent is used by
+            # the QScrollArea widget to resize its children. If we don't call the default
+            # method then that functionality is lost.
+            # I've got no reference that says we can call a method like this, but it works.
+            type(self.underlying).resizeEvent(self.underlying, event) # type: ignore  # noqa: PGH003
 
     def _set_on_resize(self, underlying: QtWidgets.QWidget, on_resize: tp.Callable[[QtGui.QResizeEvent], None] | None):
         # Store the QWidget's default virtual event handler method one time
