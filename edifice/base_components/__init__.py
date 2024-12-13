@@ -31,6 +31,7 @@ from .table_grid_view import TableGridView, TableGridRow
 from .spin_input import SpinInput
 from .radio_button import RadioButton
 from .check_box import CheckBox
+from .scroll_bar import ScrollBar
 
 __all__ = [
     "QtWidgetElement",
@@ -65,4 +66,5 @@ __all__ = [
     "TableGridView",
     "TableGridRow",
     "SpinInput",
+    "ScrollBar",
 ]

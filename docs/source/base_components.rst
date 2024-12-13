@@ -89,21 +89,22 @@ Content Base Elements render a single Qt Widget and mostly do not have children.
    :recursive:
    :template: custom-class.rst
 
-   Label
+   Button
+   ButtonView
+   CheckBox
+   Dropdown
    Image
    ImageSvg
    Icon
    IconButton
-   Button
-   ButtonView
+   Label
+   ProgressBar
+   RadioButton
+   ScrollBar
+   Slider
+   SpinInput
    TextInput
    TextInputMultiline
-   SpinInput
-   CheckBox
-   RadioButton
-   Slider
-   ProgressBar
-   Dropdown
 
 Events
 ------

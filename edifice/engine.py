@@ -823,6 +823,10 @@ class QtWidgetElement(Element, tp.Generic[_T_widget]):
             Takes a
             `QMouseEvent <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QMouseEvent.html>`_
             as argument.
+        on_mouse_wheel:
+            Callback for mouse wheel events. Takes a
+            `QWheelEvent <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QWheelEvent.html>`_
+            as argument.
         on_drop:
             Handle drop events.
 
@@ -892,6 +896,7 @@ class QtWidgetElement(Element, tp.Generic[_T_widget]):
         on_mouse_enter: tp.Callable[[QtGui.QMouseEvent], None | tp.Awaitable[None]] | None = None,
         on_mouse_leave: tp.Callable[[QtGui.QMouseEvent], None | tp.Awaitable[None]] | None = None,
         on_mouse_move: tp.Callable[[QtGui.QMouseEvent], None | tp.Awaitable[None]] | None = None,
+        on_mouse_wheel: tp.Callable[[QtGui.QWheelEvent], None | tp.Awaitable[None]] | None = None,
         on_drop: tp.Callable[
             [QtGui.QDragEnterEvent | QtGui.QDragMoveEvent | QtGui.QDragLeaveEvent | QtGui.QDropEvent],
             None,
@@ -918,6 +923,7 @@ class QtWidgetElement(Element, tp.Generic[_T_widget]):
                 "on_mouse_enter": on_mouse_enter,
                 "on_mouse_leave": on_mouse_leave,
                 "on_mouse_move": on_mouse_move,
+                "on_mouse_wheel": on_mouse_wheel,
                 "on_drop": on_drop,
                 "on_resize": on_resize,
             },
@@ -937,6 +943,7 @@ class QtWidgetElement(Element, tp.Generic[_T_widget]):
         self._on_mouse_down = None
         self._on_mouse_up = None
         self._on_mouse_move = None
+        self._on_mouse_wheel = None
         self._on_drop: (
             tp.Callable[[QtGui.QDragEnterEvent | QtGui.QDragMoveEvent | QtGui.QDragLeaveEvent | QtGui.QDropEvent], None]
             | None
@@ -947,6 +954,7 @@ class QtWidgetElement(Element, tp.Generic[_T_widget]):
         self._default_mouse_move_event = None
         self._default_mouse_enter_event = None
         self._default_mouse_leave_event = None
+        self._default_mouse_wheel_event = None
         self._default_drag_enter_event = None
         self._default_drag_move_event = None
         self._default_drag_leave_event = None
@@ -1032,6 +1040,25 @@ class QtWidgetElement(Element, tp.Generic[_T_widget]):
         if self._default_mouse_release_event is None:
             self._default_mouse_release_event = underlying.mouseReleaseEvent
         underlying.mouseReleaseEvent = self._mouse_release(underlying)
+
+    def _handle_mouse_wheel(self, event: QtGui.QWheelEvent):
+        if self._on_mouse_wheel is not None:
+            self._on_mouse_wheel(event)
+        else:
+            type(self.underlying).wheelEvent(self.underlying, event) # type: ignore  # noqa: PGH003
+
+    def _set_mouse_wheel(self, underlying: QtWidgets.QWidget, on_mouse_wheel):
+        # https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.wheelEvent
+        # “If you reimplement this handler, it is very important that
+        # you ignore() the event if you do not handle it, so that the widget’s
+        # parent can interpret it.”
+        if self._default_mouse_wheel_event is None:
+            self._default_mouse_wheel_event = underlying.wheelEvent
+            underlying.wheelEvent = self._handle_mouse_wheel
+        if on_mouse_wheel is not None:
+            self._on_mouse_wheel = _ensure_future(on_mouse_wheel)
+        else:
+            self._on_mouse_wheel = None
 
     def _handle_key_down(self, event: QtGui.QKeyEvent):
         if self._on_key_down is not None:
@@ -1148,7 +1175,7 @@ class QtWidgetElement(Element, tp.Generic[_T_widget]):
             # the QScrollArea widget to resize its children. If we don't call the default
             # method then that functionality is lost.
             # I've got no reference that says we can call a method like this, but it works.
-            type(self.underlying).resizeEvent(self.underlying, event) # type: ignore  # noqa: PGH003
+            type(self.underlying).resizeEvent(self.underlying, event)  # type: ignore  # noqa: PGH003
 
     def _set_on_resize(self, underlying: QtWidgets.QWidget, on_resize: tp.Callable[[QtGui.QResizeEvent], None] | None):
         # Store the QWidget's default virtual event handler method one time
@@ -1362,6 +1389,8 @@ class QtWidgetElement(Element, tp.Generic[_T_widget]):
                 commands.append(CommandType(self._set_on_mouse_leave, underlying, newprops.on_mouse_leave))
             elif prop == "on_mouse_move":
                 commands.append(CommandType(self._set_on_mouse_move, underlying, newprops.on_mouse_move))
+            elif prop == "on_mouse_wheel":
+                commands.append(CommandType(self._set_mouse_wheel, underlying, newprops.on_mouse_wheel))
             elif prop == "on_drop":
                 commands.append(CommandType(self._set_on_drop, underlying, newprops.on_drop))
             elif prop == "on_resize":
