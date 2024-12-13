@@ -4,6 +4,14 @@
 Release Notes
 =============
 
+v2.8.0
+------
+Released: 2024-12-13
+
+* New Base Element :class:`ScrollBar`.
+* New :class:`QtWidgetElement` prop :code:`on_mouse_wheel`.
+
+
 v2.7.1
 ------
 Released: 2024-12-12
