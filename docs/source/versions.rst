@@ -4,6 +4,13 @@
 Release Notes
 =============
 
+v2.8.1
+------
+Released: 2024-12-18
+
+* Bugfix: prop :code:`enable_mouse_scroll` for :class:`Slider`, :class:`SpinInput`, :class:`Dropdown`.
+
+
 v2.8.0
 ------
 Released: 2024-12-13
