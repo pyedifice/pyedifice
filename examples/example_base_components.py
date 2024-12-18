@@ -145,6 +145,7 @@ def Main(self):
                 min_value=10,
                 max_value=20,
                 on_change=sival_set,
+                enable_mouse_scroll=False,
             )
 
             def text_to_meters(text: str) -> int | tp.Literal[QValidator.State.Intermediate, QValidator.State.Invalid]:
