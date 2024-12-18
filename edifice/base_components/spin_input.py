@@ -133,8 +133,6 @@ class SpinInput(QtWidgetElement[EdSpinBox]):
         self.underlying = EdSpinBox()
         self.underlying.setObjectName(str(id(self)))
         self.underlying.valueChanged.connect(self._on_change_handler)
-        if "enable_mouse_scroll" in self.props and not self.props.enable_mouse_scroll:
-            self.underlying.wheelEvent = lambda event: event.ignore()
 
     def _on_change_handler(self, value: int):
         if self.props.on_change is not None:
@@ -181,4 +179,12 @@ class SpinInput(QtWidgetElement[EdSpinBox]):
             commands.append(CommandType(self._set_value, newprops.value))
         if "single_step" in newprops:
             commands.append(CommandType(self.underlying.setSingleStep, newprops.single_step))
+        if "enable_mouse_scroll" in newprops:
+            # Doing it this way means that if the user tries to attach an
+            # on_mouse_wheel event handler then that won't work. But I think
+            # that's okay for now.
+            if newprops.enable_mouse_scroll:
+                commands.append(CommandType(self._set_mouse_wheel, self.underlying, None))
+            else:
+                commands.append(CommandType(self._set_mouse_wheel, self.underlying, lambda e: e.ignore()))
         return commands

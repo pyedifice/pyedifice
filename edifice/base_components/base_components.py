@@ -830,8 +830,6 @@ class Dropdown(QtWidgetElement[QtWidgets.QComboBox]):
         self.underlying.setObjectName(str(id(self)))
         self.underlying.setEditable(False)
         self.underlying.currentIndexChanged.connect(self._on_select)
-        if "enable_mouse_scroll" in self.props and not self.props.enable_mouse_scroll:
-            self.underlying.wheelEvent = lambda e: e.ignore()
 
     def _on_select(self, text):
         if self.props.on_select is not None:
@@ -867,6 +865,14 @@ class Dropdown(QtWidgetElement[QtWidgets.QComboBox]):
             commands.append(CommandType(self._set_options, newprops.options))
         if "selection" in newprops:
             commands.append(CommandType(self._set_current_index, newprops.selection))
+        if "enable_mouse_scroll" in newprops:
+            # Doing it this way means that if the user tries to attach an
+            # on_mouse_wheel event handler then that won't work. But I think
+            # that's okay for now.
+            if newprops.enable_mouse_scroll:
+                commands.append(CommandType(self._set_mouse_wheel, self.underlying, None))
+            else:
+                commands.append(CommandType(self._set_mouse_wheel, self.underlying, lambda e: e.ignore()))
         return commands
 
 
@@ -927,7 +933,7 @@ class Slider(QtWidgetElement[QtWidgets.QSlider]):
                 "orientation": orientation,
                 "on_change": on_change,
                 "enable_mouse_scroll": enable_mouse_scroll,
-            }
+            },
         )
         self._register_props(kwargs)
         self._connected = False
@@ -944,8 +950,6 @@ class Slider(QtWidgetElement[QtWidgets.QSlider]):
 
         self.underlying.setObjectName(str(id(self)))
         self.underlying.valueChanged.connect(self._on_change_handle)
-        if "enable_mouse_scroll" in self.props and not self.props.enable_mouse_scroll:
-            self.underlying.wheelEvent = lambda e: e.ignore()
 
     def _on_change_handle(self, position: int) -> None:
         if self._on_change is not None:
@@ -979,6 +983,15 @@ class Slider(QtWidgetElement[QtWidgets.QSlider]):
             commands.append(CommandType(self._set_value, newprops.value))
         if "on_change" in newprops:
             commands.append(CommandType(self._set_on_change, newprops.on_change))
+        if "enable_mouse_scroll" in newprops:
+            # Doing it this way means that if the user tries to attach an
+            # on_mouse_wheel event handler then that won't work. But I think
+            # that's okay for now.
+            if newprops.enable_mouse_scroll:
+                commands.append(CommandType(self._set_mouse_wheel, self.underlying, None))
+            else:
+                commands.append(CommandType(self._set_mouse_wheel, self.underlying, lambda e: e.ignore()))
+
         return commands
 
 

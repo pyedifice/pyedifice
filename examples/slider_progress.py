@@ -1,7 +1,6 @@
 import typing as tp
 
-from edifice import App, Label, ProgressBar, Slider, SpinInput, VBoxView, Window, component
-from edifice.hooks import use_state
+import edifice as ed
 from edifice.qt import QT_VERSION
 
 if QT_VERSION == "PyQt6" and not tp.TYPE_CHECKING:
@@ -21,33 +20,33 @@ def from_percent(x):
         v = float(x.rstrip("%"))
         if v >= 0 and v <= 100.0:
             return int(v * 10.0)
-        else:
+        else:  # noqa: RET505
             return QValidator.State.Intermediate
-    except Exception:
+    except Exception:  # noqa: BLE001
         return QValidator.State.Invalid
 
 
-@component
+@ed.component
 def MyComponent(self):
-    x, x_set = use_state(0)
+    x, x_set = ed.use_state(0)
 
-    y, y_set = use_state(0)
+    y, y_set = ed.use_state(0)
 
     def second_slider(value: int):
         x_set(value)
 
-    with VBoxView():
-        Slider(x, min_value=0, max_value=100, on_change=x_set)
-        Slider(x, min_value=0, max_value=100, on_change=second_slider)
-        ProgressBar(
+    with ed.VBoxView():
+        ed.Slider(x, min_value=0, max_value=100, on_change=x_set)
+        ed.Slider(x, min_value=0, max_value=100, on_change=second_slider, enable_mouse_scroll=False)
+        ed.ProgressBar(
             x,
             min_value=0,
             max_value=100,
-            # format="%p% is the progress",
+            # format="%p% is the progress",  # noqa: ERA001
             format=f"{x}% is the progress",
         )
-        ProgressBar(0, min_value=0, max_value=0, format="Loading…")
-        ProgressBar(
+        ed.ProgressBar(0, min_value=0, max_value=0, format="Loading…")
+        ed.ProgressBar(
             y,
             min_value=0,
             max_value=1000,
@@ -55,7 +54,7 @@ def MyComponent(self):
             orientation=Qt.Orientation.Vertical,
             style={"max-height": "100px"},
         )
-        SpinInput(
+        ed.SpinInput(
             y,
             min_value=0,
             max_value=1000,
@@ -66,14 +65,25 @@ def MyComponent(self):
                 "font-size": "20px",
             },
         )
-        Label(to_percent(y))
+        ed.Label(to_percent(y))
+
+        with ed.VScrollView(style={"height": 80}):
+            # It's important that if enable_mouse_scroll is False, then wheel scrolls the VScrollView
+            ed.Slider(x, min_value=0, max_value=100, on_change=x_set, enable_mouse_scroll=False)
+            ed.Slider(x, min_value=0, max_value=100, on_change=x_set, enable_mouse_scroll=False)
+            ed.Slider(x, min_value=0, max_value=100, on_change=x_set, enable_mouse_scroll=False)
+            ed.Slider(x, min_value=0, max_value=100, on_change=x_set)
+            ed.Slider(x, min_value=0, max_value=100, on_change=x_set, enable_mouse_scroll=False)
+            ed.Slider(x, min_value=0, max_value=100, on_change=x_set, enable_mouse_scroll=False)
+            ed.Slider(x, min_value=0, max_value=100, on_change=x_set, enable_mouse_scroll=False)
+            ed.Slider(x, min_value=0, max_value=100, on_change=x_set, enable_mouse_scroll=False)
 
 
-@component
+@ed.component
 def Main(self):
-    with Window():
+    with ed.Window():
         MyComponent()
 
 
 if __name__ == "__main__":
-    App(Main()).start()
+    ed.App(Main()).start()
