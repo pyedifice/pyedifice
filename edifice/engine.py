@@ -1196,7 +1196,7 @@ class QtWidgetElement(Element, tp.Generic[_T_widget]):
         underlying_layout: QtWidgets.QLayout | None = None,
     ):
         # shallow copy the style because we will be modifying it
-        style = copy(style)
+        cpstyle = copy(style)
 
         commands: list[CommandType] = []
 
@@ -1213,43 +1213,43 @@ class QtWidgetElement(Element, tp.Generic[_T_widget]):
             # https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QLayout.html#PySide6.QtWidgets.QLayout.setContentsMargins
             set_padding = False
             new_padding = [0, 0, 0, 0]
-            if "padding" in style:
-                new_padding = [int(_css_to_number(style["padding"]))] * 4
-                style.pop("padding")
+            if "padding" in cpstyle:
+                new_padding = [int(_css_to_number(cpstyle["padding"]))] * 4
+                cpstyle.pop("padding")
                 set_padding = True
-            if "padding-left" in style:
-                new_padding[0] = int(_css_to_number(style["padding-left"]))
-                style.pop("padding-left")
+            if "padding-left" in cpstyle:
+                new_padding[0] = int(_css_to_number(cpstyle["padding-left"]))
+                cpstyle.pop("padding-left")
                 set_padding = True
-            if "padding-right" in style:
-                new_padding[2] = int(_css_to_number(style["padding-right"]))
-                style.pop("padding-right")
+            if "padding-right" in cpstyle:
+                new_padding[2] = int(_css_to_number(cpstyle["padding-right"]))
+                cpstyle.pop("padding-right")
                 set_padding = True
-            if "padding-top" in style:
-                new_padding[1] = int(_css_to_number(style["padding-top"]))
-                style.pop("padding-top")
+            if "padding-top" in cpstyle:
+                new_padding[1] = int(_css_to_number(cpstyle["padding-top"]))
+                cpstyle.pop("padding-top")
                 set_padding = True
-            if "padding-bottom" in style:
-                new_padding[3] = int(_css_to_number(style["padding-bottom"]))
-                style.pop("padding-bottom")
+            if "padding-bottom" in cpstyle:
+                new_padding[3] = int(_css_to_number(cpstyle["padding-bottom"]))
+                cpstyle.pop("padding-bottom")
                 set_padding = True
 
-            if "align" in style:
-                if style["align"] == "left":
+            if "align" in cpstyle:
+                if cpstyle["align"] == "left":
                     set_align = QtCore.Qt.AlignmentFlag.AlignLeft
-                elif style["align"] == "center":
+                elif cpstyle["align"] == "center":
                     set_align = QtCore.Qt.AlignmentFlag.AlignCenter
-                elif style["align"] == "right":
+                elif cpstyle["align"] == "right":
                     set_align = QtCore.Qt.AlignmentFlag.AlignRight
-                elif style["align"] == "justify":
+                elif cpstyle["align"] == "justify":
                     set_align = QtCore.Qt.AlignmentFlag.AlignJustify
-                elif style["align"] == "top":
+                elif cpstyle["align"] == "top":
                     set_align = QtCore.Qt.AlignmentFlag.AlignTop
-                elif style["align"] == "bottom":
+                elif cpstyle["align"] == "bottom":
                     set_align = QtCore.Qt.AlignmentFlag.AlignBottom
                 else:
-                    raise ValueError(f"Unknown style align: {style['align']}")
-                style.pop("align")
+                    raise ValueError(f"Unknown style align: {cpstyle['align']}")
+                cpstyle.pop("align")
                 commands.append(CommandType(underlying_layout.setAlignment, set_align))
 
             if set_padding:
@@ -1262,59 +1262,59 @@ class QtWidgetElement(Element, tp.Generic[_T_widget]):
                         new_padding[3],
                     ),
                 )
-        elif "align" in style:
-            if style["align"] == "left":
+        elif "align" in cpstyle:
+            if cpstyle["align"] == "left":
                 set_align = "AlignLeft"
-            elif style["align"] == "center":
+            elif cpstyle["align"] == "center":
                 set_align = "AlignCenter"
-            elif style["align"] == "right":
+            elif cpstyle["align"] == "right":
                 set_align = "AlignRight"
-            elif style["align"] == "justify":
+            elif cpstyle["align"] == "justify":
                 set_align = "AlignJustify"
-            elif style["align"] == "top":
+            elif cpstyle["align"] == "top":
                 set_align = "AlignTop"
-            elif style["align"] == "bottom":
+            elif cpstyle["align"] == "bottom":
                 set_align = "AlignBottom"
             else:
-                raise ValueError(f"Unknown style align: {style['align']}")
-            style.pop("align")
-            style["qproperty-alignment"] = set_align
+                raise ValueError(f"Unknown style align: {cpstyle['align']}")
+            cpstyle.pop("align")
+            cpstyle["qproperty-alignment"] = set_align
 
-        if "font-size" in style:
-            font_size = _css_to_number(style["font-size"])
+        if "font-size" in cpstyle:
+            font_size = _css_to_number(cpstyle["font-size"])
             if self._size_from_font is not None:
                 size = self._size_from_font(font_size)
                 self._width = size[0]
                 self._height = size[1]
-            if not isinstance(style["font-size"], str):
-                style["font-size"] = "%dpx" % font_size
-        if "width" in style:
-            if "min-width" not in style:
-                style["min-width"] = style["width"]
-            if "max-width" not in style:
-                style["max-width"] = style["width"]
+            if not isinstance(cpstyle["font-size"], str):
+                cpstyle["font-size"] = "%dpx" % font_size
+        if "width" in cpstyle:
+            if "min-width" not in cpstyle:
+                cpstyle["min-width"] = cpstyle["width"]
+            if "max-width" not in cpstyle:
+                cpstyle["max-width"] = cpstyle["width"]
         # else:
-        #     if "min-width" not in style:
-        #         style["min-width"] = self._get_width(children)
+        #     if "min-width" not in cpstyle:
+        #         cpstyle["min-width"] = self._get_width(children)
 
-        if "height" in style:
-            if "min-height" not in style:
-                style["min-height"] = style["height"]
-            if "max-height" not in style:
-                style["max-height"] = style["height"]
+        if "height" in cpstyle:
+            if "min-height" not in cpstyle:
+                cpstyle["min-height"] = cpstyle["height"]
+            if "max-height" not in cpstyle:
+                cpstyle["max-height"] = cpstyle["height"]
         # else:
-        #     if "min-height" not in style:
-        #         style["min-height"] = self._get_height(children)
+        #     if "min-height" not in cpstyle:
+        #         cpstyle["min-height"] = self._get_height(children)
 
         set_move = False
         move_coords = [0, 0]
-        if "top" in style:
+        if "top" in cpstyle:
             set_move = True
-            move_coords[1] = int(_css_to_number(style["top"]))
+            move_coords[1] = int(_css_to_number(cpstyle["top"]))
             self._top = move_coords[1]
-        if "left" in style:
+        if "left" in cpstyle:
             set_move = True
-            move_coords[0] = int(_css_to_number(style["left"]))
+            move_coords[0] = int(_css_to_number(cpstyle["left"]))
             self._left = move_coords[0]
 
         if set_move:
@@ -1323,7 +1323,7 @@ class QtWidgetElement(Element, tp.Generic[_T_widget]):
         # CSS style selection is matched by setting underlying.setObjectName(str(id(self)))
         # In Element initialization.
         # https://doc.qt.io/qtforpython-6/PySide6/QtCore/QObject.html#PySide6.QtCore.QObject.setObjectName
-        css_string = _dict_to_style(style, "QWidget#" + str(id(self)))
+        css_string = _dict_to_style(cpstyle, "QWidget#" + str(id(self)))
         commands.append(CommandType(underlying.setStyleSheet, css_string))
         return commands
 
