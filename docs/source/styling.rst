@@ -71,7 +71,8 @@ Widgets follow the
 
 - **height**, **width**: Height/width in pixels.
 - **min-height**, **max-height**, **min-width**, **max-width**: Min/max height/width in pixels.
-- **align**: One of :code:`"left`, :code:`"right"`, :code:`"top"`, :code:`"bottom"`, :code:`"center"`, :code:`"justify"`.
+- **align**: :code:`str | AlignmentFlag` One of :code:`"left`, :code:`"right"`, :code:`"top"`, :code:`"bottom"`, :code:`"center"`, :code:`"justify"`.
+  Or an `AlignmentFlag <https://doc.qt.io/qtforpython-6/PySide6/QtCore/Qt.html#PySide6.QtCore.Qt.AlignmentFlag>`_.
 - **top**, **left** (but not bottom, right): Position offset in pixels from a
   :class:`FixView <edifice.FixView>`.
 
@@ -119,6 +120,8 @@ and follows slightly different rules than the
 - **height**, **width**: Height/width in pixels.
 - **min-height**, **max-height**, **min-width**, **max-width**: Min/max height/width in pixels.
 - **align**: One of :code:`"left`, :code:`"right"`, :code:`"top"`, :code:`"bottom"`, :code:`"center"`, :code:`"justify"`.
+- **align**: :code:`str | AlignmentFlag` One of :code:`"left`, :code:`"right"`, :code:`"top"`, :code:`"bottom"`, :code:`"center"`, :code:`"justify"`.
+  Or an `AlignmentFlag <https://doc.qt.io/qtforpython-6/PySide6/QtCore/Qt.html#PySide6.QtCore.Qt.AlignmentFlag>`_.
 - **top**, **left** (but not bottom, right): Position offset in pixels from a
   :class:`FixView <edifice.FixView>`.
 
