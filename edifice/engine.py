@@ -1235,20 +1235,27 @@ class QtWidgetElement(Element, tp.Generic[_T_widget]):
                 set_padding = True
 
             if "align" in cpstyle:
-                if cpstyle["align"] == "left":
-                    set_align = QtCore.Qt.AlignmentFlag.AlignLeft
-                elif cpstyle["align"] == "center":
-                    set_align = QtCore.Qt.AlignmentFlag.AlignCenter
-                elif cpstyle["align"] == "right":
-                    set_align = QtCore.Qt.AlignmentFlag.AlignRight
-                elif cpstyle["align"] == "justify":
-                    set_align = QtCore.Qt.AlignmentFlag.AlignJustify
-                elif cpstyle["align"] == "top":
-                    set_align = QtCore.Qt.AlignmentFlag.AlignTop
-                elif cpstyle["align"] == "bottom":
-                    set_align = QtCore.Qt.AlignmentFlag.AlignBottom
+                # https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QLayout.html#PySide6.QtWidgets.QLayout.setAlignment
+                cpstyle_align = cpstyle["align"]
+                if type(cpstyle_align) is str:
+                    if cpstyle_align == "left":
+                        set_align = QtCore.Qt.AlignmentFlag.AlignLeft
+                    elif cpstyle_align == "center":
+                        set_align = QtCore.Qt.AlignmentFlag.AlignCenter
+                    elif cpstyle_align == "right":
+                        set_align = QtCore.Qt.AlignmentFlag.AlignRight
+                    elif cpstyle_align == "justify":
+                        set_align = QtCore.Qt.AlignmentFlag.AlignJustify
+                    elif cpstyle_align == "top":
+                        set_align = QtCore.Qt.AlignmentFlag.AlignTop
+                    elif cpstyle_align == "bottom":
+                        set_align = QtCore.Qt.AlignmentFlag.AlignBottom
+                    else:
+                        raise ValueError(f"Unknown style align: {cpstyle_align}")
+                elif type(cpstyle_align) is QtCore.Qt.AlignmentFlag:
+                    set_align = cpstyle_align
                 else:
-                    raise ValueError(f"Unknown style align: {cpstyle['align']}")
+                    raise ValueError(f"Style align wrong type: {cpstyle_align}")
                 cpstyle.pop("align")
                 commands.append(CommandType(underlying_layout.setAlignment, set_align))
 
@@ -1262,23 +1269,52 @@ class QtWidgetElement(Element, tp.Generic[_T_widget]):
                         new_padding[3],
                     ),
                 )
-        elif "align" in cpstyle:
-            if cpstyle["align"] == "left":
-                set_align = "AlignLeft"
-            elif cpstyle["align"] == "center":
-                set_align = "AlignCenter"
-            elif cpstyle["align"] == "right":
-                set_align = "AlignRight"
-            elif cpstyle["align"] == "justify":
-                set_align = "AlignJustify"
-            elif cpstyle["align"] == "top":
-                set_align = "AlignTop"
-            elif cpstyle["align"] == "bottom":
-                set_align = "AlignBottom"
+
+        if "align" in cpstyle:
+            if hasattr(type(underlying), "setAlignment"):
+            # QLabels and other things that have a setAlignment method
+            # https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QLabel.html#PySide6.QtWidgets.QLabel.setAlignment
+                cpstyle_align = cpstyle["align"]
+                if type(cpstyle_align) is str:
+                    if cpstyle_align == "left":
+                        set_align = QtCore.Qt.AlignmentFlag.AlignLeft
+                    elif cpstyle_align == "center":
+                        set_align = QtCore.Qt.AlignmentFlag.AlignCenter
+                    elif cpstyle_align == "right":
+                        set_align = QtCore.Qt.AlignmentFlag.AlignRight
+                    elif cpstyle_align == "justify":
+                        set_align = QtCore.Qt.AlignmentFlag.AlignJustify
+                    elif cpstyle_align == "top":
+                        set_align = QtCore.Qt.AlignmentFlag.AlignTop
+                    elif cpstyle_align == "bottom":
+                        set_align = QtCore.Qt.AlignmentFlag.AlignBottom
+                    else:
+                        raise ValueError(f"Unknown style align: {cpstyle_align}")
+                elif type(cpstyle_align) is QtCore.Qt.AlignmentFlag:
+                    set_align = cpstyle_align
+                else:
+                    raise ValueError(f"Style align wrong type: {cpstyle_align}")
+                cpstyle.pop("align")
+                commands.append(CommandType(underlying.setAlignment, set_align)) # type: ignore  # noqa: PGH003
             else:
-                raise ValueError(f"Unknown style align: {cpstyle['align']}")
-            cpstyle.pop("align")
-            cpstyle["qproperty-alignment"] = set_align
+                # Set the align property for the style sheet
+                # TODO This case is probably unreachable?
+                if cpstyle["align"] == "left":
+                    set_align = "AlignLeft"
+                elif cpstyle["align"] == "center":
+                    set_align = "AlignCenter"
+                elif cpstyle["align"] == "right":
+                    set_align = "AlignRight"
+                elif cpstyle["align"] == "justify":
+                    set_align = "AlignJustify"
+                elif cpstyle["align"] == "top":
+                    set_align = "AlignTop"
+                elif cpstyle["align"] == "bottom":
+                    set_align = "AlignBottom"
+                else:
+                    raise ValueError(f"Unknown style align: {cpstyle['align']}")
+                cpstyle.pop("align")
+                cpstyle["qproperty-alignment"] = set_align
 
         if "font-size" in cpstyle:
             font_size = _css_to_number(cpstyle["font-size"])
