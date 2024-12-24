@@ -1,9 +1,12 @@
 from __future__ import annotations
 
+import threading
 import typing as tp
 from asyncio import get_event_loop
 from collections.abc import Awaitable, Callable, Coroutine
 from typing import Any, Generic, ParamSpec, TypeVar, cast
+
+import ulid
 
 from edifice.engine import Reference, _T_use_state, get_render_context_maybe
 from edifice.qt import QT_VERSION
@@ -763,6 +766,7 @@ def use_hover() -> tuple[bool, tp.Callable[[QtGui.QMouseEvent], None], tp.Callab
 
 _T_use_memo = tp.TypeVar("_T_use_memo")
 
+
 def use_memo(
     fn:  Callable[[], _T_use_memo],
     dependencies: tp.Any,
@@ -786,16 +790,64 @@ def use_memo(
         bignumber = use_memo(expensive_computation, (x_factor,))
 
     Args:
-        fn: A function of no arguments which returns a value.
-        dependencies: The value will be recomputed when the dependencies change. If :code:`None`, then the value will be recomputed every render.
+        fn:
+            A function of no arguments which returns a value.
+        dependencies:
+            The value will be recomputed when the dependencies change.
+            If :code:`None`, then the value will be recomputed every render.
     Returns:
         The memoized value from calling :code:`fn`.
 
     """
-    stored, _ = use_state([None,None])
+    stored, _ = use_state([None, None])
     if dependencies is None:
-        stored[0] = fn() # type: ignore  # noqa: PGH003
+        stored[0] = fn()  # type: ignore  # noqa: PGH003
     elif stored[1] != dependencies:
-        stored[0] = fn() # type: ignore  # noqa: PGH003
+        stored[0] = fn()  # type: ignore  # noqa: PGH003
         stored[1] = dependencies
-    return stored[0] # type: ignore  # noqa: PGH003
+    return stored[0]  # type: ignore  # noqa: PGH003
+
+
+_T_context = tp.TypeVar("_T_context")
+
+_edifice_context = cast(dict[str, tuple[Any, dict[str, Callable]]], {})
+
+
+def use_context(
+    key: str,
+    value: _T_context | Callable[[], _T_context],
+) -> tuple[_T_context, Callable[[_T_context | Callable[[_T_context], _T_context]], None]]:
+
+    inited, inited_set = use_state([None])
+    this_id, _ = use_state(ulid.ulid)
+
+    def _setter(new_value: _T_context | Callable[[_T_context], _T_context]) -> None:
+        v = new_value(_edifice_context[key][0]) if isinstance(new_value, Callable) else new_value
+        _edifice_context[key] = (v, _edifice_context[key][1])
+        for k, setter in _edifice_context[key][1].items():
+            print(f"Calling {k}")
+            setter(lambda v: v)
+
+    def _clean_up() -> None:
+        if key in _edifice_context:
+            print(f"Popping {this_id}")
+            _ = _edifice_context[key][1].pop(this_id, None)
+            if len(_edifice_context[key][1]) == 0:
+                del _edifice_context[key]
+
+    use_effect(lambda: _clean_up)
+
+    if inited[0] is None:
+        if key not in _edifice_context:
+            v = value() if isinstance(value, Callable) else value
+            _edifice_context[key] = (v, {this_id: inited_set})
+        else:
+            _edifice_context[key] = (_edifice_context[key][0], _edifice_context[key][1] | {this_id: inited_set})
+        inited[0] = key  # type: ignore  # noqa: PGH003
+    elif inited[0] != key:
+        raise ValueError(f'Context was initialized with key {inited[0]} but new key "{key}" has been given.')
+
+    for key in _edifice_context:
+        print(f"{key}: {_edifice_context[key][0]}, {tuple(_edifice_context[key][1].keys())}")
+
+    return _edifice_context[key][0], _setter

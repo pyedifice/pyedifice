@@ -20,6 +20,7 @@ format = "poetry-core"
 python = ">=3.10, <3.13"
 qasync = ">=0.26.0"
 typing-extensions = ">=4.0.0"
+ulid = "^1.1"
 
 [tool.poetry.group.dev.dependencies]
 PyQt6 = ">= 6.0"
