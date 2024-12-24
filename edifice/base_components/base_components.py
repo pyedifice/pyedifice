@@ -552,7 +552,8 @@ class ImageSvg(QtWidgetElement[QtSvgWidgets.QSvgWidget]):
 
     Args:
         src:
-            Either a path to an SVG image file, or a :code:`QByteArray`
+            Either a path to an SVG image file, or a
+            `QByteArray <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QByteArray.html>`_
             containing the serialized XML representation of an SVG file.
     """
 
