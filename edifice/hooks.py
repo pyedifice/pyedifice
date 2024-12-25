@@ -26,7 +26,7 @@ def use_state(
 
     Behaves like `React useState <https://react.dev/reference/react/useState>`_.
 
-    :func:`use_state` is called with an **initial state**.
+    :func:`use_state` is called with an **initial value**.
     It returns a **state value** and a
     **setter function**.
 
@@ -49,6 +49,10 @@ def use_state(
                 on_click = lambda _event: x_setter(x + 1)
             )
 
+    The **setter function** is referentially stable, so it will always
+    be :code:`__eq__` to the **setter function** from the previous render.
+    It can be passed as a **prop** to child components.
+
     The **setter function** should be called inside of an event handler
     or a :func:`use_effect` function.
 
@@ -68,10 +72,12 @@ def use_state(
     Initialization
     --------------
 
+    The **initial value** can be either a **state value** or an **initializer function**.
+
     An **initializer function** is a function of no arguments.
 
     If an **initializer function** is passed to :func:`use_state` instead
-    of an initial value, then the
+    of an **state value**, then the
     **initializer function** will be called once before
     this :func:`components`’s first render to get the **initial state**.
 
@@ -104,7 +110,13 @@ def use_state(
     Update
     ------
 
-    An **updater function** is a function from the previous state to the new state.
+    All updates from calling the **setter function** will be applied before the
+    beginning of the next render.
+
+    A **setter function** can be called with a **state value** or an **updater function**.
+
+    An **updater function** is a function from the previous **state value** to the
+    new **state value**.
 
     If an **updater function** is passed to the **setter function**, then before the
     beginning of the next render the **state value** will be modified by calling all of the
@@ -157,7 +169,7 @@ def use_state(
 
             def updater(x_previous:list[str]) -> list[str]:
                 x_new = copy(x_previous)
-                x_new.append("Label Text " + str(len(x_previous)))
+                x_new.append("another")
                 return x_new
 
             with View():
@@ -188,7 +200,7 @@ def use_state(
             x, x_setter = use_state(cast(tuple[str, ...], ()))
 
             def updater(x_previous:tuple[str, ...]) -> tuple[str, ...]:
-                return x_previous + ("Label Text " + str(len(x_previous)),)
+                return x_previous + ("another",)
 
             with View():
                 Button(
