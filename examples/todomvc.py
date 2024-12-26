@@ -97,7 +97,7 @@ def TodoItem(self, key: int, todo: Todo, set_complete, delete_todo, set_editing,
                     },
                     tool_tip="Clear " + todo.text,
                     size_policy=QtWidgets.QSizePolicy(
-                        QtWidgets.QSizePolicy.Policy.Fixed, QtWidgets.QSizePolicy.Policy.Fixed
+                        QtWidgets.QSizePolicy.Policy.Fixed, QtWidgets.QSizePolicy.Policy.Fixed,
                     ),
                 ):
                     Label(
