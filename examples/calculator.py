@@ -2,6 +2,8 @@
 # python examples/calculator.py
 #
 
+from __future__ import annotations
+
 import logging
 
 import edifice as ed
@@ -21,7 +23,7 @@ OPERATORS = {
     "÷": lambda stored, display: stored / display,
     "+/-": lambda display: -display,
     "%": lambda display: display / 100,
-    "AC": lambda display: 0,
+    "AC": lambda _display: 0,
 }
 
 
@@ -79,20 +81,20 @@ def Calculator(self):
         else:
             val = OPERATORS[previous_operator](stored_value, float(display))
             stored_value_set(val)
-            display_set("%.4f" % val)
+            display_set(f"{val:.4f}")
         previous_operator_set(operator)
 
     def binary_button(symbol):
         # Qt layout is sometimes unintuitive, but you can definitely hack around it!
         button_style = binary_style.copy()
-        return ed.Button(symbol, style=button_style, on_click=lambda e: apply_binary_operand(symbol))
+        return ed.Button(symbol, style=button_style, on_click=lambda _e: apply_binary_operand(symbol))
 
     def unary_button(symbol):
         def apply_unary_operand(operator):
             clear_display_set(True)
-            display_set("%.4f" % OPERATORS[operator](float(display)))
+            display_set(f"{OPERATORS[operator](float(display)):.4f}")
 
-        return ed.Button(symbol, style=unary_style, on_click=lambda e: apply_unary_operand(symbol))
+        return ed.Button(symbol, style=unary_style, on_click=lambda _e: apply_unary_operand(symbol))
 
     def key_press(e: QtGui.QKeyEvent):
         if ord("0") <= e.key() <= ord("9"):
@@ -109,7 +111,7 @@ def Calculator(self):
                                 789*
                                 456-
                                 123+
-                                00.="""
+                                00.=""",
         ):
             unary_button("AC").set_key("c")
             unary_button("+/-").set_key("s")
