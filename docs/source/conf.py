@@ -27,6 +27,7 @@ extensions = [
 "sphinx_autodoc_typehints",
 "sphinx.ext.viewcode",
 "sphinx_copybutton",
+"sphinx.ext.autosectionlabel",
 ]
 
 templates_path = ["_templates"]

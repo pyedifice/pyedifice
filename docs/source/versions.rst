@@ -219,8 +219,6 @@ old elements of the same name, so that old code will still work, probably.
 These functions have deprecation warnings at the type level and at runtime,
 and they will be removed in the future.
 
-.. _v0.7.4:
-
 v0.7.4
 ------
 Released: 2024-06-14
@@ -228,7 +226,6 @@ Released: 2024-06-14
 * :func:`component` composition with :code:`children` props
   and :func:`child_place`.
 
-.. _v0.7.3:
 
 v0.7.3
 ------
@@ -236,7 +233,6 @@ Released: 2024-06-12
 
 * :class:`View` :code:`layout="none"` remove minimum size 100×100.
 
-.. _v0.7.2:
 
 v0.7.2
 ------
@@ -244,7 +240,6 @@ Released: 2024-06-11
 
 * Bugfix :class:`View` :code:`layout="none"` added children become visible.
 
-.. _v0.7.1:
 
 v0.7.1
 ------
@@ -252,7 +247,6 @@ Released: 2024-06-06
 
 * Prop :code:`padding` for :code:`View` layout Elements.
 
-.. _v0.7.0:
 
 v0.7.0
 ------
@@ -268,7 +262,6 @@ This means that :class:`RadioButton` “grouping” is now fully independent
 of the parent widget, and only depends on how the :code:`checked` prop
 is calculated.
 
-.. _v0.6.2:
 
 v0.6.2
 ------
@@ -276,7 +269,6 @@ Released: 2024-05-22
 
 * :class:`SpinInput` bugfix: Set value after min/max.
 
-.. _v0.6.1:
 
 v0.6.1
 ------
@@ -285,7 +277,6 @@ Released: 2024-05-22
 * :class:`SpinInput` bugfix: Block :code:`on_change` signal while setting
   min and max value.
 
-.. _v0.6.0:
 
 v0.6.0
 ------
@@ -295,7 +286,6 @@ Released: 2024-05-21
     * Option text is not editable.
     * Option selection is index based, not text-based.
 
-.. _v0.5.6:
 
 v0.5.6
 ------
@@ -304,7 +294,6 @@ Released: 2024-05-18
 * New base element :class:`TextInputMultiline`.
 * :class:`Label` prop text must be type :code:`str`.
 
-.. _v0.5.5:
 
 v0.5.5
 ------
@@ -312,7 +301,6 @@ Released: 2024-04-30
 
 * bugfix :class:`QtWidgetElement` :code:`on_resize` event handler prop.
 
-.. _v0.5.4:
 
 v0.5.4
 ------
@@ -322,7 +310,6 @@ Released: 2024-04-29
 * :class:`QtWidgetElement` :code:`on_resize` event handler prop.
 * :code:`enable_mouse_scroll` prop for :class:`Dropdown`.
 
-.. _v0.5.3:
 
 v0.5.3
 ------
@@ -332,7 +319,6 @@ Released: 2024-04-22
 * :code:`enable_mouse_scroll` prop for :class:`SpinInput`, :class:`Slider`.
 * Inspector bugfix correct source locations for :code:`@component`.
 
-.. _v0.5.2:
 
 v0.5.2
 ------
@@ -343,7 +329,6 @@ Released: 2024-04-01
   :func:`use_state` setter functions without causing re-render of an unmounting
   component.
 
-.. _v0.5.1:
 
 v0.5.1
 ------
@@ -353,7 +338,6 @@ Released: 2024-03-27
 * Bugfix: After :func:`App.stop`, don't run new renders, also don't
   schedule new :func:`use_async` calls.
 
-.. _v0.5.0:
 
 v0.5.0
 ------
@@ -370,7 +354,6 @@ Released: 2024-03-21
     * :class:`Slider` :code:`on_move`
     * :class:`TextInput` :code:`on_edit`
 
-.. _v0.4.5:
 
 v0.4.5
 ------
@@ -381,7 +364,6 @@ Released: 2024-03-21
     * :class:`TextInput` :code:`on_edit`
 * :class:`extra.PyQtPlot` instructions for disabling mouse interaction.
 
-.. _v0.4.4:
 
 v0.4.4
 ------
@@ -391,7 +373,6 @@ Released: 2024-03-16
 * Delete :code:`StateManager` and :code:`StateValue`.
 * Delete all state rollback features.
 
-.. _v0.4.3:
 
 v0.4.3
 ------
@@ -400,7 +381,6 @@ Released: 2024-03-06
 * :class:`TextInput` bugfix don’t :code:`setText` on every render.
 * Clean up Python dependencies.
 
-.. _v0.4.2:
 
 v0.4.2
 ------
@@ -409,7 +389,6 @@ Released: 2024-02-26
 * :func:`use_effect` allways run when :code:`dependencies` is :code:`None`.
 * :class:`extra.PyQtPlot` disable mouse interaction.
 
-.. _v0.4.1:
 
 v0.4.1
 ------
@@ -419,7 +398,6 @@ Released: 2024-02-17
 * :func:`use_async` window close Task done bugfix.
 * :func:`use_state` will not re-render if state is :code:`__eq__` after update.
 
-.. _v0.4.0:
 
 v0.4.0
 ------
@@ -445,7 +423,6 @@ Bugfixes:
 
 * :func:`use_effect` runs after all the render prop updates.
 
-.. _v0.3.7:
 
 v0.3.7
 ------
@@ -454,7 +431,6 @@ Released: 2024-02-06
 * Breaking change: Hook :func:`use_async_call` returns canceller function in a
   tuple.
 
-.. _v0.3.6:
 
 v0.3.6
 ------
@@ -462,7 +438,6 @@ Released: 2024-02-06
 
 * Hooks :func:`use_async` and :func:`use_async_call` are manually cancellable.
 
-.. _v0.3.5:
 
 v0.3.5
 ------
@@ -470,7 +445,6 @@ Released: 2024-02-03
 
 * :func:`use_async` bugfix.
 
-.. _v0.3.4:
 
 v0.3.4
 ------
@@ -478,7 +452,6 @@ Released: 2024-01-31
 
 * New Hook :func:`use_async_call`
 
-.. _v0.3.3:
 
 v0.3.3
 ------
@@ -486,7 +459,6 @@ Released: 2024-01-25
 
 * Internal improvements and *typing-extensions* requirement.
 
-.. _v0.3.2:
 
 v0.3.2
 ------
@@ -494,7 +466,6 @@ Released: 2024-01-22
 
 * Hooks are preserved during hot-reload.
 
-.. _v0.3.1:
 
 v0.3.1
 ------
@@ -503,7 +474,6 @@ Released: 2024-01-19
 * Hot-reload improvements and bugfixes.
 * :class:`TableGridView` improvements and bugfixes.
 
-.. _v0.3.0:
 
 v0.3.0
 ------
@@ -525,7 +495,6 @@ Released: 2023-12-19
 * Removed deprecated modules :code:`forms`, :code:`plotting`.
 * Hot-reload bugfixes.
 
-.. _v0.2.1:
 
 v0.2.1
 ------
@@ -533,7 +502,6 @@ Released: 2023-11-14
 
 * :class:`ExportList` for :func:`App.export_widgets`.
 
-.. _v0.2.0:
 
 v0.2.0
 ------
@@ -580,7 +548,6 @@ API, then you can make a few changes and run your old code.
 3. The :code:`StateValue` and :code:`StateManager` can be imported from module
    :code:`edifice.state`.
 
-.. _v0.1.2:
 
 v0.1.2
 ------
@@ -589,7 +556,6 @@ Released: 2023-10-06
 * :code:`PropsDict` type annotations.
 * Documentation and metadata improvements.
 
-.. _v0.1.1:
 
 v0.1.1
 ------
@@ -597,7 +563,6 @@ Released: 2023-09-15
 
 * Documentation and metadata improvements.
 
-.. _v0.1.0:
 
 v0.1.0
 ------
@@ -616,7 +581,6 @@ Released: 2023-09-14
 * New Higher-level Component: :class:`FlowView`.
 * New Higher-level Component: :class:`TableGridView`.
 
-.. _v0.0.10:
 
 v0.0.10
 -------
@@ -625,7 +589,6 @@ Released: 2021-07-15
 * Fix deletion from View and ScrollView.
 * Add alert and file dialog options.
 
-.. _v0.0.9:
 
 v0.0.9
 ------
@@ -640,7 +603,6 @@ Released: 2021-06-20
 * Add support for keydown and keyup events.
 * Fix on_change event for textinput.
 
-.. _v0.0.8:
 
 v0.0.8
 ------
@@ -649,7 +611,6 @@ Released: 2021-02-04
 Bug fixes for dynamic loading,
 and clearer error messages for Dropdowns and Sliders.
 
-.. _v0.0.7:
 
 v0.0.7
 ------
@@ -657,7 +618,6 @@ Released: 2021-02-02
 
 Bug fixes for checkboxes and forms.
 
-.. _v0.0.6:
 
 v0.0.6
 ------
@@ -665,7 +625,6 @@ Released: 2021-01-27
 
 Support for asyncio.
 
-.. _v0.0.5:
 
 v0.0.5
 ------
