@@ -36,12 +36,12 @@ Widget Styling
 Widgets follow the
 `Qt Style Sheet Box Model <https://doc.qt.io/qtforpython-6/overviews/stylesheet-customizing.html#the-box-model>`_.
 
-- **color**: :code:`"rgba(red, green, blue, alpha)"` range *0—255* or named colors like :code:`"red"`.
+- **color**: See :ref:`Color`.
 - **font-size**: Font size in points.
 - **font-weight**: A number indicating how bold the font should be.
 - **font-family**: Font family name.
 - **font-style**: Font style, i.e. :code:`"italic"`.
-- **background-color**: :code:`"rgba(red, green, blue, alpha)"` range *0—255* or named colors like :code:`"red"`.
+- **background-color**: See :ref:`Color`.
 - **margin**: Exterior margin in pixels.
 
   - **margin-left**, **margin-right**, **margin-top**, **margin-bottom**: Exterior margin in pixels.
@@ -61,7 +61,7 @@ Widgets follow the
 
     - **border-left-style**, **border-right-style**, **border-top-style**, **border-bottom-style**: Border style.
 
-  - **border-color**: Border color.
+  - **border-color**: Border color. See :ref:`Color`.
 
     - **border-left-color**, **border-right-color**, **border-top-color**, **border-bottom-color**: Border color.
 
@@ -92,7 +92,7 @@ and follows slightly different rules than the
     if you want a *2px* border around the :code:`View` then you should also
     set at least *2px* of padding so that the content does not obscure the border.
 
-- **background-color**: :code:`"rgba(red, green, blue, alpha)"` range *0—255* or named colors like :code:`"red"`.
+- **background-color**: See :ref:`Color`.
 
 - **padding**: Interior padding in pixels.
 
@@ -109,7 +109,7 @@ and follows slightly different rules than the
 
     - **border-left-style**, **border-right-style**, **border-top-style**, **border-bottom-style**: Border style.
 
-  - **border-color**: Border color.
+  - **border-color**: Border color. See :ref:`Color`.
 
     - **border-left-color**, **border-right-color**, **border-top-color**, **border-bottom-color**: Border color.
 
@@ -131,6 +131,22 @@ Size Policy
 
 The :code:`size_policy` **prop** of :class:`QtWidgetElement <edifice.QtWidgetElement>` is also
 sometimes useful for controlling the Qt layout behavior.
+
+Color
+-----
+
+There are two ways to specify a style value which takes a single color:
+
+- A :code:`str` with any of the formats allowed by
+  `QColor.fromString <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QColor.html#PySide6.QtGui.QColor.fromString>`_,
+  for example:
+
+  - :code:`"rgba(red, green, blue, alpha)"` decimal range *0—255*
+  - Named colors like :code:`"red"`
+  - Hexadecimal :code:`"#rrggbb"`
+  - Hexadecimal :code:`"#aarrggbb"`
+
+- A `QColor <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QColor.html>`_.
 
 Style Merging
 -------------

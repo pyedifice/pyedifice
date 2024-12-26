@@ -29,8 +29,17 @@ logger = logging.getLogger("Edifice")
 P = tp.ParamSpec("P")
 
 
-def _dict_to_style(d: dict[str, tp.Any], prefix="QWidget") -> str:
-    return prefix + "{" + (";".join(f"{k}: {v}" for (k, v) in d.items())) + "}"
+
+def stylevalue_to_str(v: QtGui.QColor | tp.Any) -> str:
+    match v:
+        case QtGui.QColor():
+            # should be equivalent to f"rgba({color.red()}, {color.green()}, {color.blue()}, {color.alpha()})"
+            return v.name(format=QtGui.QColor.NameFormat.HexArgb)
+        case _:
+            return v
+
+def _dict_to_style(d: dict[str, tp.Any]) -> str:
+    return "{" + (";".join(f"{k}: {stylevalue_to_str(v)}" for (k, v) in d.items())) + "}"
 
 
 # TODO
@@ -1359,7 +1368,7 @@ class QtWidgetElement(Element, tp.Generic[_T_widget]):
         # CSS style selection is matched by setting underlying.setObjectName(str(id(self)))
         # In Element initialization.
         # https://doc.qt.io/qtforpython-6/PySide6/QtCore/QObject.html#PySide6.QtCore.QObject.setObjectName
-        css_string = _dict_to_style(cpstyle, "QWidget#" + str(id(self)))
+        css_string = "QWidget#" + str(id(self)) + _dict_to_style(cpstyle)
         commands.append(CommandType(underlying.setStyleSheet, css_string))
         return commands
 
