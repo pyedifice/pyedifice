@@ -21,19 +21,20 @@
                 #
                 # This section might be needed for upgrading to PySide6 v6.7.2
                 #
-                # pyside6-essentials = pysuper.pyside6-essentials.overridePythonAttrs( old: {
-                #   autoPatchelfIgnoreMissingDeps = old.autoPatchelfIgnoreMissingDeps or [ ] ++ [
-                #     "libgbm.so.1"
-                #   ];
-                #   # propagatedBuildInputs = old.propagatedBuildInputs or [] ++ [
-                #   #   prev.mesa # provides libgbm.so.1
-                #   # ];
-                # });
-                # pyside6-addons = pysuper.pyside6-addons.overridePythonAttrs( old: {
-                #   autoPatchelfIgnoreMissingDeps = old.autoPatchelfIgnoreMissingDeps or [ ] ++ [
-                #     "libgbm.so.1"
-                #   ];
-                # });
+                pyside6-essentials = pysuper.pyside6-essentials.overridePythonAttrs( old: {
+                  autoPatchelfIgnoreMissingDeps = old.autoPatchelfIgnoreMissingDeps or [ ] ++ [
+                    "libgbm.so.1"
+                  ];
+                  # propagatedBuildInputs = old.propagatedBuildInputs or [] ++ [
+                  #   prev.mesa # provides libgbm.so.1
+                  # ];
+                });
+                pyside6-addons = pysuper.pyside6-addons.overridePythonAttrs( old: {
+                  autoPatchelfIgnoreMissingDeps = old.autoPatchelfIgnoreMissingDeps or [ ] ++ [
+                    "libgbm.so.1"
+                    "libQt6WebViewQuick.so.6"
+                  ];
+                });
               });
             });
           })
