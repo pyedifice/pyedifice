@@ -2,12 +2,12 @@
 # python examples/use_context1.py
 #
 
-from edifice import App, Button, Label, VBoxView, Window, component, use_context
+from edifice import App, Button, Label, VBoxView, Window, component, provide_context, use_context
 
 
 @component
 def Display(self):
-    show, _ = use_context("show", False)
+    show, _ = use_context("show", bool)
     with VBoxView():
         if show:
             TestComp()
@@ -15,7 +15,7 @@ def Display(self):
 
 @component
 def UseContext1(self):
-    show, set_show = use_context("show", False)
+    show, set_show = provide_context("show", False)
     with Window():
         if show:
             with VBoxView():

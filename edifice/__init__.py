@@ -34,6 +34,7 @@ from edifice.base_components import (
     WindowPopView,
 )
 from edifice.hooks import (
+    provide_context,
     use_async,
     use_async_call,
     use_callback,
@@ -89,6 +90,7 @@ __all__ = [
     "file_dialog",
     "palette_edifice_dark",
     "palette_edifice_light",
+    "provide_context",
     "qt_component",
     "set_trace",
     "theme_is_light",

@@ -3,6 +3,7 @@ from __future__ import annotations
 import typing as tp
 from asyncio import get_event_loop
 from collections.abc import Awaitable, Callable, Coroutine
+from dataclasses import dataclass
 from typing import Any, Generic, ParamSpec, TypeVar, cast
 
 from edifice.engine import Reference, _T_use_state, get_render_context_maybe
@@ -404,7 +405,8 @@ _P_callback = tp.ParamSpec("_P_callback")
 
 
 def use_callback(
-    fn: tp.Callable[[], tp.Callable[_P_callback, None]], dependencies: tp.Any,
+    fn: tp.Callable[[], tp.Callable[_P_callback, None]],
+    dependencies: tp.Any,
 ) -> tp.Callable[_P_callback, None]:
     """
     Hook for a callback function to pass as **props**.
@@ -765,7 +767,7 @@ _T_use_memo = tp.TypeVar("_T_use_memo")
 
 
 def use_memo(
-    fn:  Callable[[], _T_use_memo],
+    fn: Callable[[], _T_use_memo],
     dependencies: tp.Any,
 ) -> _T_use_memo:
     """
@@ -805,280 +807,168 @@ def use_memo(
     return stored[0]  # type: ignore  # noqa: PGH003
 
 
-_T_context = tp.TypeVar("_T_context")
-
-_edifice_context = cast(dict[str, tuple[Any, dict[str, Callable]]], {})
-_cleaned_components = cast(set[str], set())
-
-
-def use_context(
-    context_key: str,
-    default_value: _T_context | Callable[[], _T_context],
-) -> tuple[_T_context, Callable[[_T_context | Callable[[_T_context], _T_context]], None]]:
+@dataclass
+class _EdificeProvideContext:
+    value: Any
     """
-    Global persistent mutable context Hook inside an Edifice application.
+    Global value.
+    """
+    stable_setter: Callable[[Any], None]
+    """
+    setter that calls all the setters.
+    """
+    setters: set[Callable[[Any], None]]
+    """
+    setters for the all of the use_context subscribers.
+    """
 
-    Behaves like `React useContext <https://react.dev/reference/react/useContext>`_ and
-    `React createContext <https://react.dev/reference/react/createContext>.
 
-    :func:`use_context` is called with a **context key** and a **default value**.
-    It returns a **context value** and a **setter function**.
+_edifice_provide_context: dict[str, _EdificeProvideContext] = {}
 
-    The **context key** used in a given :func:`use_context` hook should not be change.
-    Edifice will raise and exception if the value **context key** of a given
-    :func:`use_context` hook changes after the first evaluation of the hook.
+_T_provide_context = tp.TypeVar("_T_provide_context")
 
-    The **context value** will be the value associated with the **context key**
-    at the beginning of the render for this component.
+
+def provide_context(
+    context_key: str,
+    initial_state: _T_provide_context | Callable[[], _T_provide_context],
+) -> tuple[
+    _T_provide_context, Callable[[_T_provide_context | Callable[[_T_provide_context], _T_provide_context]], None]
+]:
+    """
+    Context state provider Hook for *prop drilling*.
+
+    Provides similar features to `React useContext <https://react.dev/reference/react/useContext>`_.
+
+    Use this Hook to transmit state to a child :func:`@component<edifice.component>`
+    without passing the state down through the **props**.
+
+    :func:`provide_context` is called with a :code:`context_key` and an **initial value**.
+    It returns a **state value** and a **setter function**. The **initial value**,
+    **state value** and **setter function** behave exactly like the
+    ones documented in :func:`use_state`.
+
+    The :code:`context_key` must be unique for each :func:`provide_context` Hook.
 
     The **setter function** will, when called, update the **context value** across
-    all :func:`@component<edifice.component>` using :func:`use_context` with the
-    same **context key**.
-    If the new **state value** is not :code:`__eq__` to the
-    old **state value**, then the component will be re-rendered.
+    each :func:`@component<edifice.component>` using :func:`use_context` with the
+    same :code:`context_key`.
 
     .. code-block:: python
+        :caption: Example provide_context, use_context
+
         @component
-        def ContextButton(self):
-            _, x_setter = use_context("x", 0)
+        def ContextChild(self):
+            x, x_setter = use_context("x_context_key", int)
 
             Button(
-                title="+1"
+                title=str(x) + "+1"
                 on_click = lambda _event: x_setter(x + 1)
             )
 
         @component
-        def Contextfull(self):
-            x, _ = use_context("x", 0)
+        def ContextParent(self):
+            x, _x_setter = provide_context("x_context_key", 0)
 
             with VBoxview():
                 Label(text=str(x))
-                ContextButton()
+                ContextChild()
+                ContextChild()
 
-    The **setter function** should be called inside of an event handler
-    or a :func:`use_effect` function.
 
-    Never call the **setter function**
-    directly during a :func:`@component<edifice.component>` render function.
-
-    .. warning::
-
-        The **context value** must not be a
-        `Callable <https://docs.python.org/3/library/collections.abc.html#collections.abc.Callable>`_,
-        so that Edifice does not mistake it for an **initializer function**
-        or an **updater function**.
-
-        If you want to store a :code:`Callable` value, like a function, then wrap
-        it in a :code:`tuple` or some other non-:code:`Callable` data structure.
-
-    Initialization
-    --------------
-
-    An **initializer function** is a function of no arguments.
-
-    If an **initializer function** is passed to :func:`use_context` instead
-    of a **default value**, then the
-    **initializer function** will be called once before
-    this :func:`components`’s first render to get the **context value** for
-    the **context key** if this had not been already defined by another
-    :func:`component`.
-
-    .. code-block:: python
-        :caption: Initializer function
-
-        def initializer() -> tuple[int]:
-            return tuple(range(1000000))
-
-        intlist, intlist_set = use_context("int-list", initializer)
-
-    This is useful for one-time construction of **context value** if it
-    is expensive to compute.
-
-    If an **initializer function** raises an exception then Edifice will crash.
-
-    Do not perform observable side effects inside the **initializer function**.
-
-    * Do not write to files or network.
-    * Do not call a **setter function** of an :func:`use_state` Hook.
-
-    For these kinds of initialization side effects, use :func:`use_effect` instead,
-    or :func:`use_async` for very long-running initial side effects.
-
-    Using the **initializer function** for initial side effects is good for
-    some cases where the side effect has a predictable result and cannot fail,
-    like for example setting global styles, or reading small configuration files.
-
-    Update
-    ------
-
-    An **updater function** is a function from the previous context to the new context.
-
-    If an **updater function** is passed to the **setter function**, then before the
-    beginning of the next render the **context value** will be modified by calling all of the
-    **updater functions** in the order in which they were set.
-
-    .. code-block:: python
-        :caption: Updater function
-
-        @component
-        def ContextButton(self):
-            _, x_setter = use_context("x", 0)
-
-            def updater(x_previous: int) -> int:
-                return x_previous + 1
-
-            Button(
-                title="+1"
-                on_click = lambda _event: x_setter(updater)
-            )
-
-        @component
-        def Contextfull(self):
-            x, _ = use_context("x", 0)
-
-            with VBoxview():
-                Label(text=str(x))
-                ContextButton()
-
-    If any of the **updater functions** raises an exception then Edifice will
-    crash.
-
-    Context must not be mutated
-    ---------------------------
-
-    Do not mutate the context variable. The old context variable must be left
-    unmodified so that it can be compared to the new context variable during
-    the next render.
-
-    If Python does not have an
-    `immutable <https://docs.python.org/3/glossary.html#term-immutable>`_
-    version of your context data structure,
-    like for example the :code:`dict`, then you just have to take care to never
-    mutate it.
-
-    Instead of mutating a context :code:`list`, create a
-    shallow `copy <https://docs.python.org/3/library/copy.html#copy.copy>`_
-    of the :code:`list`, modify the copy, then call the **setter function**
-    with the modified copy.
-
-    .. code-block:: python
-        :caption: Updater function with shallow copy of a list
-
-        from copy import copy
-        from typing import cast
-
-        @component
-        def ContextButton(self):
-            _, x_setter = use_context("x", cast(list[str], []))
-
-            def updater(x_previous: list[str]) -> list[str]:
-                x_new = x_previous.copy()
-                x_new.append(f"Label Text {len(x_previous)}")
-                return x_new
-
-            Button(
-                title="Add one"
-                on_click = lambda _event: x_setter(updater)
-            )
-
-        @component
-        def Contextfull(self):
-            x, _ = use_context("x", cast(list[str], []))
-
-            with VBoxview():
-                ContextButton()
-                for text in x:
-                    Label(text=text)
-
-    Techniques for `immutable <https://docs.python.org/3/glossary.html#term-immutable>`_ datastructures in Python
-    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-    - `Shallow copy <https://docs.python.org/3/library/copy.html#copy.copy>`_.
-      We never need a deep copy because all the data structure items are also immutable.
-    - `Frozen dataclasses <https://docs.python.org/3/library/dataclasses.html#frozen-instances>`_.
-      Use the
-      `replace() <https://docs.python.org/3/library/dataclasses.html#dataclasses.replace>`_
-      function to update the dataclass.
-    - Tuples (:code:`my_list:tuple[str, ...]`) instead of lists (:code:`my_list:list[str]`).
-
-    .. code-block:: python
-        :caption: Updater function with shallow copy of a tuple
-
-        from typing import cast
-
-        @component
-        def ContextButton(self):
-            _, x_setter = use_context("x", cast(tuple[str, ...], []))
-
-            def updater(x_previous: tuple[str, ...]) -> tuple[str, ...]:
-                return x_previous + (f"Label Text {len(x_previous)}",)
-
-            Button(
-                title="Add one"
-                on_click = lambda _event: x_setter(updater)
-            )
-
-        @component
-        def Contextfull(self):
-            x, _ = use_context("x", cast(tuple[str, ...], []))
-
-            with VBoxview():
-                ContextButton()
-                for text in x:
-                    Label(text=text)
     Args:
-        context_key: Identifier for a shared context attribute.
-        default_value: The initial **context value** or **initializer function**.
+        context_key:
+            Identifier for a shared context.
+        initial_state:
+            The initial **state value** or **initializer function**.
     Returns:
         A tuple pair containing
 
-        1. The current **context value** for the given **context key**.
-        2. A **setter function** for setting or updating the context value.
+        1. The current **state value** for the given :code:`context_key`.
+        2. A **setter function** for setting or updating the **state value**.
     """
-    inited, inited_set = use_state([None, None])
 
-    def _init() -> None:
-        context = get_render_context_maybe()
-        if context is None or context.current_element is None:
-            raise ValueError("use_context used outside component")
-        this_id = str(id(context.current_element))
-        if this_id in _cleaned_components:
-            # TODO: I do not know why this is necessary. The components are inititalized
-            # again after clean up and this avoid to re-register them. I think this should
-            # not be necessary but I can't tell if it is something off about Edifice.
-            return
-        if context_key not in _edifice_context:
-            # Create the context if it does not exist.
-            v = default_value() if isinstance(default_value, Callable) else default_value
-            _edifice_context[context_key] = (v, {this_id: inited_set})
-        else:
-            # If it exists, just register the current hook.
-            _edifice_context[context_key] = (
-                _edifice_context[context_key][0],
-                _edifice_context[context_key][1] | {this_id: inited_set},
-            )
-        inited[0] = context_key  # type: ignore  # noqa: PGH003
-        inited[1] = this_id  # type: ignore  # noqa: PGH003
+    local_state, local_setter = use_state(initial_state)
 
-    use_state(_init)
+    if context_key not in _edifice_provide_context:
 
-    def _clean_up() -> None:
-        if context_key in _edifice_context:
-            _ = _edifice_context[context_key][1].pop(inited[1], None)  # type: ignore  # noqa: PGH003
-            if len(_edifice_context[context_key][1]) == 0:
-                del _edifice_context[context_key]
-        _cleaned_components.add(inited[1])  # type: ignore  # noqa: PGH003
+        def stable_setter(update: _T_provide_context | Callable[[_T_provide_context], _T_provide_context]) -> None:
+            context = _edifice_provide_context[context_key]
+            new_value = update(context.value) if isinstance(update, Callable) else update
+            if new_value != context.value:
+                context.value = new_value
+                # Call each setter for every use_context with this context_key.
+                # This is how we trigger re-render for every component using the context.
+                # Note that the context value update happens now but the local_setter
+                # updates will not happen until the beginning of the next render.
+                for use_context_setter in context.setters:
+                    use_context_setter(new_value)
+                local_setter(new_value)
 
-    use_effect_final(_clean_up, ())
+        _edifice_provide_context[context_key] = _EdificeProvideContext(local_state, stable_setter, set())
 
-    def _setter(new_value: _T_context | Callable[[_T_context], _T_context]) -> None:
-        v = new_value(_edifice_context[context_key][0]) if isinstance(new_value, Callable) else new_value
-        if v != _edifice_context[context_key][0]:  # Just update if the new value is different.
-            _edifice_context[context_key] = (v, _edifice_context[context_key][1])
-            for setter in _edifice_context[context_key][1].values():
-                setter(lambda v: v)
+    def cleanup():
+        del _edifice_provide_context[context_key]
 
-    if inited[0] is not None and inited[0] != context_key:
-        raise ValueError(f'Context was initialized with key {inited[0]} but new key "{context_key}" has been given.')
+    # We want the cleanup function bound to the context_key before it changed
+    use_effect(lambda: cleanup, context_key)
 
-    return _edifice_context[context_key][0], _setter
+    return local_state, _edifice_provide_context[context_key].stable_setter
+
+
+_T_use_context = tp.TypeVar("_T_use_context")
+
+
+def use_context(
+    context_key: str,
+    value_type: type[_T_use_context],
+) -> tuple[_T_use_context, Callable[[_T_use_context | Callable[[_T_use_context], _T_use_context]], None]]:
+    """
+    Context state consumer Hook for *prop drilling*.
+
+    Provides similar features to `React useContext <https://react.dev/reference/react/useContext>`_.
+
+    Use this Hook to consume state transmitted by the :func:`provide_context` with
+    the same :code:`context_key`.
+
+    :func:`use_context` is called with a :code:`context_key` and a :code:`value_type`.
+    It returns a **state value** and a **setter function**. The
+    **state value** and **setter function** behave exactly like the
+    ones documented in :func:`use_state`. The :code:`value_type` must be the same
+    as the type of the **initial value** in the parent :func:`provide_context`.
+
+    The **setter function** will, when called, update the **context value** across
+    each :func:`@component<edifice.component>` using :func:`use_context` with the
+    same :code:`context_key`.
+
+
+    Args:
+        context_key:
+            Identifier for a shared context.
+        value_type:
+            The type of the **initial value** in the parent :func:`provide_context`
+    Returns:
+        A tuple pair containing
+
+        1. The current **state value** for the given :code:`context_key`.
+        2. A **setter function** for setting or updating the **state value**.
+    """
+    if context_key not in _edifice_provide_context:
+        raise ValueError(f"use_context context_key '{context_key}' has no provide_context.")
+    context = _edifice_provide_context[context_key]
+
+    local_state, local_setter = use_state(context.value)
+
+    if context_key not in context.setters:
+        context.setters.add(local_setter)
+        # call the local setter so that it gets the value if the context_key
+        # changed.
+        if local_state != context.value:
+            local_setter(context.value)
+
+    def cleanup():
+        # We want the cleanup function bound to the context_key before it changed
+        _edifice_provide_context[context_key].setters.remove(local_setter)
+
+    use_effect(lambda: cleanup, context_key)
+
+    return local_state, context.stable_setter

@@ -49,6 +49,8 @@ These Derived Hooks are provided by Edifice.
    use_async_call
    use_callback
    use_memo
+   provide_context
+   use_context
    use_hover
    use_stop
 
