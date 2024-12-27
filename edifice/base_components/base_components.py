@@ -510,36 +510,32 @@ class Label(QtWidgetElement[QtWidgets.QLabel]):
         if self.underlying is None:
             self._initialize()
         assert self.underlying is not None
-        size = self.underlying.font().pointSize()
-        self._set_size(size * len(self.props.text), size, lambda size: (size * len(str(self.props.text)), size))
 
-        # TODO
-        # If you want the QLabel to fit the text then you must use adjustSize()
+        # TODO None of this code is working.
+        # > size = self.underlying.font().pointSize()
+        # > self._set_size(size * len(self.props.text), size, lambda size: (size * len(str(self.props.text)), size))
         # https://github.com/pyedifice/pyedifice/issues/41
-        # https://stackoverflow.com/questions/48665788/qlabels-getting-clipped-off-at-the-end/48665900#48665900
 
-        widget = tp.cast(QtWidgets.QLabel, self.underlying)
         commands = super()._qt_update_commands_super(widget_trees, newprops, self.underlying, None)
         if "text" in newprops:
-            commands.append(CommandType(widget.setText, newprops.text))
+            commands.append(CommandType(self.underlying.setText, newprops.text))
         if "word_wrap" in newprops:
-            commands.append(CommandType(widget.setWordWrap, newprops.word_wrap))
+            commands.append(CommandType(self.underlying.setWordWrap, newprops.word_wrap))
         if "link_open" in newprops:
-            commands.append(CommandType(widget.setOpenExternalLinks, newprops.link_open))
+            commands.append(CommandType(self.underlying.setOpenExternalLinks, newprops.link_open))
         if "selectable" in newprops:
             if self.props.selectable:
                 interaction_flags = (
                     QtCore.Qt.TextInteractionFlag.TextSelectableByMouse
                     | QtCore.Qt.TextInteractionFlag.TextSelectableByKeyboard
                 )
-                commands.append(CommandType(widget.setTextInteractionFlags, interaction_flags))
+                commands.append(CommandType(self.underlying.setTextInteractionFlags, interaction_flags))
                 if "cursor" not in self.props or self.props.cursor is None:
-                    commands.append(CommandType(widget.setCursor, _CURSORS["text"]))
-            else:
-                if "cursor" not in self.props or self.props.cursor is None:
-                    commands.append(CommandType(widget.setCursor, _CURSORS["default"]))
+                    commands.append(CommandType(self.underlying.setCursor, _CURSORS["text"]))
+            elif "cursor" not in self.props or self.props.cursor is None:
+                    commands.append(CommandType(self.underlying.setCursor, _CURSORS["default"]))
         if "text_format" in newprops:
-            commands.append(CommandType(widget.setTextFormat, newprops.text_format))
+            commands.append(CommandType(self.underlying.setTextFormat, newprops.text_format))
 
         return commands
 
