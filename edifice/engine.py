@@ -969,6 +969,7 @@ class QtWidgetElement(Element, tp.Generic[_T_widget]):
         self._default_drag_leave_event = None
         self._default_drop_event = None
         self._default_resize_event = None
+        self._default_size_policy : QtWidgets.QSizePolicy | None = None
 
         self._context_menu = None
         self._context_menu_connected = False
@@ -1409,7 +1410,11 @@ class QtWidgetElement(Element, tp.Generic[_T_widget]):
                 commands.extend(self._gen_styling_commands(style, underlying, underlying_layout))
             elif prop == "size_policy":
                 if newprops.size_policy is not None:
+                    if self._default_size_policy is None:
+                        self._default_size_policy = underlying.sizePolicy()
                     commands.append(CommandType(underlying.setSizePolicy, newprops.size_policy))
+                elif self._default_size_policy is not None:
+                    commands.append(CommandType(underlying.setSizePolicy, self._default_size_policy))
             elif prop == "focus_policy":
                 if newprops.focus_policy is not None:
                     commands.append(CommandType(underlying.setFocusPolicy, newprops.focus_policy))
