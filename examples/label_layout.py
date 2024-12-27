@@ -4,6 +4,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import typing as tp
 
 import edifice as ed
@@ -59,15 +60,34 @@ def SeparateLabels(self, text: str):
 @ed.component
 def Inner(self):
 
+    label1_ref = ed.use_ref()
+    scroll_ref = ed.use_ref()
+
+    def handle_resize(event: QResizeEvent):
+        winsize_set(event.size())
+
+        label1 = label1_ref()
+        if label1 and label1.underlying is not None:
+            # label1.underlying.adjustSize()
+            # asyncio.get_event_loop().call_soon(label1.underlying.adjustSize)
+            pass
+
+        scroll1 = scroll_ref()
+        if scroll1 and scroll1.underlying is not None:
+            # scroll1.underlying.adjustSize()
+            # asyncio.get_event_loop().call_soon(scroll1.underlying.adjustSize)
+            pass
+
     winsize, winsize_set = ed.use_state(tp.cast(QSize | None, None))
     with ed.VScrollView(
         style={"align": Qt.AlignmentFlag.AlignTop},
-        on_resize=lambda event: winsize_set(event.size()),
-    ):
+        # on_resize=lambda event: winsize_set(event.size()),
+        on_resize=handle_resize,
+    ).register_ref(scroll_ref):
         ed.Label(
             text=str(winsize),
             style={"align": Qt.AlignmentFlag.AlignHCenter},
-        )
+        ).register_ref(label1_ref)
         # SeparateLabels(sample_text)
         ed.Label(
             text=sample_text,
