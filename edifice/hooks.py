@@ -851,8 +851,9 @@ def provide_context(
 
     Provides similar features to `React useContext <https://react.dev/reference/react/useContext>`_.
 
-    Use this Hook to transmit state to a child :func:`@component<edifice.component>`
-    without passing the state down through the **props**.
+    Use this Hook to transmit state without passing the state down through
+    the **props** to a child :func:`@component<edifice.component>` using
+    :func:`use_context`.
 
     :func:`provide_context` is called with a :code:`context_key` and an **initial value**.
     It returns a **state value** and a **setter function**. The **initial value**,
@@ -861,7 +862,7 @@ def provide_context(
 
     The :code:`context_key` must be unique for each :func:`provide_context` Hook.
 
-    The **setter function** will, when called, update the **context value** across
+    The **setter function** will, when called, update the **state value** across
     each :func:`@component<edifice.component>` using :func:`use_context` with the
     same :code:`context_key`.
 
@@ -946,9 +947,10 @@ def use_context(
     It returns a **state value** and a **setter function**. The
     **state value** and **setter function** behave exactly like the
     ones documented in :func:`use_state`. The :code:`value_type` must be the same
-    as the type of the **initial value** in the parent :func:`provide_context`.
+    as the type of the **initial value** in the :func:`provide_context`
+    with the same :code:`context_key`.
 
-    The **setter function** will, when called, update the **context value** across
+    The **setter function** will, when called, update the **state value** across
     each :func:`@component<edifice.component>` using :func:`use_context` with the
     same :code:`context_key`.
 
