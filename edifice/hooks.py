@@ -6,6 +6,8 @@ from collections.abc import Awaitable, Callable, Coroutine
 from dataclasses import dataclass
 from typing import Any, Generic, ParamSpec, TypeVar, cast
 
+from typing_extensions import deprecated
+
 from edifice.engine import Reference, _T_use_state, get_render_context_maybe
 from edifice.qt import QT_VERSION
 
@@ -416,144 +418,15 @@ def use_ref() -> Reference:
 _P_callback = tp.ParamSpec("_P_callback")
 
 
+@deprecated("use_callback is deprecated, use use_memo instead")
 def use_callback(
     fn: tp.Callable[[], tp.Callable[_P_callback, None]],
     dependencies: tp.Any,
 ) -> tp.Callable[_P_callback, None]:
     """
-    Hook for a callback function to pass as **props**.
-
-    This Hook behaves like React `useCallback <https://react.dev/reference/react/useCallback>`_.
-
-    Use this Hook to reduce the re-render frequency of
-    a :func:`@component<edifice.component>` which has a **prop** that is a function.
-
-    This Hook will return a callback function with specific
-    bound :code:`dependencies`
-    and the callback function will only change when the
-    specified :code:`dependencies` are not :code:`__eq__` to
-    the :code:`dependencies` from the last render, so the callback function
-    can be used as a stable **prop**.
-
-    The problem
-    ===========
-
-    We want to present the user with a hundred buttons and give the buttons
-    an :code:`on_click` **prop**.
-
-    This :code:`SuperComp` component will re-render every time
-    the :code:`fastprop` **prop** changes, so then we will have to re-render all
-    the buttons even though the buttons don’t depend on the :code:`fastprop`.
-
-    .. code-block:: python
-
-        @component
-        def SuperComp(self, fastprop:int, slowprop:int):
-
-            value, value_set = use_state(0)
-
-            def value_from_slowprop():
-                value_set(slowprop)
-
-            for i in range(100):
-                Button(
-                    on_click=lambda _event: value_from_slowprop()
-                )
-
-    The general solution to this kind of performance problem is to
-    create a new :func:`@component<component>` to render the
-    buttons. This new :code:`Buttons100` :func:`@component<component>`
-    will only re-render when its :code:`click_handler` **prop** changes.
-
-    .. code-block:: python
-
-        @component
-        def Buttons100(self, click_handler:Callable[[], None]):
-
-            for i in range(100):
-                Button(
-                    on_click=lambda _event: click_handler()
-                )
-
-        @component
-        def SuperComp(self, fastprop:int, slowprop:int):
-
-            value, value_set = use_state(0)
-
-            def value_from_slowprop():
-                value_set(slowprop)
-
-            Buttons100(value_from_slowprop)
-
-    But there is a problem here, which is that the :code:`click_handler` **prop**
-    for the :code:`Buttons100` component is a new function
-    :code:`value_from_slowprop` every time that
-    the :code:`SuperComp` component re-renders, so it will always cause
-    the :code:`Buttons100` to re-render.
-
-    We can’t define :code:`value_from_slowprop` as a constant
-    function declared outside of the :code:`SuperComp` component because it
-    depends on bindings to :code:`slowprop` and :code:`value_set`.
-
-    The solution
-    ============
-
-    So we use the :func:`use_callback` Hook to create a callback function
-    which only changes when :code:`slowprop` changes.
-
-    And now the :code:`Buttons100` will only re-render when the :code:`slowprop`
-    changes.
-
-    The :code:`value_set` **setter function** does not need to be in
-    the :code:`dependencies` because each **setter function** is always
-    :code:`__eq__` from the previous render.
-
-    .. code-block:: python
-
-        @component
-        def Buttons100(self, click_handler:Callable[[], None]):
-
-            for i in range(100):
-                Button(
-                    on_click=lambda _event: click_handler(),
-                )
-
-        @component
-        def SuperComp(self, fastprop:int, slowprop:int):
-
-            value, value_set = use_state(0)
-
-            def make_value_from_slowprop():
-                def value_from_slowprop():
-                    value_set(slowprop)
-                return value_from_slowprop
-
-            value_from_slowprop = use_callback(
-                make_value_from_slowprop,
-                (slowprop,),
-            )
-
-            Buttons100(value_from_slowprop)
-
-    Args:
-        fn:
-            A function of no arguments which creates and returns a callback function.
-        dependencies:
-            The callback function will be created when the
-            :code:`dependencies` are not :code:`__eq__` to the old :code:`dependencies`.
-    Returns:
-        A callback function.
+    Deprecated alias for :func:`use_memo`.
     """
-
-    def initialize_f() -> tuple[tp.Callable[_P_callback, None], tp.Any]:
-        return (fn(), dependencies)
-
-    stored, stored_set = use_state(initialize_f)
-    if stored[1] != dependencies:
-        new_fn = fn()
-        stored_set((new_fn, dependencies))
-        return new_fn
-    return stored[0]
+    return use_memo(fn, dependencies)
 
 
 _P_async = ParamSpec("_P_async")
@@ -785,9 +658,24 @@ def use_memo(
     """
     Hook to memoize the result of calling a function.
 
-    Behaves like `React useMemo <https://react.dev/reference/react/useMemo>`_.
+    Behaves like React `useMemo <https://react.dev/reference/react/useMemo>`_.
 
-    Use this hook during a render to memoize a value which is pure and
+    Args:
+        fn:
+            A function of no arguments which returns a **value**.
+        dependencies:
+            The :code:`fn` will be called to recompute the **value** when the
+            :code:`dependencies`
+            are not :code:`__eq__` to the old :code:`dependencies`.
+            If :code:`dependencies` is :code:`None`, then the **value** will
+            recompute on every render.
+    Returns:
+        The memoized **value** from calling :code:`fn`.
+
+    Memoize an expensive computation
+    --------------------------------
+
+    Use this Hook during a render to memoize a value which is pure and
     non-side-effecting but expensive to compute.
 
     .. code-block:: python
@@ -800,16 +688,120 @@ def use_memo(
 
         bignumber = use_memo(expensive_computation, (x_factor,))
 
-    Args:
-        fn:
-            A function of no arguments which returns a value.
-        dependencies:
-            The value will be recomputed when the dependencies change.
-            If :code:`None`, then the value will be recomputed every render.
-    Returns:
-        The memoized value from calling :code:`fn`.
+    Memoize a function definition
+    -----------------------------
+
+    This Hook also behaves like React `useCallback <https://react.dev/reference/react/useCallback>`_.
+
+    Use this Hook to reduce the re-render frequency of
+    a :func:`@component<edifice.component>` which has a **prop** that is a function.
+
+    This Hook can store callback function with specific
+    bound :code:`dependencies`
+    and the callback function will only change when the
+    specified :code:`dependencies` are not :code:`__eq__` to
+    the :code:`dependencies` from the last render, so the callback function
+    can be used as a stable **prop** which does not change on every render.
+
+    Memoize a function definition: The problem
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+    We want to present the user with a hundred buttons and give the buttons
+    an :code:`on_click` **prop**.
+
+    This :code:`SuperComp` component will re-render every time
+    the :code:`fastprop` **prop** changes, so then we will have to re-render all
+    the buttons even though the buttons don’t depend on the :code:`fastprop`.
+
+    .. code-block:: python
+
+        @component
+        def SuperComp(self, fastprop:int, slowprop:int):
+
+            value, value_set = use_state(0)
+
+            def value_from_slowprop():
+                value_set(slowprop)
+
+            for i in range(100):
+                Button(on_click=lambda _event: value_from_slowprop())
+
+    The general solution to this kind of performance problem is to
+    create a new :func:`@component<component>` to render the
+    buttons. This new :code:`Buttons100` :func:`@component<component>`
+    will only re-render when its :code:`click_handler` **prop** changes.
+
+    .. code-block:: python
+
+        @component
+        def Buttons100(self, click_handler:Callable[[], None]):
+
+            for i in range(100):
+                Button(on_click=lambda _event: click_handler())
+
+        @component
+        def SuperComp(self, fastprop:int, slowprop:int):
+
+            value, value_set = use_state(0)
+
+            def value_from_slowprop():
+                value_set(slowprop)
+
+            Buttons100(value_from_slowprop)
+
+    But there is a problem here, which is that the :code:`click_handler` **prop**
+    for the :code:`Buttons100` component is a new function
+    :code:`value_from_slowprop` every time that
+    the :code:`SuperComp` component re-renders, so it will always cause
+    the :code:`Buttons100` to re-render.
+
+    We can’t define :code:`value_from_slowprop` as a constant
+    function declared outside of the :code:`SuperComp` component because it
+    depends on bindings to :code:`slowprop` and :code:`value_set`.
+
+    Memoize a function definition: The solution
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+    So we use the :func:`use_memo` Hook to create a callback function
+    which only changes when :code:`slowprop` changes.
+
+    And now the :code:`Buttons100` will only re-render when the :code:`slowprop`
+    changes.
+
+    (The :code:`value_set` **setter function** does not need to be in
+    the :code:`dependencies` because each **setter function** is constant, so
+    it is always :code:`__eq__` from the previous render.)
+
+    .. code-block:: python
+
+        @component
+        def Buttons100(self, click_handler:Callable[[], None]):
+
+            for i in range(100):
+                Button(on_click=lambda _event: click_handler())
+
+        @component
+        def SuperComp(self, fastprop:int, slowprop:int):
+
+            value, value_set = use_state(0)
+
+            def value_from_slowprop():
+                value_set(slowprop)
+
+            value_from_slowprop_memo = use_memo(
+                lambda: value_from_slowprop,
+                slowprop,
+            )
+
+            Buttons100(value_from_slowprop_memo)
+
+    The :code:`lambda` function passed to :func:`use_memo` will only be
+    called when the :code:`slowprop` changes, so the memoized
+    :code:`value_from_slowprop`
+    function will only change when the :code:`slowprop` changes.
 
     """
+
     stored, _ = use_state([None, None])
     if dependencies is None:
         stored[0] = fn()  # type: ignore  # noqa: PGH003

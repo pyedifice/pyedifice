@@ -10,8 +10,10 @@ import edifice as ed
 @ed.component
 def Thing(self, chrord:int, callback:tp.Callable[[], None]):
     with ed.VBoxView(style={"padding": 5}):
-        # with ed.ButtonView(style={"padding": 5}):
-        with ed.ButtonView(style={"padding": 5}):
+        with ed.ButtonView(
+            style={"padding": 5},
+            on_click=lambda _ev: callback(),
+        ):
             ed.Label(
                 text="Label " + chr(chrord),
                 style={
@@ -20,18 +22,22 @@ def Thing(self, chrord:int, callback:tp.Callable[[], None]):
                     "font-family": "Segoe UI Emoji",
                 },
             )
+            ed.Label(text=str(id(callback)))
 
 @ed.component
 def Main(self):
     chars, chars_set = ed.use_state(50)
     x, x_set = ed.use_state(0)
 
-    def bind_funcaller():
-        def funcaller():
-            pass
-        return funcaller
+    # def bind_funcaller():
+    #     def funcaller():
+    #         print("funcaller")
+    #     return funcaller
 
-    funcallback = ed.use_callback(bind_funcaller, ())
+    def funcaller():
+        print("funcaller")
+
+    funcallback = ed.use_memo(lambda: funcaller, ())
 
     with ed.Window(style={"align":"top"}):
         ed.Slider(
