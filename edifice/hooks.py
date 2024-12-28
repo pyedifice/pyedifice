@@ -28,6 +28,14 @@ def use_state(
 
     Behaves like `React useState <https://react.dev/reference/react/useState>`_.
 
+    Args:
+        initial_state: The initial **state value** or **initializer function**.
+    Returns:
+        A tuple pair containing
+
+        1. The current **state value**.
+        2. A **setter function** for setting or updating the state value.
+
     :func:`use_state` is called with an **initial value**.
     It returns a **state value** and a
     **setter function**.
@@ -211,13 +219,6 @@ def use_state(
                 )
                 for t in x:
                     Label(text=t)
-    Args:
-        initial_state: The initial **state value** or **initializer function**.
-    Returns:
-        A tuple pair containing
-
-        1. The current **state value**.
-        2. A **setter function** for setting or updating the state value.
     """
     context = get_render_context_maybe()
     if context is None or context.current_element is None:
@@ -233,6 +234,19 @@ def use_effect(
     Side-effect Hook inside a :func:`@component<edifice.component>` function.
 
     Behaves like `React useEffect <https://react.dev/reference/react/useEffect>`_.
+
+    Args:
+        setup:
+            An effect **setup function** which returns a **cleanup function**
+            or :code:`None`.
+        dependencies:
+            The effect **setup function** will be called when the
+            dependencies are not :code:`__eq__` to the old dependencies.
+
+            If the dependencies are :code:`None`, then the effect
+            **setup function** will always be called.
+    Returns:
+        None
 
     The **setup function** will be called after render and after the underlying
     Qt Widgets are updated.
@@ -277,19 +291,6 @@ def use_effect(
                 return cleanup_handler
 
             use_effect(setup_handler, handler)
-
-    Args:
-        setup:
-            An effect **setup function** which returns a **cleanup function**
-            or :code:`None`.
-        dependencies:
-            The effect **setup function** will be called when the
-            dependencies are not :code:`__eq__` to the old dependencies.
-
-            If the dependencies are :code:`None`, then the effect
-            **setup function** will always be called.
-    Returns:
-        None
     """
     context = get_render_context_maybe()
     if context is None or context.current_element is None:
@@ -303,6 +304,15 @@ def use_async(
 ) -> Callable[[], None]:
     """
     Asynchronous side-effect Hook inside a :func:`@component<edifice.component>` function.
+
+    Args:
+        fn_coroutine:
+            Async Coroutine function to be run as a Task.
+        dependencies:
+            The :code:`fn_coroutine` Task will be started when the
+            :code:`dependencies` are not :code:`__eq__` to the old :code:`dependencies`.
+    Returns:
+        A function which can be called to cancel the :code:`fn_coroutine` Task manually.
 
     Will create a new
     `Task <https://docs.python.org/3/library/asyncio-task.html#asyncio.Task>`_
@@ -390,15 +400,6 @@ def use_async(
             text="pause" if is_playing else "play",
             on_click=lambda e: is_playing_set(lambda p: not p),
         )
-
-    Args:
-        fn_coroutine:
-            Async Coroutine function to be run as a Task.
-        dependencies:
-            The :code:`fn_coroutine` Task will be started when the
-            :code:`dependencies` are not :code:`__eq__` to the old :code:`dependencies`.
-    Returns:
-        A function which can be called to cancel the :code:`fn_coroutine` Task manually.
     """
     context = get_render_context_maybe()
     if context is None or context.current_element is None:
@@ -444,6 +445,16 @@ def use_async_call(
     """
     Hook to call an async function from a non-async context.
 
+    Args:
+        fn_coroutine:
+            Async Coroutine function to be run as a Task.
+    Returns:
+        A tuple pair of non-async functions.
+            1. A non-async function with the same argument signature as the
+               :code:`fn_coroutine`.
+            2. A non-async cancellation function which can be called to cancel
+               the :code:`fn_coroutine` Task manually.
+
     The async :code:`fn_coroutine` function can have any argument
     signature, but it must return :code:`None`. The return value is discarded.
 
@@ -485,17 +496,6 @@ def use_async_call(
     but because it uses
     :func:`use_async`, it will cancel the Task
     when this :func:`@component<edifice.component>` is unmounted, or when the function is called again.
-
-    Args:
-        fn_coroutine:
-            Async Coroutine function to be run as a Task.
-    Returns:
-        A tuple pair of non-async functions.
-            1. A non-async function with the same argument signature as the
-               :code:`fn_coroutine`.
-            2. A non-async cancellation function which can be called to cancel
-               the :code:`fn_coroutine` Task manually.
-
     """
 
     triggered, triggered_set = use_state(cast(_AsyncCommand[_P_async] | None, None))
@@ -526,6 +526,14 @@ def use_effect_final(
     """
     Side-effect Hook for when a :func:`@component<edifice.component>` unmounts.
 
+    Args:
+        cleanup:
+            A function of no arguments and no return value.
+        dependencies:
+            If the :code:`dependencies`
+            are not :code:`__eq__` to the old :code:`dependencies`
+            then the :code:`cleanup` function will be called.
+
     This Hook will call the :code:`cleanup` side-effect function with the latest
     local state from :func:`use_state` Hooks.
 
@@ -539,6 +547,8 @@ def use_effect_final(
 
     The optional :code:`dependencies` argument can be used to trigger the
     Hook to call the :code:`cleanup` function before the component unmounts.
+    The :code:`cleanup` function will be called again when the
+    component unmounts.
 
     .. code-block:: python
         :caption: use_effect_final
@@ -608,6 +618,19 @@ def use_hover() -> tuple[bool, tp.Callable[[QtGui.QMouseEvent], None], tp.Callab
 
     Use this hook to track if the mouse is hovering over a :class:`QtWidgetElement`.
 
+    Returns:
+        A tuple of three values:
+            1. :code:`bool`
+                True if the mouse is hovering over the
+                :class:`QtWidgetElement`, False otherwise.
+            2. :code:`Callable[[QtGui.QMouseEvent], None]`
+                Pass this function
+                to the :code:`on_mouse_enter` prop of the :class:`QtWidgetElement`
+            3. :code:`Callable[[QtGui.QMouseEvent], None]`
+                Pass this function
+                to the :code:`on_mouse_leave` prop of the :class:`QtWidgetElement`.
+
+
     .. code-block:: python
         :caption: use_hover
 
@@ -623,19 +646,6 @@ def use_hover() -> tuple[bool, tp.Callable[[QtGui.QMouseEvent], None], tp.Callab
 
     The :code:`on_mouse_enter` and :code:`on_mouse_leave` functions can be
     passed to more than one :class:`QtWidgetElement`.
-
-    Returns:
-        A tuple of three values:
-            1. :code:`bool`
-                True if the mouse is hovering over the
-                :class:`QtWidgetElement`, False otherwise.
-            2. :code:`Callable[[QtGui.QMouseEvent], None]`
-                Pass this function
-                to the :code:`on_mouse_enter` prop of the :class:`QtWidgetElement`
-            3. :code:`Callable[[QtGui.QMouseEvent], None]`
-                Pass this function
-                to the :code:`on_mouse_leave` prop of the :class:`QtWidgetElement`.
-
     """
     hover, hover_set = use_state(False)
 
@@ -653,7 +663,7 @@ _T_use_memo = tp.TypeVar("_T_use_memo")
 
 def use_memo(
     fn: Callable[[], _T_use_memo],
-    dependencies: tp.Any,
+    dependencies: tp.Any = (),
 ) -> _T_use_memo:
     """
     Hook to memoize the result of calling a function.
@@ -843,6 +853,17 @@ def provide_context(
 
     Provides similar features to `React useContext <https://react.dev/reference/react/useContext>`_.
 
+    Args:
+        context_key:
+            Identifier for a shared context.
+        initial_state:
+            The initial **state value** or **initializer function**.
+    Returns:
+        A tuple pair containing
+
+        1. The current **state value** for the given :code:`context_key`.
+        2. A **setter function** for setting or updating the **state value**.
+
     Use this Hook to transmit state without passing the state down through
     the **props** to a child :func:`@component<edifice.component>` using
     :func:`use_context`.
@@ -878,18 +899,6 @@ def provide_context(
                 Label(text=str(x))
                 ContextChild()
                 ContextChild()
-
-
-    Args:
-        context_key:
-            Identifier for a shared context.
-        initial_state:
-            The initial **state value** or **initializer function**.
-    Returns:
-        A tuple pair containing
-
-        1. The current **state value** for the given :code:`context_key`.
-        2. A **setter function** for setting or updating the **state value**.
     """
 
     local_state, local_setter = use_state(initial_state)
@@ -932,6 +941,17 @@ def use_context(
 
     Provides similar features to `React useContext <https://react.dev/reference/react/useContext>`_.
 
+    Args:
+        context_key:
+            Identifier for a shared context.
+        value_type:
+            The type of the **initial value** in the parent :func:`provide_context`
+    Returns:
+        A tuple pair containing
+
+        1. The current **state value** for the given :code:`context_key`.
+        2. A **setter function** for setting or updating the **state value**.
+
     Use this Hook to consume state transmitted by the :func:`provide_context` with
     the same :code:`context_key`.
 
@@ -945,18 +965,6 @@ def use_context(
     The **setter function** will, when called, update the **state value** across
     each :func:`@component<edifice.component>` using :func:`use_context` with the
     same :code:`context_key`.
-
-
-    Args:
-        context_key:
-            Identifier for a shared context.
-        value_type:
-            The type of the **initial value** in the parent :func:`provide_context`
-    Returns:
-        A tuple pair containing
-
-        1. The current **state value** for the given :code:`context_key`.
-        2. A **setter function** for setting or updating the **state value**.
     """
     if context_key not in _edifice_provide_context:
         raise ValueError(f"use_context context_key '{context_key}' has no provide_context.")
