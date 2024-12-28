@@ -26,7 +26,7 @@ def use_state(
     """
     Persistent mutable state Hook inside a :func:`@component<edifice.component>` function.
 
-    Behaves like `React useState <https://react.dev/reference/react/useState>`_.
+    Behaves like React `useState <https://react.dev/reference/react/useState>`_.
 
     Args:
         initial_state: The initial **state value** or **initializer function**.
@@ -233,7 +233,7 @@ def use_effect(
     """
     Side-effect Hook inside a :func:`@component<edifice.component>` function.
 
-    Behaves like `React useEffect <https://react.dev/reference/react/useEffect>`_.
+    Behaves like React `useEffect <https://react.dev/reference/react/useEffect>`_.
 
     Args:
         setup:
@@ -851,7 +851,7 @@ def provide_context(
     """
     Context state provider Hook for *prop drilling*.
 
-    Provides similar features to `React useContext <https://react.dev/reference/react/useContext>`_.
+    Provides similar features to React `useContext <https://react.dev/reference/react/useContext>`_.
 
     Args:
         context_key:
@@ -939,7 +939,7 @@ def use_context(
     """
     Context state consumer Hook for *prop drilling*.
 
-    Provides similar features to `React useContext <https://react.dev/reference/react/useContext>`_.
+    Provides similar features to React `useContext <https://react.dev/reference/react/useContext>`_.
 
     Args:
         context_key:
