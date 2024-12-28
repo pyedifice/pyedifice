@@ -4,6 +4,17 @@
 Release Notes
 =============
 
+v2.9.0
+------
+Released: 2024-12-28
+
+- New Hooks: :func:`provide_context`, :func:`use_context`.
+- :ref:`Styling` :code:`style` prop :code:`"align"` can take an
+  `AlignmentFlag <https://doc.qt.io/qtforpython-6/PySide6/QtCore/Qt.html#PySide6.QtCore.Qt.AlignmentFlag>`_.
+- :ref:`Styling` :code:`style` prop colors can take a `QColor <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QColor.html>`_.
+- Deprecate Hook :func:`use_callback` in favor of :func:`use_memo`.
+
+
 v2.8.1
 ------
 Released: 2024-12-18
