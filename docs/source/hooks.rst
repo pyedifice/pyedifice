@@ -70,10 +70,11 @@ clock value incremented each time.
         tick, tick_set = use_state(0)
 
         async def increment():
-            await asyncio.sleep(1)
-            tick_set(tick + 1)
+            while True:
+                await asyncio.sleep(1)
+                tick_set(lambda t: t + 1)
 
-        use_async(increment, tick)
+        use_async(increment)
 
         return tick
 

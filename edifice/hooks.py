@@ -300,7 +300,7 @@ def use_effect(
 
 def use_async(
     fn_coroutine: Callable[[], Coroutine[None, None, None]],
-    dependencies: Any,
+    dependencies: Any = (),
 ) -> Callable[[], None]:
     """
     Asynchronous side-effect Hook inside a :func:`@component<edifice.component>` function.
