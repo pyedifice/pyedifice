@@ -2,44 +2,67 @@
 
 How to work on Edifice.
 
-## Poetry Build System
+## Setuptools Build System
+
+Setuptools `pyproject.toml` with [src layout](https://packaging.python.org/en/latest/discussions/src-layout-vs-flat-layout/).
+
+## uv dev environment
 
 For development of this package, you can use the
-[`poetry shell`](https://python-poetry.org/docs/cli#shell) environment.
+[`uv venv`](https://docs.astral.sh/uv/pip/environments/#using-a-virtual-environment)
+environment.
+
+```console
+uv venv
+```
+```console
+source .venv/bin/activate
+```
+```console
+uv sync --all-extras
+```
 
 In this environment the tests should pass.
 
-    ./run_tests.sh
+```console
+./run_tests.sh
+```
 
-## Nix Build System
+In this environment
+[publishing to PyPI](https://docs.astral.sh/uv/guides/publish/)
+should work.
 
-There is a [Nix Flake](https://nixos.wiki/wiki/Flakes) with
-two development environments:
+## Nix uv dev environment
 
-1. `nix develop`
+The [Nix Flake](https://nixos.wiki/wiki/Flakes) has this development environment:
 
-   poetry2nix [`mkPoetryEnv`](https://github.com/nix-community/poetry2nix#mkpoetryenv)
-   environment with editable `edifice/` source files.
+```console
+nix develop .#impure
+```
 
-   In this environment the tests should pass.
+which provides everything for the **uv dev environment**.
 
-       ./run_tests.sh
+## Nix uv2nix dev environment
 
-   In this environment building the [Docs](docs) should work.
+The [Nix Flake](https://nixos.wiki/wiki/Flakes) has this development environment:
 
-2. `nix develop .#poetry`
+```console
+nix develop .#uv2nix
+```
+[uv2nix](https://github.com/pyproject-nix/uv2nix)
+environment with editable `src/edifice/` source files.
 
-   Poetry environment.
+In this environment the tests should pass.
 
-   In this environment the tests should pass.
+```console
+./run_tests.sh
+```
 
-       poetry install --sync --all-extras
-       poetry shell
-       ./run_tests.sh
+In this environment
+[publishing to PyPI](https://docs.astral.sh/uv/guides/publish/)
+should work.
 
-   In this environment
-   [publishing to PyPI](https://python-poetry.org/docs/libraries/#publishing-to-pypi)
-   should work.
+## Nix apps
 
 There are also Nix Flake `apps` for running the tests and the examples, see
 [Examples](https://pyedifice.github.io/examples.html) or
@@ -47,6 +70,29 @@ There are also Nix Flake `apps` for running the tests and the examples, see
 ```
 nix flake show github:pyedifice/pyedifice
 ```
+
+## Import Edifice
+
+### uv
+
+To use the latest Edifice with a **uv** `pyproject.toml` from Github
+instead of PyPI, see
+[Adding dependencies](https://docs.astral.sh/uv/concepts/projects/dependencies/#adding-dependencies)
+
+### Poetry
+
+To use the latest Edifice with a Poetry `pyproject.toml` from Github
+instead of PyPI, see
+[Poetry git dependencies](https://python-poetry.org/docs/dependency-specification/#git-dependencies),
+for example:
+
+```
+[tool.poetry.dependencies]
+python = ">=3.10,<3.11"
+pyedifice = {git = "https://github.com/pyedifice/pyedifice.git"}
+PySide6-Essentials = "6.6.2"
+```
+
 ## Release Checklist
 
 - version agreement
@@ -56,17 +102,18 @@ nix flake show github:pyedifice/pyedifice
 - `nix run .#run_tests`
 
 ```
-nix develop .#poetry
+nix develop .#uv2nix
 ```
 
 ```
-poetry build
+uv build
 ```
 
 ```
-poetry publish
+uv publish
 ```
 
 - `git tag`
 - Publish [`docs`](docs/)
 - Publish [Release](https://github.com/pyedifice/pyedifice/releases)
+
