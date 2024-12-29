@@ -513,7 +513,6 @@ class Label(QtWidgetElement[QtWidgets.QLabel]):
                 a focus mnemonic key for another widget.
                 </p>
                 ''',
-            word_wrap=True,
         )
 
     .. note::
