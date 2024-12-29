@@ -1,3 +1,6 @@
+..  https://pydata-sphinx-theme.readthedocs.io/en/stable/user_guide/page-toc.html#remove-the-table-of-contents
+
+:html_theme.sidebar_secondary.remove:
 
 .. currentmodule:: edifice
 
