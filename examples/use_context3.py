@@ -14,7 +14,7 @@ def Display(self):
     with ed.VBoxView(style={"padding": 10}):
         ed.Dropdown(
             selection=context_select,
-            options=("context A", "context B"),
+            options=("Context A", "Context B"),
             on_select=context_select_set,
         )
         ed.TextInput(text=text_a, on_change=text_a_set)
@@ -26,7 +26,7 @@ def Main(self):
 
     with ed.Window(_size_open=(800, 400)):
         with ed.VBoxView(style={"align": "top"}):
-            ed.CheckBox(text="Show All", checked=show_all, on_change=set_show_all)
+            ed.CheckBox(text="Show provide_context", checked=show_all, on_change=set_show_all)
             if show_all:
                 ProviderComponent()
 
@@ -45,7 +45,7 @@ def ProviderComponent(self):
             ed.Label(text="Context B")
             ed.TextInput(text=text_b, on_change=set_text_b)
         with ed.HBoxView():
-            ed.CheckBox(text="Show Displays", checked=show_a, on_change=set_show_a)
+            ed.CheckBox(text="Show use_context", checked=show_a, on_change=set_show_a)
             ed.SpinInput(value=display_count, on_change=set_display_count)
         if show_a:
             with ed.FlowView():
