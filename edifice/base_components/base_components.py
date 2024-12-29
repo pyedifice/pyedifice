@@ -500,12 +500,28 @@ class Label(QtWidgetElement[QtWidgets.QLabel]):
     Render rich text with the
     `Qt supported HTML subset <https://doc.qt.io/qtforpython-6/overviews/richtext-html-subset.html>`_.
 
-    .. figure:: /image/label.png
-       :width: 500
+    .. code-block:: python
+
+        Label(
+            text='''
+                <h1>QLabel</h1>
+
+                <p style='line-height:1.5;'>
+                <code>QLabel</code> is used for displaying text or an image.
+                No user interaction functionality is provided.The visual appearance of the
+                label can be configured in various ways, and it can be used for specifying
+                a focus mnemonic key for another widget.
+                </p>
+                ''',
+            word_wrap=True,
+        )
 
     .. note::
         The combination of rich text and :code:`word_wrap` can sometimes cause
         `Qt Layout Issues <https://doc.qt.io/qtforpython-6/overviews/layout.html#layout-issues>`_.
+
+    .. figure:: /image/label.png
+       :width: 500
     """
 
     def __init__(
