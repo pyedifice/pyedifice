@@ -229,31 +229,37 @@ class Button(QtWidgetElement[QtWidgets.QPushButton]):
         - Underlying Qt Widget
           `QPushButton <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QPushButton.html>`_
 
-    .. figure:: /image/textinput_button.png
-       :width: 300
-
-       Button on the right
-
     .. rubric:: Props
-
-    Set the :code:`on_click` **prop** (inherited from :class:`QtWidgetElement`) to
-    define the click behavior.
 
     All **props** from :class:`QtWidgetElement` plus:
 
     Args:
         title:
             The button text
+
+    Set the :code:`on_click` **prop** (inherited from :class:`QtWidgetElement`) to
+    define the click behavior.
+
+    .. rubric:: Usage
+
+    .. code-block:: python
+
+        Button(title="Click me", on_click=lambda _: print("Clicked!"))
+
+    .. figure:: /image/textinput_button.png
+       :width: 300
+
+       Button on the right
     """
 
-    def __init__(self, title: tp.Any = "", **kwargs):
+    def __init__(self, title: str = "", **kwargs):
         super().__init__(**kwargs)
         self._register_props({"title": title})
         self._register_props(kwargs)
         self._connected = False
 
     def _initialize(self):
-        self.underlying = QtWidgets.QPushButton(str(self.props.title))
+        self.underlying = QtWidgets.QPushButton()
         self.underlying.setObjectName(str(id(self)))
 
     def _qt_update_commands(
@@ -268,10 +274,9 @@ class Button(QtWidgetElement[QtWidgets.QPushButton]):
         # > size = self.underlying.font().pointSize()
         # > self._set_size(size * len(self.props.title), size, lambda size: (size * len(self.props.title), size))
         commands = super()._qt_update_commands_super(widget_trees, newprops, self.underlying)
-        widget = tp.cast(QtWidgets.QPushButton, self.underlying)
         for prop in newprops:
             if prop == "title":
-                commands.append(CommandType(widget.setText, str(newprops.title)))
+                commands.append(CommandType(self.underlying.setText, newprops.title))
 
         return commands
 
@@ -582,6 +587,19 @@ class ImageSvg(QtWidgetElement[QtSvgWidgets.QSvgWidget]):
             Either a path to an SVG image file, or a
             `QByteArray <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QByteArray.html>`_
             containing the XML string of an SVG file.
+
+    .. rubric:: Usage
+
+    .. code-block:: python
+
+        henomaru = QByteArray.fromStdString(
+            '<svg viewBox="0 0 200 200"><circle fill="red" cx="100" cy="100" r="100"/></svg>'
+        )
+
+        ImageSvg(
+            src=henomaru,
+            style={"width": 100, "height": 100},
+        )
     """
 
     def __init__(self, src: str | QtCore.QByteArray, **kwargs):
@@ -656,6 +674,15 @@ class TextInput(QtWidgetElement[QtWidgets.QLineEdit]):
             (not recommended).
 
     .. rubric:: Usage
+
+    .. code-block:: python
+
+        text, text_set = ed.use_state("")
+
+        TextInput(
+            text=text,
+            on_change=text_set,
+        )
 
     .. figure:: /image/textinput_button.png
        :width: 300
@@ -852,6 +879,16 @@ class Dropdown(QtWidgetElement[QtWidgets.QComboBox]):
        :width: 300
 
        Dropdown on the right.
+
+    .. code-block:: python
+
+        dropselect, dropselect_set = use_state(0)
+
+        Dropdown(
+            selection=dropselect,
+            options=["Option 1", "Option 2", "Option 3"],
+            on_select=dropselect_set,
+        )
     """
 
     def __init__(

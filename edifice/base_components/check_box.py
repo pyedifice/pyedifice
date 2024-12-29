@@ -61,7 +61,17 @@ class CheckBox(QtWidgetElement[EdCheckBox]):
     .. figure:: /image/checkbox_dropdown.png
        :width: 300
 
-       Checkbox on the left.
+       CheckBox on the left.
+
+    .. code-block:: python
+
+        checked, checked_set = ed.use_state(False)
+
+        CheckBox(
+            checked=checked,
+            text="Check me",
+            on_change=checked_set,
+        )
     """
 
     def __init__(

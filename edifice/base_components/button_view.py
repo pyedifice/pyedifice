@@ -64,7 +64,7 @@ class ButtonView(HBoxView):
         :caption: Example ButtonView
 
         with ButtonView(
-            on_click=handle_click,
+            on_trigger=lambda _event: print("Button Triggered"),
         ):
             Icon(name="share")
             Label(text="<i>Share the Content</i>")
