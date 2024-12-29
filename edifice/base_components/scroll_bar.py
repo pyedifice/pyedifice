@@ -12,11 +12,10 @@ else:
     from PySide6.QtCore import Qt
 
 
+from collections.abc import Awaitable, Callable  # noqa: TCH003
+
 import edifice as ed
 from edifice.engine import CommandType, PropsDict, _ensure_future, _WidgetTree
-
-if tp.TYPE_CHECKING:
-    from collections.abc import Awaitable, Callable
 
 
 class ScrollBar(ed.QtWidgetElement[QtWidgets.QScrollBar]):
@@ -25,8 +24,13 @@ class ScrollBar(ed.QtWidgetElement[QtWidgets.QScrollBar]):
 
     Render a scroll bar widget that allows the user to scroll through a range of values.
 
-    - Underlying Qt Widget:
-      `QScrollBar <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QScrollBar.html>`_
+    .. highlights::
+        - Underlying Qt Widget:
+          `QScrollBar <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QScrollBar.html>`_
+
+    .. rubric:: Props
+
+    All **props** from :class:`QtWidgetElement` plus:
 
     Args:
         value: The current value of the scroll bar.

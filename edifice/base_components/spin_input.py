@@ -55,16 +55,22 @@ class EdSpinBox(QSpinBox):
 class SpinInput(QtWidgetElement[EdSpinBox]):
     """Widget for a :code:`int` input value with up/down buttons.
 
-    Allows the user to choose a value by clicking the up/down buttons or
+    Allows the user to choose an :code:`int` by clicking the up/down buttons or
     pressing up/down on the keyboard to increase/decrease the value currently
     displayed. The user can also type the value in manually.
 
-    * Underlying Qt Widget
-      `QSpinBox <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QSpinBox.html>`_
+    .. highlights::
+
+        - Underlying Qt Widget
+          `QSpinBox <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QSpinBox.html>`_
+
+    .. rubric::
+        Props
+
+    All **props** for :class:`QtWidgetElement` plus:
 
     Args:
-        value:
-            Value of the text input.
+        value: Value of the text input.
         min_value:
             Minimum value of the text input.
         max_value:

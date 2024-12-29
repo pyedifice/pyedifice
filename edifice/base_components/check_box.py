@@ -32,19 +32,15 @@ class EdCheckBox(QtWidgets.QCheckBox):
 class CheckBox(QtWidgetElement[EdCheckBox]):
     """Checkbox widget.
 
-    * Underlying Qt Widget
-      `QCheckBox <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QCheckBox.html>`_
+    A CheckBox allows the user to select a boolean.
 
-    .. figure:: /image/checkbox_dropdown.png
-       :width: 300
+    .. highlights::
+        - Underlying Qt Widget
+          `QCheckBox <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QCheckBox.html>`_
 
-       Checkbox on the left.
+    .. rubric:: Props
 
-    A checkbox allows the user to specify some boolean state.
-
-    The :code:`checked` prop determines the check-state of the widget.
-    When the user toggles the check state, the :code:`on_change` callback is called
-    with the requested new check state.
+    All **props** from :class:`QtWidgetElement`, plus:
 
     Args:
         checked:
@@ -55,6 +51,17 @@ class CheckBox(QtWidgetElement[EdCheckBox]):
             Event handler for when the checked value changes, but
             only when the user checks or unchecks, not when the checked prop
             changes.
+
+    The :code:`checked` prop determines the check-state of the widget.
+    When the user toggles the check state, the :code:`on_change` callback is called
+    with the requested new check state.
+
+    .. rubric:: Usage
+
+    .. figure:: /image/checkbox_dropdown.png
+       :width: 300
+
+       Checkbox on the left.
     """
 
     def __init__(

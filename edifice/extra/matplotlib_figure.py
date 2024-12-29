@@ -24,7 +24,23 @@ class MatplotlibFigure(QtWidgetElement):
 
     Requires `matplotlib <https://matplotlib.org/stable/>`_.
 
-    Example::
+    .. rubric:: Props
+
+    All **props** from :class:`edifice.QtWidgetElement` plus:
+
+    Args:
+        plot_fun:
+            Function which takes **matplotlib**
+            `Axes <https://matplotlib.org/stable/api/axes_api.html>`_
+            and calls
+            `Axes.plot <https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.plot.html>`_.
+        on_figure_mouse_move:
+            Handler for mouse move
+            `MouseEvent <https://matplotlib.org/stable/api/backend_bases_api.html#matplotlib.backend_bases.MouseEvent>`_.
+
+    .. rubric:: Usage
+
+    .. code-block:: python
 
         from matplotlib.axes import Axes
         import numpy as np
@@ -36,15 +52,6 @@ class MatplotlibFigure(QtWidgetElement):
 
         MatplotlibFigure(plot_fun=plot_fun)
 
-    Args:
-        plot_fun:
-            Function which takes **matplotlib**
-            `Axes <https://matplotlib.org/stable/api/axes_api.html>`_
-            and calls
-            `Axes.plot <https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.plot.html>`_.
-        on_figure_mouse_move:
-            Handler for mouse move
-            `MouseEvent <https://matplotlib.org/stable/api/backend_bases_api.html#matplotlib.backend_bases.MouseEvent>`_.
     """
 
     def __init__(

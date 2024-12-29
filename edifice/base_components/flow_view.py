@@ -138,7 +138,7 @@ class FlowLayout(QLayout):
 
 class FlowView(_LinearView[QWidget]):
     """
-    Flow-style layout widget.
+    Flow-style layout.
 
     Displays its children horizonally left-to-right and wraps into multiple rows.
 
@@ -150,9 +150,13 @@ class FlowView(_LinearView[QWidget]):
     .. note::
 
         The :class:`FlowView` element is implemented in Python because Qt does not provide
-        any :code:`QLayout` which behaves this way. Currently the :class:`FlowView`
-        has O(N\ :sup:`2`) time complexity for adding children
-        because of technical limitation of the Qt API.
+        any native :code:`QLayout` which behaves this way. Currently the :class:`FlowView`
+        has worst-case O(N :sup:`2`) time complexity for inserting children
+        because of technical limitations of the Qt API.
+
+    .. rubric:: Props
+
+    All **props** for :class:`QtWidgetElement`.
     """
 
     def __init__(self, **kwargs):

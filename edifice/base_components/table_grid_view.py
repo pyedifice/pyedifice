@@ -43,13 +43,36 @@ class TableGridRow(QtWidgetElement):
 class TableGridView(QtWidgetElement[QWidget]):
     """Table-style grid layout displays its children as aligned rows of columns.
 
-    * Underlying Qt Layout
-      `QGridLayout <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGridLayout.html>`_
+    .. highlights::
+        - Underlying Qt Layout
+          `QGridLayout <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGridLayout.html>`_
 
     This component has similar behavior to an `HTML
     table <https://developer.mozilla.org/en-US/docs/Web/HTML/Element/table>`_.
     Each column will be the width of its widest child. Each row will be the
     height of its tallest child.
+
+    .. rubric:: Props
+
+    All **props** for :class:`QtWidgetElement` plus:
+
+    Args:
+        row_stretch:
+            *n*:sup:`th` row stretch size in proportion to the *n*:sup:`th`
+            :code:`int` in this list.
+            See `setRowStretch <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGridLayout.html#PySide6.QtWidgets.QGridLayout.setRowStretch>`_
+        column_stretch:
+            *n*:sup:`th` column stretch size in proportion to the *n*:sup:`th`
+            :code:`int` in this list.
+            See `setColumnStretch <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGridLayout.html#PySide6.QtWidgets.QGridLayout.setColumnStretch>`_
+        row_minheight:
+            *n*:sup:`th` row minimum height is the *n*:sup:`th` :code:`int` in this list.
+            See `setRowMinimumHeight <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGridLayout.html#PySide6.QtWidgets.QGridLayout.setRowMinimumHeight>`_
+        column_minwidth:
+            *n*:sup:`th` column minimum width is the *n*:sup:`th` :code:`int` in this list.
+            See `setColumnMinimumWidth <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGridLayout.html#PySide6.QtWidgets.QGridLayout.setColumnMinimumWidth>`_
+
+    .. rubric:: Usage
 
     The only type of child :class:`Element` allowed in a :class:`TableGridView` is
     :class:`TableGridRow`.
@@ -69,22 +92,6 @@ class TableGridView(QtWidgetElement[QWidget]):
 
     If the :class:`TableGridRow` s are added and removed dynamically then
     it’s a good idea to :func:`Element.set_key` each row.
-
-    Args:
-        row_stretch:
-            *n*:sup:`th` row stretch size in proportion to the *n*:sup:`th`
-            :code:`int` in this list.
-            See `setRowStretch <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGridLayout.html#PySide6.QtWidgets.QGridLayout.setRowStretch>`_
-        column_stretch:
-            *n*:sup:`th` column stretch size in proportion to the *n*:sup:`th`
-            :code:`int` in this list.
-            See `setColumnStretch <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGridLayout.html#PySide6.QtWidgets.QGridLayout.setColumnStretch>`_
-        row_minheight:
-            *n*:sup:`th` row minimum height is the *n*:sup:`th` :code:`int` in this list.
-            See `setRowMinimumHeight <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGridLayout.html#PySide6.QtWidgets.QGridLayout.setRowMinimumHeight>`_
-        column_minwidth:
-            *n*:sup:`th` column minimum width is the *n*:sup:`th` :code:`int` in this list.
-            See `setColumnMinimumWidth <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGridLayout.html#PySide6.QtWidgets.QGridLayout.setColumnMinimumWidth>`_
 
     """
 

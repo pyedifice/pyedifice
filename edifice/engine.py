@@ -746,14 +746,14 @@ def _css_to_number(a):
 
 
 class QtWidgetElement(Element, tp.Generic[_T_widget]):
-    """Base Qt Widget.
+    """Base Qt Widget Element.
 
-    All elements with an underlying
-    `QWidget <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html>`_
-    inherit from this element.
+    All :doc:`Base Elements<../base_components>` inherit from this class.
+
+    .. rubric::
+        Props
 
     The props add basic functionality such as styling and event handlers.
-
 
     Args:
         style: Style dictionary. See :doc:`../../styling` for details.

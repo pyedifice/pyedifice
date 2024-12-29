@@ -93,8 +93,15 @@ def NumpyArray_to_QImage(arr: npt.NDArray[np.uint8] | NumpyArray[np.uint8]) -> Q
 class NumpyImage(ed.QtWidgetElement):
     """Render a :code:`numpy` array as an image.
 
-    * Underlying Qt Widget
-      `QLabel <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QLabel.html>`_
+    Requres `numpy <https://numpy.org/doc/stable/reference/index.html>`_.
+
+    .. highlights::
+        - Underlying Qt Widget
+          `QLabel <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QLabel.html>`_
+
+    .. rubric:: Props
+
+    All **props** from :class:`edifice.QtWidgetElement` plus:
 
     Args:
         src:

@@ -36,12 +36,32 @@ class _PushButton(QPushButton):
 
 class ButtonView(HBoxView):
     """
+    Button with child layout.
+
     A Button where the label is the Button’s children rendered in a :class:`edifice.HBoxView`.
 
-    * Underlying Qt Widget
-      `QPushButton <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QPushButton.html>`_
+    .. highlights::
+        - Underlying Qt Widget
+          `QPushButton <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QPushButton.html>`_
 
-    Example::
+    .. rubric:: Props
+
+    All **props** from :class:`QtWidgetElement` plus:
+
+    Args:
+        on_trigger:
+            Event fires when the button is triggered by mouse or
+            the Spacebar or Enter key. Event type is either
+            `QMouseEvent <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QMouseEvent.html>`_
+            or
+            `QKeyEvent <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QKeyEvent.html>`_.
+
+            Use either this **prop** or :code:`on_click` **prop**, not both.
+
+    .. rubric:: Usage
+
+    .. code-block:: python
+        :caption: Example ButtonView
 
         with ButtonView(
             on_click=handle_click,
@@ -51,11 +71,6 @@ class ButtonView(HBoxView):
 
     .. figure:: /image/button_view.png
 
-    Args:
-        on_trigger:
-            Event fires when the button is triggered by mouse or
-            the Spacebar or Enter key. Event type is either :code:`QMouseEvent` or :code:`QKeyEvent`.
-            Use either this or :code:`on_click`, not both.
     """
 
     def __init__(

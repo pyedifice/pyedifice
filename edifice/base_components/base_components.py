@@ -117,26 +117,13 @@ class GroupBox(QtWidgetElement[QtWidgets.QGroupBox]):
 class Icon(QtWidgetElement[QtWidgets.QLabel]):
     """Display an Icon.
 
-    * Underlying Qt Widget
-      `QLabel <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QLabel.html>`_
+    .. highlights::
+        - Underlying Qt Widget
+          `QLabel <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QLabel.html>`_
 
-    .. figure:: /image/icons.png
-       :width: 300
+    .. rubric:: Props
 
-       Two icons. Note that you can set the color and rotation.
-
-    Icons are central to modern-looking UI design.
-    Edifice comes with the Font Awesome (https://fontawesome.com) regular and solid
-    icon sets, to save you time from looking up your own icon set.
-    You can specify an icon simplify using its name (and optionally the sub_collection).
-
-    Example::
-
-        Icon(name="share")
-
-    will create a classic share icon.
-
-    You can browse and search for icons here: https://fontawesome.com/icons?d=gallery&s=regular,solid
+    All **props** from :class:`QtWidgetElement` plus:
 
     Args:
         name:
@@ -151,6 +138,27 @@ class Icon(QtWidgetElement[QtWidgets.QLabel]):
             the RGBA value for the icon color
         rotation:
             an angle (in degrees) for the icon rotation
+
+    .. rubric:: Usage
+
+    .. figure:: /image/icons.png
+       :width: 300
+
+       Two icons
+
+    Icons are central to modern-looking UI design.
+    Edifice comes with the Font Awesome (https://fontawesome.com) regular and solid
+    icon sets, to save you time from looking up your own icon set.
+    You can specify an icon simplify using its name (and optionally the sub_collection).
+
+    .. code-block:: python
+        :caption: Example classic share icon
+
+        Icon(name="share")
+
+    You can browse and search for icons here: https://fontawesome.com/icons?d=gallery&s=regular,solid
+
+    For full control of custom icons, use an :class:`ImageSvg` instead.
     """
 
     def __init__(
@@ -217,21 +225,25 @@ class Icon(QtWidgetElement[QtWidgets.QLabel]):
 class Button(QtWidgetElement[QtWidgets.QPushButton]):
     """Basic button widget.
 
-    * Underlying Qt Widget
-      `QPushButton <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QPushButton.html>`_
+    .. highlights::
+        - Underlying Qt Widget
+          `QPushButton <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QPushButton.html>`_
 
     .. figure:: /image/textinput_button.png
        :width: 300
 
        Button on the right
 
-    Set the on_click prop (inherited from QtWidgetElement) to define the behavior on click.
+    .. rubric:: Props
+
+    Set the :code:`on_click` **prop** (inherited from :class:`QtWidgetElement`) to
+    define the click behavior.
+
+    All **props** from :class:`QtWidgetElement` plus:
 
     Args:
         title:
-            the button text
-        style:
-            the styling of the button
+            The button text
     """
 
     def __init__(self, title: tp.Any = "", **kwargs):
@@ -252,8 +264,9 @@ class Button(QtWidgetElement[QtWidgets.QPushButton]):
         if self.underlying is None:
             self._initialize()
         assert self.underlying is not None
-        size = self.underlying.font().pointSize()
-        self._set_size(size * len(self.props.title), size, lambda size: (size * len(self.props.title), size))
+        # TODO _set_size doesn't work
+        # > size = self.underlying.font().pointSize()
+        # > self._set_size(size * len(self.props.title), size, lambda size: (size * len(self.props.title), size))
         commands = super()._qt_update_commands_super(widget_trees, newprops, self.underlying)
         widget = tp.cast(QtWidgets.QPushButton, self.underlying)
         for prop in newprops:
@@ -266,8 +279,23 @@ class Button(QtWidgetElement[QtWidgets.QPushButton]):
 class IconButton(Button):
     """Display an Icon Button.
 
-    * Underlying Qt Widget
-      `QPushButton <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QPushButton.html>`_
+    .. highlights::
+        - Underlying Qt Widget
+          `QPushButton <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QPushButton.html>`_
+
+    .. rubric:: Props
+
+    All **props** from :class:`QtWidgetElement` plus:
+
+    Args:
+        name: name of the icon. Search for icon names on https://fontawesome.com/icons?d=gallery&s=regular,solid
+        size: size of the icon.
+        collection: the icon package. Currently only font-awesome is supported.
+        sub_collection: for font awesome, either solid or regular
+        color: the RGBA value for the icon color
+        rotation: an angle (in degrees) for the icon rotation
+
+    .. rubric:: Usage
 
     .. figure:: /image/icons.png
        :width: 300
@@ -280,31 +308,22 @@ class IconButton(Button):
     icon sets, to save you time from looking up your own icon set.
     You can specify an icon simplify using its name (and optionally the sub_collection).
 
-    Example::
-
-        IconButton(name="share", on_click: self.share)
-
-    will create a button with a share icon.
-
     You can browse and search for icons here: https://fontawesome.com/icons?d=gallery&s=regular,solid
 
-    Args:
-        name: name of the icon. Search for the name on https://fontawesome.com/icons?d=gallery&s=regular,solid
-        size: size of the icon.
-        collection: the icon package. Currently only font-awesome is supported.
-        sub_collection: for font awesome, either solid or regular
-        color: the RGBA value for the icon color
-        rotation: an angle (in degrees) for the icon rotation
+    .. code-block:: python
+        :caption: Example share icon button
+
+        IconButton(name="share", on_click: lambda _: share())
     """
 
     def __init__(
         self,
-        name,
-        size=10,
-        collection="font-awesome",
-        sub_collection="solid",
-        color=(0, 0, 0, 255),
-        rotation=0,
+        name:str,
+        size:int =10,
+        collection:str="font-awesome",
+        sub_collection:str="solid",
+        color:tuple[int,int,int,int]=(0, 0, 0, 255),
+        rotation:int=0,
         **kwargs,
     ):
         super().__init__(**kwargs)
@@ -451,20 +470,15 @@ class IconButton(Button):
 
 
 class Label(QtWidgetElement[QtWidgets.QLabel]):
-    """Basic widget for displaying text.
+    """Text display widget.
 
-    * Underlying Qt Widget
-      `QLabel <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QLabel.html>`_
+    .. highlights::
+        - Underlying Qt Widget
+          `QLabel <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QLabel.html>`_
 
-    Render rich text with the
-    `Qt supported HTML subset <https://doc.qt.io/qtforpython-6/overviews/richtext-html-subset.html>`_.
+    .. rubric:: Props
 
-    .. figure:: /image/label.png
-       :width: 500
-
-    .. note::
-        The combination of rich text and :code:`word_wrap` can sometimes cause
-        `Qt Layout Issues <https://doc.qt.io/qtforpython-6/overviews/layout.html#layout-issues>`_.
+    All **props** from :class:`QtWidgetElement` plus:
 
     Args:
         text: The text to display.
@@ -475,6 +489,18 @@ class Label(QtWidgetElement[QtWidgets.QLabel]):
         text_format: The text format of the label.
              Defaults to :code:`QtCore.Qt.TextFormat.AutoText`.
              See `QtCore.Qt.TextFormat <https://doc.qt.io/qtforpython-6/PySide6/QtCore/Qt.html#PySide6.QtCore.Qt.TextFormat>`_.
+
+    .. rubric:: Usage
+
+    Render rich text with the
+    `Qt supported HTML subset <https://doc.qt.io/qtforpython-6/overviews/richtext-html-subset.html>`_.
+
+    .. figure:: /image/label.png
+       :width: 500
+
+    .. note::
+        The combination of rich text and :code:`word_wrap` can sometimes cause
+        `Qt Layout Issues <https://doc.qt.io/qtforpython-6/overviews/layout.html#layout-issues>`_.
     """
 
     def __init__(
@@ -543,14 +569,19 @@ class Label(QtWidgetElement[QtWidgets.QLabel]):
 class ImageSvg(QtWidgetElement[QtSvgWidgets.QSvgWidget]):
     """Render an SVG image.
 
-    * Underlying Qt Widget
-      `QSvgWidget <https://doc.qt.io/qtforpython-6/PySide6/QtSvgWidgets/QSvgWidget.html>`_
+    .. highlights::
+        - Underlying Qt Widget
+          `QSvgWidget <https://doc.qt.io/qtforpython-6/PySide6/QtSvgWidgets/QSvgWidget.html>`_
+
+    .. rubric:: Props
+
+    All **props** from :class:`QtWidgetElement`, plus:
 
     Args:
         src:
             Either a path to an SVG image file, or a
             `QByteArray <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QByteArray.html>`_
-            containing the serialized XML representation of an SVG file.
+            containing the XML string of an SVG file.
     """
 
     def __init__(self, src: str | QtCore.QByteArray, **kwargs):
@@ -583,15 +614,15 @@ class ImageSvg(QtWidgetElement[QtSvgWidgets.QSvgWidget]):
 
 
 class TextInput(QtWidgetElement[QtWidgets.QLineEdit]):
-    """Basic widget for a one line text input.
+    """One line text input widget.
 
-    * Underlying Qt Widget
-      `QLineEdit <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QLineEdit.html>`_
+    .. highlights::
+        - Underlying Qt Widget
+          `QLineEdit <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QLineEdit.html>`_
 
-    .. figure:: /image/textinput_button.png
-       :width: 300
+    .. rubric:: Props
 
-       TextInput on the left.
+    All **props** from :class:`QtWidgetElement` plus:
 
     Args:
         text:
@@ -623,6 +654,13 @@ class TextInput(QtWidgetElement[QtWidgets.QLineEdit]):
             Or optionally you can pass in an instance of a
             `QCompleter <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QCompleter.html>`_
             (not recommended).
+
+    .. rubric:: Usage
+
+    .. figure:: /image/textinput_button.png
+       :width: 300
+
+       TextInput on the left.
 
     """
 
@@ -705,11 +743,17 @@ class TextInput(QtWidgetElement[QtWidgets.QLineEdit]):
 
 
 class TextInputMultiline(QtWidgetElement[QtWidgets.QTextEdit]):
-    """Basic widget for a multiline text input.
+    """Multiline text input widget.
 
-    * Underlying Qt Widget `QTextEdit <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QTextEdit.html>`_
+    .. highlights::
+        - Underlying Qt Widget
+          `QTextEdit <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QTextEdit.html>`_
 
     Accepts only plain text, not “rich text.”
+
+    .. rubric:: Props
+
+    All **props** from :class:`QtWidgetElement` plus:
 
     Args:
         text:
@@ -779,15 +823,15 @@ class TextInputMultiline(QtWidgetElement[QtWidgets.QTextEdit]):
 
 
 class Dropdown(QtWidgetElement[QtWidgets.QComboBox]):
-    """Basic widget for a dropdown menu.
+    """Dropdown selection widget.
 
-    * Underlying Qt Widget
-      `QComboBox <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QComboBox.html>`_
+    .. highlights::
+        - Underlying Qt Widget
+          `QComboBox <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QComboBox.html>`_
 
-    .. figure:: /image/checkbox_dropdown.png
-       :width: 300
+    .. rubric:: Props
 
-       Dropdown on the right.
+    All **props** from :class:`QtWidgetElement`, plus:
 
     Args:
         selection:
@@ -801,6 +845,13 @@ class Dropdown(QtWidgetElement[QtWidgets.QComboBox]):
             when the selection prop changes.
         enable_mouse_scroll:
             Whether mouse scroll events should be able to change the selection.
+
+    .. rubric:: Usage
+
+    .. figure:: /image/checkbox_dropdown.png
+       :width: 300
+
+       Dropdown on the right.
     """
 
     def __init__(
@@ -876,20 +927,15 @@ class Dropdown(QtWidgetElement[QtWidgets.QComboBox]):
 class Slider(QtWidgetElement[QtWidgets.QSlider]):
     """Slider bar widget.
 
-    * Underlying Qt Widget
-      `QSlider <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QSlider.html>`_
-
-    .. figure:: /image/slider.png
-       :width: 300
-
-       Horizontal and vertical sliders
-
     A Slider bar allows the user to input a continuous value.
-    The bar could be displayed either horizontally or vertically.
 
-    The value prop determines the position of the slider.
-    When the user changes the position of the slider,
-    the on_change callback is called with the new value.
+    .. highlights::
+        - Underlying Qt Widget
+          `QSlider <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QSlider.html>`_
+
+    .. rubric:: Props
+
+    All **props** from :class:`QtWidgetElement` plus:
 
     Args:
         value:
@@ -908,6 +954,13 @@ class Slider(QtWidgetElement[QtWidgets.QSlider]):
             not when the value prop changes.
         enable_mouse_scroll:
             Whether mouse scroll events should be able to change the value.
+
+    .. rubric:: Usage
+
+    .. figure:: /image/slider.png
+       :width: 300
+
+       Horizontal and vertical sliders
     """
 
     def __init__(
@@ -1107,11 +1160,19 @@ class VBoxView(_LinearView[QtWidgets.QWidget]):
     This is the basic layout element which behaves like an
     `HTML div <https://developer.mozilla.org/en-US/docs/Web/HTML/Element/div>`_.
 
-    * Underlying Qt Layout
-      `QVBoxLayout <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QVBoxLayout.html>`_
+    .. highlights::
+
+        - Underlying Qt Layout
+          `QVBoxLayout <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QVBoxLayout.html>`_
 
     Content that does not fit into the VBoxView layout will be clipped.
     To allow scrolling in case of overflow, use :class:`VScrollView<edifice.VScrollView>`.
+
+    .. rubric::
+        Props
+
+    All **props** from :class:`QtWidgetElement`.
+
     """
 
     def __init__(
@@ -1175,11 +1236,19 @@ class VBoxView(_LinearView[QtWidgets.QWidget]):
 class HBoxView(_LinearView[QtWidgets.QWidget]):
     """Horizontal row layout view for child elements.
 
-    * Underlying Qt Layout
-      `QHBoxLayout <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QHBoxLayout.html>`_
+    .. highlights::
+
+        - Underlying Qt Layout
+          `QHBoxLayout <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QHBoxLayout.html>`_
 
     Content that does not fit into the HBoxView layout will be clipped.
     To allow scrolling in case of overflow, use :class:`HScrollView<edifice.HScrollView>`.
+
+    .. rubric::
+        Props
+
+    All **props** from :class:`QtWidgetElement`.
+
     """
 
     def __init__(
@@ -1246,15 +1315,23 @@ class FixView(_LinearView[QtWidgets.QWidget]):
     Content that does not fit into the FixView layout will be clipped.
     To allow scrolling in case of overflow, use :class:`FixScrollView<edifice.FixScrollView>`.
 
-    Use the :code:`top` and :code:`left` style properties to set the position of the child widgets.
+    Use the :code:`top` and :code:`left` :ref:`style<styling>` properties to set the
+    position of the child widgets.
 
-    Example::
+    .. code-block:: python
+        :caption: Example FixView with Label at 100px from top and 200px from left
 
         with FixView():
             Label(
                 text="Label 100px from top and 200px from left",
                 style={"top": 100, "left": 200},
             )
+
+    .. rubric::
+        Props
+
+    All **props** from :class:`QtWidgetElement`.
+
     """
 
     def __init__(
@@ -1559,12 +1636,54 @@ class Window(VBoxView):
 
 class WindowPopView(VBoxView):
     """
-    Pop-up Window.
+    Pop-up Window layout.
 
-    This Element will render as a new operating system window instead
+    This Element will render its children in a new operating system window instead
     of appearing in its parent’s layout. It will occupy a zero-size position
     in its parent’s layout.
 
+
+    .. rubric:: Props
+
+    All **props** from :class:`QtWidgetElement` plus:
+
+    Args:
+        title:
+            The window title.
+        icon:
+            The window icon image.
+
+            See caveats in `windowIcon <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.windowIcon>`_.
+            This prop is not supported on all platforms.
+        on_close:
+            When the user tries to close this window, the window will not close.
+            Instead, this event handler will be called.
+
+            The only way to close a :class:`WindowPopView` is to remove it from
+            its parent’s layout. This event handler should set some state which causes the
+            :class:`WindowPopView` to be removed from the parent layout.
+            See the example below.
+
+            The event handler function will be passed a
+            `QCloseEvent <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QCloseEvent.html>`_.
+        on_window_state_change:
+            Event handler for when the window state changes.
+
+            This event handler will be passed the old window state and the
+            new window state.
+        full_screen:
+            Whether the window is in full screen mode.
+        _size_open:
+            This argument is not a **prop** and will not cause re-render when changed.
+
+            It will only be used once to set width and height of the window when it is opened.
+
+            If the value :code:`"Maximized"` is passed, the window will be
+            opened maximized (does not work on X11, see
+            `showMaximized <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.showMaximized>`_
+            ).
+
+    .. rubric:: Usage
 
     .. code-block:: python
         :caption: Pop-up Window Example
@@ -1592,41 +1711,6 @@ class WindowPopView(VBoxView):
                         )
 
 
-    Args:
-        title:
-            The window title.
-        icon:
-            The window icon image.
-
-            See caveats in `windowIcon <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.windowIcon>`_.
-            This prop is not supported on all platforms.
-        on_close:
-            When the user tries to close this window, the window will not close.
-            Instead, this event handler will be called.
-
-            The only way to close a :class:`WindowPopView` is to remove it from
-            its parent’s layout. This event handler should set some state which causes the
-            :class:`WindowPopView` to be removed from the parent layout.
-            See the example above.
-
-            The event handler function will be passed a
-            `QCloseEvent <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QCloseEvent.html>`_.
-        on_window_state_change:
-            Event handler for when the window state changes.
-
-            This event handler will be passed the old window state and the
-            new window state.
-        full_screen:
-            Whether the window is in full screen mode.
-        _size_open:
-            This argument is not a **prop** and will not cause re-render when changed.
-
-            It will only be used once to set width and height of the window when it is opened.
-
-            If the value :code:`"Maximized"` is passed, the window will be
-            opened maximized (does not work on X11, see
-            `showMaximized <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.showMaximized>`_
-            ).
     """
 
     def __init__(
@@ -1806,19 +1890,25 @@ class WindowPopView(VBoxView):
 
 
 class VScrollView(_LinearView[QtWidgets.QScrollArea]):
-    """Scrollable vertical column layout widget for grouping children together.
+    """Scrollable vertical column layout.
 
-    * Underlying Qt Widget
-      `QScrollArea <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QScrollArea.html>`_
-    * Underlying Qt Layout
-      `QVBoxLayout <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QVBoxLayout.html>`_
+    .. highlights::
+        - Underlying Qt Widget
+          `QScrollArea <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QScrollArea.html>`_
+        - Underlying Qt Layout
+          `QVBoxLayout <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QVBoxLayout.html>`_
 
     .. figure:: /image/scroll_view.png
        :width: 500
 
        A VScrollView containing a Label.
 
-    Overflows in both the x and y direction will cause a scrollbar to show.
+    Overflows in both the *x* and *y* direction will cause a scrollbar to show.
+
+    .. rubric::
+        Props
+
+    All **props** from :class:`QtWidgetElement`.
     """
 
     def __init__(self, **kwargs):
@@ -1868,19 +1958,25 @@ class VScrollView(_LinearView[QtWidgets.QScrollArea]):
 
 
 class HScrollView(_LinearView[QtWidgets.QScrollArea]):
-    """Scrollable horizontal row layout widget for grouping children together.
+    """Scrollable horizontal row layout widget.
 
-    * Underlying Qt Widget
-      `QScrollArea <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QScrollArea.html>`_
-    * Underlying Qt Layout
-      `QHBoxLayout <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QHBoxLayout.html>`_
+    .. highlights::
+        - Underlying Qt Widget
+          `QScrollArea <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QScrollArea.html>`_
+        - Underlying Qt Layout
+          `QHBoxLayout <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QHBoxLayout.html>`_
 
     .. figure:: /image/scroll_view.png
        :width: 500
 
        An HScrollView containing a Label.
 
-    Overflows in both the x and y direction will cause a scrollbar to show.
+    Overflows in both the *x* and *y* direction will cause a scrollbar to show.
+
+    .. rubric::
+        Props
+
+    All **props** from :class:`QtWidgetElement`.
     """
 
     def __init__(self, **kwargs):
@@ -1932,25 +2028,33 @@ class HScrollView(_LinearView[QtWidgets.QScrollArea]):
 class FixScrollView(_LinearView[QtWidgets.QScrollArea]):
     """Scrollable layout widget for child widgets with fixed position.
 
-    * Underlying Qt Widget
-      `QScrollArea <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QScrollArea.html>`_
+    .. highlights::
+
+        - Underlying Qt Widget
+          `QScrollArea <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QScrollArea.html>`_
 
     .. figure:: /image/scroll_view.png
        :width: 500
 
        A ScrollView containing a Label.
 
-    Overflows in both the x and y direction will cause a scrollbar to show.
+    Overflows in both the *x* and *y* direction will cause a scrollbar to show.
 
     Use the :code:`top` and :code:`left` style properties to set the position of the child widgets.
 
-    Example::
+    .. code-block:: python
+        :caption: Example FixScrollView with Label at 100px from top and 200px from left
 
         with FixScrollView():
             Label(
                 text="Label 100px from top and 200px from left",
                 style={"top": 100, "left": 200},
             )
+
+    .. rubric::
+        Props
+
+    All **props** from :class:`QtWidgetElement`.
     """
 
     def __init__(self, **kwargs):
@@ -2073,13 +2177,26 @@ def _layout_str_to_grid_spec(layout):
 class GridView(QtWidgetElement[QtWidgets.QWidget]):
     """Grid layout widget for rendering children on a 2D rectangular grid.
 
-    * Underlying Qt Layout
-      `QGridLayout <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGridLayout.html>`_
+    .. highlights::
+        - Underlying Qt Layout
+          `QGridLayout <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGridLayout.html>`_
 
     Grid views allow you to precisely control 2D positioning of widgets.
     specifying the exact location of children relative to each other (with proper alignment)
     requires extensive fine tuning of style attributes.
     The GridView allows you to lay out widgets at specified grid indices and size.
+
+    .. rubric::
+        Props
+
+    All **props** for :class:`QtWidgetElement` plus:
+
+    Args:
+        layout: description of layout as described above
+        key_to_code: mapping from key to a single character representing that child in the layout string
+
+    .. rubric::
+        Usage
 
     Children will be laid out according to the layout argument.
     Each child is assigned a character code (by default, the first character of the key;
@@ -2101,7 +2218,8 @@ class GridView(QtWidgetElement[QtWidgets.QWidget]):
         aa__
         aabc
 
-    Here is a complete example of using GridView::
+    .. code-block:: python
+        :caption: GridView Example
 
         def render(self):
             return ed.GridView(layout='''
@@ -2116,10 +2234,6 @@ class GridView(QtWidgetElement[QtWidgets.QWidget]):
                 ed.Button("0").set_key("0"),                              ed.Button(".").set_key("."), ed.Button("*").set_key("/"),
             )
 
-    Args:
-
-        layout: description of layout as described above
-        key_to_code: mapping from key to a single character representing that child in the layout string
     """
 
     def __init__(self, layout="", key_to_code=None, **kwargs):
@@ -2172,21 +2286,28 @@ class GridView(QtWidgetElement[QtWidgets.QWidget]):
 class TabView(_LinearView[QtWidgets.QTabWidget]):
     """Layout widget with multiple tabs.
 
-    * Underlying Qt Widget
-      `QTabWidget <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QTabWidget.html>`_
+    .. highlights::
+        - Underlying Qt Widget
+          `QTabWidget <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QTabWidget.html>`_
 
-    Each child of a TabView will be the content of one tab.
+    Each child of a :class:`TabView` will be the content of one tab.
 
     .. figure:: /image/tab_view.png
        :width: 300
 
        A TabView with 2 children.
 
-    It’s important to :func:`Element.set_key` the child tabs if you add and
-    remove child tabs.
+    It’s important for performance to :func:`Element.set_key` the child tabs
+    if you dynamically add and remove child tabs.
+
+    .. rubric::
+        Props
+
+    All **props** from :class:`QtWidgetElement` plus:
 
     Args:
         labels: The labels for the tabs. The number of labels must match the number of children.
+
     """
 
     def __init__(self, labels: tp.Sequence[str] | None = None, **kwargs):
@@ -2371,20 +2492,19 @@ class ExportList(QtWidgetElement):
 class ProgressBar(QtWidgetElement[QtWidgets.QProgressBar]):
     """Progress bar widget.
 
-    * Underlying Qt Widget
-      `QProgressBar <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QProgressBar.html>`_.
+    .. highlights::
+        - Underlying Qt Widget
+          `QProgressBar <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QProgressBar.html>`_.
 
     A progress bar is used to give the user an indication of the progress of an operation.
 
-    The :code:`value` prop indicates the progress from :code:`min_value` to
-    :code:`max_value`.
+    .. rubric:: Props
 
-    If :code:`min_value` and :code:`max_value` both are set to *0*, the bar shows
-    a busy indicator instead of a percentage of steps.
+    All **props** from :class:`QtWidgetElement` plus:
 
     Args:
         value:
-            The progress.
+            The progress from :code:`min_value` to :code:`max_value`.
         min_value:
             The starting progress.
         max_value:
@@ -2396,6 +2516,9 @@ class ProgressBar(QtWidgetElement[QtWidgets.QProgressBar]):
             The orientation of the bar,
             either :code:`Horizontal` or :code:`Vertical`.
             See `Orientation <https://doc.qt.io/qtforpython-6/PySide6/QtCore/Qt.html#PySide6.QtCore.Qt.Orientation>`_.
+
+    If :code:`min_value` and :code:`max_value` both are set to *0*, the bar shows
+    a busy indicator instead of a percentage of steps.
     """
 
     def __init__(

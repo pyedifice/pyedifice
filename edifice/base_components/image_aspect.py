@@ -54,11 +54,13 @@ class _ScaledLabel(QtWidgets.QLabel):
 class Image(QtWidgetElement):
     """Render an image.
 
-    * Underlying Qt Widget
-      `QLabel <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QLabel.html>`_
+    .. highlights::
+        - Underlying Qt Widget
+          `QLabel <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QLabel.html>`_
 
-    To render a 3-dimensional :code:`uint8` :code:`numpy` array as an image,
-    see :class:`edifice.extra.NumpyImage`.
+    .. rubric:: Props
+
+    All **props** from :class:`QtWidgetElement`, plus:
 
     Args:
         src:
@@ -75,6 +77,10 @@ class Image(QtWidgetElement):
               `AspectRatioMode <https://doc.qt.io/qtforpython-6/PySide6/QtCore/Qt.html#PySide6.QtCore.Qt.AspectRatioMode>`_
               to specify how the image should scale.
 
+    .. rubric:: Usage
+
+    To render a 3-dimensional :code:`uint8` :code:`numpy` array as an image,
+    see :class:`edifice.extra.numpy_image.NumpyImage`.
     """
 
     def __init__(

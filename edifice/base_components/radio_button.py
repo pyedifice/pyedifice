@@ -30,26 +30,43 @@ class EdRadioButton(QtWidgets.QRadioButton):
 class RadioButton(QtWidgetElement[EdRadioButton]):
     """Radio buttons.
 
-    * Underlying Qt Widget
-      `QRadioButton <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QRadioButton.html>`_
+    .. highlights::
+        - Underlying Qt Widget
+          `QRadioButton <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QRadioButton.html>`_
+
+    Radio buttons are used to specify a single choice out of many.
+
+    .. rubric:: Props
+
+    All **props** from :class:`QtWidgetElement` plus:
+
+    Args:
+        checked:
+            Whether or not the RadioButton is checked.
+        text:
+            Text for the label of the RadioButton.
+        on_change:
+            Event handler for when the checked value changes, but
+            only when the user checks or unchecks, not when the checked prop
+            changes.
+
+    .. rubric:: Usage
 
     .. figure:: /image/radio_button.png
        :width: 300
 
-       Three mutually exclusive radio buttons.
-
-    Radio buttons are used to specify a single choice out of many.
+       Three RadioButtons
 
     Because of the declarative nature of Edifice, we can ignore all of the
     Qt mechanisms for radio button “groups” and “exclusivity.”
     Just declare each radio button :code:`checked` prop to depend on the state.
 
-    Example::
+    .. code-block:: python
+        :caption: Exclusive RadioButtons with different parents
 
         value, value_set = use_state(cast(Literal["op1", "op2"], "op1"))
 
         with ed.VBoxView():
-            # Exclusive RadioButtons with different parents
             with ed.VBoxView():
                 ed.RadioButton(
                     checked = value == "op1",
@@ -64,16 +81,6 @@ class RadioButton(QtWidgetElement[EdRadioButton]):
                     text = "Option 2",
                     style = {} if value == "op1" else { "color": "grey" },
                 )
-
-    Args:
-        checked:
-            Whether or not the RadioButton is checked.
-        text:
-            Text for the label of the RadioButton.
-        on_change:
-            Event handler for when the checked value changes, but
-            only when the user checks or unchecks, not when the checked prop
-            changes.
     """
 
     def __init__(
