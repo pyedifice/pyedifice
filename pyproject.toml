@@ -23,7 +23,7 @@ typing-extensions = ">=4.0.0"
 
 [tool.poetry.group.dev.dependencies]
 PyQt6 = ">= 6.0"
-PySide6-Essentials = ">= 6.0.0"
+PySide6 = ">= 6.0.0, < 6.8.1"
 
 matplotlib = ">= 3.3.3" # for https://pyedifice.github.io/stubs/edifice.extra.MatplotlibFigure.html
 pyqtgraph = ">= 0.13.0" # for https://pyedifice.github.io/stubs/edifice.extra.PyQtPlot.html
@@ -40,8 +40,8 @@ numpy = ">= 1.19.4" # for examples
 pandas = ">= 1.2.0" # for examples/financial_charts.py
 yfinance = "*" # for examples/financial_charts.py
 
-memray = "*" # for memory profiling
-objgraph = "*" # for memory profiling
+# memray = "*" # for memory profiling
+# objgraph = "*" # for memory profiling
 
 [build-system]
 requires = ["poetry-core"]

@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from enum import Enum
+import sys
 import typing as tp
 
 from .qt import QT_VERSION
@@ -315,3 +317,26 @@ def set_trace():
     # users_frame = sys._getframe().f_back # frame where the user invoked `pyqt_set_trace()`
     # debugger.interaction(users_frame, None)
     # pyqtRestoreInputHook()
+
+
+class Platform(Enum):
+    """
+    This enum represents the platform the application is running on.
+    Use the global.PLATFORM variable choose adjustments based on the platform.
+    """
+
+    Windows = "windows"
+    Linux = "linux"
+    MacOS = "macos"
+
+
+if sys.platform.startswith("win"):
+    CURRENT_PLATFORM = Platform.Windows
+elif sys.platform.startswith("Win"):
+    CURRENT_PLATFORM = Platform.Windows
+elif sys.platform.startswith("darwin"):
+    CURRENT_PLATFORM = Platform.MacOS
+elif sys.platform.startswith("Darwin"):
+    CURRENT_PLATFORM = Platform.MacOS
+else:
+    CURRENT_PLATFORM = Platform.Linux
