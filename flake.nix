@@ -28,7 +28,7 @@
   };
 
   outputs =
-    {
+    inputs@{
       nixpkgs,
       uv2nix,
       pyproject-nix,
@@ -249,8 +249,7 @@
               script = pkgs.writeShellApplication {
                 name = "edifice-example";
                 runtimeInputs = [ virtualenv-all ];
-                # text = "cd ${inputs.self.outPath}; python examples/calculator.py";
-                text = "python examples/calculator.py";
+                text = "cd ${inputs.self.outPath}; python examples/calculator.py";
               };
             in
             {
@@ -262,7 +261,7 @@
               script = pkgs.writeShellApplication {
                 name = "edifice-example";
                 runtimeInputs = [ virtualenv-all ];
-                text = "python examples/financial_charts.py";
+                text = "cd ${inputs.self.outPath}; python examples/financial_charts.py";
               };
             in
             {
@@ -274,7 +273,7 @@
               script = pkgs.writeShellApplication {
                 name = "edifice-example";
                 runtimeInputs = [ virtualenv-all ];
-                text = "python examples/harmonic_oscillator.py";
+                text = "cd ${inputs.self.outPath}; python examples/harmonic_oscillator.py";
               };
             in
             {
@@ -286,7 +285,7 @@
               script = pkgs.writeShellApplication {
                 name = "edifice-example";
                 runtimeInputs = [ virtualenv-all ];
-                text = "python examples/todomvc.py";
+                text = "cd ${inputs.self.outPath}; python examples/todomvc.py";
               };
             in
             {
