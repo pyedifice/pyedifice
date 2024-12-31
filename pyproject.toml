@@ -23,6 +23,12 @@ Homepage = "https://pyedifice.github.io"
 Repository = "https://github.com/pyedifice/pyedifice"
 
 [dependency-groups]
+PySide6-Essentials = [
+  "PySide6-Essentials >= 6.0.0",
+]
+PyQt6 = [
+  "PyQt6 >= 6.0.0",
+]
 dev = [
   # PySide6 or PySide6-Essentials or PyQt6
   "PyQt6 >= 6.0.0",
