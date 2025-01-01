@@ -22,13 +22,17 @@ dependencies = [
 Homepage = "https://pyedifice.github.io"
 Repository = "https://github.com/pyedifice/pyedifice"
 
-[dependency-groups]
+# https://packaging.python.org/en/latest/guides/writing-pyproject-toml/#dependencies-optional-dependencies
+[project.optional-dependencies]
 PySide6-Essentials = [
   "PySide6-Essentials >= 6.0.0",
 ]
 PyQt6 = [
   "PyQt6 >= 6.0.0",
 ]
+
+# https://packaging.python.org/en/latest/specifications/dependency-groups/
+[dependency-groups]
 dev = [
   # PySide6 or PySide6-Essentials or PyQt6
   "PyQt6 >= 6.0.0",

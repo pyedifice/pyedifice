@@ -41,6 +41,7 @@
 
       # Load a uv workspace from a workspace root.
       # Uv2nix treats all uv projects as workspace projects.
+      # https://pyproject-nix.github.io/uv2nix/lib/workspace.html
       workspace = uv2nix.lib.workspace.loadWorkspace { workspaceRoot = ./.; };
 
       # Create package overlay from workspace.
@@ -213,8 +214,8 @@
 
       apps.x86_64-linux =
         let
-          virtualenv-all = pythonSet.mkVirtualEnv "edifice-env" workspace.deps.all;
           run_tests_sh = pkgs.writeScript "run_tests_sh" (builtins.readFile ./run_tests.sh);
+          virtualenv-all = pythonSet.mkVirtualEnv "edifice-env" workspace.deps.all;
         in
         {
           run_tests =
@@ -249,7 +250,7 @@
               script = pkgs.writeShellApplication {
                 name = "edifice-example";
                 runtimeInputs = [ virtualenv-all ];
-                text = "cd ${inputs.self.outPath}; python examples/calculator.py";
+                text = "python ${inputs.self.outPath}/examples/calculator.py";
               };
             in
             {
@@ -261,7 +262,7 @@
               script = pkgs.writeShellApplication {
                 name = "edifice-example";
                 runtimeInputs = [ virtualenv-all ];
-                text = "cd ${inputs.self.outPath}; python examples/financial_charts.py";
+                text = "python ${inputs.self.outPath}/examples/financial_charts.py";
               };
             in
             {
@@ -273,7 +274,7 @@
               script = pkgs.writeShellApplication {
                 name = "edifice-example";
                 runtimeInputs = [ virtualenv-all ];
-                text = "cd ${inputs.self.outPath}; python examples/harmonic_oscillator.py";
+                text = "python ${inputs.self.outPath}/examples/harmonic_oscillator.py";
               };
             in
             {
@@ -285,7 +286,7 @@
               script = pkgs.writeShellApplication {
                 name = "edifice-example";
                 runtimeInputs = [ virtualenv-all ];
-                text = "cd ${inputs.self.outPath}; python examples/todomvc.py";
+                text = "python ${inputs.self.outPath}/examples/todomvc.py";
               };
             in
             {
