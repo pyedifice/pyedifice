@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pyedifice"
-version = "2.9.0"
+version = "2.9.1"
 description = "Declarative GUI framework for Python and Qt"
 authors = [
     {name = "David Ding"},
@@ -21,6 +21,10 @@ dependencies = [
   "qasync>=0.26.0",
   "typing-extensions>=4.0.0",
 ]
+
+# https://github.com/pypa/setuptools/issues/4759#issuecomment-2547778989
+[tool.setuptools]
+license-files = []
 
 [project.urls]
 Homepage = "https://pyedifice.github.io"
@@ -109,5 +113,5 @@ ignore = [
 ]
 
 [tool.pyright]
-include = ["edifice"]
+include = ["src/edifice"]
 exclude = ["**/__pycache__"]

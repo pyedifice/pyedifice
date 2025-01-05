@@ -7,6 +7,13 @@
 Release Notes
 =============
 
+v2.9.1
+------
+Released: 2025-01-06
+
+- Change :code:`pyproject.toml` from Poetry to Setuptools build backend.
+
+
 v2.9.0
 ------
 Released: 2024-12-28
