@@ -62,6 +62,10 @@ dev = [
   "yfinance", # for examples/financial_charts.py
 ]
 
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
 [tool.uv]
 package = true
 
