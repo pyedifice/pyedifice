@@ -166,9 +166,9 @@ or
 or
 `PyQt6 <https://pypi.org/project/PyQt6/>`_.
 
-Add an Edifice dependency to `pyproject.toml`:
+Add an Edifice dependency to :code:`pyproject.toml`:
 
-... code-block:: toml
+.. code-block:: toml
 
     dependencies = [
         "pyedifice",
@@ -177,7 +177,7 @@ Add an Edifice dependency to `pyproject.toml`:
 
 There are optional dependency groups provided for PySide6-Essentials and PyQt6:
 
-... code-block:: toml
+.. code-block:: toml
 
     dependencies = [
         "pyedifice [PySide6-Essentials]"
