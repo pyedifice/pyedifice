@@ -1220,11 +1220,18 @@ class VBoxView(_LinearView[QtWidgets.QWidget]):
     Content that does not fit into the VBoxView layout will be clipped.
     To allow scrolling in case of overflow, use :class:`VScrollView<edifice.VScrollView>`.
 
-    .. rubric::
-        Props
+    .. rubric:: Props
 
     All **props** from :class:`QtWidgetElement`.
 
+    .. rubric:: Usage
+
+    .. code-block:: python
+        :caption: Example
+
+        with VBoxView():
+            Label(text="Hello")
+            Label(text="World")
     """
 
     def __init__(
@@ -1296,11 +1303,18 @@ class HBoxView(_LinearView[QtWidgets.QWidget]):
     Content that does not fit into the HBoxView layout will be clipped.
     To allow scrolling in case of overflow, use :class:`HScrollView<edifice.HScrollView>`.
 
-    .. rubric::
-        Props
+    .. rubric:: Props
 
     All **props** from :class:`QtWidgetElement`.
 
+    .. rubric:: Usage
+
+    .. code-block:: python
+        :caption: Example
+
+        with HBoxView():
+            Label(text="Hello")
+            Label(text="World")
     """
 
     def __init__(
@@ -1379,8 +1393,7 @@ class FixView(_LinearView[QtWidgets.QWidget]):
                 style={"top": 100, "left": 200},
             )
 
-    .. rubric::
-        Props
+    .. rubric:: Props
 
     All **props** from :class:`QtWidgetElement`.
 
@@ -1457,24 +1470,9 @@ class Window(VBoxView):
     :class:`App`. When this :class:`Window` closes, all of the children
     are unmounted and then the :class:`App` stops.
 
-    .. code-block:: python
-        :caption: Example Window with F11 Full Screen Toggle
+    .. rubric:: Props
 
-        @component
-        def Main(self):
-            full_screen, full_screen_set = use_state(False)
-
-            def handle_key_down(event: PySide6.QtGui.QKeyEvent):
-                if event.key() == PySide6.QtGui.Qt.Key.Key_F11:
-                    full_screen_set(not full_screen)
-
-            with Window(
-                title="Full Screen Example",
-                _size_open=(800, 600),
-                full_screen=full_screen,
-                on_key_down=handle_key_down,
-            ):
-                Label("Press F11 to toggle full screen mode")
+    All **props** from :class:`QtWidgetElement` plus:
 
     Args:
         title:
@@ -1518,6 +1516,28 @@ class Window(VBoxView):
             opened maximized (does not work on X11, see
             `showMaximized <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.showMaximized>`_
             ).
+
+    .. rubric:: Usage
+
+    .. code-block:: python
+        :caption: Example Window with F11 Full Screen Toggle
+
+        @component
+        def Main(self):
+            full_screen, full_screen_set = use_state(False)
+
+            def handle_key_down(event: PySide6.QtGui.QKeyEvent):
+                if event.key() == PySide6.QtGui.Qt.Key.Key_F11:
+                    full_screen_set(not full_screen)
+
+            with Window(
+                title="Full Screen Example",
+                _size_open=(800, 600),
+                full_screen=full_screen,
+                on_key_down=handle_key_down,
+            ):
+                Label("Press F11 to toggle full screen mode")
+
     """
 
     def __init__(
