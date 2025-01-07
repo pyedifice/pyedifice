@@ -13,6 +13,18 @@ else:
     from PySide6.QtGui import QColor, QPalette
     from PySide6.QtWidgets import QApplication
 
+from .run_subprocess_with_callback import run_subprocess_with_callback
+
+__all__ = [
+    "alert",
+    "file_dialog",
+    "palette_dump",
+    "palette_edifice_dark",
+    "palette_edifice_light",
+    "run_subprocess_with_callback",
+    "set_trace",
+    "theme_is_light",
+]
 
 def palette_dump(palette: QPalette, palette_compare: QPalette | None = None) -> None:
     """

@@ -46,7 +46,7 @@ from edifice.hooks import (
     use_state,
     use_context,
 )
-from edifice.utilities import alert, file_dialog, palette_edifice_dark, palette_edifice_light, set_trace, theme_is_light
+from edifice.utilities import alert, file_dialog, palette_edifice_dark, palette_edifice_light, set_trace, theme_is_light, run_subprocess_with_callback
 
 __all__ = [
     "App",
@@ -92,6 +92,7 @@ __all__ = [
     "palette_edifice_light",
     "provide_context",
     "qt_component",
+    "run_subprocess_with_callback",
     "set_trace",
     "theme_is_light",
     "use_async",
