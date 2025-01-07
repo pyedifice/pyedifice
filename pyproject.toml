@@ -112,6 +112,16 @@ ignore = [
   "RUF002",
 ]
 
+[tool.ruff.lint.per-file-ignores]
+"examples/**" = [
+  "INP001",
+  "ERA001",
+]
+"tests/**" = [
+  "INP001",
+  "PT015",
+]
+
 [tool.pyright]
 include = ["src/edifice"]
 exclude = ["**/__pycache__"]

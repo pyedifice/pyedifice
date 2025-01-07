@@ -58,7 +58,7 @@ def Calculator(self):
                     display_set(display_ + ".")
                 except ValueError:
                     pass
-            else:
+            else:  # noqa: PLR5501
                 if display_ == "0":
                     display_set(str(digit))
                 else:
@@ -76,7 +76,7 @@ def Calculator(self):
     def apply_binary_operand(operator):
         clear_display_set(True)
         display_set("0")
-        if previous_operator == "" or previous_operator == "=":
+        if previous_operator == "" or previous_operator == "=":  # noqa: PLR1714
             stored_value_set(float(display))
         else:
             val = OPERATORS[previous_operator](stored_value, float(display))

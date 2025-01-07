@@ -152,7 +152,7 @@ def PlotDescriptor(self, plot: dict[str, tp.Any], plot_change: tp.Callable[[dict
             AxisDescriptor("y-axis", "yaxis", plot, plot_change)
         with VBoxView(style={"align": "top", "margin-left": 10}):
             labeled_elem(
-                "Chart type", lambda: Dropdown(selection=plot_type, options=plot_types, on_select=handle_plot_type)
+                "Chart type", lambda: Dropdown(selection=plot_type, options=plot_types, on_select=handle_plot_type),
             )
             labeled_elem("Color", lambda: Dropdown(selection=color, options=plot_colors, on_select=handle_color))
 
