@@ -7,6 +7,12 @@
 Release Notes
 =============
 
+v2.10.0
+------
+Released: 2025-01-08
+
+- New utility function :func:`utilities.run_subprocess_with_callback`.
+
 v2.9.1
 ------
 Released: 2025-01-06
