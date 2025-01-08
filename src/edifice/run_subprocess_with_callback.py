@@ -12,23 +12,18 @@ if typing.TYPE_CHECKING:
 _T_subprocess = typing.TypeVar("_T_subprocess")
 _P_callback = typing.ParamSpec("_P_callback")
 
-
 class _EndProcess:
     pass
-
 
 def _run_subprocess(
     subprocess: typing.Callable[[typing.Callable[_P_callback, None]], typing.Awaitable[_T_subprocess]],
     qup: queue.Queue,
-) -> _T_subprocess | BaseException:  # type of Queue?
+) -> _T_subprocess | BaseException: # type of Queue?
     subloop = asyncio.new_event_loop()
-
     async def work() -> _T_subprocess | BaseException:
         try:
-
             def _run_callback(*args: _P_callback.args, **kwargs: _P_callback.kwargs) -> None:
                 qup.put((args, kwargs))
-
             r = await subprocess(_run_callback)
         except BaseException as e:  # noqa: BLE001
             return e
@@ -36,9 +31,7 @@ def _run_subprocess(
             return r
         finally:
             qup.put(_EndProcess())
-
     return subloop.run_until_complete(work())
-
 
 async def run_subprocess_with_callback(
     subprocess: typing.Callable[[typing.Callable[_P_callback, None]], typing.Awaitable[_T_subprocess]],
@@ -152,6 +145,7 @@ async def run_subprocess_with_callback(
 
     """
 
+
     with (
         Manager() as manager,
         # We must have 2 parallel workers. Therefore 2 ProcessPoolExecutors.
@@ -166,7 +160,7 @@ async def run_subprocess_with_callback(
 
             async def get_messages() -> None:
                 while type(i := (await loop.run_in_executor(executor_queue, qup.get))) is not _EndProcess:
-                    callback(*(i[0]), **(i[1]))  # type: ignore  # noqa: PGH003
+                    callback(*(i[0]), **(i[1])) # type: ignore  # noqa: PGH003
 
             get_messages_task = asyncio.create_task(get_messages())
 
@@ -174,7 +168,7 @@ async def run_subprocess_with_callback(
             if isinstance(retval, BaseException):
                 raise retval  # noqa: TRY301
             return retval  # noqa: TRY300
-        except BaseException:  # including asyncio.CancelledError
+        except BaseException: # including asyncio.CancelledError
             # We must terminate the process pool workers because the
             # loop.run_in_executor() call will not terminate the workers.
             for process in executor_sub._processes.values():
