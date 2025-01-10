@@ -1,6 +1,7 @@
 import asyncio
 import functools
 import multiprocessing
+import multiprocessing.connection
 import multiprocessing.synchronize
 import queue
 import threading
@@ -54,6 +55,14 @@ async def subprocess_queue(
     callback: typing.Callable[[int], None],
 ) -> str:
     while (i := queue.get()) != "finish":
+        callback(len(i))
+    return "done"
+
+async def subprocess_pipe(
+    rx: multiprocessing.connection.Connection,
+    callback: typing.Callable[[int], None],
+) -> str:
+    while (i := rx.recv()) != "finish":
         callback(len(i))
     return "done"
 
@@ -156,6 +165,50 @@ class IntegrationTestCase(unittest.IsolatedAsyncioTestCase):
                 assert False
             except:
                 assert True
+
+    async def test_pipe(self) -> None:
+        rx, tx = multiprocessing.Pipe()
+
+        def local_callback(x:int) -> None:
+            # This function will run in the main process event loop.
+            pass
+
+        async def send_messages() -> None:
+            tx.send("one")
+            tx.send("three")
+            tx.send("finish")
+
+        y, _ = await asyncio.gather(
+            run_subprocess_with_callback(
+                functools.partial(subprocess_pipe, rx),
+                local_callback,
+            ),
+            send_messages(),
+        )
+
+        assert y == "done"
+
+    async def test_pipe_cancel(self) -> None:
+        rx, tx = multiprocessing.Pipe()
+
+        def local_callback(x:int) -> None:
+            # This function will run in the main process event loop.
+            pass
+
+        y = asyncio.create_task(run_subprocess_with_callback(
+            functools.partial(subprocess_pipe, rx),
+            local_callback,
+        ))
+        await asyncio.sleep(0.1)
+        tx.send("one")
+        await asyncio.sleep(0.1)
+        y.cancel()
+
+        try:
+            await y
+            assert False
+        except:
+            assert True
 
 if __name__ == "__main__":
     unittest.main()

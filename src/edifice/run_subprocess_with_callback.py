@@ -37,9 +37,16 @@ def _run_subprocess(
 
             r = await subprocess(_run_callback)
 
-            # TODO it would actually be nice if the subprocess could be cancelled
+            # It would be nice if the subprocess could be cancelled
             # by .cancel() so it it could have a chance to handle CancelledError
             # and clean up before it gets .terminate()ed.
+            #
+            # But we have to ask: what if the subprocess is blocked?
+            # Making blocking I/O calls in a subprocess should be supported
+            # and encouranged. That's the whole point of using a subprocess.
+            #
+            # So I think the best and simplest thing to do is to terminate
+            # on cancellation.
 
         except BaseException as e:  # noqa: BLE001
             return _ExceptionWrapper(e)
@@ -81,6 +88,10 @@ async def run_subprocess_with_callback(
             This function will run in the main process event loop.
             All of the arguments to the :code:`callback` function must be picklable.
 
+    The :code:`subprocess` will be started when :func:`run_subprocess_with_callback`
+    is entered, and the :code:`subprocess` is guaranteed to be terminated when
+    :func:`run_subprocess_with_callback` completes.
+
     The :code:`subprocess` will be started with the
     `'spawn' start method <https://docs.python.org/3/library/multiprocessing.html#contexts-and-start-methods>`_,
     so it will not inherit any file handles from the calling process.
@@ -92,8 +103,12 @@ async def run_subprocess_with_callback(
     `cancelled <https://docs.python.org/3/library/asyncio-task.html#task-cancellation>`_,
     the :code:`subprocess` will be terminated by calling
     `Process.terminate() <https://docs.python.org/3/library/multiprocessing.html#multiprocessing.Process.terminate>`_.
-    Cancellation and termination of the :code:`subprocess` will occur even if
-    the :code:`subprocess` is blocked.
+    Termination of the :code:`subprocess` will occur even if
+    the :code:`subprocess` is blocked. Note that
+    :code:`CancelledError` will not be raised in the :code:`subprocess`,
+    instead the :code:`subprocess` will be terminated immediately. If you
+    want to perform sudden cleanup and halt of the :code:`subprocess` then
+    send it a message as in the below “Example of Queue messaging.”
 
     Exceptions raised in the :code:`subprocess` will be re-raised from :func:`run_subprocess_with_callback`.
 
@@ -117,9 +132,10 @@ async def run_subprocess_with_callback(
 
         async def main() -> None:
             y = await run_subprocess_with_callback(my_subprocess, my_callback)
+
             # If this main() function is cancelled while awaiting the
-            # subprocess then the subprocess will be cancelled and
-            # terminated.
+            # subprocess then the subprocess will be terminated.
+
             print(f"my_subprocess returned {y}")
 
     .. note::
@@ -142,15 +158,15 @@ async def run_subprocess_with_callback(
     `multiprocessing.managers.SyncManager.Queue <https://docs.python.org/3/library/multiprocessing.html#multiprocessing.managers.SyncManager.Queue>`_.
 
     .. code-block:: python
-        :caption: Example of Queue signalling from the main process to the subprocess
+        :caption: Example of Queue messaging from the main process to the subprocess
 
         async def my_subprocess(
             # This function will run in a subprocess in a new event loop.
             queue: queue.Queue[str],
             callback: typing.Callable[[int], None],
         ) -> str:
-            while (i := queue.get()) != "finish":
-                callback(len(i))
+            while (msg := queue.get()) != "finish":
+                callback(len(msg))
             return "done"
 
         async def main() -> None:
