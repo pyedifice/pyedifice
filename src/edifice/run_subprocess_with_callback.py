@@ -2,13 +2,13 @@ from __future__ import annotations
 
 import asyncio
 import dataclasses
+import multiprocessing
 import typing
 from concurrent.futures import ProcessPoolExecutor
-from multiprocessing import Manager
 from multiprocessing.context import SpawnContext
 
 if typing.TYPE_CHECKING:
-    import queue
+    from multiprocessing.connection import Connection
 
 _T_subprocess = typing.TypeVar("_T_subprocess")
 _P_callback = typing.ParamSpec("_P_callback")
@@ -25,7 +25,7 @@ class _ExceptionWrapper:
 
 def _run_subprocess(
     subprocess: typing.Callable[[typing.Callable[_P_callback, None]], typing.Awaitable[_T_subprocess]],
-    qup: queue.Queue,  # type of Queue?
+    tx: Connection,
 ) -> _T_subprocess | _ExceptionWrapper:
     subloop = asyncio.new_event_loop()
 
@@ -33,7 +33,7 @@ def _run_subprocess(
         try:
 
             def _run_callback(*args: _P_callback.args, **kwargs: _P_callback.kwargs) -> None:
-                qup.put((args, kwargs))
+                tx.send((args, kwargs))
 
             r = await subprocess(_run_callback)
 
@@ -53,7 +53,7 @@ def _run_subprocess(
         else:
             return r
         finally:
-            qup.put(_EndProcess())
+            tx.send(_EndProcess())
 
     return subloop.run_until_complete(work())
 
@@ -194,21 +194,18 @@ async def run_subprocess_with_callback(
     """
 
     with (
-        # https://docs.python.org/3/library/multiprocessing.html#multiprocessing.Manager
-        # “corresponds to a spawned child process”
-        Manager() as manager,
         # We must have 2 parallel workers. Therefore 2 ProcessPoolExecutors.
         ProcessPoolExecutor(max_workers=1, mp_context=SpawnContext()) as executor_sub,
         ProcessPoolExecutor(max_workers=1, mp_context=SpawnContext()) as executor_queue,
     ):
         try:
-            qup: queue.Queue = manager.Queue()
+            rx, tx = multiprocessing.Pipe()
 
             loop = asyncio.get_running_loop()
-            subtask = loop.run_in_executor(executor_sub, _run_subprocess, subprocess, qup)
+            subtask = loop.run_in_executor(executor_sub, _run_subprocess, subprocess, tx)
 
             async def get_messages() -> None:
-                while type(i := (await loop.run_in_executor(executor_queue, qup.get))) is not _EndProcess:
+                while type(i := (await loop.run_in_executor(executor_queue, rx.recv))) is not _EndProcess:
                     try:
                         callback(*(i[0]), **(i[1]))  # type: ignore  # noqa: PGH003
                     except:  # noqa: PERF203, S110, E722
