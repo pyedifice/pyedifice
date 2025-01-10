@@ -7,7 +7,12 @@
 Release Notes
 =============
 
+v2.11.0
+-------
+Released: 2025-01-10
+
 - :func:`utilities.run_subprocess_with_callback` :code:`callback` exceptions will be suppressed.
+
 
 v2.10.0
 -------
