@@ -5,12 +5,14 @@ import dataclasses
 import os
 import typing
 from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
-from multiprocessing import Pipe
+# from multiprocessing import Pipe, Queue, get_context
+from multiprocessing import get_context
 from multiprocessing.connection import Connection
 from multiprocessing.context import SpawnContext
+import multiprocessing.queues
 
-if typing.TYPE_CHECKING:
-    import queue
+# if typing.TYPE_CHECKING:
+#     import queue
 
 _T_subprocess = typing.TypeVar("_T_subprocess")
 _P_callback = typing.ParamSpec("_P_callback")
@@ -27,7 +29,8 @@ class _ExceptionWrapper:
 
 def _run_subprocess(
     subprocess: typing.Callable[[typing.Callable[_P_callback, None]], typing.Awaitable[_T_subprocess]],
-    callback_send: Connection,
+    # callback_send: Connection,
+    callback_send: multiprocessing.queues.Queue,
 ) -> _T_subprocess | _ExceptionWrapper:
     subloop = asyncio.new_event_loop()
 
@@ -35,7 +38,8 @@ def _run_subprocess(
         try:
 
             def _run_callback(*args: _P_callback.args, **kwargs: _P_callback.kwargs) -> None:
-                callback_send.send((args, kwargs))
+                # callback_send.send((args, kwargs))
+                callback_send.put((args, kwargs))
 
             r = await subprocess(_run_callback)
 
@@ -68,7 +72,9 @@ def _run_subprocess(
             # in the main process.
             # https://stackoverflow.com/questions/20608495/multiprocessing-pipe-recv-blocks-even-when-child-process-is-defunct
             # So we must explicitly tell it that we are done.
-            callback_send.send(_EndProcess())
+
+            # callback_send.send(_EndProcess())
+            callback_send.put(_EndProcess())
 
     return subloop.run_until_complete(work())
 
@@ -208,9 +214,15 @@ async def run_subprocess_with_callback(
 
     """
 
+    # multiprocessing.Queue can only be used with spawn startmethod
+    # if we get it from a spawn context.
+    # https://stackoverflow.com/questions/34847203/queue-objects-should-only-be-shared-between-processes-through-inheritance
+    # https://docs.python.org/3/library/multiprocessing.html#contexts-and-start-methods
+    spawncontext: SpawnContext = get_context("spawn")
+
     with (
         # We must have 2 parallel workers. Therefore 2 ProcessPoolExecutors.
-        ProcessPoolExecutor(max_workers=1, mp_context=SpawnContext()) as executor_sub,
+        ProcessPoolExecutor(max_workers=1, mp_context=spawncontext) as executor_sub,
         # We must use a ProcessPoolExecutor for the waiting on the queue
         # because there is no way to cleanly terminate a ThreadPoolExecutor
         # which is blocked on I/O.
@@ -218,19 +230,26 @@ async def run_subprocess_with_callback(
         # https://docs.python.org/3/library/concurrent.futures.html#processpoolexecutor
         # Closing the callback_recv will not raise EOFError in the ThreadPoolExecutor.
 
-        ProcessPoolExecutor(max_workers=1, mp_context=SpawnContext()) as executor_queue,
+        ProcessPoolExecutor(max_workers=1, mp_context=spawncontext) as executor_queue,
 
         # ThreadPoolExecutor(max_workers=1) as executor_queue,
     ):
         # https://docs.python.org/3/library/multiprocessing.html#exchanging-objects-between-processes
         # > there is no risk of corruption from processes using different ends of the pipe at the same time.
-        callback_recv, callback_send = Pipe(duplex=False)
+        # callback_recv, callback_send = Pipe(duplex=False)
+
+        # callback_send = Queue()
+        callback_send = spawncontext.Queue()
 
         loop = asyncio.get_running_loop()
         try:
 
             async def get_messages() -> None:
-                while type(i := (await loop.run_in_executor(executor_queue, callback_recv.recv))) is not _EndProcess:
+                # while type(i := (await loop.run_in_executor(executor_queue, callback_recv.recv))) is not _EndProcess:
+                def queue_get(mqueue: multiprocessing.queues.Queue):
+                    return mqueue.get()
+                while type(i := (await loop.run_in_executor(executor_queue, queue_get, callback_send))) is not _EndProcess:
+                # while type(i := (await loop.run_in_executor(executor_queue, callback_send.get))) is not _EndProcess:
                 # while (i := (await loop.run_in_executor(executor_queue, callback_recv.recv))):
                     # recv() will raise EOFError when the callback_send is closed.
                     try:
