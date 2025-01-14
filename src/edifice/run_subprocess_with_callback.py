@@ -216,6 +216,7 @@ async def run_subprocess_with_callback(
         # which is blocked on I/O.
         # https://docs.python.org/3/library/concurrent.futures.html#threadpoolexecutor
         # https://docs.python.org/3/library/concurrent.futures.html#processpoolexecutor
+        # Closing the callback_recv will not raise EOFError in the ThreadPoolExecutor.
 
         ProcessPoolExecutor(max_workers=1, mp_context=SpawnContext()) as executor_queue,
 
@@ -273,7 +274,7 @@ async def run_subprocess_with_callback(
 
             # Raise EOFError in get_messages to make sure that the
             # ThreadPoolExecutor is terminated.
-            # callback_send.close()
+            # callback_recv.close()
 
             # We must terminate the process pool workers because cancelling the
             # loop.run_in_executor() call will not terminate the workers.
