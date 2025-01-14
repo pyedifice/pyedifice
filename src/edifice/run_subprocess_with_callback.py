@@ -2,9 +2,11 @@ from __future__ import annotations
 
 import asyncio
 import dataclasses
+import os
 import typing
-from concurrent.futures import ProcessPoolExecutor
-from multiprocessing import Manager
+from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
+from multiprocessing import Pipe
+from multiprocessing.connection import Connection
 from multiprocessing.context import SpawnContext
 
 if typing.TYPE_CHECKING:
@@ -25,7 +27,7 @@ class _ExceptionWrapper:
 
 def _run_subprocess(
     subprocess: typing.Callable[[typing.Callable[_P_callback, None]], typing.Awaitable[_T_subprocess]],
-    qup: queue.Queue,  # type of Queue?
+    callback_send: Connection,
 ) -> _T_subprocess | _ExceptionWrapper:
     subloop = asyncio.new_event_loop()
 
@@ -33,7 +35,7 @@ def _run_subprocess(
         try:
 
             def _run_callback(*args: _P_callback.args, **kwargs: _P_callback.kwargs) -> None:
-                qup.put((args, kwargs))
+                callback_send.send((args, kwargs))
 
             r = await subprocess(_run_callback)
 
@@ -48,12 +50,25 @@ def _run_subprocess(
             # So I think the best and simplest thing to do is to terminate
             # on cancellation.
 
+        # What if callback_send.send() raises EOFError?
+        # Then this subprocess has been cancelled and will soon be terminated.
+        # Should we do something other than return _ExceptionWrapper in that case?
+
         except BaseException as e:  # noqa: BLE001
             return _ExceptionWrapper(e)
         else:
             return r
         finally:
-            qup.put(_EndProcess())
+            # print("callback_send.close()")
+            # # This is necessary to raise EOFError in the main process.
+            # os.close(callback_send.fileno())
+            # # callback_send.close()
+
+            # Closing the pipe from the subprocess will not raise EOFError
+            # in the main process.
+            # https://stackoverflow.com/questions/20608495/multiprocessing-pipe-recv-blocks-even-when-child-process-is-defunct
+            # So we must explicitly tell it that we are done.
+            callback_send.send(_EndProcess())
 
     return subloop.run_until_complete(work())
 
@@ -194,39 +209,72 @@ async def run_subprocess_with_callback(
     """
 
     with (
-        # https://docs.python.org/3/library/multiprocessing.html#multiprocessing.Manager
-        # “corresponds to a spawned child process”
-        Manager() as manager,
         # We must have 2 parallel workers. Therefore 2 ProcessPoolExecutors.
         ProcessPoolExecutor(max_workers=1, mp_context=SpawnContext()) as executor_sub,
-        ProcessPoolExecutor(max_workers=1, mp_context=SpawnContext()) as executor_queue,
-    ):
-        try:
-            qup: queue.Queue = manager.Queue()
+        # We must use a ProcessPoolExecutor for the waiting on the queue
+        # because there is no way to cleanly terminate a ThreadPoolExecutor
+        # which is blocked on I/O.
+        # https://docs.python.org/3/library/concurrent.futures.html#threadpoolexecutor
+        # https://docs.python.org/3/library/concurrent.futures.html#processpoolexecutor
 
-            loop = asyncio.get_running_loop()
-            subtask = loop.run_in_executor(executor_sub, _run_subprocess, subprocess, qup)
+        ProcessPoolExecutor(max_workers=1, mp_context=SpawnContext()) as executor_queue,
+
+        # ThreadPoolExecutor(max_workers=1) as executor_queue,
+    ):
+        # https://docs.python.org/3/library/multiprocessing.html#exchanging-objects-between-processes
+        # > there is no risk of corruption from processes using different ends of the pipe at the same time.
+        callback_recv, callback_send = Pipe(duplex=False)
+
+        loop = asyncio.get_running_loop()
+        try:
 
             async def get_messages() -> None:
-                while type(i := (await loop.run_in_executor(executor_queue, qup.get))) is not _EndProcess:
+                while type(i := (await loop.run_in_executor(executor_queue, callback_recv.recv))) is not _EndProcess:
+                # while (i := (await loop.run_in_executor(executor_queue, callback_recv.recv))):
+                    # recv() will raise EOFError when the callback_send is closed.
                     try:
                         callback(*(i[0]), **(i[1]))  # type: ignore  # noqa: PGH003
                     except:  # noqa: PERF203, S110, E722
-                        # We have to suppress callback exceptions because
-                        # asyncio.gather will not cancel the subtask if the
-                        # callback raises an exception.
-                        # https://docs.python.org/3/library/asyncio-task.html#asyncio.gather
-                        # We cannot use TaskGroup because we require Python 3.10.
+                        # We suppress callback exceptions because its
+                        # not clear where we should raise them to.
+                        # We could raise them back to the subprocess but them
+                        # we would have to send them back through a Pipe.
+                        # And what if the Pipe raises?
                         pass
 
-            retval, _ = await asyncio.gather(subtask, get_messages())
+            # task_messages = loop.create_task(get_messages())
+
+            task_subprocess = loop.run_in_executor(executor_sub, _run_subprocess, subprocess, callback_send)
+
+            # https://docs.python.org/3/library/asyncio-task.html#asyncio.gather
+            # > If gather() is cancelled, all submitted awaitables (that have not
+            # > completed yet) are also cancelled.
+            #
+            # > the first raised exception is immediately propagated to the task that
+            # > awaits on gather(). Other awaitables in the aws sequence won’t be
+            # > cancelled and will continue to run.
+            #
+            # We cannot use TaskGroup because we require Python 3.10.
+            #
+            # If one of these tasks raises an exception then the other task will
+            # have its ProcessPoolExecutor terminated.
+            retval, _ = await asyncio.gather(task_subprocess, get_messages())
             match retval:
                 case _ExceptionWrapper(ex):
                     raise ex  # noqa: TRY301
                 case _:
                     return retval
-            return retval  # noqa: TRY300
-        except BaseException:  # including asyncio.CancelledError
+        # except EOFError:
+        #     # The callback_recv was closed.
+        #     # https://docs.python.org/3/library/multiprocessing.html#multiprocessing.connection.Connection.recv
+        #     # This probably will never happen?
+        #     raise
+        except BaseException: # including asyncio.CancelledError
+
+            # Raise EOFError in get_messages to make sure that the
+            # ThreadPoolExecutor is terminated.
+            # callback_send.close()
+
             # We must terminate the process pool workers because cancelling the
             # loop.run_in_executor() call will not terminate the workers.
             for process in executor_sub._processes.values():
@@ -234,6 +282,7 @@ async def run_subprocess_with_callback(
                 if process.is_alive():
                     process.terminate()
                 process.join()
+
             for process in executor_queue._processes.values():
                 # https://docs.python.org/3/library/multiprocessing.html#multiprocessing.Process.terminate
                 if process.is_alive():
