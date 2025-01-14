@@ -1,10 +1,11 @@
+from __future__ import annotations
+
 import asyncio
 import functools
 import multiprocessing
 import multiprocessing.connection
+import multiprocessing.queues
 import multiprocessing.synchronize
-import queue
-import threading
 import typing
 import unittest
 
@@ -35,7 +36,7 @@ async def subprocess_closure(retval:str, callback: typing.Callable[[int], None])
     return retval
 
 async def subprocess_event(
-    event: threading.Event,
+    event: multiprocessing.synchronize.Event,
     callback: typing.Callable[[bool], None],
 ) -> str:
     if event.is_set():
@@ -45,21 +46,21 @@ async def subprocess_event(
     if event.is_set():
         return "early"
     callback(True)
-    await asyncio.sleep(0.5)
-    if event.is_set():
+    while not event.is_set():
+        await asyncio.sleep(0.1)
         return "return here" # We will return here.
     return "done"
 
 async def subprocess_queue(
-    queue: queue.Queue[str],
+    msg_queue: multiprocessing.queues.Queue[str],
     callback: typing.Callable[[int], None],
 ) -> str:
-    while (i := queue.get()) != "finish":
+    while (i := msg_queue.get()) != "finish":
         callback(len(i))
     return "done"
 
 async def subprocess_pipe(
-    rx: multiprocessing.connection.Connection,
+    rx: multiprocessing.connection.Connection[str, str],
     callback: typing.Callable[[int], None],
 ) -> str:
     while (i := rx.recv()) != "finish":
@@ -88,6 +89,12 @@ class IntegrationTestCase(unittest.IsolatedAsyncioTestCase):
             assert False
         except ValueError:
             assert True
+        # For testing with Python 3.11:
+        # > except BaseException as e:
+        # >     print(f"Exception: {type(e)} ")
+        # >     print(str(e))
+        # >     print(e.__notes__)
+        # >     assert True
 
     async def test_callback_throw(self):
         try:
@@ -106,68 +113,67 @@ class IntegrationTestCase(unittest.IsolatedAsyncioTestCase):
         )
 
     async def test_event(self) -> None:
-        with multiprocessing.Manager() as manager:
-            event: threading.Event = manager.Event()
+        event: multiprocessing.synchronize.Event = multiprocessing.get_context("spawn").Event()
 
-            def local_callback(signal: bool) -> None:
-                # This function will run in the main process event loop.
-                if signal:
-                    event.set()
+        def local_callback(signal: bool) -> None:
+            # This function will run in the main process event loop.
+            if signal:
+                event.set()
 
-            y = await run_subprocess_with_callback(
-                functools.partial(subprocess_event, event),
-                local_callback,
-            )
-            assert y == "return here"
+        y = await run_subprocess_with_callback(
+            functools.partial(subprocess_event, event),
+            local_callback,
+        )
+        assert y == "return here"
 
     async def test_queue(self) -> None:
-        with multiprocessing.Manager() as manager:
-            msg_queue: queue.Queue[str] = manager.Queue()
+        msg_queue: multiprocessing.queues.Queue[str] = multiprocessing.get_context("spawn").Queue()
 
-            def local_callback(x:int) -> None:
-                # This function will run in the main process event loop.
-                pass
+        def local_callback(x:int) -> None:
+            # This function will run in the main process event loop.
+            pass
 
-            async def send_messages() -> None:
-                msg_queue.put("one")
-                msg_queue.put("three")
-                msg_queue.put("finish")
+        async def send_messages() -> None:
+            msg_queue.put("one")
+            msg_queue.put("three")
+            msg_queue.put("finish")
 
-            y, _ = await asyncio.gather(
-                run_subprocess_with_callback(
-                    functools.partial(subprocess_queue, msg_queue),
-                    local_callback,
-                ),
-                send_messages(),
-            )
-
-            assert y == "done"
-
-    async def test_queue_cancel(self) -> None:
-        with multiprocessing.Manager() as manager:
-            msg_queue: queue.Queue[str] = manager.Queue()
-
-            def local_callback(x:int) -> None:
-                # This function will run in the main process event loop.
-                pass
-
-            y = asyncio.create_task(run_subprocess_with_callback(
+        y, _ = await asyncio.gather(
+            run_subprocess_with_callback(
                 functools.partial(subprocess_queue, msg_queue),
                 local_callback,
-            ))
-            await asyncio.sleep(0.1)
-            msg_queue.put("one")
-            await asyncio.sleep(0.1)
-            y.cancel()
+            ),
+            send_messages(),
+        )
 
-            try:
-                await y
-                assert False
-            except:
-                assert True
+        assert y == "done"
+
+    async def test_queue_cancel(self) -> None:
+        msg_queue: multiprocessing.queues.Queue[str] = multiprocessing.get_context("spawn").Queue()
+
+        def local_callback(x:int) -> None:
+            # This function will run in the main process event loop.
+            pass
+
+        y = asyncio.create_task(run_subprocess_with_callback(
+            functools.partial(subprocess_queue, msg_queue),
+            local_callback,
+        ))
+        await asyncio.sleep(0.1)
+        msg_queue.put("one")
+        await asyncio.sleep(0.1)
+        y.cancel()
+
+        try:
+            await y
+            assert False
+        except:
+            assert True
 
     async def test_pipe(self) -> None:
-        rx, tx = multiprocessing.Pipe()
+        rx: multiprocessing.connection.Connection[str, str]
+        tx: multiprocessing.connection.Connection[str, str]
+        rx, tx = multiprocessing.get_context("spawn").Pipe()
 
         def local_callback(x:int) -> None:
             # This function will run in the main process event loop.
@@ -189,7 +195,9 @@ class IntegrationTestCase(unittest.IsolatedAsyncioTestCase):
         assert y == "done"
 
     async def test_pipe_cancel(self) -> None:
-        rx, tx = multiprocessing.Pipe()
+        rx: multiprocessing.connection.Connection[str, str]
+        tx: multiprocessing.connection.Connection[str, str]
+        rx, tx = multiprocessing.get_context("spawn").Pipe()
 
         def local_callback(x:int) -> None:
             # This function will run in the main process event loop.
