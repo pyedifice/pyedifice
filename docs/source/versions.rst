@@ -7,6 +7,15 @@
 Release Notes
 =============
 
+v2.11.1
+-------
+Released: 2025-01-10
+
+- :func:`utilities.run_subprocess_with_callback` reduced the number of incidental
+  processes and threads created. Removed :code:`multiprocessing.Manager` from
+  documentation.
+
+
 v2.11.0
 -------
 Released: 2025-01-10
