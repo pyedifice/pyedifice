@@ -21,6 +21,9 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
+# This run_subprocess_with_callback module file depends only on the Python
+# standard library so it can copied and pasted into any project without
+# modification.
 
 from __future__ import annotations
 
@@ -29,7 +32,6 @@ import dataclasses
 import multiprocessing
 import multiprocessing.process
 import multiprocessing.queues
-import platform
 import queue
 import traceback
 import typing
@@ -51,6 +53,7 @@ class _ExceptionWrapper:
     """
     Wrap an exception raised in the subprocess
     """
+
     ex: BaseException
     ex_string: list[str]
 
@@ -61,9 +64,7 @@ def _run_subprocess(
 ) -> None:
     subloop = asyncio.new_event_loop()
 
-    # async def work() -> _T_subprocess | _ExceptionWrapper:
     async def work() -> None:
-
         def _run_callback(*args: _P_callback.args, **kwargs: _P_callback.kwargs) -> None:
             callback_send.put((args, kwargs))
 
@@ -281,19 +282,21 @@ async def run_subprocess_with_callback(
                     case _EndProcess(r):
                         return r
                     case _ExceptionWrapper(ex, ex_string):
-                        major, minor, _patchlevel = platform.python_version_tuple()
-                        if major == "3" and minor in ("11", "12", "13", "14", "15"):
+                        if hasattr(ex, "add_note"):
                             # https://docs.python.org/3/library/exceptions.html#BaseException.add_note
-                            ex.add_note("".join(ex_string)) # type: ignore  # noqa: PGH003
-                        raise ex # including CancelledError
-                    case _:
+                            ex.add_note("".join(ex_string))  # type: ignore  # noqa: PGH003
+                        raise ex  # including CancelledError
+                    case (args, kwargs):
                         try:
-                            callback(*(message[0]), **(message[1]))  # type: ignore  # noqa: PGH003
+                            callback(*args, **kwargs)  # type: ignore  # noqa: PGH003
                         except:  # noqa: S110, E722
+                            # We suppress exceptions in the callback.
                             pass
+                    case _:
+                        raise RuntimeError("unreachable")
             except queue.Empty:
                 pass
-            await asyncio.sleep(0.1)
+            await asyncio.sleep(0.1) # CancelledError can be raised here
     except asyncio.CancelledError:
         proc.terminate()
         raise
