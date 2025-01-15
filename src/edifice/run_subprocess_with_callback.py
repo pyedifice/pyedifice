@@ -8,7 +8,9 @@ import multiprocessing
 import multiprocessing.process
 import multiprocessing.queues
 import queue
+import traceback
 import typing
+import platform
 
 if typing.TYPE_CHECKING:
     from multiprocessing.context import SpawnContext
@@ -24,7 +26,11 @@ class _EndProcess:
 
 @dataclasses.dataclass
 class _ExceptionWrapper:
+    """
+    Wrap an exception raised in the subprocess
+    """
     ex: BaseException
+    ex_string: list[str]
 
 
 def _run_subprocess(
@@ -35,11 +41,11 @@ def _run_subprocess(
 
     # async def work() -> _T_subprocess | _ExceptionWrapper:
     async def work() -> None:
+
+        def _run_callback(*args: _P_callback.args, **kwargs: _P_callback.kwargs) -> None:
+            callback_send.put((args, kwargs))
+
         try:
-
-            def _run_callback(*args: _P_callback.args, **kwargs: _P_callback.kwargs) -> None:
-                callback_send.put((args, kwargs))
-
             r = await subprocess(_run_callback)
 
             # It would be nice if the subprocess could be cancelled
@@ -54,7 +60,7 @@ def _run_subprocess(
             # on cancellation.
 
         except BaseException as e:  # noqa: BLE001
-            callback_send.put(_ExceptionWrapper(e))
+            callback_send.put(_ExceptionWrapper(e, traceback.format_exception(e)))
         else:
             callback_send.put(_EndProcess(r))
 
@@ -248,8 +254,12 @@ async def run_subprocess_with_callback(
                 match message:
                     case _EndProcess(r):
                         return r
-                    case _ExceptionWrapper(ex):
-                        raise ex
+                    case _ExceptionWrapper(ex, ex_string):
+                        major, minor, patchlevel = platform.python_version_tuple()
+                        if major == "3" and minor in ("11", "12", "13", "14", "15"):
+                            # https://docs.python.org/3/library/exceptions.html#BaseException.add_note
+                            ex.add_note("".join(ex_string)) # type: ignore  # noqa: PGH003
+                        raise ex # including CancelledError
                     case _:
                         try:
                             callback(*(message[0]), **(message[1]))  # type: ignore  # noqa: PGH003
@@ -259,6 +269,7 @@ async def run_subprocess_with_callback(
                 pass
             await asyncio.sleep(0.1)
     except asyncio.CancelledError:
+        proc.close()
         proc.terminate()
         raise
     finally:
