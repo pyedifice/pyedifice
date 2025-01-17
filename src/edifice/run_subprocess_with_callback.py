@@ -20,11 +20,13 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
+
 # Edifice run_subprocess_with_callback 2025 by James D. Brock
 #
 # This run_subprocess_with_callback module file depends only on the Python
 # standard library so it can copied and pasted into any project without
 # modification.
+
 
 from __future__ import annotations
 
@@ -46,6 +48,10 @@ _P_callback = typing.ParamSpec("_P_callback")
 
 @dataclasses.dataclass
 class _EndProcess:
+    """
+    The result returned by the subprocess
+    """
+
     result: typing.Any
 
 
@@ -89,6 +95,14 @@ def _run_subprocess(
             callback_send.put(_EndProcess(r))
 
     return subloop.run_until_complete(work())
+    # https://docs.python.org/3/library/multiprocessing.html#multiprocessing.Queue.join_thread
+    # > “By default if a process is not the creator of the queue then on
+    # > exit it will attempt to join the queue’s background thread.”
+    #
+    # https://docs.python.org/3/library/multiprocessing.html#pipes-and-queues
+    # > “if a child process has put items on a queue (and it has not used
+    # > JoinableQueue.cancel_join_thread), then that process will not
+    # > terminate until all buffered items have been flushed to the pipe.”
 
 
 async def run_subprocess_with_callback(
@@ -277,44 +291,80 @@ async def run_subprocess_with_callback(
     proc.start()
     while True:
         try:
-            message = callback_send.get_nowait()
-            match message:
-                case _EndProcess(r):
-                    # subprocess returned
-                    proc.join() # We know that process end is imminent.
-                    # https://stackoverflow.com/questions/58866837/python3-multiprocessing-terminate-vs-kill-vs-close/58866932#58866932
-                    # > “close allows you to ensure the resources are definitely cleaned at a
-                    # > specific point in time”
-                    # TODO proc.close()?
-                    return r
-                case _ExceptionWrapper(ex, ex_string):
-                    # subprocess raised an exception
-                    if hasattr(ex, "add_note"):
-                        # https://docs.python.org/3/library/exceptions.html#BaseException.add_note
-                        ex.add_note("".join(ex_string))  # type: ignore  # noqa: PGH003
-                    proc.join() # We know that process end is imminent.
-                    # TODO proc.close()?
-                    raise ex  # including CancelledError
-                case (args, kwargs):
-                    # subprocess called callback
-                    try:
-                        callback(*args, **kwargs) # type: ignore  # noqa: PGH003
-                    except:  # noqa: S110, E722
-                        # We suppress exceptions in the callback.
-                        pass
-                case _:
-                    raise RuntimeError("unreachable")
+            while True:
+                # Pull messages out of the queue as fast as we can until
+                # the queue is empty.
+                # Then wait on the event loop for 100ms and check the queue
+                # again.
+                message = callback_send.get_nowait()
+                match message:
+                    case _EndProcess(r):
+                        # subprocess returned
+                        proc.join()  # We know that process end is imminent.
+                        return r
+                    case _ExceptionWrapper(ex, ex_string):
+                        # subprocess raised an exception
+                        if hasattr(ex, "add_note"):
+                            # https://docs.python.org/3/library/exceptions.html#BaseException.add_note
+                            ex.add_note("".join(ex_string))  # type: ignore  # noqa: PGH003
+                        proc.join()  # We know that process end is imminent.
+                        raise ex  # including CancelledError
+                    case (args, kwargs):
+                        # subprocess called callback
+                        try:
+                            callback(*args, **kwargs)  # type: ignore  # noqa: PGH003
+                        except:  # noqa: S110, E722
+                            # We suppress exceptions in the callback.
+                            pass
+                    case _:
+                        raise RuntimeError("unreachable")
         except queue.Empty:
             pass
+        # Can the callback_send queue raise any other kind of exception?
         try:
-            await asyncio.sleep(0.1) # CancelledError can be raised here
+            await asyncio.sleep(0.1)  # CancelledError can be raised here
         except asyncio.CancelledError:
-            proc.terminate()
             # https://docs.python.org/3/library/multiprocessing.html#multiprocessing.Process.terminate
+            # > “Warning: If this method is used when the associated process is
+            # > using a pipe or queue then the pipe or queue is liable to become
+            # corrupted and may become unusable by other process.”
+            #
+            # Really?
+
+            # https://docs.python.org/3/library/multiprocessing.html#pipes-and-queues
+            # > “Warning If a process is killed using Process.terminate() while
+            # > it is trying to use a Queue, then the data in the queue is
+            # > likely to become corrupted. This may cause any other process to
+            # get an exception when it tries to use the queue later on.”
+            #
+            # What kind of exception?
+
             # Windows
             # https://learn.microsoft.com/en-us/windows/win32/api/processthreadsapi/nf-processthreadsapi-terminateprocess#remarks
             # > “The terminated process cannot exit until all pending I/O has
             # > been completed or canceled.”
+
+            proc.terminate()
+
+            # https://docs.python.org/3/library/multiprocessing.html#pipes-and-queues
+            # > ”This means that if you try joining that process you may get a
+            # > deadlock unless you are sure that all items which have been put
+            # > on the queue have been consumed.”
+            try:
+                while True:
+                    callback_send.get_nowait()
+            except queue.Empty:
+                pass
+
+            # https://docs.python.org/3/library/multiprocessing.html#multiprocessing.Process.join
             proc.join()
-            # TODO proc.close()?
+
+            # proc.close()?
+            # https://docs.python.org/3/library/multiprocessing.html#multiprocessing.Process.close
+            # https://stackoverflow.com/questions/58866837/python3-multiprocessing-terminate-vs-kill-vs-close/58866932#58866932
+            # > “close allows you to ensure the resources are definitely cleaned at a
+            # > specific point in time”
+            # We don't need to call close() because we are not worried about
+            # the OS running out of file descriptors.
+
             raise

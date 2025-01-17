@@ -82,6 +82,8 @@ class IntegrationTestCase(unittest.IsolatedAsyncioTestCase):
             assert False
         except asyncio.CancelledError:
             assert True
+        except:
+            assert False
 
     async def test_subprocess_throw(self):
         try:
@@ -101,6 +103,8 @@ class IntegrationTestCase(unittest.IsolatedAsyncioTestCase):
             await run_subprocess_with_callback(subprocess_return, callback_throw)
             assert True
         except ValueError:
+            assert False
+        except:
             assert False
 
     async def test_closure(self):
@@ -134,8 +138,8 @@ class IntegrationTestCase(unittest.IsolatedAsyncioTestCase):
             pass
 
         async def send_messages() -> None:
-            msg_queue.put("one")
-            msg_queue.put("three")
+            for i in range(1000):
+                msg_queue.put(str(i))
             msg_queue.put("finish")
 
         y, _ = await asyncio.gather(
@@ -159,16 +163,17 @@ class IntegrationTestCase(unittest.IsolatedAsyncioTestCase):
             functools.partial(subprocess_queue, msg_queue),
             local_callback,
         ))
-        await asyncio.sleep(0.1)
-        msg_queue.put("one")
-        await asyncio.sleep(0.1)
+        for i in range(1000):
+            msg_queue.put(str(i))
         y.cancel()
 
         try:
             await y
             assert False
-        except:
+        except asyncio.CancelledError:
             assert True
+        except:
+            assert False
 
     async def test_pipe(self) -> None:
         rx: multiprocessing.connection.Connection[str, str]
@@ -231,8 +236,10 @@ class IntegrationTestCase(unittest.IsolatedAsyncioTestCase):
         try:
             await y
             assert False
-        except:
+        except asyncio.CancelledError:
             assert True
+        except:
+            assert False
 
 if __name__ == "__main__":
     unittest.main()
