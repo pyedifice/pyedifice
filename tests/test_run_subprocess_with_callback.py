@@ -173,7 +173,7 @@ class IntegrationTestCase(unittest.IsolatedAsyncioTestCase):
     async def test_pipe(self) -> None:
         rx: multiprocessing.connection.Connection[str, str]
         tx: multiprocessing.connection.Connection[str, str]
-        rx, tx = multiprocessing.get_context("spawn").Pipe()
+        rx, tx = multiprocessing.get_context("spawn").Pipe(duplex=False)
 
         def local_callback(x:int) -> None:
             # This function will run in the main process event loop.
@@ -193,17 +193,33 @@ class IntegrationTestCase(unittest.IsolatedAsyncioTestCase):
         )
 
         assert y == "done"
+        # TODO This test passes but then the unittest framework prints a strange
+        # error message:
+        #
+        # ...Exception ignored in: <function BaseEventLoop.__del__ at 0x7fffe8e7e170>
+        # ValueError: Invalid file descriptor: -1
+        #
+        # This behavior first appeared in v2.11.2.
+        # This behavior only happens in
+        #
+        #     ./run_tests.py
+        #
+        # but not in
+        #
+        #     python tests/test_run_subprocess_with_callback.py
+        #
+        # nor in the VS Code debugger.
 
     async def test_pipe_cancel(self) -> None:
         rx: multiprocessing.connection.Connection[str, str]
         tx: multiprocessing.connection.Connection[str, str]
-        rx, tx = multiprocessing.get_context("spawn").Pipe()
+        rx, tx = multiprocessing.get_context("spawn").Pipe(duplex=False)
 
         def local_callback(x:int) -> None:
             # This function will run in the main process event loop.
             pass
 
-        y = asyncio.create_task(run_subprocess_with_callback(
+        y = asyncio.get_event_loop().create_task(run_subprocess_with_callback(
             functools.partial(subprocess_pipe, rx),
             local_callback,
         ))
