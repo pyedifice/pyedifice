@@ -9,6 +9,24 @@ from typing import cast
 
 import edifice as ed
 
+def use_clocktick() -> int:
+    tick, tick_set = ed.use_state(0)
+
+    async def increment():
+        while True:
+            await asyncio.sleep(1)
+            tick_set(lambda t: t + 1)
+
+    ed.use_async(increment)
+
+    return tick
+
+
+@ed.component
+def Clock(self):
+    tick = use_clocktick()
+    ed.Label(str(tick))
+
 
 @ed.component
 def ComponentWithAsync(self):
@@ -135,7 +153,20 @@ def Main(self):
 
     ##########
 
+    show_clock, set_show_clock = ed.use_state(True)
+
+    ##########
+
     with ed.VBoxView(style={"align": "top"}):
+        with ed.VBoxView():
+            ed.CheckBox(
+                checked=show_clock,
+                on_change=set_show_clock,
+                text="Show Clock",
+            )
+            if show_clock:
+                Clock()
+
         with ed.VBoxView(
             style={
                 "padding-top": 20,

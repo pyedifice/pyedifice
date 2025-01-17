@@ -321,6 +321,8 @@ def use_async(
     The :code:`fn_coroutine` will be called every time the :code:`dependencies` change.
     Only one :code:`fn_coroutine` will be allowed to run at a time.
 
+    Exceptions raised from the :code:`fn_coroutine` will be suppressed.
+
     .. code-block:: python
         :caption: use_async to fetch from the network
 
@@ -362,7 +364,8 @@ def use_async(
     2. The :code:`use_async` Hook returns a function which can be called to
        cancel the :code:`fn_coroutine` Task manually. In the example above,
        the :code:`_cancel_fetcher()` function can be called to cancel the fetcher.
-    3. If the component is unmounted before the :code:`fn_coroutine` Task completes, then
+    3. If this `@component<edifice.component>` is unmounted before the
+       :code:`fn_coroutine` Task completes, then
        the :code:`fn_coroutine` Task will be cancelled.
 
     Write your async :code:`fn_coroutine` function in such a way that it

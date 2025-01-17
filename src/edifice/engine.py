@@ -2274,12 +2274,20 @@ class RenderEngine:
             hooks.append(hook)
 
             def done_callback(_future_object):
-                hook.task = None
+                if hook.task is not None:
+                    # If there is an exception, retrieve the exception and throw it away.
+                    # Otherwise asyncio complains
+                    # “Task exception was never retrieved”
+                    try:
+                        # https://docs.python.org/3/library/asyncio-task.html#asyncio.Task.result
+                        _ = hook.task.result()
+                    except:  # noqa: S110, E722
+                        pass
+                    hook.task = None
                 if len(hook.queue) > 0:
                     # There is another async task waiting in the queue
-                    task = asyncio.create_task(hook.queue.pop(0)())
-                    hook.task = task
-                    task.add_done_callback(done_callback)
+                    hook.task = asyncio.create_task(hook.queue.pop(0)())
+                    hook.task.add_done_callback(done_callback)
 
             task.add_done_callback(done_callback)
 
@@ -2306,12 +2314,20 @@ class RenderEngine:
                 hook.task = asyncio.create_task(fn_coroutine())
 
                 def done_callback(_future_object):
-                    hook.task = None
+                    if hook.task is not None:
+                        # If there is an exception, retrieve the exception and throw it away.
+                        # Otherwise asyncio complains
+                        # “Task exception was never retrieved”
+                        try:
+                            # https://docs.python.org/3/library/asyncio-task.html#asyncio.Task.result
+                            _ = hook.task.result()
+                        except:  # noqa: S110, E722
+                            pass
+                        hook.task = None
                     if len(hook.queue) > 0:
                         # There is another async task waiting in the queue
-                        task = asyncio.create_task(hook.queue.pop(0)())
-                        hook.task = task
-                        task.add_done_callback(done_callback)
+                        hook.task = asyncio.create_task(hook.queue.pop(0)())
+                        hook.task.add_done_callback(done_callback)
 
                 hook.task.add_done_callback(done_callback)
 
