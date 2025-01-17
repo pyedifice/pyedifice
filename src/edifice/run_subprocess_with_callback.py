@@ -1,7 +1,6 @@
 # MIT License
 #
-# Edifice Copyright 2021 David Ding
-# Edifice run_subprocess_with_callback Copyright 2025 James D. Brock
+# Copyright 2021 David Ding
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -21,6 +20,8 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
+# Edifice run_subprocess_with_callback 2025 by James D. Brock
+#
 # This run_subprocess_with_callback module file depends only on the Python
 # standard library so it can copied and pasted into any project without
 # modification.

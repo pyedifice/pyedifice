@@ -7,6 +7,13 @@
 Release Notes
 =============
 
+v2.11.2
+-------
+Released: 2025-01-10
+
+- :func:`utilities.run_subprocess_with_callback` don’t :code:`terminate` on normal return.
+
+
 v2.11.1
 -------
 Released: 2025-01-10
