@@ -7,16 +7,23 @@
 Release Notes
 =============
 
+v2.11.3
+-------
+Released: 2025-01-17
+
+- :func:`use_async` bugfix for exceptions raised from the async function.
+
+
 v2.11.2
 -------
-Released: 2025-01-10
+Released: 2025-01-17
 
 - :func:`utilities.run_subprocess_with_callback` don’t :code:`terminate` on normal return.
 
 
 v2.11.1
 -------
-Released: 2025-01-10
+Released: 2025-01-15
 
 - :func:`utilities.run_subprocess_with_callback` reduced the number of incidental
   processes and threads created. Removed :code:`multiprocessing.Manager` from
