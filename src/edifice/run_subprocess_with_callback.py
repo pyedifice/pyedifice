@@ -274,31 +274,46 @@ async def run_subprocess_with_callback(
     #   2. There is an extra <100ms delay calling the callback.
     #   3. There is some extra CPU busy-waiting while the subprocess is running.
     proc.start()
-    try:
-        while True:
-            try:
-                message = callback_send.get_nowait()
-                match message:
-                    case _EndProcess(r):
-                        return r
-                    case _ExceptionWrapper(ex, ex_string):
-                        if hasattr(ex, "add_note"):
-                            # https://docs.python.org/3/library/exceptions.html#BaseException.add_note
-                            ex.add_note("".join(ex_string))  # type: ignore  # noqa: PGH003
-                        raise ex  # including CancelledError
-                    case (args, kwargs):
-                        try:
-                            callback(*args, **kwargs)  # type: ignore  # noqa: PGH003
-                        except:  # noqa: S110, E722
-                            # We suppress exceptions in the callback.
-                            pass
-                    case _:
-                        raise RuntimeError("unreachable")
-            except queue.Empty:
-                pass
+    while True:
+        try:
+            message = callback_send.get_nowait()
+            match message:
+                case _EndProcess(r):
+                    # subprocess returned
+                    proc.join() # We know that process end is imminent.
+                    # https://stackoverflow.com/questions/58866837/python3-multiprocessing-terminate-vs-kill-vs-close/58866932#58866932
+                    # > “close allows you to ensure the resources are definitely cleaned at a
+                    # > specific point in time”
+                    # TODO proc.close()?
+                    return r
+                case _ExceptionWrapper(ex, ex_string):
+                    # subprocess raised an exception
+                    if hasattr(ex, "add_note"):
+                        # https://docs.python.org/3/library/exceptions.html#BaseException.add_note
+                        ex.add_note("".join(ex_string))  # type: ignore  # noqa: PGH003
+                    proc.join() # We know that process end is imminent.
+                    # TODO proc.close()?
+                    raise ex  # including CancelledError
+                case (args, kwargs):
+                    # subprocess called callback
+                    try:
+                        callback(*args, **kwargs) # type: ignore  # noqa: PGH003
+                    except:  # noqa: S110, E722
+                        # We suppress exceptions in the callback.
+                        pass
+                case _:
+                    raise RuntimeError("unreachable")
+        except queue.Empty:
+            pass
+        try:
             await asyncio.sleep(0.1) # CancelledError can be raised here
-    except asyncio.CancelledError:
-        proc.terminate()
-        raise
-    finally:
-        proc.join()
+        except asyncio.CancelledError:
+            proc.terminate()
+            # https://docs.python.org/3/library/multiprocessing.html#multiprocessing.Process.terminate
+            # Windows
+            # https://learn.microsoft.com/en-us/windows/win32/api/processthreadsapi/nf-processthreadsapi-terminateprocess#remarks
+            # > “The terminated process cannot exit until all pending I/O has
+            # > been completed or canceled.”
+            proc.join()
+            # TODO proc.close()?
+            raise
