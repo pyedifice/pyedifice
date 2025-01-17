@@ -380,7 +380,7 @@ def use_async(
     Timers
     ======
 
-    The :code:`use_async` Hook is also useful for timers and animation.
+    The :code:`use_async` Hook is useful for timers and animation.
 
     Here is an example which shows how to run a timer in a component. The
     Harmonic Oscillator in :doc:`../examples` uses this technique::

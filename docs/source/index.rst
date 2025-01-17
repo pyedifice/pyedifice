@@ -113,6 +113,20 @@ a button and a label with the current value of :code:`number`.
 Clicking the button will add 5 to the :code:`number`.
 If the :code:`number` is “mid” then another label will reveal that fact.
 
+Put a GUI on useful Python code
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The whole point of Edifice is that it’s a way to put a GUI on useful Python
+code. If you have a Python script which does a long-running computation,
+Edifice provides an API for running that script while presenting
+a responsive GUI to the user.
+
+1. Paste the script into an :code:`async def worker()` function.
+2. Call
+   :func:`run_subprocess_with_callback <edifice.utilities.run_subprocess_with_callback>`
+   on that :code:`worker` function with a :func:`use_async <edifice.use_async>`
+   Hook.
+
 Developer Tools
 ^^^^^^^^^^^^^^^
 
@@ -149,8 +163,6 @@ Edifice does not support every feature of Qt,
 but it is easy to interface with Qt, either :ref:`incorporating a Qt Widget<custom_widget>` into an Edifice component,
 :doc:`use Qt commands directly<stubs/edifice.Reference>` with an existing Edifice component,
 or :doc:`incorporating Edifice components<stubs/stubs/edifice.App.export_widgets>` in a Qt application.
-
-
 
 Setuptools Build System
 -----------------------
