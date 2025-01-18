@@ -225,7 +225,7 @@ def App(self, plot_colors: list[str]):
         Fetch data if needed.
         """
         for plot in plots.values():
-            if len(plot.x_ticker) > 0 and plot.x_ticker not in plot_data:
+            if len(plot.x_ticker) > 0 and plot.x_ticker == ticker:
                 # Because the Yahoo history() function is synchronous and
                 # blocking, we will run it in a separate process.
                 # This takes longer than just calling history() directly
@@ -245,6 +245,7 @@ def App(self, plot_colors: list[str]):
                     pass
                 except Exception as e:  # noqa: BLE001
                     plot_data_set(lambda pltd, plot=plot, e=e: pltd | {plot.x_ticker: Failed(e)})
+                break
 
     call_fetch_data, _call_fetch_data_cancel = ed.use_async_call(fetch_data)
 
