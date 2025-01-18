@@ -254,8 +254,8 @@ def App(self, plot_colors: list[str]):
             # fetch the first one that we need.
             call_fetch_data(tickers_needed[0])
 
-    # Call fetch_data whenever the list of tickers needed changes
-    ed.use_effect(check_fetch_data, tickers_needed)
+    # Call fetch_data whenever the first in the list of tickers needed changes
+    ed.use_effect(check_fetch_data, tickers_needed[0:1])
 
     # The Plotting function called by the MatplotlibFigure component.
     # The plotting function is passed a Matplotlib axis object.
