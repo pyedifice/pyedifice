@@ -114,7 +114,7 @@ Clicking the button will add 5 to the :code:`number`.
 If the :code:`number` is “mid” then another label will reveal that fact.
 
 Put a GUI on useful Python code
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The whole point of Edifice is that it’s a way to put a GUI on useful Python
 code. If you have a Python script which does a long-running computation,

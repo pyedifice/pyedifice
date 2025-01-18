@@ -47,15 +47,15 @@ class Received:
 
     def __bool__(self):
         """
-        We need this because
-        ValueError: The truth value of a DataFrame is ambiguous.
+        We need this to store a DataFrame in use_state because
+        “ValueError: The truth value of a DataFrame is ambiguous.”
         """
         return True
 
     def __eq__(self, other):
         """
-        We need this because
-        ValueError: The truth value of a DataFrame is ambiguous.
+        We need this to store a DataFrame in use_state because
+        “ValueError: The truth value of a DataFrame is ambiguous.”
         """
         return id(self) == id(other)
 
@@ -70,17 +70,6 @@ transform_types = ["None", "EMA"]
 
 
 @ed.component
-def add_dividers(self, children: tuple[ed.Element, ...] = ()):
-    """Add dividers between children"""
-    with ed.VBoxView():
-        for i, child in enumerate(children):
-            with ed.VBoxView(style={"padding": 5}):
-                ed.child_place(child)
-            if i < len(children) - 1:
-                ed.VBoxView(style={"height": 0, "border": "1px solid rgba(128, 128, 128, 0.2)"})
-
-
-@ed.component
 def PlotDescriptor(
     self,
     key: int,
@@ -90,8 +79,7 @@ def PlotDescriptor(
     plot_change: tp.Callable[[int, tp.Callable[[PlotParams], PlotParams]], None],
 ):
     """
-    A component to describe the entire plot: the descriptions of both axis,
-    plot type, and color
+    A component to render the UI for one plot.
     """
 
     def handle_color(color_index: int):
@@ -106,82 +94,84 @@ def PlotDescriptor(
     def handle_param(param_val: int):
         plot_change(key, lambda p: replace(p, y_transform_param=param_val))
 
-    with ed.HBoxView(style={"align": "left"}):
+    with ed.HBoxView(style={"align": "left", "width": 300, "height": 100}):
         with ed.VBoxView(style={"align": "top"}):
-            with ed.VBoxView():
-                with ed.HBoxView(style={"align": "left"}):
-                    ed.TextInput(
-                        text=plot.x_ticker,
-                        style={
-                            "padding": 2,
-                            "width": 80,
-                            "color": plot.color,
-                            "font-size": 25,
-                        },
-                        on_change=handle_ticker,
-                    )
-                    with ed.HBoxView(style={"padding-left": 10, "align": "left"}):
-                        if isinstance(plot_data, Failed):
-                            ed.Label(
-                                f"No data for {plot.x_ticker}",
-                                size_policy=QSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed),
-                            )
-                        elif isinstance(plot_data, Received):
-                            ed.Dropdown(
-                                selection=plot_colors.index(plot.color),
-                                options=plot_colors,
-                                on_select=handle_color,
-                                size_policy=QSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed),
-                                focus_policy=Qt.FocusPolicy.ClickFocus,
-                            )
-                        elif plot.x_ticker:
-                            ed.Label(
-                                text=f"Fetching {plot.x_ticker}...",
-                                size_policy=QSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed),
-                            )
+            with ed.HBoxView(style={"align": "left"}):
+                ed.TextInput(
+                    text=plot.x_ticker,
+                    style={
+                        "padding": 2,
+                        "width": 80,
+                        "color": plot.color,
+                        "font-size": 25,
+                    },
+                    on_change=handle_ticker,
+                )
+                with ed.HBoxView(style={"padding-left": 10, "align": "left"}):
+                    if isinstance(plot_data, Failed):
+                        ed.Label(
+                            f"No data for {plot.x_ticker}",
+                            size_policy=QSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed),
+                        )
+                    elif isinstance(plot_data, Received):
+                        ed.Dropdown(
+                            selection=plot_colors.index(plot.color),
+                            options=plot_colors,
+                            on_select=handle_color,
+                            size_policy=QSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed),
+                            focus_policy=Qt.FocusPolicy.ClickFocus,
+                        )
+                    elif plot.x_ticker:
+                        ed.Label(
+                            text=f"Fetching {plot.x_ticker}...",
+                            size_policy=QSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed),
+                        )
 
-                with ed.HBoxView(
-                    style={"align": "left", "padding-top": 5},
-                    size_policy=QSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed),
-                ):
+            with ed.VBoxView(
+                style={"align": "left", "padding-top": 5},
+                size_policy=QSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed),
+            ):
+                if plot.x_ticker != "":
                     with ed.HBoxView(
                         style={"padding-right": 10, "align": "left"},
                     ):
                         ed.Label("Transform")
-                    with ed.HBoxView(style={"padding-right": 10, "align": "left"}):
-                        ed.Dropdown(
-                            selection=transform_types.index(plot.y_transform),
-                            options=transform_types,
-                            on_select=handle_transform_type,
-                            size_policy=QSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed),
-                            focus_policy=Qt.FocusPolicy.ClickFocus,
-                        )
-                    if plot.y_transform == "EMA":
-                        ed.Slider(
-                            value=plot.y_transform_param,
-                            min_value=1,
-                            max_value=90,
-                            style={"min-width": 200},
-                            on_change=handle_param,
-                            tool_tip="Exponential Moving Average half-life",
-                        )
-                        ed.Label(
-                            text=f"half-life {plot.y_transform_param} days",
-                            word_wrap=False,
-                            style={"margin-left": 10},
-                            tool_tip="Exponential Moving Average half-life",
-                        )
+                        with ed.HBoxView(style={"padding-left": 10, "padding-right": 10, "align": "left"}):
+                            ed.Dropdown(
+                                selection=transform_types.index(plot.y_transform),
+                                options=transform_types,
+                                on_select=handle_transform_type,
+                                size_policy=QSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed),
+                                focus_policy=Qt.FocusPolicy.ClickFocus,
+                            )
+                        if plot.y_transform == "EMA":
+                            ed.Label(
+                                text=f"half-life {plot.y_transform_param} days",
+                                word_wrap=False,
+                                tool_tip="Exponential Moving Average half-life",
+                            )
+                    with ed.HBoxView():
+                        if plot.y_transform == "EMA":
+                            ed.Slider(
+                                value=plot.y_transform_param,
+                                min_value=1,
+                                max_value=90,
+                                style={"min-width": 200},
+                                on_change=handle_param,
+                                tool_tip="Exponential Moving Average half-life",
+                                focus_policy=Qt.FocusPolicy.ClickFocus,
+                            )
 
 
 async def fetch_data_from_yahoo(ticker: str, callback: tp.Callable[[], None]) -> pd.DataFrame:
     """
-    Syncronous function to fetch data from Yahoo Finance.
+    Synchronous function to fetch data from Yahoo Finance.
     It is async def because we will pass it to run_subprocess_with_callback.
     """
     return yf.Ticker(ticker).history("1y")
 
 
-# Finally, we create a component that contains the plot descriptions, a button to add a plot,
+# Finally, we create a component that contains the plot descriptions
 # and the actual Matplotlib figure.
 @ed.component
 def App(self, plot_colors: list[str]):
@@ -208,6 +198,11 @@ def App(self, plot_colors: list[str]):
             plots_.update({next_i: PlotParams("", "Close", "None", 30, plot_colors[next_i % len(plot_colors)])})
             next_i_set(lambda j: j + 1)
             plots_set(plots_)
+        elif len(plots) > 1 and list(plots.values())[-2].x_ticker == "":
+            # Else if the last two plots are blank then remove the last one.
+            plots_ = plots.copy()
+            plots_.popitem()
+            plots_set(plots_)
 
     ed.use_effect(check_insert_blank_plot, plots)
 
@@ -217,12 +212,11 @@ def App(self, plot_colors: list[str]):
         plots_.update([(key, plot_setter(p))])
         plots_set(plots_)
 
-    tickers_needed: list[str] = [plot.x_ticker for plot in plots.values() if plot.x_ticker not in plot_data.keys()]
+    tickers_needed: list[str] = [plot.x_ticker for plot in plots.values() if plot.x_ticker != "" and plot.x_ticker not in plot_data.keys()]
 
     async def fetch_data(ticker: str):
         """
-        Check plots to see if we need to fetch data for any of them.
-        Fetch data if needed.
+        Fetch data for the ticker symbol argument.
         """
         for plot in plots.values():
             if len(plot.x_ticker) > 0 and plot.x_ticker == ticker:
@@ -242,7 +236,7 @@ def App(self, plot_colors: list[str]):
                     else:
                         plot_data_set(lambda pltd, plot=plot, data=data: pltd | {plot.x_ticker: Received(data)})
                 except asyncio.CancelledError:
-                    pass
+                    raise
                 except Exception as e:  # noqa: BLE001
                     plot_data_set(lambda pltd, plot=plot, e=e: pltd | {plot.x_ticker: Failed(e)})
                 break
@@ -273,9 +267,9 @@ def App(self, plot_colors: list[str]):
                 else:
                     ax.plot(plot_datum.dataframe.index, plot_datum.dataframe[plot.y_label], color=plot.color)
 
-    with ed.VBoxView(style={"padding": 10, "align": "top"}):
-        with ed.VBoxView():
-            with add_dividers():
+    with ed.VBoxView(style={"align": "top"}):
+        with ed.VBoxView(style={"padding": 10}):
+            with ed.FlowView():
                 for key, plot in plots.items():
                     PlotDescriptor(key, plot, plot_data.get(plot.x_ticker, None), plot_colors, plot_change)
 
@@ -291,7 +285,8 @@ def Main(self):
         if ed.theme_is_light():
             qapp.setPalette(ed.palette_edifice_light())
             plot_colors = [
-                "darkorange",
+                # https://matplotlib.org/stable/gallery/color/named_colors.html#css-colors
+                "firebrick",
                 "darkcyan",
                 "darkred",
                 "darkviolet",

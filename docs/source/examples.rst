@@ -32,27 +32,12 @@ The code is available at `calculator.py <https://github.com/pyedifice/pyedifice/
 Financial Charting
 ------------------
 
-In this example, we create a reactive charting application with Edifice.
-We allow arbitrary number of plots to be made on the same axis.
-For each plot, the source for the x-axis and y-axis data can be specified by the user.
-The source data could be the date, the close price, or the volume of a stock.
-The data in each axis can also be transformed by an EMA operator,
-which computes a moving average over the past n days (with n adjustable by a slider).
-And of course, everything is reactive --- there's no "plot" button that the user needs to press to render the chart.
-
-All this is possible in under 200 lines of code and straightforward logic:
-there's an underlying description of everything that is plotted.
-This description is shown to the user in two ways:
-the "textual" description via dropdowns and input elements,
-and a visual rendering in the form of a graph.
-Users can interact with the textual display and thereby update the plot description.
+In this example, we create a reactive charting application with Edifice
+which fetches stock data from `Yahoo Finance <https://pypi.org/project/yfinance/>`_.
 
 The code is available at `financial_charts.py <https://github.com/pyedifice/pyedifice/tree/master/examples/financial_charts.py>`_.
 
-.. figure:: /image/example_financial_charting1.png
-   :width: 600
-
-.. figure:: /image/example_financial_charting2.png
+.. figure:: /image/example_financial_charting3.png
    :width: 600
 
 .. code-block:: shell
