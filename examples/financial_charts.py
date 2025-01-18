@@ -5,7 +5,7 @@
 #
 from __future__ import annotations
 
-import asyncio
+import multiprocessing
 import typing as tp
 from collections import OrderedDict
 from dataclasses import dataclass, replace
@@ -19,6 +19,8 @@ from edifice.extra.matplotlib_figure import MatplotlibFigure
 from edifice.qt import QT_VERSION
 
 if tp.TYPE_CHECKING:
+    from multiprocessing.queues import Queue
+
     import pandas as pd
     from matplotlib.axes import Axes
 
@@ -163,12 +165,23 @@ def PlotDescriptor(
                             )
 
 
-async def fetch_data_from_yahoo(ticker: str, callback: tp.Callable[[], None]) -> pd.DataFrame:
+async def fetch_subprocess(
+    request_queue: Queue[str],
+    response_callback: tp.Callable[[str, Failed | Received], None],
+) -> None:
     """
-    Synchronous function to fetch data from Yahoo Finance.
+    Synchronous subprocess function to fetch data from Yahoo Finance.
     It is async def because we will pass it to run_subprocess_with_callback.
+    The whole point of this subprocess is that we can make an async call
+    to the blocking function .history() in the yfinance API without blocking
+    the GUI.
     """
-    return yf.Ticker(ticker).history("1y")
+    while True:
+        ticker = request_queue.get()
+        try:
+            response_callback(ticker, Received(yf.Ticker(ticker).history("1y")))
+        except Exception as e:  # noqa: BLE001
+            response_callback(ticker, Failed(e))
 
 
 # Finally, we create a component that contains the plot descriptions
@@ -212,42 +225,45 @@ def App(self, plot_colors: list[str]):
         plots_.update([(key, plot_setter(p))])
         plots_set(plots_)
 
-    tickers_needed: list[str] = [plot.x_ticker for plot in plots.values() if plot.x_ticker != "" and plot.x_ticker not in plot_data.keys()]
+    ticker_queue: Queue[str] = ed.use_memo(lambda: multiprocessing.get_context("spawn").Queue())
 
-    async def fetch_data(ticker: str):
-        """
-        Fetch data for the ticker symbol argument.
-        """
-        for plot in plots.values():
-            if len(plot.x_ticker) > 0 and plot.x_ticker == ticker:
-                # Because the Yahoo history() function is synchronous and
-                # blocking, we will run it in a separate process.
-                # This takes longer than just calling history() directly
-                # but it allows us to keep the GUI responsive.
-                # TODO we could fetch multiple tickers concurrently with
-                # asyncio.gather() but for now let's not get too fancy.
-                try:
-                    data = await ed.run_subprocess_with_callback(
-                        partial(fetch_data_from_yahoo, plot.x_ticker),
-                        lambda: None,
-                    )
-                    if data.empty:
-                        plot_data_set(lambda pltd, plot=plot: pltd | {plot.x_ticker: Failed(Exception("No data"))})
-                    else:
-                        plot_data_set(lambda pltd, plot=plot, data=data: pltd | {plot.x_ticker: Received(data)})
-                except asyncio.CancelledError:
-                    raise
-                except Exception as e:  # noqa: BLE001
-                    plot_data_set(lambda pltd, plot=plot, e=e: pltd | {plot.x_ticker: Failed(e)})
-                break
+    def receive_data(ticker: str, data: Failed | Received):
+        match data:
+            case Failed():
+                plot_data_set(lambda pltd: pltd | {ticker: data})
+            case Received(dataframe):
+                if dataframe.empty:
+                    plot_data_set(lambda pltd: pltd | {ticker: Failed(Exception("No data"))})
+                else:
+                    plot_data_set(lambda pltd: pltd | {ticker: data})
 
-    call_fetch_data, _call_fetch_data_cancel = ed.use_async_call(fetch_data)
+    async def wrap_fetch_subprocess() -> None:
+        await ed.run_subprocess_with_callback(
+            partial(fetch_subprocess, ticker_queue),
+            receive_data,
+        )
+
+    ed.use_async(
+        # The fetch_subprocess will run forever while this component is mounted.
+        wrap_fetch_subprocess,
+        # Why do we need wrap_fetch_subprocess? Is that a problem with the API?
+        # Why can't we do here:
+        #
+        # > ed.run_subprocess_with_callback(
+        # >     partial(fetch_subprocess, ticker_queue),
+        # >     receive_data,
+        # > )
+    )
+
+    tickers_needed: list[str] = [
+        plot.x_ticker for plot in plots.values() if plot.x_ticker != "" and plot.x_ticker not in plot_data.keys()
+    ]
 
     def check_fetch_data():
         if len(tickers_needed) > 0:
             # If we need some ticker data and we don't have it yet, then
             # fetch the first one that we need.
-            call_fetch_data(tickers_needed[0])
+            ticker_queue.put(tickers_needed[0])
 
     # Call fetch_data whenever the first in the list of tickers needed changes
     ed.use_effect(check_fetch_data, tickers_needed[0:1])
