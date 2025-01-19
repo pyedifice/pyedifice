@@ -9,7 +9,7 @@ from __future__ import annotations  # noqa: I001
 import asyncio
 import typing as tp
 from collections import OrderedDict
-from concurrent.futures import ProcessPoolExecutor
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, replace
 
 import yfinance as yf
@@ -217,7 +217,7 @@ def App(self, plot_colors: list[str], plot_color_background: str):
 
     tickers_requested, tickers_requested_set = ed.use_state(tp.cast(list[str], []))
 
-    fetch_executor = ed.use_memo(ProcessPoolExecutor)
+    fetch_executor = ed.use_memo(ThreadPoolExecutor)
 
     fetch_tasks, fetch_tasks_set = ed.use_state(tp.cast(list[asyncio.Task[None]], []))
 
