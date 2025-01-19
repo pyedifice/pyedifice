@@ -7,6 +7,15 @@
 Release Notes
 =============
 
+v2.11.4
+-------
+Released: 2025-01-19
+
+- :func:`utilities.run_subprocess_with_callback` improvements: Handle multiple
+  callbacks with no delay. Drain the callback_send queue before joining the
+  Process.
+
+
 v2.11.3
 -------
 Released: 2025-01-17
