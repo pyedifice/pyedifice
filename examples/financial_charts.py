@@ -3,13 +3,14 @@
 #
 # python examples/financial_charts.py
 #
+
 from __future__ import annotations
 
-import multiprocessing
+import asyncio
 import typing as tp
 from collections import OrderedDict
+from concurrent.futures import ProcessPoolExecutor
 from dataclasses import dataclass, replace
-from functools import partial
 
 import matplotlib.pyplot as plt
 import yfinance as yf
@@ -19,8 +20,6 @@ from edifice.extra.matplotlib_figure import MatplotlibFigure
 from edifice.qt import QT_VERSION
 
 if tp.TYPE_CHECKING:
-    from multiprocessing.queues import Queue
-
     import pandas as pd
     from matplotlib.axes import Axes
 
@@ -104,9 +103,9 @@ def PlotDescriptor(
                     style={
                         "padding": 2,
                         "width": 80,
-                        "color": plot.color,
                         "font-size": 25,
-                    },
+                    }
+                    | ({"color": plot.color} if isinstance(plot_data, Received) else {}),
                     on_change=handle_ticker,
                 )
                 with ed.HBoxView(style={"padding-left": 10, "align": "left"}):
@@ -133,7 +132,7 @@ def PlotDescriptor(
                 style={"align": "left", "padding-top": 5},
                 size_policy=QSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed),
             ):
-                if plot.x_ticker != "":
+                if plot.x_ticker != "" and isinstance(plot_data, Received):
                     with ed.HBoxView(
                         style={"padding-right": 10, "align": "left"},
                     ):
@@ -165,37 +164,22 @@ def PlotDescriptor(
                             )
 
 
-async def fetch_subprocess(
-    request_queue: Queue[str],
-    response_callback: tp.Callable[[str, Failed | Received], None],
-) -> None:
-    """
-    Synchronous subprocess function to fetch data from Yahoo Finance.
-    It is async def because we will pass it to run_subprocess_with_callback.
-    The whole point of this subprocess is that we can make an async call
-    to the blocking function .history() in the yfinance API without blocking
-    the GUI.
-    """
-    while True:
-        ticker = request_queue.get()
-        try:
-            response_callback(ticker, Received(yf.Ticker(ticker).history("1y")))
-        except Exception as e:  # noqa: BLE001
-            response_callback(ticker, Failed(e))
+def fetch_from_yahoo(ticker: str) -> pd.DataFrame:
+    return yf.Ticker(ticker).history("1y")
 
 
 # Finally, we create a component that contains the plot descriptions
 # and the actual Matplotlib figure.
 @ed.component
 def App(self, plot_colors: list[str]):
-    next_i, next_i_set = ed.use_state(1)
+    next_key, next_key_set = ed.use_state(1)
 
-    def initializer() -> OrderedDict[int, PlotParams]:
+    def one_plot_aapl() -> OrderedDict[int, PlotParams]:
         return OrderedDict([(0, PlotParams("AAPL", "Close", "None", 30, plot_colors[0]))])
 
     # The plots are enter by the user in the UI.
     plots: OrderedDict[int, PlotParams]
-    plots, plots_set = ed.use_state(initializer)
+    plots, plots_set = ed.use_state(one_plot_aapl)
 
     # The plot_data is what we fetch from Yahoo Finance.
     plot_data: dict[str, Received | Failed]
@@ -208,8 +192,8 @@ def App(self, plot_colors: list[str]):
         """
         if len(plots) == 0 or list(plots.values())[-1].x_ticker != "":
             plots_ = plots.copy()
-            plots_.update({next_i: PlotParams("", "Close", "None", 30, plot_colors[next_i % len(plot_colors)])})
-            next_i_set(lambda j: j + 1)
+            plots_.update({next_key: PlotParams("", "Close", "None", 30, plot_colors[next_key % len(plot_colors)])})
+            next_key_set(lambda j: j + 1)
             plots_set(plots_)
         elif len(plots) > 1 and list(plots.values())[-2].x_ticker == "":
             # Else if the last two plots are blank then remove the last one.
@@ -225,51 +209,48 @@ def App(self, plot_colors: list[str]):
         plots_.update([(key, plot_setter(p))])
         plots_set(plots_)
 
-    ticker_queue: Queue[str] = ed.use_memo(lambda: multiprocessing.get_context("spawn").Queue())
-
-    def receive_data(ticker: str, data: Failed | Received):
-        match data:
-            case Failed():
-                plot_data_set(lambda pltd: pltd | {ticker: data})
-            case Received(dataframe):
-                if dataframe.empty:
-                    plot_data_set(lambda pltd: pltd | {ticker: Failed(Exception("No data"))})
-                else:
-                    plot_data_set(lambda pltd: pltd | {ticker: data})
-
-    async def wrap_fetch_subprocess() -> None:
-        await ed.run_subprocess_with_callback(
-            partial(fetch_subprocess, ticker_queue),
-            receive_data,
-        )
-
-    ed.use_async(
-        # The fetch_subprocess will run forever while this component is mounted.
-        wrap_fetch_subprocess,
-        # Why do we need wrap_fetch_subprocess? Is that a problem with the API?
-        # Why can't we do here:
-        #
-        # > ed.run_subprocess_with_callback(
-        # >     partial(fetch_subprocess, ticker_queue),
-        # >     receive_data,
-        # > )
-    )
-
     tickers_needed: list[str] = [
         plot.x_ticker for plot in plots.values() if plot.x_ticker != "" and plot.x_ticker not in plot_data.keys()
     ]
 
-    def check_fetch_data():
-        if len(tickers_needed) > 0:
-            # If we need some ticker data and we don't have it yet, then
-            # fetch the first one that we need.
-            ticker_queue.put(tickers_needed[0])
+    tickers_requested, tickers_requested_set = ed.use_state(tp.cast(list[str], []))
 
-    # Call fetch_data whenever the first in the list of tickers needed changes
-    ed.use_effect(check_fetch_data, tickers_needed[0:1])
+    fetch_executor = ed.use_memo(ProcessPoolExecutor)
+
+    fetch_tasks, fetch_tasks_set = ed.use_state(tp.cast(list[asyncio.Task[None]], []))
+
+    async def check_fetch_data():
+        # If we need some ticker data and we don't have it yet, then
+        # fetch it.
+        for ticker in [t for t in tickers_needed if t not in tickers_requested]:
+            tickers_requested_set(lambda tr_old, ticker=ticker: [*tr_old, ticker])
+            try:
+                data = await asyncio.get_event_loop().run_in_executor(fetch_executor, fetch_from_yahoo, ticker)
+                if data.empty:
+                    plot_data_set(lambda pltd, ticker=ticker: pltd | {ticker: Failed(Exception("No data"))})
+                else:
+                    plot_data_set(lambda pltd, ticker=ticker, data=data: pltd | {ticker: Received(data)})
+            except Exception as e:  # noqa: BLE001
+                plot_data_set(lambda pltd, ticker=ticker, e=e: pltd | {ticker: Failed(e)})
+
+    def check_fetch_data_start():
+        # We don't do
+        #
+        #     use_async(check_fetch_data, tickers_needed)
+        #
+        # because we don't want check_fetch_data to
+        # be cancelled if it is called again before the last call finishes.
+
+        # first reap the finished tasks
+        done_tasks = [t for t in fetch_tasks if t.done()]
+        fetch_tasks_set(lambda ft: [t for t in ft if not t not in done_tasks])
+        # then start a new task
+        t = asyncio.get_event_loop().create_task(check_fetch_data())
+        fetch_tasks_set(lambda ft: [*ft, t])
+
+    ed.use_effect(check_fetch_data_start, tickers_needed)
 
     # The Plotting function called by the MatplotlibFigure component.
-    # The plotting function is passed a Matplotlib axis object.
     def plot_figure(ax: Axes):
         for plot in plots.values():
             plot_datum = plot_data.get(plot.x_ticker, None)
@@ -283,6 +264,7 @@ def App(self, plot_colors: list[str]):
                 else:
                     ax.plot(plot_datum.dataframe.index, plot_datum.dataframe[plot.y_label], color=plot.color)
 
+    # render the UI
     with ed.VBoxView(style={"align": "top"}):
         with ed.VBoxView(style={"padding": 10}):
             with ed.FlowView():
