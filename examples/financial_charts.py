@@ -244,8 +244,7 @@ def App(self, plot_colors: list[str], plot_color_background: str):
         # be cancelled if it is called again before the last call finishes.
 
         # first reap the finished tasks
-        done_tasks = [t for t in fetch_tasks if t.done()]
-        fetch_tasks_set(lambda ft: [t for t in ft if not t not in done_tasks])
+        fetch_tasks_set(lambda ft: [t for t in ft if not t.done()])
         # then start a new task
         t = asyncio.get_event_loop().create_task(check_fetch_data())
         fetch_tasks_set(lambda ft: [*ft, t])
@@ -337,7 +336,6 @@ def Main(self):
                 "plum",
                 "ivory",
             ]
-            plt.style.use("dark_background")
         return plot_colors, plot_color_background
 
     plot_colors, plot_color_background = ed.use_memo(initializer)
