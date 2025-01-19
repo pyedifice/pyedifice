@@ -12,7 +12,6 @@ from collections import OrderedDict
 from concurrent.futures import ProcessPoolExecutor
 from dataclasses import dataclass, replace
 
-import matplotlib.pyplot as plt
 import yfinance as yf
 
 import edifice as ed
@@ -23,7 +22,6 @@ import pyqtgraph as pg  # important: import pyqtgraph after edifice
 
 if tp.TYPE_CHECKING:
     import pandas as pd
-    from matplotlib.axes import Axes
 
 if QT_VERSION == "PyQt6" and not tp.TYPE_CHECKING:
     from PyQt6.QtCore import Qt
