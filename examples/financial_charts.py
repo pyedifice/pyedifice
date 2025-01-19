@@ -19,7 +19,7 @@ import edifice as ed
 from edifice.extra.pyqtgraph_plot import PyQtPlot
 from edifice.qt import QT_VERSION
 
-import pyqtgraph as pg # important: import pyqtgraph after edifice
+import pyqtgraph as pg  # important: import pyqtgraph after edifice
 
 if tp.TYPE_CHECKING:
     import pandas as pd
@@ -261,16 +261,18 @@ def App(self, plot_colors: list[str], plot_color_background: str):
 
         plot_widget: pg.PlotWidget
         plot_widget = tp.cast(pg.PlotWidget, plot_item.getViewWidget())
-        plot_widget.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents) # type: ignore  # noqa: PGH003
+        plot_widget.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)  # type: ignore  # noqa: PGH003
 
         plot_item.setAxisItems(axisItems={"bottom": pg.DateAxisItem()})
 
         for plot in plots.values():
             match plot_data.get(plot.x_ticker, None):
                 case Received(dataframe):
-                    ys = (dataframe[plot.y_label].ewm(halflife=plot.y_transform_param).mean()
-                        if plot.y_transform == "EMA" else
-                        dataframe[plot.y_label])
+                    ys = (
+                        dataframe[plot.y_label].ewm(halflife=plot.y_transform_param).mean()
+                        if plot.y_transform == "EMA"
+                        else dataframe[plot.y_label]
+                    )
                     plot_item.plot(
                         # https://stackoverflow.com/questions/11865458/how-to-get-unix-timestamp-from-numpy-datetime64/45968949#45968949
                         x=[x.astype("datetime64[s]").astype("int") for x in dataframe.index.values],  # noqa: PD011
