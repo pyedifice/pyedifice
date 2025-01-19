@@ -4,7 +4,7 @@
 # python examples/financial_charts.py
 #
 
-from __future__ import annotations
+from __future__ import annotations  # noqa: I001
 
 import asyncio
 import typing as tp
@@ -16,8 +16,10 @@ import matplotlib.pyplot as plt
 import yfinance as yf
 
 import edifice as ed
-from edifice.extra.matplotlib_figure import MatplotlibFigure
+from edifice.extra.pyqtgraph_plot import PyQtPlot
 from edifice.qt import QT_VERSION
+
+import pyqtgraph as pg # important: import pyqtgraph after edifice
 
 if tp.TYPE_CHECKING:
     import pandas as pd
@@ -25,9 +27,11 @@ if tp.TYPE_CHECKING:
 
 if QT_VERSION == "PyQt6" and not tp.TYPE_CHECKING:
     from PyQt6.QtCore import Qt
+    from PyQt6.QtGui import QColor, QPen
     from PyQt6.QtWidgets import QApplication, QSizePolicy
 else:
     from PySide6.QtCore import Qt
+    from PySide6.QtGui import QColor, QPen
     from PySide6.QtWidgets import QApplication, QSizePolicy
 
 
@@ -171,7 +175,7 @@ def fetch_from_yahoo(ticker: str) -> pd.DataFrame:
 # Finally, we create a component that contains the plot descriptions
 # and the actual Matplotlib figure.
 @ed.component
-def App(self, plot_colors: list[str]):
+def App(self, plot_colors: list[str], plot_color_background: str):
     next_key, next_key_set = ed.use_state(1)
 
     def one_plot_aapl() -> OrderedDict[int, PlotParams]:
@@ -250,19 +254,29 @@ def App(self, plot_colors: list[str]):
 
     ed.use_effect(check_fetch_data_start, tickers_needed)
 
-    # The Plotting function called by the MatplotlibFigure component.
-    def plot_figure(ax: Axes):
+    def plot_fun(plot_item: pg.PlotItem):
+        """
+        The plotting function called by the PyQtPlot component.
+        """
+
+        plot_widget: pg.PlotWidget
+        plot_widget = tp.cast(pg.PlotWidget, plot_item.getViewWidget())
+        plot_widget.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents) # type: ignore  # noqa: PGH003
+
+        plot_item.setAxisItems(axisItems={"bottom": pg.DateAxisItem()})
+
         for plot in plots.values():
-            plot_datum = plot_data.get(plot.x_ticker, None)
-            if isinstance(plot_datum, Received):
-                if plot.y_transform == "EMA":
-                    ax.plot(
-                        plot_datum.dataframe.index,
-                        plot_datum.dataframe[plot.y_label].ewm(halflife=plot.y_transform_param).mean(),
-                        color=plot.color,
+            match plot_data.get(plot.x_ticker, None):
+                case Received(dataframe):
+                    ys = (dataframe[plot.y_label].ewm(halflife=plot.y_transform_param).mean()
+                        if plot.y_transform == "EMA" else
+                        dataframe[plot.y_label])
+                    plot_item.plot(
+                        # https://stackoverflow.com/questions/11865458/how-to-get-unix-timestamp-from-numpy-datetime64/45968949#45968949
+                        x=[x.astype("datetime64[s]").astype("int") for x in dataframe.index.values],  # noqa: PD011
+                        y=ys.values,
+                        pen=pg.mkPen(QColor(plot.color), width=2),
                     )
-                else:
-                    ax.plot(plot_datum.dataframe.index, plot_datum.dataframe[plot.y_label], color=plot.color)
 
     # render the UI
     with ed.VBoxView(style={"align": "top"}):
@@ -271,8 +285,21 @@ def App(self, plot_colors: list[str]):
                 for key, plot in plots.items():
                     PlotDescriptor(key, plot, plot_data.get(plot.x_ticker, None), plot_colors, plot_change)
 
-        with ed.VBoxView(style={"height": 500, "margin-top": 10}):
-            MatplotlibFigure(plot_figure)
+        with ed.VBoxView(
+            style={
+                "height": 500,
+                "background-color": plot_color_background,
+                "padding-top": 20,
+                "padding-bottom": 20,
+                "padding-left": 10,
+                "padding-right": 10,
+            },
+            size_policy=QSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed),
+        ):
+            PyQtPlot(
+                plot_fun=plot_fun,
+                focus_policy=Qt.FocusPolicy.ClickFocus,
+            )
 
 
 @ed.component
@@ -280,7 +307,11 @@ def Main(self):
     def initializer():
         qapp = tp.cast(QApplication, QApplication.instance())
         qapp.setApplicationName("Financial Charts")
+        pg.setConfigOption("antialias", True)
         if ed.theme_is_light():
+            plot_color_background = "white"
+            pg.setConfigOption("foreground", "grey")
+            pg.setConfigOption("background", "white")
             qapp.setPalette(ed.palette_edifice_light())
             plot_colors = [
                 # https://matplotlib.org/stable/gallery/color/named_colors.html#css-colors
@@ -294,6 +325,9 @@ def Main(self):
             ]
         else:
             qapp.setPalette(ed.palette_edifice_dark())
+            plot_color_background = "black"
+            pg.setConfigOption("foreground", "grey")
+            pg.setConfigOption("background", "black")
             plot_colors = [
                 "coral",
                 "peachpuff",
@@ -304,12 +338,12 @@ def Main(self):
                 "ivory",
             ]
             plt.style.use("dark_background")
-        return plot_colors
+        return plot_colors, plot_color_background
 
-    plot_colors = ed.use_memo(initializer)
+    plot_colors, plot_color_background = ed.use_memo(initializer)
 
     with ed.Window(title="Financial Charts", _size_open=(1024, 768)):
-        App(plot_colors)
+        App(plot_colors, plot_color_background)
 
 
 # Finally to start the the app, we pass the Element to the edifice.App object

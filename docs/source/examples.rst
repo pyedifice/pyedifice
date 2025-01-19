@@ -11,7 +11,7 @@ in 100 lines of code (most of which is implementing the calculator state machine
 
 The code is available at `calculator.py <https://github.com/pyedifice/pyedifice/tree/master/examples/calculator.py>`_.
 
-.. image:: /image/example_calculator.png
+.. figure:: /image/example_calculator.png
    :width: 300
 
 .. code-block:: shell
@@ -37,7 +37,7 @@ which fetches stock data from `Yahoo Finance <https://pypi.org/project/yfinance/
 
 The code is available at `financial_charts.py <https://github.com/pyedifice/pyedifice/tree/master/examples/financial_charts.py>`_.
 
-.. figure:: /image/example_financial_charting3.png
+.. figure:: /image/example_financial_charting4.png
    :width: 600
 
 .. code-block:: shell

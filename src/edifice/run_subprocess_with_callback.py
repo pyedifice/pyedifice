@@ -97,7 +97,7 @@ def _run_subprocess(
     return subloop.run_until_complete(work())
     # https://docs.python.org/3/library/multiprocessing.html#multiprocessing.Queue.join_thread
     # > “By default if a process is not the creator of the queue then on
-    # > exit it will attempt to join the queue’s background thread.”
+    # > exit it will attempt to join the queue's background thread.”
     #
     # https://docs.python.org/3/library/multiprocessing.html#pipes-and-queues
     # > “if a child process has put items on a queue (and it has not used
