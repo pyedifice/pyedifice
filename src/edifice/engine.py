@@ -1587,7 +1587,7 @@ class _HookAsync:
     """
     The currently executing async effect task.
     """
-    queue: list[tp.Callable[[], Coroutine[None, None, None]]]
+    queue: list[Coroutine[None, None, None]]
     """
     The queue of waiting async effect tasks. Max length 1.
     """
@@ -2207,7 +2207,7 @@ class RenderEngine:
     def use_async(
         self,
         element: Element,
-        fn_coroutine: tp.Callable[[], Coroutine[None, None, None]],
+        fn_coroutine: Coroutine[None, None, None],
         dependencies: tp.Any,
     ) -> Callable[[], None]:
         hooks = self._hook_async[element]
@@ -2223,7 +2223,7 @@ class RenderEngine:
 
         if len(hooks) <= h_index:
             # then this is the first render.
-            task = asyncio.create_task(fn_coroutine())
+            task = asyncio.create_task(fn_coroutine)
             hook = _HookAsync(
                 task=task,
                 dependencies=dependencies,
@@ -2231,20 +2231,22 @@ class RenderEngine:
             )
             hooks.append(hook)
 
-            def done_callback(_future_object):
+            def done_callback(_task:asyncio.Task[tp.Any]):
                 if hook.task is not None:
                     # If there is an exception, retrieve the exception and throw it away.
                     # Otherwise asyncio complains
                     # “Task exception was never retrieved”
                     try:
                         # https://docs.python.org/3/library/asyncio-task.html#asyncio.Task.result
-                        _ = hook.task.result()
+                        # _ = hook.task.result()
+                        _r = _task.result()
+                        print("Done")
                     except:  # noqa: S110, E722
                         pass
                     hook.task = None
                 if len(hook.queue) > 0:
                     # There is another async task waiting in the queue
-                    hook.task = asyncio.create_task(hook.queue.pop(0)())
+                    hook.task = asyncio.create_task(hook.queue.pop(0))
                     hook.task.add_done_callback(done_callback)
 
             task.add_done_callback(done_callback)
@@ -2269,9 +2271,10 @@ class RenderEngine:
                 hook.task.cancel()
 
             else:
-                hook.task = asyncio.create_task(fn_coroutine())
+                hook.task = asyncio.create_task(fn_coroutine)
 
-                def done_callback(_future_object):
+                def done_callback(_task:asyncio.Task[tp.Any]):
+                # def done_callback(_future_object):
                     if hook.task is not None:
                         # If there is an exception, retrieve the exception and throw it away.
                         # Otherwise asyncio complains
@@ -2284,7 +2287,7 @@ class RenderEngine:
                         hook.task = None
                     if len(hook.queue) > 0:
                         # There is another async task waiting in the queue
-                        hook.task = asyncio.create_task(hook.queue.pop(0)())
+                        hook.task = asyncio.create_task(hook.queue.pop(0))
                         hook.task.add_done_callback(done_callback)
 
                 hook.task.add_done_callback(done_callback)

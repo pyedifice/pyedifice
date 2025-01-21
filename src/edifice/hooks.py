@@ -299,7 +299,7 @@ def use_effect(
 
 
 def use_async(
-    fn_coroutine: Callable[[], Coroutine[None, None, None]],
+    fn_coroutine: Coroutine[None, None, None],
     dependencies: Any = (),
 ) -> Callable[[], None]:
     """

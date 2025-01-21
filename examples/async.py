@@ -9,6 +9,7 @@ from typing import cast
 
 import edifice as ed
 
+
 def use_clocktick() -> int:
     tick, tick_set = ed.use_state(0)
 
@@ -17,7 +18,7 @@ def use_clocktick() -> int:
             await asyncio.sleep(1)
             tick_set(lambda t: t + 1)
 
-    ed.use_async(increment)
+    ed.use_async(increment())
 
     return tick
 
@@ -37,15 +38,15 @@ def ComponentWithAsync(self):
     x, set_x = ed.use_state("async incomplete")
 
     async def set_label():
-        print("async start")
+        print("async start")  # noqa: T201
         try:
             await asyncio.sleep(1)
-            print("async complete")
+            print("async complete")  # noqa: T201
             set_x("async complete")
-        except asyncio.CancelledError as ex:
-            print("async cancelled")
+        except asyncio.CancelledError:
+            print("async cancelled")  # noqa: T201
             set_x("async cancelled")
-            raise ex
+            raise
 
     ed.use_async(set_label, ())
 
@@ -145,9 +146,9 @@ def Main(self):
                 set_k(k_updater_progress(i * 10, "Running"))
             await asyncio.sleep(0.1)
             set_k(k_updater_progress(100, "Finished"))
-        except asyncio.CancelledError as e:
+        except asyncio.CancelledError:
             set_k(k_updater_cancel())
-            raise e
+            raise
 
     start_k, cancel_k = ed.use_async_call(start_k_async)
 
