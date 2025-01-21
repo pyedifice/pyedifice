@@ -102,8 +102,6 @@ class RadioButton(QtWidgetElement[EdRadioButton]):
 
     def _initialize(self):
         self.underlying = EdRadioButton(str(self.props.text))
-        size = self.underlying.font().pointSize()
-        self._set_size(size * len(self.props.text), size)
         self.underlying.setObjectName(str(id(self)))
         # We setAutoExclusive(False) because we don't want to use the Qt
         # radio button group mechanism. We handle the exclusivity.

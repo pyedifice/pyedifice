@@ -281,15 +281,15 @@ class _RenderContext:
     """
 
     __slots__ = (
-        "need_qt_command_reissue",
+        "_callback_queue",
         "component_to_old_props",
         "component_tree",
-        "widget_tree",
-        "enqueued_deletions",
-        "trackers",
-        "_callback_queue",
-        "engine",
         "current_element",
+        "engine",
+        "enqueued_deletions",
+        "need_qt_command_reissue",
+        "trackers",
+        "widget_tree",
     )
     trackers: list[_Tracker]
     """Stack of _Tracker"""
@@ -937,11 +937,8 @@ class QtWidgetElement(Element, tp.Generic[_T_widget]):
                 "on_resize": on_resize,
             },
         )
-        self._height = 0
-        self._width = 0
         self._top = 0
         self._left = 0
-        self._size_from_font = None  # TODO _size_from_font is unused
         self._on_click = None
         self._on_key_down = None
         self._default_on_key_down = None
@@ -983,35 +980,6 @@ class QtWidgetElement(Element, tp.Generic[_T_widget]):
         """
         self._mouse_pressed = False
         self._focus_open_needed = _focus_open
-
-    def _set_size(self, width, height, size_from_font=None):
-        self._height = height
-        self._width = width
-        self._size_from_font = size_from_font
-
-    def _get_width(self, children):
-        # TODO this function is unreferenced
-        if self._width:
-            return self._width
-        layout = self.props._get("layout", "none")
-        if layout == "row":
-            return sum(max(0, child.component._width + child.component._left) for child in children)
-        try:
-            return max(max(0, child.component._width + child.component._left) for child in children)
-        except ValueError:
-            return 0
-
-    def _get_height(self, children):
-        # TODO this function is unreferenced
-        if self._height:
-            return self._height
-        layout = self.props._get("layout", "none")
-        if layout == "column":
-            return sum(max(0, child.component._height + child.component._top) for child in children)
-        try:
-            return max(max(0, child.component._height + child.component._top) for child in children)
-        except ValueError:
-            return 0
 
     def _mouse_press(self, event: QtGui.QMouseEvent) -> None:
         if self._on_mouse_down is not None:
@@ -1060,7 +1028,7 @@ class QtWidgetElement(Element, tp.Generic[_T_widget]):
     def _set_mouse_wheel(self, underlying: QtWidgets.QWidget, on_mouse_wheel):
         # https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.wheelEvent
         # “If you reimplement this handler, it is very important that
-        # you ignore() the event if you do not handle it, so that the widget’s
+        # you ignore() the event if you do not handle it, so that the widget's
         # parent can interpret it.”
         if self._default_mouse_wheel_event is None:
             self._default_mouse_wheel_event = underlying.wheelEvent
@@ -1328,29 +1296,19 @@ class QtWidgetElement(Element, tp.Generic[_T_widget]):
 
         if "font-size" in cpstyle:
             font_size = _css_to_number(cpstyle["font-size"])
-            if self._size_from_font is not None:
-                size = self._size_from_font(font_size)
-                self._width = size[0]
-                self._height = size[1]
             if not isinstance(cpstyle["font-size"], str):
-                cpstyle["font-size"] = "%dpx" % font_size
+                cpstyle["font-size"] = f"{font_size}px"
         if "width" in cpstyle:
             if "min-width" not in cpstyle:
                 cpstyle["min-width"] = cpstyle["width"]
             if "max-width" not in cpstyle:
                 cpstyle["max-width"] = cpstyle["width"]
-        # else:
-        #     if "min-width" not in cpstyle:
-        #         cpstyle["min-width"] = self._get_width(children)
 
         if "height" in cpstyle:
             if "min-height" not in cpstyle:
                 cpstyle["min-height"] = cpstyle["height"]
             if "max-height" not in cpstyle:
                 cpstyle["max-height"] = cpstyle["height"]
-        # else:
-        #     if "min-height" not in cpstyle:
-        #         cpstyle["min-height"] = self._get_height(children)
 
         set_move = False
         move_coords = [0, 0]
@@ -1542,7 +1500,7 @@ class _WidgetTree:
     A QtWidgetElement and its QtWidgetElement children.
     """
 
-    __slots__ = ("component", "children")
+    __slots__ = ("children", "component")
 
     def __init__(self, component: QtWidgetElement, children: list[QtWidgetElement]):
         self.component: QtWidgetElement = component
@@ -1657,14 +1615,14 @@ class RenderEngine:
     """
 
     __slots__ = (
-        "_component_tree",
-        "_widget_tree",
-        "_root",
         "_app",
+        "_component_tree",
+        "_hook_async",
+        "_hook_effect",
         "_hook_state",
         "_hook_state_setted",
-        "_hook_effect",
-        "_hook_async",
+        "_root",
+        "_widget_tree",
         "is_stopped",
     )
 

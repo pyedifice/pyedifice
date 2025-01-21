@@ -202,7 +202,6 @@ class Icon(QtWidgetElement[QtWidgets.QLabel]):
         if self.underlying is None:
             self._initialize()
 
-        self._set_size(self.props.size, self.props.size)
         assert self.underlying is not None
         commands = super()._qt_update_commands_super(widget_trees, newprops, self.underlying)
         icon_path = str(ICONS / self.props.collection / self.props.sub_collection / (self.props.name + ".svg"))
@@ -270,9 +269,6 @@ class Button(QtWidgetElement[QtWidgets.QPushButton]):
         if self.underlying is None:
             self._initialize()
         assert self.underlying is not None
-        # TODO _set_size doesn't work
-        # > size = self.underlying.font().pointSize()
-        # > self._set_size(size * len(self.props.title), size, lambda size: (size * len(self.props.title), size))
         commands = super()._qt_update_commands_super(widget_trees, newprops, self.underlying)
         for prop in newprops:
             if prop == "title":
@@ -353,12 +349,6 @@ class IconButton(Button):
         icon_path = str(ICONS / self.props.collection / self.props.sub_collection / (self.props.name + ".svg"))
 
         assert self.underlying is not None
-        size = self.underlying.font().pointSize()
-        self._set_size(
-            self.props.size + 3 + size * len(self.props.title),
-            size,
-            lambda size: (self.props.size + 3 + size * len(self.props.title), size),
-        )
 
         def render_image(icon_path, size, color, rotation):
             pixmap = _get_svg_image(icon_path, size, color=color, rotation=rotation)
@@ -436,7 +426,6 @@ class IconButton(Button):
 # >     widget = use_underlying(self, lambda: QtWidgets.QLabel(text))
 # >     widget.setObjectName(str(id(self)))
 # >     size = widget.font().pointSize()
-# >     self._set_size(size * len(text), size, lambda size: (size * len(str(text)), size))
 #
 # >     # TODO
 # >     # If you want the QLabel to fit the text then you must use adjustSize()
@@ -556,11 +545,6 @@ class Label(QtWidgetElement[QtWidgets.QLabel]):
         if self.underlying is None:
             self._initialize()
         assert self.underlying is not None
-
-        # TODO None of this code is working.
-        # > size = self.underlying.font().pointSize()
-        # > self._set_size(size * len(self.props.text), size, lambda size: (size * len(str(self.props.text)), size))
-        # https://github.com/pyedifice/pyedifice/issues/41
 
         commands = super()._qt_update_commands_super(widget_trees, newprops, self.underlying, None)
         if "text" in newprops:
@@ -729,8 +713,6 @@ class TextInput(QtWidgetElement[QtWidgets.QLineEdit]):
 
     def _initialize(self):
         self.underlying = QtWidgets.QLineEdit()
-        size = self.underlying.font().pointSize()
-        self._set_size(size * len(self.props.text), size)
         self.underlying.setObjectName(str(id(self)))
         self.underlying.textEdited.connect(self._on_change_handler)
         self.underlying.editingFinished.connect(self._on_edit_finish)
@@ -1043,12 +1025,6 @@ class Slider(QtWidgetElement[QtWidgets.QSlider]):
 
     def _initialize(self, orientation):
         self.underlying = QtWidgets.QSlider(orientation)
-
-        # TODO: figure out what's the right default height and width
-        # > if self.orientation == QtCore.Qt.Horizontal:
-        # >     self._set_size(size * len(self.props.text), size)
-        # > else:
-        # >     self._set_size(size * len(self.props.text), size)
 
         self.underlying.setObjectName(str(id(self)))
         self.underlying.valueChanged.connect(self._on_change_handle)

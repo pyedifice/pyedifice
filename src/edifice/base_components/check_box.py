@@ -93,8 +93,6 @@ class CheckBox(QtWidgetElement[EdCheckBox]):
 
     def _initialize(self):
         self.underlying = EdCheckBox(str(self.props.text))
-        size = self.underlying.font().pointSize()
-        self._set_size(size * len(self.props.text), size)
         self.underlying.setObjectName(str(id(self)))
         self.underlying.clicked.connect(self._on_clicked)
 
