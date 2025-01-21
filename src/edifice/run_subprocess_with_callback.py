@@ -111,7 +111,7 @@ async def run_subprocess_with_callback(
 ) -> _T_subprocess:
     """
     Run an
-    async :code:`subprocess` in a
+    :code:`async def subprocess` function in a
     `Process <https://docs.python.org/3/library/multiprocessing.html#multiprocessing.Process>`_
     and return the result.
 
@@ -173,7 +173,7 @@ async def run_subprocess_with_callback(
         :caption: Example
 
         async def my_subprocess(callback: Callable[[int], None]) -> str:
-            # This function will run in a subprocess in a new event loop.
+            # This function will run in a new Process in a new event loop.
             callback(1)
             await asyncio.sleep(1)
             callback(2)
@@ -222,7 +222,7 @@ async def run_subprocess_with_callback(
         :caption: Example of Queue messaging from the main process to the subprocess
 
         async def my_subprocess(
-            # This function will run in a subprocess in a new event loop.
+            # This function will run in a new Process in a new event loop.
             msg_queue: multiprocessing.queues.Queue[str],
             callback: typing.Callable[[int], None],
         ) -> str:

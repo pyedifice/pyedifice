@@ -14,7 +14,7 @@ from edifice.qt import QT_VERSION
 if QT_VERSION == "PyQt6" and not tp.TYPE_CHECKING:
     from PyQt6 import QtGui
 else:
-    from PySide6 import QtGui  # noqa: TCH002
+    from PySide6 import QtGui  # noqa: TC002
 
 
 def use_state(
@@ -299,7 +299,7 @@ def use_effect(
 
 
 def use_async(
-    fn_coroutine: Callable[[], Coroutine[None, None, None]],
+    fn_coroutine: tp.Callable[[], Coroutine[None, None, None]],
     dependencies: Any = (),
 ) -> Callable[[], None]:
     """
@@ -307,7 +307,7 @@ def use_async(
 
     Args:
         fn_coroutine:
-            Async Coroutine function to be run as a Task.
+            Function of no arguments which returns an async Coroutine to be run as a Task.
         dependencies:
             The :code:`fn_coroutine` Task will be started when the
             :code:`dependencies` are not :code:`__eq__` to the old :code:`dependencies`.
@@ -338,7 +338,7 @@ def use_async(
                 except asyncio.CancelledError:
                     definition_set("Fetch definition cancelled")
                     raise
-                except BaseException:
+                except Exception:
                     defintion_set("Fetch definition failed")
 
             cancel_fetcher = use_async(fetcher, word)
@@ -383,7 +383,10 @@ def use_async(
     The :code:`use_async` Hook is useful for timers and animation.
 
     Here is an example which shows how to run a timer in a component. The
-    Harmonic Oscillator in :doc:`../examples` uses this technique::
+    Harmonic Oscillator in :doc:`../examples` uses this technique.
+
+    .. code-block:: python
+        :caption: use_async to run a stoppable-startable timer
 
         is_playing, is_playing_set = use_state(False)
         play_trigger, play_trigger_set = use_state(False)
@@ -403,6 +406,44 @@ def use_async(
             text="pause" if is_playing else "play",
             on_click=lambda e: is_playing_set(lambda p: not p),
         )
+
+    Worker Process
+    ==============
+
+    We can run an
+    :code:`async def my_subprocess` function in a worker
+    `Process <https://docs.python.org/3/library/multiprocessing.html#multiprocessing.Process>`_
+    by using :func:`run_subprocess_with_callback<edifice.utilities.run_subprocess_with_callback>`.
+
+    :func:`run_subprocess_with_callback<edifice.utilities.run_subprocess_with_callback>`
+    is good for spawing a parallel worker Process from a :func:`@component<edifice.component>`
+    because if the :func:`@component<edifice.component>` is unmounted, then
+    :func:`run_subprocess_with_callback<edifice.utilities.run_subprocess_with_callback>`
+    be cancelled and the Process will be immediately terminated.
+    Which is usually what we want.
+
+    .. code-block:: python
+        :caption: use_async with run_subprocess_with_callback
+
+        async def my_subprocess(callback: Callable[[str], None]) -> None:
+            # This function will run in a new Process in a new event loop.
+            callback("Starting long calculation")
+            await asyncio.sleep(100.0)
+            x = 1 + 2
+            callback(f"Finished long calculation with result: {x}"))
+
+        @component
+        def Calculator(self):
+            calculation_progress, calculation_progress_set = ed.use_state("")
+
+            def my_callback(progress: str) -> None:
+                # This function will run in the main process event loop.
+                calculation_progress_set(progress)  # noqa: RUF005
+
+            ed.use_async(lambda:run_subprocess_with_callback(my_subprocess, my_callback))
+
+            Label(text=calculation_progress)
+
     """
     context = get_render_context_maybe()
     if context is None or context.current_element is None:
@@ -849,7 +890,7 @@ def provide_context(
     context_key: str,
     initial_state: _T_provide_context | Callable[[], _T_provide_context],
 ) -> tuple[
-    _T_provide_context, Callable[[_T_provide_context | Callable[[_T_provide_context], _T_provide_context]], None]
+    _T_provide_context, Callable[[_T_provide_context | Callable[[_T_provide_context], _T_provide_context]], None],
 ]:
     """
     Context state provider Hook for *prop drilling*.
