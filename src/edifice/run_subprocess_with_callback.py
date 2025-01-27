@@ -108,6 +108,7 @@ def _run_subprocess(
 async def run_subprocess_with_callback(
     subprocess: typing.Callable[[typing.Callable[_P_callback, None]], typing.Awaitable[_T_subprocess]],
     callback: typing.Callable[_P_callback, None],
+    daemon: bool | None = None,
 ) -> _T_subprocess:
     """
     Run an
@@ -134,6 +135,11 @@ async def run_subprocess_with_callback(
             The :code:`callback` function to pass to the :code:`subprocess` when it starts.
             This function will run in the main process event loop.
             All of the arguments to the :code:`callback` function must be picklable.
+        daemon:
+            Optional argument which will be passed to the Process
+            `daemon <https://docs.python.org/3/library/multiprocessing.html#multiprocessing.Process.daemon>`_
+            argument.
+
 
     The :code:`subprocess` will be started when :func:`run_subprocess_with_callback`
     is entered, and the :code:`subprocess` is guaranteed to be terminated when
@@ -164,10 +170,6 @@ async def run_subprocess_with_callback(
     to the Exception `__notes__ <https://docs.python.org/3/library/exceptions.html#BaseException.__notes__>`_.
 
     Exceptions raised in the :code:`callback` will be suppressed.
-
-    The :code:`subprocess` is started as a
-    `daemon <https://docs.python.org/3/library/multiprocessing.html#multiprocessing.Process.daemon>`_
-    so it will be terminated if it is still running when the main process exits.
 
     .. code-block:: python
         :caption: Example
@@ -277,7 +279,7 @@ async def run_subprocess_with_callback(
         group=None,
         target=_run_subprocess,
         args=(subprocess, callback_send),
-        daemon=True,
+        daemon=daemon,
     )
     # We alternate waiting on the queue and waiting on the event loop.
     # There is no good way in Python to wait on both at the same time.
