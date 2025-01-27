@@ -7,6 +7,13 @@
 Release Notes
 =============
 
+v2.12.0
+-------
+Released: 2025-01-27
+
+- :func:`utilities.run_subprocess_with_callback` new argument :code:`daemon`.
+
+
 v2.11.4
 -------
 Released: 2025-01-19
