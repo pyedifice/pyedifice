@@ -339,9 +339,8 @@ async def run_subprocess_with_callback(
             pass
         # Can the callback_send queue raise any other kind of exception?
         if not proc.is_alive() and callback_send.empty():
-            # Is that extra empty() check necessary sufficient to avoid a race condition
-            # when the process returns normally and exits?
-            #
+            # Is that extra empty() check necessary and sufficient to avoid a
+            # race condition when the process returns normally and exits?
             # Yes, because
             # https://docs.python.org/3/library/multiprocessing.html#pipes-and-queues
             # > “if a child process has put items on a queue (and it has not used
