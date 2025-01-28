@@ -7,6 +7,10 @@
 Release Notes
 =============
 
+- If the :code:`subprocess` exits abnormally without returning a value then a
+  `ProcessError <https://docs.python.org/3/library/multiprocessing.html#multiprocessing.ProcessError>`_
+   will be raised from :func:`utilities.run_subprocess_with_callback`.
+
 v2.12.0
 -------
 Released: 2025-01-27

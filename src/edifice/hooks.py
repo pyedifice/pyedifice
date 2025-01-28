@@ -323,6 +323,9 @@ def use_async(
 
     Exceptions raised from the :code:`fn_coroutine` will be suppressed.
 
+    For general advice about :code:`async` programming in Python see
+    `Developing with asyncio <https://docs.python.org/3/library/asyncio-dev.html>`_.
+
     .. code-block:: python
         :caption: use_async to fetch from the network
 
@@ -363,7 +366,7 @@ def use_async(
        be started after the old :code:`fn_coroutine` Task completes.
     2. The :code:`use_async` Hook returns a function which can be called to
        cancel the :code:`fn_coroutine` Task manually. In the example above,
-       the :code:`_cancel_fetcher()` function can be called to cancel the fetcher.
+       the :code:`cancel_fetcher()` function can be called to cancel the fetcher.
     3. If this `@component<edifice.component>` is unmounted before the
        :code:`fn_coroutine` Task completes, then
        the :code:`fn_coroutine` Task will be cancelled.
@@ -425,22 +428,32 @@ def use_async(
     .. code-block:: python
         :caption: use_async with run_subprocess_with_callback
 
-        async def my_subprocess(callback: Callable[[str], None]) -> None:
+        async def my_subprocess(callback: Callable[[str], None]) -> int:
             # This function will run in a new Process in a new event loop.
             callback("Starting long calculation")
             await asyncio.sleep(100.0)
             x = 1 + 2
-            callback(f"Finished long calculation with result: {x}"))
+            callback(f"Finished long calculation"))
+            return x
 
         @component
-        def Calculator(self):
+        def LongCalculator(self):
             calculation_progress, calculation_progress_set = ed.use_state("")
 
             def my_callback(progress: str) -> None:
                 # This function will run in the main process event loop.
-                calculation_progress_set(progress)  # noqa: RUF005
+                calculation_progress_set(progress)
 
-            ed.use_async(lambda:run_subprocess_with_callback(my_subprocess, my_callback))
+            async def run_my_subprocess() -> None:
+                try:
+                    x = await run_subprocess_with_callback(my_subprocess, my_callback)
+                    calculation_progress_set(f"Result: {x}")
+                except asyncio.CancelledError:
+                    raise
+                except Exception as e:
+                    calculation_progress_set(f"Error: {str(e)}")
+
+            ed.use_async(run_my_subprocess)
 
             Label(text=calculation_progress)
 

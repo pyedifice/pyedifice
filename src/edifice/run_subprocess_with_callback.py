@@ -116,13 +116,6 @@ async def run_subprocess_with_callback(
     `Process <https://docs.python.org/3/library/multiprocessing.html#multiprocessing.Process>`_
     and return the result.
 
-    The advantage of :func:`run_subprocess_with_callback` is that it behaves
-    well and cleans up properly in the event of exceptions and
-    `cancellation <https://docs.python.org/3/library/asyncio-task.html#task-cancellation>`_.
-    This function is useful for a long-running parallel worker
-    subprocess for which we want to report progress back to the main GUI event loop.
-    Like *pytorch* stuff.
-
     Args:
         subprocess:
             The async function to run in a
@@ -140,36 +133,25 @@ async def run_subprocess_with_callback(
             `daemon <https://docs.python.org/3/library/multiprocessing.html#multiprocessing.Process.daemon>`_
             argument.
 
+    The advantage of :func:`run_subprocess_with_callback` over
+    `ProcessPoolExecutor <https://docs.python.org/3/library/concurrent.futures.html#concurrent.futures.ProcessPoolExecutor>`_
+    is that it behaves
+    well and cleans up properly in the event of exceptions and
+    `cancellation <https://docs.python.org/3/library/asyncio-task.html#task-cancellation>`_.
+    This function is useful for a long-running parallel worker
+    subprocess for which we want to report progress back to the main GUI event loop.
+    Like *PyTorch* stuff.
 
-    The :code:`subprocess` will be started when :func:`run_subprocess_with_callback`
+    The :code:`subprocess` will be started when :code:`await` :func:`run_subprocess_with_callback`
     is entered, and the :code:`subprocess` is guaranteed to be terminated when
-    :func:`run_subprocess_with_callback` completes.
-
-    The :code:`subprocess` will be started with the
-    `"spawn" start method <https://docs.python.org/3/library/multiprocessing.html#contexts-and-start-methods>`_,
-    so it will not inherit any file handles from the calling process.
+    :code:`await` :func:`run_subprocess_with_callback` completes.
 
     While the :code:`subprocess` is running, it may call the supplied :code:`callback` function.
     The :code:`callback` function will run in the main event loop of the calling process.
 
-    If this async :func:`run_subprocess_with_callback` function is
-    `cancelled <https://docs.python.org/3/library/asyncio-task.html#task-cancellation>`_,
-    the :code:`subprocess` will be terminated by calling
-    `Process.terminate() <https://docs.python.org/3/library/multiprocessing.html#multiprocessing.Process.terminate>`_.
-    Termination of the :code:`subprocess` will occur even if
-    the :code:`subprocess` is blocked. Note that
-    :code:`CancelledError` will not be raised in the :code:`subprocess`,
-    instead the :code:`subprocess` will be terminated immediately. If you
-    want to perform sudden cleanup and halt of the :code:`subprocess` then
-    send it a message as in the below “Example of Queue messaging.”
-
-    Exceptions raised in the :code:`subprocess` will be re-raised from :func:`run_subprocess_with_callback`.
-    Because the Exception must be pickled back to the main process, it will
-    lose its `traceback <https://docs.python.org/3/reference/datamodel.html#traceback-objects>`_.
-    In Python ≥3.11, the traceback string from the :code:`subprocess` stack will be added
-    to the Exception `__notes__ <https://docs.python.org/3/library/exceptions.html#BaseException.__notes__>`_.
-
-    Exceptions raised in the :code:`callback` will be suppressed.
+    The :code:`subprocess` will be started with the
+    `"spawn" start method <https://docs.python.org/3/library/multiprocessing.html#contexts-and-start-methods>`_,
+    so it will not inherit any file handles from the calling process.
 
     .. code-block:: python
         :caption: Example
@@ -195,6 +177,36 @@ async def run_subprocess_with_callback(
 
             print(f"my_subprocess returned {y}")
 
+    Cancellation, Exceptions, Crashes
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+    If this :code:`async` :func:`run_subprocess_with_callback` function is
+    `cancelled <https://docs.python.org/3/library/asyncio-task.html#task-cancellation>`_,
+    then the :code:`subprocess` will be terminated by calling
+    `Process.terminate() <https://docs.python.org/3/library/multiprocessing.html#multiprocessing.Process.terminate>`_.
+    Termination of the :code:`subprocess` will occur even if
+    the :code:`subprocess` is blocked. Note that
+    `CancelledError <https://docs.python.org/3/library/asyncio-exceptions.html#asyncio.CancelledError>`_
+    will not be raised in the :code:`subprocess`,
+    instead the :code:`subprocess` will be terminated immediately. If you
+    want to perform sudden cleanup and halt of the :code:`subprocess` then
+    send it a message as in the below `Example of Queue messaging.`
+
+    Exceptions raised in the :code:`subprocess` will be re-raised from :func:`run_subprocess_with_callback`.
+    Because the Exception must be pickled back to the main process, it will
+    lose its `traceback <https://docs.python.org/3/reference/datamodel.html#traceback-objects>`_.
+    In Python ≥3.11, the traceback string from the :code:`subprocess` stack will be added
+    to the Exception `__notes__ <https://docs.python.org/3/library/exceptions.html#BaseException.__notes__>`_.
+
+    Exceptions raised in the :code:`callback` will be suppressed.
+
+    If the :code:`subprocess` exits abnormally without returning a value then a
+    `ProcessError <https://docs.python.org/3/library/multiprocessing.html#multiprocessing.ProcessError>`_
+    will be raised from :func:`run_subprocess_with_callback`.
+
+    Pickling the subprocess
+    ^^^^^^^^^^^^^^^^^^^^^^^
+
     .. note::
 
         Because “only picklable objects can be executed” by a
@@ -207,6 +219,9 @@ async def run_subprocess_with_callback(
 
         The :code:`callback` does not have this problem; we can pass a local
         function as the :code:`callback`.
+
+    Messaging to the subprocess
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
     The :func:`run_subprocess_with_callback` function provides a :code:`callback`
     function for messaging back up to the main process, but it does not provide a
@@ -323,6 +338,13 @@ async def run_subprocess_with_callback(
         except queue.Empty:
             pass
         # Can the callback_send queue raise any other kind of exception?
+        if not proc.is_alive() and callback_send.empty():
+            # Is that extra empty() check necessary to avoid a race condition
+            # when the process returns normally and exits?
+            # Is that extra empty() check sufficient to avoid a race condition
+            # when the process returns normally and exits?
+            # This is a lot of extra system calls, too bad we have to poll like this.
+            raise multiprocessing.ProcessError(f"subprocess exited with code {proc.exitcode}")
         try:
             await asyncio.sleep(0.1)  # CancelledError can be raised here
         except asyncio.CancelledError:

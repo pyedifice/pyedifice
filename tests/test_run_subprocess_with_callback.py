@@ -2,10 +2,12 @@ from __future__ import annotations
 
 import asyncio
 import functools
+import os
 import multiprocessing
 import multiprocessing.connection
 import multiprocessing.queues
 import multiprocessing.synchronize
+import sys
 import typing
 import unittest
 
@@ -67,6 +69,10 @@ async def subprocess_pipe(
         callback(len(i))
     return "done"
 
+async def subprocess_exit(callback: typing.Callable[[str], None]) -> str:
+    callback("one and done")
+    os._exit(1)
+
 class IntegrationTestCase(unittest.IsolatedAsyncioTestCase):
     async def test_success(self):
         assert "done" == await run_subprocess_with_callback(subprocess_return, callback_return)
@@ -115,6 +121,15 @@ class IntegrationTestCase(unittest.IsolatedAsyncioTestCase):
             functools.partial(subprocess_closure, retval),
             callback_local,
         )
+
+    async def test_subprocess_exit(self):
+        try:
+            await run_subprocess_with_callback(subprocess_exit, lambda _: None, daemon=True)
+            assert False
+        except multiprocessing.ProcessError:
+            assert True
+        except:
+            assert False
 
     async def test_event(self) -> None:
         event: multiprocessing.synchronize.Event = multiprocessing.get_context("spawn").Event()
