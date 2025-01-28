@@ -354,31 +354,35 @@ def use_async(
     Cancellation
     ============
 
-    The async :code:`fn_coroutine` Task can be cancelled by Edifice. Edifice will call
+    Edifice will call
     `cancel() <https://docs.python.org/3/library/asyncio-task.html#asyncio.Task.cancel>`_
-    on the Task.
-    See also
-    `Task Cancellation <https://docs.python.org/3/library/asyncio-task.html#task-cancellation>`_.
+    on the async :code:`fn_coroutine`
+    `Task <https://docs.python.org/3/library/asyncio-task.html#asyncio.Task>`_
+    in three situations:
 
     1. If the :code:`dependencies` change before the :code:`fn_coroutine` Task completes, then
-       the :code:`fn_coroutine` Task will be cancelled and then the new
+       the :code:`fn_coroutine` Task will be cancelled. Then the new
        :code:`fn_coroutine` Task will
        be started after the old :code:`fn_coroutine` Task completes.
     2. The :code:`use_async` Hook returns a function which can be called to
        cancel the :code:`fn_coroutine` Task manually. In the example above,
        the :code:`cancel_fetcher()` function can be called to cancel the fetcher.
-    3. If this `@component<edifice.component>` is unmounted before the
+    3. If this :func:`@component <edifice.component>` is unmounted before the
        :code:`fn_coroutine` Task completes, then
        the :code:`fn_coroutine` Task will be cancelled.
 
     Write your async :code:`fn_coroutine` function in such a way that it
-    cleans itself up after exceptions. If you catch a :code:`CancelledError`
-    then always re-raise it.
+    cleans itself up after exceptions. If you catch a
+    `CancelledError <https://docs.python.org/3/library/asyncio-exceptions.html#asyncio.CancelledError>`_
+    in :code:`fn_coroutine` then always re-raise it.
 
     You may call a :func:`use_state` setter during
     a :code:`CancelledError` exception. If the :code:`fn_coroutine` Task was
     cancelled because the component is being unmounted, then the
     :func:`use_state` setter will have no effect.
+
+    See also
+    `Task Cancellation <https://docs.python.org/3/library/asyncio-task.html#task-cancellation>`_.
 
     Timers
     ======
