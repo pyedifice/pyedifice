@@ -457,7 +457,7 @@ def use_async(
                 except Exception as e:
                     calculation_progress_set(f"Error: {str(e)}")
 
-            ed.use_async(run_my_subprocess)
+            use_async(run_my_subprocess)
 
             Label(text=calculation_progress)
 
