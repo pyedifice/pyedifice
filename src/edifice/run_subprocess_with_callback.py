@@ -134,8 +134,9 @@ async def run_subprocess_with_callback(
             argument.
 
     The advantage of :func:`run_subprocess_with_callback` over
+    `run_in_executor <https://docs.python.org/3/library/asyncio-eventloop.html#asyncio.loop.run_in_executor>`_
     `ProcessPoolExecutor <https://docs.python.org/3/library/concurrent.futures.html#concurrent.futures.ProcessPoolExecutor>`_
-    is that it behaves
+    is that :func:`run_subprocess_with_callback` behaves
     well and cleans up properly in the event of exceptions and
     `cancellation <https://docs.python.org/3/library/asyncio-task.html#task-cancellation>`_.
     This function is useful for a long-running parallel worker
@@ -192,7 +193,9 @@ async def run_subprocess_with_callback(
     want to perform sudden cleanup and halt of the :code:`subprocess` then
     send it a message as in the below `Example of Queue messaging.`
 
-    Exceptions raised in the :code:`subprocess` will be re-raised from :func:`run_subprocess_with_callback`.
+    Exceptions raised in the :code:`subprocess` will be re-raised from :func:`run_subprocess_with_callback`,
+    including
+    `CancelledError <https://docs.python.org/3/library/asyncio-exceptions.html#asyncio.CancelledError>`_.
     Because the Exception must be pickled back to the main process, it will
     lose its `traceback <https://docs.python.org/3/reference/datamodel.html#traceback-objects>`_.
     In Python ≥3.11, the traceback string from the :code:`subprocess` stack will be added
@@ -258,6 +261,10 @@ async def run_subprocess_with_callback(
                 msg_queue.put("one")
                 msg_queue.put("finish")
 
+            # In this example we use gather() to run these 2 functions
+            # concurrently (“at the same time”).
+            # 1. run_subprocess_with_callback()
+            # 2. send_messages()
             y, _ = await asyncio.gather(
                 run_subprocess_with_callback(
                     functools.partial(my_subprocess, msg_queue),
