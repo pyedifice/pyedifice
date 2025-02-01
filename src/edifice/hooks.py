@@ -389,30 +389,57 @@ def use_async(
 
     The :code:`use_async` Hook is useful for timers and animation.
 
-    Here is an example which shows how to run a timer in a component. The
-    Harmonic Oscillator in :doc:`../examples` uses this technique.
+    Here is an example busy-wait UI indicator which is a bit more visually subtle
+    than Qt’s barbershop-pole :class:`QProgressBar<edifice.ProgressBar>` with
+    :code:`minimum=0, maximum=0`.
 
     .. code-block:: python
-        :caption: use_async to run a stoppable-startable timer
+        :caption: BusyWaitIndicator component
 
-        is_playing, is_playing_set = use_state(False)
-        play_trigger, play_trigger_set = use_state(False)
+        @ed.component
+        def BusyWaitIndicator(
+            self,
+            visible: bool = True,
+            size: int | None = None,
+            color: QColor | None = None,
+        ):
+            \"\"\"
+            Animated busy wait indicator which looks like ⬤⬤⬤⬤⬤
 
-        async def play_tick():
-            if is_playing:
-                # Do the timer effect here
-                # (timer effect code)
+            If not visible, will still occupy the same layout space but will be
+            transparent and animation will not run.
+            \"\"\"
 
-                # Then wait for 0.05 seconds and trigger another play_tick.
-                await asyncio.sleep(0.05)
-                play_trigger_set(lambda p: not p)
+            color_: QColor
+            color_ = color if color else QApplication.palette().color(QPalette.ColorRole.Text)
+            tick, tick_set = ed.use_state(0)
 
-        use_async(play_tick, (is_playing, play_trigger))
+            async def animation():
+                if visible:
+                    while True:
+                        await asyncio.sleep(0.2)
+                        tick_set(lambda t: (t + 1) % 5)
 
-        Button(
-            text="pause" if is_playing else "play",
-            on_click=lambda e: is_playing_set(lambda p: not p),
-        )
+            ed.use_async(animation, visible)
+
+            with ed.HBoxView(
+                size_policy=QSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed),
+            ):
+                for i in range(0, 5):
+                    ed.Label(
+                        text="⬤",
+                        style={
+                            "color": QColor(
+                                color_.red(),
+                                color_.green(),
+                                color_.blue(),
+                                40 + (((i - tick) % 5) * 20) if visible else 0,
+                            ),
+                        }
+                        | {"font-size": size}
+                        if size
+                        else {},
+                    )
 
     Worker Process
     ==============
