@@ -2,10 +2,10 @@ Styling
 =======
 
 Edfice supports
-`Qt Widget Style Sheet Syntax <https://doc.qt.io/qtforpython-6/overviews/stylesheet-syntax.html>`_.
+`Qt Widget Style Sheet Syntax <https://doc.qt.io/qtforpython-6/overviews/qtwidgets-stylesheet-syntax.html>`_.
 
-The :code:`style` **prop** of every :class:`QtWidgetElement <edifice.QtWidgetElement>` is
-a dictionary of style properties.
+The :code:`style` **prop** of every :ref:`Base Element <Base Elements>`
+is a dictionary of style properties.
 
 The keys of the :code:`style` dictionary are the style name, and the values
 are usually either strings or numbers.
@@ -23,18 +23,18 @@ in a *16pt* font on a *beige* *semi-transparent* background::
         })
 
 All style properties supported by Qt will also work with Edifice.
-See `Qt Stylesheet Reference List of Properties <https://doc.qt.io/qtforpython-6/overviews/stylesheet-reference.html#list-of-properties>`_.
+See `Qt Stylesheet Reference List of Properties <https://doc.qt.io/qtforpython-6/overviews/qtwidgets-stylesheet-reference.html#list-of-properties>`_.
 
 Note that sometimes Qt styling behaves differently from CSS styling
 (despite similar syntax and naming) and is not supported by all Widgets.
 
 Currently, the following styles are tested to be supported.
 
-Widget Styling
---------------
+Content Base Element Styling
+----------------------------
 
-Widgets follow the
-`Qt Style Sheet Box Model <https://doc.qt.io/qtforpython-6/overviews/stylesheet-customizing.html#the-box-model>`_.
+:ref:`Content Base Elements <Content Base Elements>` follow the
+`Qt Style Sheet Box Model <https://doc.qt.io/qtforpython-6/overviews/qtwidgets-stylesheet-customizing.html#the-box-model>`_.
 
 - **color**: See :ref:`Color`.
 - **font-size**: Font size in points.
@@ -76,13 +76,13 @@ Widgets follow the
 - **top**, **left** (but not bottom, right): Position offset in pixels from a
   :class:`FixView <edifice.FixView>`.
 
-Layout View Styling
--------------------
+Layout Base Element Styling
+---------------------------
 
-Every Layout Base Element named :code:`View` has an underlying
+Every :ref:`Layout Base Element <Layout Base Elements>` has an underlying
 `QLayout <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QLayout.html>`_
 and follows slightly different rules than the
-`Qt Style Sheet Box Model <https://doc.qt.io/qtforpython-6/overviews/stylesheet-customizing.html#the-box-model>`_.
+`Qt Style Sheet Box Model <https://doc.qt.io/qtforpython-6/overviews/qtwidgets-stylesheet-customizing.html#the-box-model>`_.
 
 .. note::
     There is no :code:`margin` style for Layout :code:`View` Elements.
@@ -126,12 +126,6 @@ and follows slightly different rules than the
   :class:`FixView <edifice.FixView>`.
 
 
-Size Policy
------------
-
-The :code:`size_policy` **prop** of :class:`QtWidgetElement <edifice.QtWidgetElement>` is also
-sometimes useful for controlling the Qt layout behavior.
-
 Color
 -----
 
@@ -147,6 +141,47 @@ There are two ways to specify a style value which takes a single color:
   - Hexadecimal :code:`"#aarrggbb"`
 
 - A `QColor <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QColor.html>`_.
+
+Graphics Effects
+----------------
+
+Edifice styles support the four stock `QGraphicsEffect <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGraphicsEffect.html>`_
+effects for any :ref:`Base Element <Base Elements>`.
+
+.. note::
+
+  Due to limitations in the Qt API, only one graphic effect can be applied to
+  a :ref:`Base Element <Base Elements>` at a time.
+
+Each effect style has a different set of parameters.
+
+- **blur**: :code:`float` The blur radius in pixels.
+
+  See `QGraphicsBlurEffect <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGraphicsBlurEffect.html>`_.
+- **drop-shadow**: :code:`tuple[float, QColor, QRectF]`
+
+  - :code:`float` The blur radius in pixels.
+  - `QColor <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QColor.html>`_ Shadow color.
+  - `QRectF <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QRectF.html>`_ Shadow offset.
+
+  See `QGraphicsDropShadowEffect <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGraphicsDropShadowEffect.html>`_.
+- **colorize**: :code:`tuple[QColor, float]`
+
+  - `QColor <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QColor.html>`_ Tint color.
+  - :code:`float` The strength of the colorization.
+
+  See `QGraphicsColorizeEffect <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGraphicsColorizeEffect.html>`_.
+- **opacity**: :code:`float` The opacity of the widget.
+
+  See `QGraphicsOpacityEffect <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGraphicsOpacityEffect.html>`_.
+
+
+
+Size Policy
+-----------
+
+The :code:`size_policy` **prop** of :class:`QtWidgetElement <edifice.QtWidgetElement>` is also
+sometimes useful for controlling the Qt layout behavior.
 
 Style Merging
 -------------
@@ -173,11 +208,11 @@ font sizes, you can create a common style dict for shared styles…
         Label("foo", style=LABEL_STYLE | {"font-size": 8})
 
 
-Style Advice
+Global Style
 ------------
 
 Set global application styles in a root Element
-:func:`use_state<edifice.use_state>` **initializer function**.
+:func:`use_memo<edifice.use_memo>` **initializer function**.
 For more information see :class:`App<edifice.App>`.
 
 - `QApplication.setStyleSheet <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QApplication.html#PySide6.QtWidgets.QApplication.setStyleSheet>`_
