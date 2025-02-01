@@ -88,14 +88,14 @@ def theme_is_light() -> bool:
 
     True if light theme, false if dark theme.
 
-    Example::
+    .. code-block:: python
 
         def initializer():
             palette = palette_edifice_light() if theme_is_light() else palette_edifice_dark()
             cast(QApplication, QApplication.instance()).setPalette(palette)
             return palette
 
-        palette, _ = ed.use_state(initializer)
+        palette = use_memo(initializer)
 
         with Window():
 

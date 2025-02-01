@@ -29,7 +29,6 @@ logger = logging.getLogger("Edifice")
 P = tp.ParamSpec("P")
 
 
-
 def stylevalue_to_str(v: QtGui.QColor | tp.Any) -> str:
     match v:
         case QtGui.QColor():
@@ -37,6 +36,7 @@ def stylevalue_to_str(v: QtGui.QColor | tp.Any) -> str:
             return v.name(format=QtGui.QColor.NameFormat.HexArgb)
         case _:
             return v
+
 
 def _dict_to_style(d: dict[str, tp.Any]) -> str:
     return "{" + (";".join(f"{k}: {stylevalue_to_str(v)}" for (k, v) in d.items())) + "}"
@@ -58,6 +58,79 @@ def _ensure_future(fn):
 
         return wrapper
     return fn
+
+
+# class GraphicsEffectCompose(QtWidgets.QGraphicsBlurEffect, QtWidgets.QGraphicsColorizeEffect, QtWidgets.QGraphicsDropShadowEffect, QtWidgets.QGraphicsOpacityEffect):
+#     def __init__(self):
+#         QtWidgets.QGraphicsBlurEffect.__init__(self)
+#         QtWidgets.QGraphicsColorizeEffect.__init__(self)
+#         QtWidgets.QGraphicsDropShadowEffect.__init__(self)
+#         QtWidgets.QGraphicsOpacityEffect.__init__(self)
+#         self._opacity : float | None = None
+#
+#     def draw(self, painter: QtGui.QPainter):
+#         if self._opacity:
+#             QtWidgets.QGraphicsOpacityEffect.draw(self, painter)
+#
+#     def boundingRectFor(self, rect: QtCore.QRectF | QtCore.QRect) -> QtCore.QRectF:
+#         if self._opacity:
+#             return QtWidgets.QGraphicsOpacityEffect.boundingRectFor(self, rect)
+#
+#     def sourceChanged(self, flags: QtWidgets.QGraphicsEffect.ChangeFlag):
+#         if self._opacity:
+#             QtWidgets.QGraphicsOpacityEffect.sourceChanged(self, flags)
+#
+#     def any_effects(self) -> bool:
+#         return any((self._opacity is not None,))
+
+
+# class ComposeGraphicsEffect(QtWidgets.QGraphicsEffect):
+#     """
+#     https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGraphicsEffect.html
+#
+#     The only way to compose QGraphicsEffects to to create a QGraphicsEffect
+#     subclass, unfortunately, because setGraphicsEffect only takes one effect
+#     at a time.
+#
+#     https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGraphicsItem.html#PySide6.QtWidgets.QGraphicsItem.setGraphicsEffect
+#     """
+#     def __init__(self):
+#         super().__init__()
+#         self._blur : QtWidgets.QGraphicsBlurEffect | None = None
+#         self._colorize : QtWidgets.QGraphicsColorizeEffect | None = None
+#         self._dropshadow : QtWidgets.QGraphicsDropShadowEffect | None = None
+#         self._opacity : QtWidgets.QGraphicsOpacityEffect | None = None
+#
+#     def draw(self, painter: QtGui.QPainter):
+#         # Is the order of effects important?
+#         if self._blur:
+#             self._blur.draw(painter)
+#         if self._colorize:
+#             self._colorize.draw(painter)
+#         if self._dropshadow:
+#             self._dropshadow.draw(painter)
+#         if self._opacity:
+#             self._opacity.draw(painter)
+#
+#     def boundingRectFor(self, sourceRect: QtCore.QRectF | QtCore.QRect) -> QtCore.QRectF:
+#         # return self._opacity.boundingRectFor(sourceRect)
+#         return functools.reduce(
+#             QtCore.QRectF.__or__,
+#             (effect.boundingRectFor(sourceRect) for effect in (self._blur, self._colorize, self._dropshadow, self._opacity) if effect),
+#         )
+#
+#     def sourceChanged(self, flags: QtWidgets.QGraphicsEffect.ChangeFlag):
+#         if self._blur:
+#             self._blur.sourceChanged(flags)
+#         if self._colorize:
+#             self._colorize.sourceChanged(flags)
+#         if self._dropshadow:
+#             self._dropshadow.sourceChanged(flags)
+#         if self._opacity:
+#             self._opacity.sourceChanged(flags)
+#
+#     def any_effects(self) -> bool:
+#         return any((self._blur, self._colorize, self._dropshadow, self._opacity))
 
 
 class CommandType:
@@ -668,7 +741,7 @@ def component(f: Callable[tp.Concatenate[selfT, P], None]) -> Callable[P, Elemen
         _edifice_original = f
 
         @functools.wraps(f)
-        def __init__(self, *args: P.args, **kwargs: P.kwargs):
+        def __init__(self, *args: P.args, **kwargs: P.kwargs):  # type: ignore  # noqa: PGH003
             super().__init__()
             name_to_val = defaults.copy()
             name_to_val.update(filter(not_ignored, zip(varnames, args, strict=False)))
@@ -966,7 +1039,10 @@ class QtWidgetElement(Element, tp.Generic[_T_widget]):
         self._default_drag_leave_event = None
         self._default_drop_event = None
         self._default_resize_event = None
-        self._default_size_policy : QtWidgets.QSizePolicy | None = None
+        self._default_size_policy: QtWidgets.QSizePolicy | None = None
+
+        self._mouse_pressed = False
+        self._focus_open_needed = _focus_open
 
         self._context_menu = None
         self._context_menu_connected = False
@@ -974,12 +1050,15 @@ class QtWidgetElement(Element, tp.Generic[_T_widget]):
             if cursor not in _CURSORS:
                 raise ValueError(f"Unrecognized cursor {cursor}. Cursor must be one of {list(_CURSORS.keys())}")
 
+        self._blur: QtWidgets.QGraphicsBlurEffect | None = None
+        self._dropshadow: QtWidgets.QGraphicsDropShadowEffect | None = None
+        self._colorize: QtWidgets.QGraphicsColorizeEffect | None = None
+        self._opacity: QtWidgets.QGraphicsOpacityEffect | None = None
+
         self.underlying: _T_widget | None = None
         """
         The underlying QWidget, which may not exist if this Element has not rendered.
         """
-        self._mouse_pressed = False
-        self._focus_open_needed = _focus_open
 
     def _mouse_press(self, event: QtGui.QMouseEvent) -> None:
         if self._on_mouse_down is not None:
@@ -1023,7 +1102,7 @@ class QtWidgetElement(Element, tp.Generic[_T_widget]):
         if self._on_mouse_wheel is not None:
             self._on_mouse_wheel(event)
         else:
-            type(self.underlying).wheelEvent(self.underlying, event) # type: ignore  # noqa: PGH003
+            type(self.underlying).wheelEvent(self.underlying, event)  # type: ignore  # noqa: PGH003
 
     def _set_mouse_wheel(self, underlying: QtWidgets.QWidget, on_mouse_wheel):
         # https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.wheelEvent
@@ -1167,6 +1246,88 @@ class QtWidgetElement(Element, tp.Generic[_T_widget]):
             self._on_resize = None
             underlying.resizeEvent = self._default_resize_event
 
+    def _set_blur(self, underlying: QtWidgets.QWidget, radius: float | None):
+        # https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGraphicsBlurEffect.html
+        if radius is None:
+            self._blur = None
+            underlying.setGraphicsEffect(None)  # type: ignore  # noqa: PGH003
+        else:
+            if self._blur is None:
+                self._blur = QtWidgets.QGraphicsBlurEffect()
+                underlying.setGraphicsEffect(self._blur)
+            self._blur.setBlurRadius(radius)
+            self._blur.setBlurHints(QtWidgets.QGraphicsBlurEffect.BlurHint.QualityHint)
+
+    def _set_colorize(self, underlying: QtWidgets.QWidget, colorizeprops: tuple[QtGui.QColor, float] | None):
+        # https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGraphicsColorizeEffect.html
+        if colorizeprops is None:
+            self._colorize = None
+            underlying.setGraphicsEffect(None)  # type: ignore  # noqa: PGH003
+        else:
+            if self._colorize is None:
+                self._colorize = QtWidgets.QGraphicsColorizeEffect()
+                underlying.setGraphicsEffect(self._colorize)
+            self._colorize.setColor(colorizeprops[0])
+            self._colorize.setStrength(colorizeprops[1])
+
+    def _set_dropshadow(
+        self, underlying: QtWidgets.QWidget, shadowprops: tuple[float, QtGui.QColor, QtCore.QPointF] | None
+    ):
+        # https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGraphicsDropShadowEffect.html
+        if shadowprops is None:
+            self._dropshadow = None
+            underlying.setGraphicsEffect(None)  # type: ignore  # noqa: PGH003
+        else:
+            if self._dropshadow is None:
+                self._dropshadow = QtWidgets.QGraphicsDropShadowEffect()
+                underlying.setGraphicsEffect(self._dropshadow)
+            self._dropshadow.setBlurRadius(shadowprops[0])
+            self._dropshadow.setColor(shadowprops[1])
+            self._dropshadow.setOffset(shadowprops[2])
+
+    # def _set_opacity(self, underlying: QtWidgets.QWidget, opacity: float | None):
+    #     # https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGraphicsOpacityEffect.html
+    #     # https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGraphicsItem.html#PySide6.QtWidgets.QGraphicsItem.setGraphicsEffect
+    #     if opacity is None:
+    #         # This is only called when the effect is non-None so ignore type errors
+    #         self._graphicsEffect._opacity = None # type: ignore  # noqa: PGH003
+    #         if not self._graphicsEffect.any_effects(): # type: ignore  # noqa: PGH003
+    #             self._graphicsEffect = None
+    #             underlying.setGraphicsEffect(None) # type: ignore  # noqa: PGH003
+    #     else:
+    #         if self._graphicsEffect is None:
+    #             self._graphicsEffect = ComposeGraphicsEffect()
+    #         if self._graphicsEffect._opacity is None:
+    #             self._graphicsEffect._opacity = QtWidgets.QGraphicsOpacityEffect()
+    #             underlying.setGraphicsEffect(self._graphicsEffect)
+    #         self._graphicsEffect._opacity.setOpacity(opacity)
+    # def _set_opacity(self, underlying: QtWidgets.QWidget, opacity: float | None):
+    #     # https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGraphicsOpacityEffect.html
+    #     # https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGraphicsItem.html#PySide6.QtWidgets.QGraphicsItem.setGraphicsEffect
+    #     if opacity is None:
+    #         # This is only called when the effect is non-None so ignore type errors
+    #         self._graphicsEffect._opacity = None # type: ignore  # noqa: PGH003
+    #         if not self._graphicsEffect.any_effects(): # type: ignore  # noqa: PGH003
+    #             self._graphicsEffect = None
+    #             underlying.setGraphicsEffect(None) # type: ignore  # noqa: PGH003
+    #     else:
+    #         if self._graphicsEffect is None:
+    #             self._graphicsEffect = GraphicsEffectCompose()
+    #             underlying.setGraphicsEffect(self._graphicsEffect)
+    #         self._graphicsEffect.setOpacity(opacity)
+
+    def _set_opacity(self, underlying: QtWidgets.QWidget, opacity: float | None):
+        # https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGraphicsOpacityEffect.html
+        # https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGraphicsItem.html#PySide6.QtWidgets.QGraphicsItem.setGraphicsEffect
+        if opacity is None:
+            self._opacity = None
+            underlying.setGraphicsEffect(None)  # type: ignore  # noqa: PGH003
+        else:
+            if self._opacity is None:
+                self._opacity = QtWidgets.QGraphicsOpacityEffect()
+                underlying.setGraphicsEffect(self._opacity)
+            self._opacity.setOpacity(opacity)
+
     def _gen_styling_commands(
         self,
         style: dict[str, tp.Any],
@@ -1250,8 +1411,8 @@ class QtWidgetElement(Element, tp.Generic[_T_widget]):
 
         if "align" in cpstyle:
             if hasattr(type(underlying), "setAlignment"):
-            # QLabels and other things that have a setAlignment method
-            # https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QLabel.html#PySide6.QtWidgets.QLabel.setAlignment
+                # QLabels and other things that have a setAlignment method
+                # https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QLabel.html#PySide6.QtWidgets.QLabel.setAlignment
                 cpstyle_align = cpstyle["align"]
                 if type(cpstyle_align) is str:
                     if cpstyle_align == "left":
@@ -1273,7 +1434,7 @@ class QtWidgetElement(Element, tp.Generic[_T_widget]):
                 else:
                     raise ValueError(f"Style align wrong type: {cpstyle_align}")
                 cpstyle.pop("align")
-                commands.append(CommandType(underlying.setAlignment, set_align)) # type: ignore  # noqa: PGH003
+                commands.append(CommandType(underlying.setAlignment, set_align))  # type: ignore  # noqa: PGH003
             else:
                 # Set the align property for the style sheet
                 # TODO This case is probably unreachable?
@@ -1323,6 +1484,43 @@ class QtWidgetElement(Element, tp.Generic[_T_widget]):
 
         if set_move:
             commands.append(CommandType(underlying.move, move_coords[0], move_coords[1]))
+
+        if "blur" in cpstyle:
+            blur = float(cpstyle["blur"])
+            commands.append(CommandType(self._set_blur, underlying, blur))
+            cpstyle.pop("blur")
+        elif self._blur is not None:
+            commands.append(CommandType(self._set_blur, underlying, None))
+
+        if "colorize" in cpstyle:
+            colorize = cpstyle["colorize"]
+            assert type(colorize) is tuple
+            assert len(colorize) == 2
+            assert type(colorize[0]) is QtGui.QColor
+            assert type(colorize[1]) is float
+            commands.append(CommandType(self._set_colorize, underlying, colorize))
+            cpstyle.pop("colorize")
+        elif self._colorize is not None:
+            commands.append(CommandType(self._set_colorize, underlying, None))
+
+        if "drop-shadow" in cpstyle:
+            dropshadow = cpstyle["drop-shadow"]
+            assert type(dropshadow) is tuple
+            assert len(dropshadow) == 3
+            blur = float(dropshadow[0])
+            assert type(dropshadow[1]) is QtGui.QColor
+            assert type(dropshadow[2]) is QtCore.QPointF
+            commands.append(CommandType(self._set_dropshadow, underlying, (blur, dropshadow[1], dropshadow[2])))
+            cpstyle.pop("drop-shadow")
+        elif self._dropshadow is not None:
+            commands.append(CommandType(self._set_dropshadow, underlying, None))
+
+        if "opacity" in cpstyle:
+            assert type(cpstyle["opacity"]) is float
+            commands.append(CommandType(self._set_opacity, underlying, cpstyle["opacity"]))
+            cpstyle.pop("opacity")
+        elif self._opacity is not None:
+            commands.append(CommandType(self._set_opacity, underlying, None))
 
         # CSS style selection is matched by setting underlying.setObjectName(str(id(self)))
         # In Element initialization.
@@ -1460,7 +1658,7 @@ def qt_component(
         _edifice_original = f
 
         @functools.wraps(f)
-        def __init__(self, *args: P.args, **kwargs: P.kwargs):
+        def __init__(self, *args: P.args, **kwargs: P.kwargs):  # type: ignore  # noqa: PGH003
             super().__init__()
             name_to_val = defaults.copy()
             name_to_val.update(filter(not_ignored, zip(varnames, args, strict=False)))
@@ -2221,7 +2419,7 @@ class RenderEngine:
         # After the done_callback is called, the _HookAsync object
         # should be garbage collected.
 
-        def done_callback(hook: _HookAsync, _task:asyncio.Task[tp.Any]):
+        def done_callback(hook: _HookAsync, _task: asyncio.Task[tp.Any]):
             if hook.task is not None:
                 try:
                     # https://docs.python.org/3/library/asyncio-task.html#asyncio.Task.result
@@ -2236,7 +2434,6 @@ class RenderEngine:
                 # There is another async task waiting in the queue
                 hook.task = asyncio.create_task(hook.queue.pop(0)())
                 hook.task.add_done_callback(lambda t: done_callback(hook, t))
-
 
         if len(hooks) <= h_index:
             # then this is the first render.

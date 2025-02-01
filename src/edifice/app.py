@@ -99,7 +99,7 @@ class App:
 
     Instead of calling application initialization code from the
     :code:`__main__` function, call the initialization code from a
-    :func:`use_state` **initializer function** in the root Element
+    :func:`use_memo` **initializer function** in the root Element
     because this function will run when the app is started by the Edifice
     Runner.
 
@@ -107,9 +107,9 @@ class App:
 
         from PySide6.QtWidgets import QApplication
         from PySide6.QtGui import QFont
-        from edifice import App, Window, Label, component, use_state
+        import edifice as ed
 
-        @component
+        @ed.component
         def Main(self):
 
             def initalizer():
@@ -118,19 +118,19 @@ class App:
                 qapp.setApplicationName("My App")
                 qapp.setFont(QFont("Yu Gothic UI", 10))
                 qapp.setStyleSheet("QLabel { font-size: 12pt; }")
-                if theme_is_light():
-                    qapp.setPalette(palette_edifice_light())
+                if ed.theme_is_light():
+                    qapp.setPalette(ed.palette_edifice_light())
                 else:
-                    qapp.setPalette(palette_edifice_dark())
+                    qapp.setPalette(ed.palette_edifice_dark())
 
-            _, _ = use_state(initalizer)
+            _ = ed.use_memo(initalizer)
 
-            with Window():
-                Label("Hello, World!")
+            with ed.Window():
+                ed.Label("Hello, World!")
 
 
         if __name__ == "__main__":
-            App(Main()).start()
+            ed.App(Main()).start()
 
     For more information about global styles, see :doc:`Styling<../styling>`.
 
@@ -217,7 +217,7 @@ class App:
             self.app: QtWidgets.QApplication = qapplication
 
         self._root: Element = root_element
-        self._render_engine = RenderEngine(self._root, self)
+        self._render_engine = RenderEngine(self._root, self)  # type: ignore  # noqa: PGH003
         self._logger = _RateLimitedLogger(1)
         self._render_timing = _TimingAvg()
         self._first_render = True
@@ -226,19 +226,19 @@ class App:
         self._file_change_rerender_event_type = QtCore.QEvent.registerEventType()
 
         class EventReceiverWidget(QtWidgets.QWidget):
-            def event(_self, e):
-                if e.type() == self._file_change_rerender_event_type:
-                    e.accept()
+            def event(_self, event):
+                if event.type() == self._file_change_rerender_event_type:
+                    event.accept()
                     while not self._class_rerender_queue.empty():
                         file_name, classes = self._class_rerender_queue.get_nowait()
                         try:
                             self._render_engine._refresh_by_class(classes)
-                        except Exception as exception:
+                        except Exception:
                             logger.exception("Encountered exception while reloading")
                             self._class_rerender_response_queue.put_nowait(False)
                             etype, evalue, tb = sys.exc_info()
                             stack_trace = traceback.extract_tb(tb)
-                            module_path = os.path.dirname(__file__)
+                            module_path = os.path.dirname(__file__)  # noqa: PTH120
                             user_stack_trace = [
                                 frame for frame in stack_trace if not frame.filename.startswith(module_path)
                             ]
@@ -246,24 +246,25 @@ class App:
                             formatted_trace = traceback.format_list(stack_trace)
                             formatted_user_trace = traceback.format_list(user_stack_trace)
 
-                            def should_bold(line, frame):
+                            def should_bold(line, frame, module_path):
                                 if frame.filename.startswith(module_path):
                                     return line
                                 return BOLD_SEQ + line + RESET_SEQ
 
                             formatted_trace = [
-                                should_bold(line, frame) for line, frame in zip(formatted_trace, stack_trace)
+                                should_bold(line, frame, module_path)
+                                for line, frame in zip(formatted_trace, stack_trace, strict=True)
                             ]
 
-                            print("Traceback (most recent call last):")
+                            print("Traceback (most recent call last):")  # noqa: T201
                             for line in formatted_trace:
-                                print(line, end="")
+                                print(line, end="")  # noqa: T201
 
-                            print((COLOR_SEQ % (30 + RED)) + "Stemming from these renders:" + RESET_SEQ)
+                            print((COLOR_SEQ % (30 + RED)) + "Stemming from these renders:" + RESET_SEQ)  # noqa: T201
                             for line in formatted_user_trace:
-                                print(line, end="")
+                                print(line, end="")  # noqa: T201
                             for line in traceback.format_exception_only(etype, evalue):
-                                print((COLOR_SEQ % (30 + RED)) + line + RESET_SEQ, end="")
+                                print((COLOR_SEQ % (30 + RED)) + line + RESET_SEQ, end="")  # noqa: T201
 
                             continue
 
@@ -271,7 +272,7 @@ class App:
                         self._class_rerender_response_queue.put_nowait(True)
                         logger.info("Rerendering Elements in %s due to source change", file_name)
                     return True
-                return super().event(e)
+                return super().event(event)
 
         self._event_receiver = EventReceiverWidget()
         self._class_rerender_queue = queue.Queue()
@@ -328,7 +329,7 @@ class App:
         if self._inspector_component is not None and not any(
             hasattr(comp, "__edifice_inspector_element") for comp in components
         ):
-            getattr(self._inspector_component, "force_refresh")()
+            self._inspector_component.force_refresh()  # type: ignore  # noqa: PGH003
 
         self._is_rerendering = False
         if len(self._rerender_wanted) > 0 and not self._rerender_called_soon:
@@ -365,11 +366,7 @@ class App:
         self._request_rerender([self._root])
         exportlist = self._render_engine._widget_tree[self._root]
         if isinstance(exportlist.component, ExportList):
-            widgets = []
-            for e in exportlist.children:
-                if isinstance(e, QtWidgetElement):
-                    widgets.append(e.underlying)
-            return widgets
+            return [child.underlying for child in exportlist.children if isinstance(child, QtWidgetElement)]  # type: ignore  # noqa: PGH003
         raise RuntimeError("The root element of the App for export_widgets() must be an ExportList")
 
     def start(self) -> None:
@@ -408,6 +405,8 @@ class App:
         asyncio.set_event_loop(loop)
         yield loop
 
+        self._app_close_event = asyncio.Event()
+
         async def first_render():
             self._request_rerender([self._root])
             if self._inspector:
@@ -425,15 +424,12 @@ class App:
                         )
                     ),
                 )
-                icon_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), "inspector/icon.png")
-                component = Window(title="Element Inspector", on_close=cleanup, icon=icon_path)(
+                component = Window(title="Element Inspector", on_close=cleanup)(
                     self._inspector_component,
                 )
                 self._request_rerender([component])
 
-        t = loop.create_task(first_render())
-
-        self._app_close_event = asyncio.Event()
+        loop.run_until_complete(first_render())
 
         async def app_run():
             await self._app_close_event.wait()
@@ -450,7 +446,7 @@ class App:
                 await asyncio.sleep(0.0)
 
         loop.run_until_complete(app_run())
-        del t
+
         loop.close()
 
     def stop(self) -> None:
