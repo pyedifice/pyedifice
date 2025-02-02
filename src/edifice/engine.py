@@ -60,79 +60,6 @@ def _ensure_future(fn):
     return fn
 
 
-# class GraphicsEffectCompose(QtWidgets.QGraphicsBlurEffect, QtWidgets.QGraphicsColorizeEffect, QtWidgets.QGraphicsDropShadowEffect, QtWidgets.QGraphicsOpacityEffect):
-#     def __init__(self):
-#         QtWidgets.QGraphicsBlurEffect.__init__(self)
-#         QtWidgets.QGraphicsColorizeEffect.__init__(self)
-#         QtWidgets.QGraphicsDropShadowEffect.__init__(self)
-#         QtWidgets.QGraphicsOpacityEffect.__init__(self)
-#         self._opacity : float | None = None
-#
-#     def draw(self, painter: QtGui.QPainter):
-#         if self._opacity:
-#             QtWidgets.QGraphicsOpacityEffect.draw(self, painter)
-#
-#     def boundingRectFor(self, rect: QtCore.QRectF | QtCore.QRect) -> QtCore.QRectF:
-#         if self._opacity:
-#             return QtWidgets.QGraphicsOpacityEffect.boundingRectFor(self, rect)
-#
-#     def sourceChanged(self, flags: QtWidgets.QGraphicsEffect.ChangeFlag):
-#         if self._opacity:
-#             QtWidgets.QGraphicsOpacityEffect.sourceChanged(self, flags)
-#
-#     def any_effects(self) -> bool:
-#         return any((self._opacity is not None,))
-
-
-# class ComposeGraphicsEffect(QtWidgets.QGraphicsEffect):
-#     """
-#     https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGraphicsEffect.html
-#
-#     The only way to compose QGraphicsEffects to to create a QGraphicsEffect
-#     subclass, unfortunately, because setGraphicsEffect only takes one effect
-#     at a time.
-#
-#     https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGraphicsItem.html#PySide6.QtWidgets.QGraphicsItem.setGraphicsEffect
-#     """
-#     def __init__(self):
-#         super().__init__()
-#         self._blur : QtWidgets.QGraphicsBlurEffect | None = None
-#         self._colorize : QtWidgets.QGraphicsColorizeEffect | None = None
-#         self._dropshadow : QtWidgets.QGraphicsDropShadowEffect | None = None
-#         self._opacity : QtWidgets.QGraphicsOpacityEffect | None = None
-#
-#     def draw(self, painter: QtGui.QPainter):
-#         # Is the order of effects important?
-#         if self._blur:
-#             self._blur.draw(painter)
-#         if self._colorize:
-#             self._colorize.draw(painter)
-#         if self._dropshadow:
-#             self._dropshadow.draw(painter)
-#         if self._opacity:
-#             self._opacity.draw(painter)
-#
-#     def boundingRectFor(self, sourceRect: QtCore.QRectF | QtCore.QRect) -> QtCore.QRectF:
-#         # return self._opacity.boundingRectFor(sourceRect)
-#         return functools.reduce(
-#             QtCore.QRectF.__or__,
-#             (effect.boundingRectFor(sourceRect) for effect in (self._blur, self._colorize, self._dropshadow, self._opacity) if effect),
-#         )
-#
-#     def sourceChanged(self, flags: QtWidgets.QGraphicsEffect.ChangeFlag):
-#         if self._blur:
-#             self._blur.sourceChanged(flags)
-#         if self._colorize:
-#             self._colorize.sourceChanged(flags)
-#         if self._dropshadow:
-#             self._dropshadow.sourceChanged(flags)
-#         if self._opacity:
-#             self._opacity.sourceChanged(flags)
-#
-#     def any_effects(self) -> bool:
-#         return any((self._blur, self._colorize, self._dropshadow, self._opacity))
-
-
 class CommandType:
     def __init__(self, fn: Callable[P, tp.Any], *args: P.args, **kwargs: P.kwargs):
         # The return value of fn is ignored and should thus return None. However, in
@@ -1271,7 +1198,7 @@ class QtWidgetElement(Element, tp.Generic[_T_widget]):
             self._colorize.setStrength(colorizeprops[1])
 
     def _set_dropshadow(
-        self, underlying: QtWidgets.QWidget, shadowprops: tuple[float, QtGui.QColor, QtCore.QPointF] | None
+        self, underlying: QtWidgets.QWidget, shadowprops: tuple[float, QtGui.QColor, QtCore.QPointF] | None,
     ):
         # https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGraphicsDropShadowEffect.html
         if shadowprops is None:
@@ -1284,37 +1211,6 @@ class QtWidgetElement(Element, tp.Generic[_T_widget]):
             self._dropshadow.setBlurRadius(shadowprops[0])
             self._dropshadow.setColor(shadowprops[1])
             self._dropshadow.setOffset(shadowprops[2])
-
-    # def _set_opacity(self, underlying: QtWidgets.QWidget, opacity: float | None):
-    #     # https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGraphicsOpacityEffect.html
-    #     # https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGraphicsItem.html#PySide6.QtWidgets.QGraphicsItem.setGraphicsEffect
-    #     if opacity is None:
-    #         # This is only called when the effect is non-None so ignore type errors
-    #         self._graphicsEffect._opacity = None # type: ignore  # noqa: PGH003
-    #         if not self._graphicsEffect.any_effects(): # type: ignore  # noqa: PGH003
-    #             self._graphicsEffect = None
-    #             underlying.setGraphicsEffect(None) # type: ignore  # noqa: PGH003
-    #     else:
-    #         if self._graphicsEffect is None:
-    #             self._graphicsEffect = ComposeGraphicsEffect()
-    #         if self._graphicsEffect._opacity is None:
-    #             self._graphicsEffect._opacity = QtWidgets.QGraphicsOpacityEffect()
-    #             underlying.setGraphicsEffect(self._graphicsEffect)
-    #         self._graphicsEffect._opacity.setOpacity(opacity)
-    # def _set_opacity(self, underlying: QtWidgets.QWidget, opacity: float | None):
-    #     # https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGraphicsOpacityEffect.html
-    #     # https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGraphicsItem.html#PySide6.QtWidgets.QGraphicsItem.setGraphicsEffect
-    #     if opacity is None:
-    #         # This is only called when the effect is non-None so ignore type errors
-    #         self._graphicsEffect._opacity = None # type: ignore  # noqa: PGH003
-    #         if not self._graphicsEffect.any_effects(): # type: ignore  # noqa: PGH003
-    #             self._graphicsEffect = None
-    #             underlying.setGraphicsEffect(None) # type: ignore  # noqa: PGH003
-    #     else:
-    #         if self._graphicsEffect is None:
-    #             self._graphicsEffect = GraphicsEffectCompose()
-    #             underlying.setGraphicsEffect(self._graphicsEffect)
-    #         self._graphicsEffect.setOpacity(opacity)
 
     def _set_opacity(self, underlying: QtWidgets.QWidget, opacity: float | None):
         # https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGraphicsOpacityEffect.html
@@ -1552,7 +1448,7 @@ class QtWidgetElement(Element, tp.Generic[_T_widget]):
 
     def _qt_update_commands_super(
         self,
-        widget_trees: dict[Element, _WidgetTree],
+        widget_trees: dict[Element, _WidgetTree],  # noqa: ARG002
         # We must pass all of the widget_trees because some elements
         # like TableGridView need to know the children of the children.
         newprops: PropsDict,
