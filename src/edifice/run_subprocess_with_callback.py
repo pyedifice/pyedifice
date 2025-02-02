@@ -137,8 +137,9 @@ async def run_subprocess_with_callback(
     `run_in_executor <https://docs.python.org/3/library/asyncio-eventloop.html#asyncio.loop.run_in_executor>`_
     `ProcessPoolExecutor <https://docs.python.org/3/library/concurrent.futures.html#concurrent.futures.ProcessPoolExecutor>`_
     is that :func:`run_subprocess_with_callback` behaves
-    well and cleans up properly in the event of exceptions and
-    `cancellation <https://docs.python.org/3/library/asyncio-task.html#task-cancellation>`_.
+    well and cleans up properly in the event of
+    `cancellation <https://docs.python.org/3/library/asyncio-task.html#task-cancellation>`_,
+    exceptions, and crashes.
     This function is useful for a long-running parallel worker
     subprocess for which we want to report progress back to the main GUI event loop.
     Like *PyTorch* stuff.

@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import typing as tp
 
+from typing_extensions import deprecated
+
 from .qt import QT_VERSION
 
 if QT_VERSION == "PyQt6" and not tp.TYPE_CHECKING:
@@ -68,18 +70,18 @@ def palette_dump(palette: QPalette, palette_compare: QPalette | None = None) -> 
     for colorrole in colorroles:
         for colorgroup in colorgroups:
             c = palette.color(colorgroup, colorrole)
-            print("palette.setColor(", end="")
-            print(f"QPalette.{colorgroup}, QPalette.{colorrole}, ", end="")
-            print(f"QColor.fromRgb{c.getRgb()}", end="")
-            print(")", end="")
+            print("palette.setColor(", end="")  # noqa: T201
+            print(f"QPalette.{colorgroup}, QPalette.{colorrole}, ", end="")  # noqa: T201
+            print(f"QColor.fromRgb{c.getRgb()}", end="")  # noqa: T201
+            print(")", end="")  # noqa: T201
             if palette_compare is not None:
                 c_compare = palette_compare.color(colorgroup, colorrole)
                 if c != c_compare:
-                    print(f" # CHANGED from {c_compare.getRgb()}")
+                    print(f" # CHANGED from {c_compare.getRgb()}")  # noqa: T201
                 else:
-                    print("")
+                    print("")  # noqa: T201, FURB105
             else:
-                print("")
+                print("")  # noqa: FURB105, T201
 
 
 def theme_is_light() -> bool:
@@ -248,6 +250,7 @@ def palette_edifice_light() -> QPalette:
     return palette
 
 
+@deprecated("Instead use WindowPopView")
 def alert(message: str, choices: tp.Sequence[str] | None = None) -> int | None:
     """Displays a message in an alert box.
 
@@ -265,7 +268,7 @@ def alert(message: str, choices: tp.Sequence[str] | None = None) -> int | None:
     buttons = []
     if choices is not None:
         for choice in choices:
-            buttons.append(msgbox.addButton(choice, QtWidgets.QMessageBox.ButtonRole.ActionRole))
+            buttons.append(msgbox.addButton(choice, QtWidgets.QMessageBox.ButtonRole.ActionRole))  # noqa: PERF401
     msgbox.exec()
     clicked_button = msgbox.clickedButton()
     for i, button in enumerate(buttons):
@@ -274,6 +277,7 @@ def alert(message: str, choices: tp.Sequence[str] | None = None) -> int | None:
     return None
 
 
+@deprecated("Instead use https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QFileDialog.html directly")
 def file_dialog(
     caption: str = "",
     directory: str = "",
@@ -303,6 +307,7 @@ def file_dialog(
     return None
 
 
+# TODO deprecate? Instead what? https://github.com/microsoft/debugpy ?
 def set_trace():
     """Set a tracepoint in the Python debugger that works with PyQt.
 

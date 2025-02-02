@@ -32,3 +32,8 @@ Application Programming Interface reference for Edifice.
    :maxdepth: 1
 
    utilities
+
+.. toctree::
+   :maxdepth: 1
+
+   run_subprocess_with_callback
