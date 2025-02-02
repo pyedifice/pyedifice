@@ -7,26 +7,36 @@
 Release Notes
 =============
 
+v2.14.0
+-------
+Released: 2025-02-02
+
+- New :ref:`Styling` props :ref:`Graphics Effects`
+- :class:`App` bugfix hang when Exception raised on first render.
+- Deprecated functions :code:`alert` :code:`file_dialog` :code:`set_trace`.
+
+
 v2.13.0
 -------
 Released: 2025-01-29
 
 - If the :code:`subprocess` exits abnormally without returning a value then a
   `ProcessError <https://docs.python.org/3/library/multiprocessing.html#multiprocessing.ProcessError>`_
-  will be raised from :func:`utilities.run_subprocess_with_callback`.
+  will be raised from :func:`run_subprocess_with_callback`.
+
 
 v2.12.0
 -------
 Released: 2025-01-27
 
-- :func:`utilities.run_subprocess_with_callback` new argument :code:`daemon`.
+- :func:`run_subprocess_with_callback` new argument :code:`daemon`.
 
 
 v2.11.4
 -------
 Released: 2025-01-19
 
-- :func:`utilities.run_subprocess_with_callback` improvements: Handle multiple
+- :func:`run_subprocess_with_callback` improvements: Handle multiple
   callbacks with no delay. Drain the callback_send queue before joining the
   Process.
 
@@ -42,14 +52,14 @@ v2.11.2
 -------
 Released: 2025-01-17
 
-- :func:`utilities.run_subprocess_with_callback` don’t :code:`terminate` on normal return.
+- :func:`run_subprocess_with_callback` don’t :code:`terminate` on normal return.
 
 
 v2.11.1
 -------
 Released: 2025-01-15
 
-- :func:`utilities.run_subprocess_with_callback` reduced the number of incidental
+- :func:`run_subprocess_with_callback` reduced the number of incidental
   processes and threads created. Removed :code:`multiprocessing.Manager` from
   documentation.
 
@@ -58,7 +68,7 @@ v2.11.0
 -------
 Released: 2025-01-10
 
-- :func:`utilities.run_subprocess_with_callback` :code:`callback` exceptions will be suppressed.
+- :func:`run_subprocess_with_callback` :code:`callback` exceptions will be suppressed.
 
 
 v2.10.0

@@ -143,7 +143,7 @@ Edifice vs. Qt Quick
 `Qt Quick <https://doc.qt.io/qtforpython-6/PySide6/QtQuick/>`_ is Qt’s declarative GUI framework for Qt.
 
 Qt Quick programs are written in Python + the
-special `QML <https://doc.qt.io/qtforpython-6/overviews/qmlapplications.html>`_ language + JavaScript.
+special `QML <https://doc.qt.io/qtforpython-6/overviews/qtdoc-qmlapplications.html>`_ language + JavaScript.
 
 Edifice programs are written in Python.
 
