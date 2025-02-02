@@ -447,12 +447,12 @@ def use_async(
     We can run an
     :code:`async def my_subprocess` function in a worker
     `Process <https://docs.python.org/3/library/multiprocessing.html#multiprocessing.Process>`_
-    by using :func:`run_subprocess_with_callback<edifice.utilities.run_subprocess_with_callback>`.
+    by using :func:`run_subprocess_with_callback`.
 
-    :func:`run_subprocess_with_callback<edifice.utilities.run_subprocess_with_callback>`
+    :func:`run_subprocess_with_callback`
     is good for spawing a parallel worker Process from a :func:`@component<edifice.component>`
     because if the :func:`@component<edifice.component>` is unmounted, then
-    :func:`run_subprocess_with_callback<edifice.utilities.run_subprocess_with_callback>`
+    :func:`run_subprocess_with_callback`
     will be cancelled and the Process will be immediately terminated.
     Which is usually what we want.
 

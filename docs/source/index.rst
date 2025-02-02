@@ -3,6 +3,8 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
+.. currentmodule:: edifice
+
 Edifice
 =======
 
@@ -122,10 +124,10 @@ Edifice provides an API for running that script while presenting
 a responsive GUI to the user.
 
 1. Paste the script into an :code:`async def worker()` function.
-2. Call
-   :func:`run_subprocess_with_callback <edifice.utilities.run_subprocess_with_callback>`
-   on that :code:`worker` function with a :func:`use_async <edifice.use_async>`
-   Hook.
+2. Call :func:`run_subprocess_with_callback`
+   on that :code:`worker` function with a :func:`use_async`
+   Hook. Replace the :code:`print` statements with calls to
+   :code:`callback`.
 
 Developer Tools
 ^^^^^^^^^^^^^^^
