@@ -123,7 +123,7 @@ def Main(self):
         tp.cast(QtWidgets.QApplication, QtWidgets.QApplication.instance()).setPalette(palette)
         return palette
 
-    _ = ed.use_state(initializer)
+    ed.use_memo(initializer)
 
     with ed.Window(title="Text Style", _size_open=(800, 400)):
         TextStyle()
