@@ -2332,7 +2332,7 @@ class RenderEngine:
                     # But then users would start defensively try-ing
                     # every use_async function and would forget to re-raise
                     # CancelledError. Which would be worse.
-                except Exception as ex:  # noqa: BLE001
+                except BaseException as ex:  # noqa: BLE001
                     if not isinstance(ex, asyncio.CancelledError):
                         logger.debug("Non-CancelledError exception raised in use_async")
                 hook.task = None
