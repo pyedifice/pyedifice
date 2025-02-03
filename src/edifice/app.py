@@ -407,7 +407,8 @@ class App:
 
         self._app_close_event = asyncio.Event()
 
-        async def first_render():
+        async def app_run():
+            # first render
             self._request_rerender([self._root])
             if self._inspector:
                 logger.info("Running inspector")
@@ -429,9 +430,7 @@ class App:
                 )
                 self._request_rerender([component])
 
-        loop.run_until_complete(first_render())
-
-        async def app_run():
+            # subsequent renders
             await self._app_close_event.wait()
             engine = self._render_engine
             engine.is_stopped = True
