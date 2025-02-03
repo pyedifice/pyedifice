@@ -1198,7 +1198,9 @@ class QtWidgetElement(Element, tp.Generic[_T_widget]):
             self._colorize.setStrength(colorizeprops[1])
 
     def _set_dropshadow(
-        self, underlying: QtWidgets.QWidget, shadowprops: tuple[float, QtGui.QColor, QtCore.QPointF] | None,
+        self,
+        underlying: QtWidgets.QWidget,
+        shadowprops: tuple[float, QtGui.QColor, QtCore.QPointF] | None,
     ):
         # https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGraphicsDropShadowEffect.html
         if shadowprops is None:
@@ -2323,13 +2325,21 @@ class RenderEngine:
                     # Otherwise asyncio complains
                     # “Task exception was never retrieved”
                     _r = hook.task.result()
-                except:  # noqa: S110, E722
-                    pass
+                    # TODO Maybe we should re-raise every exception
+                    # except asyncio.CancelledError? Then if the user
+                    # raises to use_async then the loop crashes.
+                    # Maybe that is better.
+                    # But then users would start defensively try-ing
+                    # every use_async function and would forget to re-raise
+                    # CancelledError. Which would be worse.
+                except Exception as ex:  # noqa: BLE001
+                    if not isinstance(ex, asyncio.CancelledError):
+                        logger.debug("Non-CancelledError exception raised in use_async")
                 hook.task = None
             if len(hook.queue) > 0:
                 # There is another async task waiting in the queue
                 hook.task = asyncio.create_task(hook.queue.pop(0)())
-                hook.task.add_done_callback(lambda t: done_callback(hook, t))
+                hook.task.add_done_callback(lambda t, hook=hook: done_callback(hook, t))
 
         if len(hooks) <= h_index:
             # then this is the first render.
@@ -2365,7 +2375,7 @@ class RenderEngine:
             else:
                 hook.task = asyncio.create_task(fn_coroutine())
 
-                hook.task.add_done_callback(lambda t: done_callback(hook, t))
+                hook.task.add_done_callback(lambda t, hook=hook: done_callback(hook, t))
 
             def cancel():
                 if hook.task is not None:

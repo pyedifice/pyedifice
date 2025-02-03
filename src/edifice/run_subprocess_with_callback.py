@@ -340,6 +340,10 @@ async def run_subprocess_with_callback(
                             callback(*args, **kwargs)  # type: ignore  # noqa: PGH003
                         except:  # noqa: S110, E722
                             # We suppress exceptions in the callback.
+                            # TODO I don't like suppressing exceptions but
+                            # but it's tricky to decide what to do with them
+                            # here. If we raise them then we must also
+                            # terminate the subprocess.
                             pass
                     case _:
                         raise RuntimeError("unreachable")
