@@ -7,11 +7,18 @@
 Release Notes
 =============
 
+v2.14.2
+-------
+Released: 2025-02-03
+
+- Fix :func:`use_async` bug introduced in v2.14.1.
+
+
 v2.14.1
 -------
 Released: 2025-02-03
 
-- Fix rendering bug introduced in 2.14.0 from :func:`App.start_loop` changes.
+- Fix rendering bug introduced in v2.14.0 from :func:`App.start_loop` changes.
 
 
 v2.14.0
