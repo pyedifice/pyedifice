@@ -14,31 +14,41 @@ else:
 def FadeIn(self, children: tuple[ed.Element, ...] = ()):
     """
     Component that fades in its children.
+    Adds an extra 10px of padding-bottom to make room for the fade-in effect.
     """
-    tick, tick_set = ed.use_state(19)
+    tick, tick_set = ed.use_state(20)
+    # tick runs from 20 to 0 for 420ms
 
     async def fade_in():
-        for t in range(18, 0, -1):
+        for t in range(19, 0, -1):
             await asyncio.sleep(0.02)
             tick_set(t)
 
     ed.use_async(fade_in)
 
     with ed.VBoxView(
-        style={"padding-top": tick, "padding-bottom": 19-tick}
-            | {"opacity": 1.0 - (float(tick) / 20.0)} if tick > 0 else {},
+        style={"padding-top": (tick // 2), "padding-bottom": 10 - (tick // 2)} | {"opacity": 1.0 - (float(tick) / 20.0)}
+        if tick > 0
+        else {},
     ):
-        for child in children:
-            ed.child_place(child)
+        with ed.VBoxView(style={"blur": tick / 3} if tick > 0 else {}):
+            for child in children:
+                ed.child_place(child)
+
 
 @ed.component
 def MyComponent(self):
+    show, show_set = ed.use_state(True)
     with ed.VBoxView(style={"align": "center"}):
-        with FadeIn():
-            ed.Label(
-                text="Hello, World!",
-                style={"font-size": 48},
-            )
+        ed.CheckBox(checked = show, on_change = show_set, text = "Show")
+        with ed.HBoxView(style={"width": 500, "height": 200}):
+            if show:
+                with FadeIn():
+                    ed.Label(
+                        text="Hello, World!",
+                        style={"font-size": 48},
+                    )
+
 
 @ed.component
 def Main(self):
