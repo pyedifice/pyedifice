@@ -1,6 +1,6 @@
 import typing as tp
 
-from edifice.base_components.base_components import CommandType, QtWidgetElement
+from edifice.engine import CommandType, PropsDiff, QtWidgetElement
 
 # Import PySide6 or PyQt6 before importing pyqtgraph so that pyqtgraph detects the same
 from edifice.qt import QT_VERSION
@@ -13,7 +13,7 @@ else:
 import pyqtgraph as pg
 
 
-class PyQtPlot(QtWidgetElement[pg.PlotWidget]):
+class PyQtPlot(QtWidgetElement[pg.PlotWidget]): # type: ignore  # noqa: PGH003
     """
     A **PyQtGraph**
     `PlotWidget <https://pyqtgraph.readthedocs.io/en/latest/api_reference/widgets/plotwidget.html>`_.
@@ -94,21 +94,22 @@ class PyQtPlot(QtWidgetElement[pg.PlotWidget]):
             },
         )
 
-    def _qt_update_commands(self, children, newprops):
+    def _qt_update_commands(self, widget_trees, diff_props: PropsDiff):
         if self.underlying is None:
             self.underlying = pg.PlotWidget()
 
-        commands = super()._qt_update_commands_super(children, newprops, self.underlying)
+        commands = super()._qt_update_commands_super(widget_trees, diff_props, self.underlying) # type: ignore  # noqa: PGH003
 
-        if "plot_fun" in newprops:
-            plot_fun = tp.cast(tp.Callable[[pg.PlotItem], None], self.props.plot_fun)
-            plot_widget = tp.cast(pg.PlotWidget, self.underlying)
-            plot_item = tp.cast(pg.PlotItem, plot_widget.getPlotItem())
+        match diff_props.get("plot_fun"):
+            case _, propnew:
+                plot_fun = tp.cast(tp.Callable[[pg.PlotItem], None], propnew)
+                plot_widget = tp.cast(pg.PlotWidget, self.underlying)
+                plot_item = tp.cast(pg.PlotItem, plot_widget.getPlotItem())
 
-            def _update_plot():
-                plot_item.clear()
-                plot_fun(plot_item)
+                def _update_plot():
+                    plot_item.clear()
+                    plot_fun(plot_item)
 
-            commands.append(CommandType(_update_plot))
+                commands.append(CommandType(_update_plot))
 
         return commands

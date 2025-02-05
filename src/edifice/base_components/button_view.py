@@ -10,10 +10,11 @@ if QT_VERSION == "PyQt6" and not tp.TYPE_CHECKING:
     from PyQt6.QtWidgets import QHBoxLayout, QPushButton
 else:
     from PySide6.QtCore import QSize, Qt
-    from PySide6.QtGui import QKeyEvent, QMouseEvent
+    from PySide6.QtGui import QKeyEvent, QMouseEvent  # noqa: TC002
     from PySide6.QtWidgets import QHBoxLayout, QPushButton
 
-from .base_components import CommandType, Element, HBoxView, _WidgetTree
+from edifice.base_components import HBoxView
+from edifice.engine import CommandType, Element, PropsDiff, _WidgetTree
 
 
 class _PushButton(QPushButton):
@@ -22,16 +23,16 @@ class _PushButton(QPushButton):
 
     # https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QLayout.html#detailed-description
     def sizeHint(self) -> QSize:
-        return self.layout().sizeHint()
+        return self.layout().sizeHint()  # type: ignore  # noqa: PGH003
 
     def hasHeightForWidth(self) -> bool:
-        return self.layout().hasHeightForWidth()
+        return self.layout().hasHeightForWidth()  # type: ignore  # noqa: PGH003
 
-    def heightForWidth(self, width: int) -> int:
-        return self.layout().heightForWidth(width)
+    def heightForWidth(self, arg__1: int) -> int:
+        return self.layout().heightForWidth(arg__1)  # type: ignore  # noqa: PGH003
 
     def minimumSizeHint(self) -> QSize:
-        return self.layout().totalMinimumSize()
+        return self.layout().totalMinimumSize()  # type: ignore  # noqa: PGH003
 
 
 class ButtonView(HBoxView):
@@ -116,14 +117,14 @@ class ButtonView(HBoxView):
     def _qt_update_commands(
         self,
         widget_trees: dict[Element, _WidgetTree],
-        newprops,
+        diff_props: PropsDiff,
     ):
         if self.underlying is None:
             self._initialize()
         assert self.underlying is not None
-        commands = super()._qt_update_commands(widget_trees, newprops)
-        for prop in newprops:
-            if prop == "on_trigger":
-                commands.append(CommandType(self._set_on_trigger, self.underlying, newprops.on_trigger))
-            commands.append(CommandType(self.underlying.setCursor, Qt.CursorShape.PointingHandCursor))
+        commands = super()._qt_update_commands(widget_trees, diff_props)
+        match diff_props.get("on_trigger"):
+            case _, propnew:
+                commands.append(CommandType(self._set_on_trigger, self.underlying, propnew))
+                commands.append(CommandType(self.underlying.setCursor, Qt.CursorShape.PointingHandCursor))
         return commands

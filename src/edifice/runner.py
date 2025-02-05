@@ -34,7 +34,7 @@ def _file_to_module_name():
     d = {}
     for name, module in sys.modules.items():
         if hasattr(module, "__file__") and module.__file__ is not None:
-            d[os.path.abspath(module.__file__)] = name
+            d[os.path.abspath(module.__file__)] = name  # noqa: PTH100
     return d
 
 
@@ -48,7 +48,7 @@ def _module_to_components(module):
         # a subclass of ComponentElement which is defined in the passed-in module,
         # like
         #
-        #     issubclass(x, ComponentElement) and x.__module__ == module.__name__
+        # >   issubclass(x, ComponentElement) and x.__module__ == module.__name__
         #
         # But that's not possible because x.__module__ is the module in which
         # ComponentElement is defined, not the module in which x is defined.
@@ -60,7 +60,7 @@ def _module_to_components(module):
         return (
             inspect.isclass(x)
             and issubclass(x, Element)
-            and (x.__module__ == module.__name__ or x.__module__ == Element.__module__)
+            and (x.__module__ == module.__name__ or x.__module__ == Element.__module__)  # noqa: PLR1714
         )
 
     return inspect.getmembers(
@@ -90,8 +90,8 @@ def _reload_components(module):
 
     try:
         _reload(module)
-    except Exception as e:
-        logger.error("Encountered exception while reloading module: %s", e)
+    except Exception:
+        logger.exception("Encountered exception while reloading module")
         return None, None
     new_components = list(_module_to_components(module))
 
@@ -118,7 +118,11 @@ def runner():
     parser.add_argument("main_file", help="Main file containing app")
     parser.add_argument("root_component", help="The root component, should be in main file")
     parser.add_argument(
-        "--inspect", action="store_true", dest="inspect", help="Whether to turn on inspector", default=False
+        "--inspect",
+        action="store_true",
+        dest="inspect",
+        help="Whether to turn on inspector",
+        default=False,
     )
     parser.add_argument(
         "--dir",
@@ -129,12 +133,12 @@ def runner():
 
     args = parser.parse_args()
 
-    directory = args.directory or os.path.dirname(args.main_file)
-    directory = os.path.abspath(directory)
+    directory = args.directory or os.path.dirname(args.main_file)  # noqa: PTH120
+    directory = os.path.abspath(directory)  # noqa: PTH100
 
     observer = Observer()
 
-    main_file = Path((args.main_file))
+    main_file = Path(args.main_file)
     sys.path.append(str(main_file.parent))
     main_module = importlib.import_module(main_file.stem)
     root_component = getattr(main_module, args.root_component)
@@ -150,21 +154,23 @@ def runner():
             if FSEventsObserver is not None and isinstance(observer, FSEventsObserver) and event.is_directory:
                 # For Macs (which use FSEvents), FSEvents only reports directory changes
                 files_in_dir = [
-                    os.path.join(event.src_path, f) for f in os.listdir(event.src_path) if f.endswith(".py")
+                    os.path.join(event.src_path, f) # type: ignore  # noqa: PGH003, PTH118
+                    for f in os.listdir(event.src_path)
+                    if f.endswith(".py")  # noqa: PGH003 # type: ignore
                 ]
                 if not files_in_dir:
                     return
                 src_path = max(files_in_dir, key=os.path.getmtime)
-                mtime = os.path.getmtime(src_path)
+                mtime = os.path.getmtime(src_path)  # noqa: PTH204
                 if self.seen_files.get(src_path, 0) == mtime:
                     return
                 self.seen_files[src_path] = mtime
-                if datetime.datetime.now().timestamp() - mtime > 1:
+                if datetime.datetime.now().timestamp() - mtime > 1:  # noqa: DTZ005
                     return
             else:
-                src_path = os.path.abspath(event.src_path)
+                src_path = os.path.abspath(event.src_path)  # noqa: PTH100
 
-            if not src_path.endswith(".py"):
+            if not src_path.endswith(".py"):  # type: ignore  # noqa: PGH003
                 return
 
             old_file_mapping = _file_to_module_name()

@@ -83,7 +83,7 @@ class MakeElementTestCase(unittest.TestCase):
         self.assertEqual(Element1234.__name__, "Element1234")
         comp = Element1234(1, 2)
         self.assertEqual(comp.__class__, Element1234)
-        self.assertEqual(comp.props._d, {"prop1": 1, "prop2": 2, "children": ()})
+        self.assertEqual(comp.props, {"prop1": 1, "prop2": 2, "children": ()})
         with engine.Container() as container:
             comp._render_element()
         value_component = container.children[0]
@@ -104,7 +104,7 @@ class MakeElementTestCase(unittest.TestCase):
         self.assertEqual(Element1234.__name__, "Element1234")
         comp = Element1234(1, 2)
         self.assertEqual(comp.__class__, Element1234)
-        self.assertEqual(comp.props._d, {"prop1": 1, "prop2": 2, "children": ()})
+        self.assertEqual(comp.props, {"prop1": 1, "prop2": 2, "children": ()})
         with engine.Container() as container:
             comp._render_element()
         view = container.children[0]
@@ -130,7 +130,7 @@ class MakeElementTestCase(unittest.TestCase):
         self.assertEqual(Element1234.__name__, "Element1234")
         comp = Element1234(1, 2)
         self.assertEqual(comp.__class__, Element1234)
-        self.assertEqual(comp.props._d, {"prop1": 1, "prop2": 2, "children": ()})
+        self.assertEqual(comp.props, {"prop1": 1, "prop2": 2, "children": ()})
         with engine.Container() as container:
             comp._render_element()
         root = container.children[0]

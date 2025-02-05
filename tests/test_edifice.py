@@ -141,7 +141,7 @@ class _TestElementInner(Element):
 
     def _render_element(self):
         return base_components.VBoxView()(
-            base_components.Label(str(self.props.prop_a)),
+            base_components.Label(str(self.props["prop_a"])),
             base_components.Label(str(self.state_a)),
         )
 
@@ -210,8 +210,8 @@ def _commands_for_address(widget_trees: dict[Element, _WidgetTree], qt_tree, add
     if isinstance(qt_tree.component, base_components.HBoxView) or isinstance(
         qt_tree.component, base_components.VBoxView
     ):
-        return qt_tree.component._qt_stateless_commands(widget_trees, qt_tree.component.props)
-    return qt_tree.component._qt_update_commands(widget_trees, qt_tree.component.props)
+        return qt_tree.component._qt_stateless_commands(widget_trees, engine.props_diff({}, qt_tree.component.props))
+    return qt_tree.component._qt_update_commands(widget_trees, engine.props_diff({}, qt_tree.component.props))
 
 
 class RenderTestCase(unittest.TestCase):
@@ -302,7 +302,7 @@ class RenderTestCase(unittest.TestCase):
                 CommandType(view.component._add_child, i, child.underlying) for (i, child) in enumerate(view.children)
             ]
 
-        self.assertEqual(_dereference_tree(app._widget_tree, _new_qt_tree, [2, 0]).component.props.text, "D")
+        self.assertEqual(_dereference_tree(app._widget_tree, _new_qt_tree, [2, 0]).component.props["text"], "D")
 
         def new_C(*args):
             return _commands_for_address(app._widget_tree, _new_qt_tree, args)
@@ -394,7 +394,7 @@ class RenderTestCase(unittest.TestCase):
 
             def _render_element(self):
                 self.count += 1
-                return base_components.Label(str(self.props.val))
+                return base_components.Label(str(self.props["val"]))
 
         class TestCompOuter(Element):
             def _render_element(self):
@@ -406,13 +406,13 @@ class RenderTestCase(unittest.TestCase):
         app._request_rerender([test_comp])
         inner_comp = app._component_tree[app._component_tree[test_comp][0]][0]
         self.assertEqual(inner_comp.count, 1)
-        self.assertEqual(inner_comp.props.val, 2)
+        self.assertEqual(inner_comp.props["val"], 2)
 
         test_comp.value = 4
         app._request_rerender([test_comp])
         inner_comp = app._component_tree[app._component_tree[test_comp][0]][0]
         self.assertEqual(inner_comp.count, 2)
-        self.assertEqual(inner_comp.props.val, 4)
+        self.assertEqual(inner_comp.props["val"], 4)
 
     def test_render_exception(self):
         class TestCompInner1(Element):
@@ -429,7 +429,7 @@ class RenderTestCase(unittest.TestCase):
             def _render_element(self):
                 self.count += 1
                 self.success_count += 1
-                return base_components.Label(str(self.props.val))
+                return base_components.Label(str(self.props["val"]))
 
         class TestCompInner2(Element):
             def __init__(self, val):
@@ -444,9 +444,9 @@ class RenderTestCase(unittest.TestCase):
 
             def _render_element(self):
                 self.count += 1
-                assert self.props.val == 8
+                assert self.props["val"] == 8
                 self.success_count += 1
-                return base_components.Label(str(self.props.val))
+                return base_components.Label(str(self.props["val"]))
 
         class TestCompOuter(Element):
             def _render_element(self):
@@ -461,9 +461,9 @@ class RenderTestCase(unittest.TestCase):
         app._request_rerender([test_comp])
         inner_comp1, inner_comp2 = app._component_tree[app._component_tree[test_comp][0]]
         self.assertEqual(inner_comp1.count, 1)
-        self.assertEqual(inner_comp1.props.val, 4)
+        self.assertEqual(inner_comp1.props["val"], 4)
         self.assertEqual(inner_comp2.count, 1)
-        self.assertEqual(inner_comp2.props.val, 8)
+        self.assertEqual(inner_comp2.props["val"], 8)
 
 
 class RefreshClassTestCase(unittest.TestCase):
@@ -480,7 +480,7 @@ class RefreshClassTestCase(unittest.TestCase):
 
             def _render_element(self):
                 self.count += 1
-                return base_components.Label(str(self.props.val))
+                return base_components.Label(str(self.props["val"]))
 
         class NewInnerClass(Element):
             def __init__(self, val):
@@ -494,7 +494,7 @@ class RefreshClassTestCase(unittest.TestCase):
 
             def _render_element(self):
                 self.count += 1
-                return base_components.Label(str(self.props.val * 2))
+                return base_components.Label(str(self.props["val"] * 2))
 
         class OuterClass(Element):
             def __init__(self):
@@ -514,7 +514,7 @@ class RefreshClassTestCase(unittest.TestCase):
         app._refresh_by_class([(OldInnerClass, NewInnerClass)])
         inner_comp = app._component_tree[app._component_tree[outer_comp][0]][0]
         assert isinstance(inner_comp, NewInnerClass)
-        self.assertEqual(inner_comp.props.val, 5)
+        self.assertEqual(inner_comp.props["val"], 5)
 
     def test_refresh_child_component(self):
         """
@@ -551,7 +551,7 @@ class RefreshClassTestCase(unittest.TestCase):
         inner_comp = app._component_tree[app._component_tree[outer_comp][0]][0]
         assert old_inner_render_count[0] == 1
         assert type(inner_comp).__name__ == "NewInnerClass"
-        self.assertEqual(inner_comp.props.val, 5)
+        self.assertEqual(inner_comp.props["val"], 5)
 
     def test_refresh_child_error(self):
         class OldInnerClass(Element):
@@ -566,7 +566,7 @@ class RefreshClassTestCase(unittest.TestCase):
 
             def _render_element(self):
                 self.count += 1
-                return base_components.Label(str(self.props.val))
+                return base_components.Label(str(self.props["val"]))
 
         class NewInnerClass(Element):
             def __init__(self, val):
@@ -581,7 +581,7 @@ class RefreshClassTestCase(unittest.TestCase):
             def _render_element(self):
                 self.count += 1
                 assert False
-                return base_components.Label(str(self.props.val * 2))
+                return base_components.Label(str(self.props["val"] * 2))
 
         class OuterClass(Element):
             def __init__(self):
@@ -604,7 +604,7 @@ class RefreshClassTestCase(unittest.TestCase):
             pass
         inner_comp = app._component_tree[app._component_tree[outer_comp][0]][0]
         assert isinstance(inner_comp, OldInnerClass)
-        self.assertEqual(inner_comp.props.val, 5)
+        self.assertEqual(inner_comp.props["val"], 5)
 
     def test_view_recalculate_children_1(self):
         v = base_components.VBoxView()

@@ -7,6 +7,15 @@
 Release Notes
 =============
 
+- Introduced internal type :code:`PropsDiff`.
+- Bugfix for removing :ref:`Graphics Effects`.
+
+Breaking Changes:
+
+- :class:`ContextMenuType` changed from :code:`Mapping` to :code:`tuple`.
+- :class:`CustomWidget` deleted function :code:`paint`, added :func:`CustomWidget.update`.
+
+
 v2.14.2
 -------
 Released: 2025-02-03

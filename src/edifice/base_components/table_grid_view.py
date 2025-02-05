@@ -10,7 +10,11 @@ if QT_VERSION == "PyQt6" and not TYPE_CHECKING:
 else:
     from PySide6.QtWidgets import QGridLayout, QWidget
 
+
 from .base_components import CommandType, Element, PropsDict, QtWidgetElement, _get_widget_children, _WidgetTree
+
+if TYPE_CHECKING:
+    from edifice.engine import PropsDiff
 
 logger = logging.getLogger("Edifice")
 
@@ -32,7 +36,7 @@ class TableGridRow(QtWidgetElement):
     def _qt_update_commands(
         self,
         widget_trees: dict[Element, _WidgetTree],  # noqa: ARG002
-        newprops: PropsDict,  # noqa: ARG002
+        diff_props: PropsDiff,  # noqa: ARG002
     ) -> list[CommandType]:
         # This element has no Qt underlying so it has nothing to do except store
         # the children of the row.
@@ -146,32 +150,24 @@ class TableGridView(QtWidgetElement[QWidget]):
         if len(self._column_minwidth) > column:
             self.underlying_layout.setColumnMinimumWidth(column, self._column_minwidth[column])
 
-    def _delete_child(self, child_component: QtWidgetElement, row: int, column: int):
-        if self.underlying_layout is None:
-            logger.warning("_delete_child No underlying_layout " + str(self))
-        else:
-            if (layoutitem := self.underlying_layout.itemAtPosition(row, column)) is None:
-                logger.warning("_delete_child itemAtPosition failed " + str((row, column)) + " " + str(self))
-            else:
-                if (w := layoutitem.widget()) is None:
-                    logger.warning("_delete_child widget is None " + str((row, column)) + " " + str(self))
-                else:
-                    w.deleteLater()
-                self.underlying_layout.removeItem(layoutitem)
+    def _delete_child(self, child_component: QtWidgetElement, row: int, column: int):  # noqa: ARG002
+        assert self.underlying_layout is not None
+        layoutitem = self.underlying_layout.itemAtPosition(row, column)
+        assert layoutitem is not None
+        w = layoutitem.widget()
+        w.deleteLater()
+        self.underlying_layout.removeItem(layoutitem)
 
-    def _soft_delete_child(self, child_component: QtWidgetElement, row: int, column: int):
-        if self.underlying_layout is None:
-            logger.warning("_delete_child No underlying_layout " + str(self))
-        else:
-            if (layoutitem := self.underlying_layout.itemAtPosition(row, column)) is None:
-                logger.warning("_delete_child itemAtPosition failed " + str((row, column)) + " " + str(self))
-            else:
-                self.underlying_layout.removeItem(layoutitem)
+    def _soft_delete_child(self, child_component: QtWidgetElement, row: int, column: int):  # noqa: ARG002
+        assert self.underlying_layout is not None
+        layoutitem = self.underlying_layout.itemAtPosition(row, column)
+        assert layoutitem is not None
+        self.underlying_layout.removeItem(layoutitem)
 
     def _qt_update_commands(
         self,
         widget_trees: dict[Element, _WidgetTree],
-        newprops,
+        diff_props: PropsDiff,
     ):
         if self.underlying is None:
             self._initialize()
@@ -208,17 +204,21 @@ class TableGridView(QtWidgetElement[QWidget]):
 
         self._old_children = new_children
 
-        if "row_stretch" in newprops:
-            commands.append(CommandType(self._set_row_stretch, newprops.row_stretch))
-        if "column_stretch" in newprops:
-            commands.append(CommandType(self._set_column_stretch, newprops.column_stretch))
-        if "row_minheight" in newprops:
-            commands.append(CommandType(self._set_row_minheight, newprops.row_minheight))
-        if "column_minwidth" in newprops:
-            commands.append(CommandType(self._set_column_minwidth, newprops.column_minwidth))
+        match diff_props.get("row_stretch"):
+            case _, propnew:
+                commands.append(CommandType(self._set_row_stretch, propnew))
+        match diff_props.get("column_stretch"):
+            case _, propnew:
+                commands.append(CommandType(self._set_column_stretch, propnew))
+        match diff_props.get("row_minheight"):
+            case _, propnew:
+                commands.append(CommandType(self._set_row_minheight, propnew))
+        match diff_props.get("column_minwidth"):
+            case _, propnew:
+                commands.append(CommandType(self._set_column_minwidth, propnew))
 
         commands.extend(
-            super()._qt_update_commands_super(widget_trees, newprops, self.underlying, self.underlying_layout),
+            super()._qt_update_commands_super(widget_trees, diff_props, self.underlying, self.underlying_layout),
         )
 
         return commands

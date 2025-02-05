@@ -11,7 +11,11 @@ else:
     from PySide6.QtGui import QValidator
     from PySide6.QtWidgets import QSpinBox
 
+
 from .base_components import CommandType, Element, QtWidgetElement, _ensure_future, _WidgetTree
+
+if tp.TYPE_CHECKING:
+    from edifice.engine import PropsDiff
 
 
 class EdSpinBox(QSpinBox):
@@ -141,8 +145,8 @@ class SpinInput(QtWidgetElement[EdSpinBox]):
         self.underlying.valueChanged.connect(self._on_change_handler)
 
     def _on_change_handler(self, value: int):
-        if self.props.on_change is not None:
-            _ensure_future(self.props.on_change)(value)
+        if self.props["on_change"] is not None:
+            _ensure_future(self.props["on_change"])(value)
 
     def _set_value(self, value: int):
         assert self.underlying is not None
@@ -165,32 +169,39 @@ class SpinInput(QtWidgetElement[EdSpinBox]):
     def _qt_update_commands(
         self,
         widget_trees: dict[Element, _WidgetTree],
-        newprops,
+        diff_props: PropsDiff,
     ):
         if self.underlying is None:
             self._initialize()
         assert self.underlying is not None
 
-        commands = super()._qt_update_commands_super(widget_trees, newprops, self.underlying)
+        commands = super()._qt_update_commands_super(widget_trees, diff_props, self.underlying)
 
-        if "value_to_text" in newprops:
-            commands.append(CommandType(setattr, self.underlying, "_textFromValue", newprops.value_to_text))
-        if "text_to_value" in newprops:
-            commands.append(CommandType(setattr, self.underlying, "_valueFromText", newprops.text_to_value))
-        if "min_value" in newprops:
-            commands.append(CommandType(self._set_min_value, newprops.min_value))
-        if "max_value" in newprops:
-            commands.append(CommandType(self._set_max_value, newprops.max_value))
-        if "value" in newprops:
-            commands.append(CommandType(self._set_value, newprops.value))
-        if "single_step" in newprops:
-            commands.append(CommandType(self.underlying.setSingleStep, newprops.single_step))
-        if "enable_mouse_scroll" in newprops:
-            # Doing it this way means that if the user tries to attach an
-            # on_mouse_wheel event handler then that won't work. But I think
-            # that's okay for now.
-            if newprops.enable_mouse_scroll:
-                commands.append(CommandType(self._set_mouse_wheel, self.underlying, None))
-            else:
-                commands.append(CommandType(self._set_mouse_wheel, self.underlying, lambda e: e.ignore()))
+        match diff_props.get("value_to_text"):
+            case _, propnew:
+                commands.append(CommandType(setattr, self.underlying, "_textFromValue", propnew))
+        match diff_props.get("text_to_value"):
+            case _, propnew:
+                commands.append(CommandType(setattr, self.underlying, "_valueFromText", propnew))
+        match diff_props.get("min_value"):
+            case _, propnew:
+                commands.append(CommandType(self._set_min_value, propnew))
+        match diff_props.get("max_value"):
+            case _, propnew:
+                commands.append(CommandType(self._set_max_value, propnew))
+        match diff_props.get("value"):
+            case _, propnew:
+                commands.append(CommandType(self._set_value, propnew))
+        match diff_props.get("single_step"):
+            case _, propnew:
+                commands.append(CommandType(self.underlying.setSingleStep, propnew))
+        match diff_props.get("enable_mouse_scroll"):
+            case _, propnew:
+                # Doing it this way means that if the user tries to attach an
+                # on_mouse_wheel event handler then that won't work. But I think
+                # that's okay for now.
+                if propnew:
+                    commands.append(CommandType(self._set_mouse_wheel, self.underlying, None))
+                else:
+                    commands.append(CommandType(self._set_mouse_wheel, self.underlying, lambda e: e.ignore()))
         return commands

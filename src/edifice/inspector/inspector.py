@@ -136,7 +136,7 @@ def ElementView(
     component: ed.Element,
     # We pass component_props in as separate props because the component
     # props doesn't have an __eq__ relation.
-    component_props: dict[str, tp.Any],
+    component_props: ed.PropsDict,
     component_hook_state: list[_HookState],
     refresh_trigger: bool,  # force a refresh when this changes
 ):
@@ -218,7 +218,7 @@ def Inspector(
                 if selected is not None:
                     ElementView(
                         selected,
-                        selected.props._d,
+                        selected.props,
                         hook_state[selected],
                         refresh_trigger,
                     )

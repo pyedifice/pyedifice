@@ -1,4 +1,13 @@
-from edifice.engine import Element, QtWidgetElement, Reference, child_place, component, qt_component  # noqa: I001
+from edifice.engine import (  # noqa: I001
+    Element,
+    PropsDict,
+    PropsDiff,
+    QtWidgetElement,
+    Reference,
+    child_place,
+    component,
+    qt_component,
+)
 from edifice.app import App, use_stop
 from edifice.base_components import (
     Button,
@@ -69,6 +78,8 @@ __all__ = [
     "ImageSvg",
     "Label",
     "ProgressBar",
+    "PropsDict",
+    "PropsDiff",
     "QtWidgetElement",
     "RadioButton",
     "Reference",

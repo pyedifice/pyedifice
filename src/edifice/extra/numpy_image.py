@@ -11,7 +11,7 @@ if QT_VERSION == "PyQt6" and not TYPE_CHECKING:
     from PyQt6 import QtCore
     from PyQt6.QtGui import QImage, QPixmap
 else:
-    from PySide6 import QtCore
+    from PySide6 import QtCore  # noqa: TC002
     from PySide6.QtGui import QImage, QPixmap
 
 import edifice as ed
@@ -42,7 +42,7 @@ class NumpyArray(Generic[T_Numpy_Array_co]):
         self.dtype = np_array.dtype
         self.np_array = np_array
 
-    def __eq__(self, other: NumpyArray[T_Numpy_Array_co]) -> bool:
+    def __eq__(self, other: NumpyArray[T_Numpy_Array_co]) -> bool: # type: ignore  # noqa: PGH003
         return np.array_equal(self.np_array, other.np_array, equal_nan=True)
 
 
@@ -145,7 +145,7 @@ class NumpyImage(ed.QtWidgetElement):
     def _qt_update_commands(
         self,
         widget_trees: dict[ed.Element, _WidgetTree],
-        newprops,
+        diff_props: ed.PropsDiff,
     ):
         if self.underlying is None:
             self._initialize()
@@ -155,9 +155,11 @@ class NumpyImage(ed.QtWidgetElement):
             qimage = NumpyArray_to_QImage(src)
             return _image_descriptor_to_pixmap(qimage)
 
-        commands = super()._qt_update_commands_super(widget_trees, newprops, self.underlying, None)
-        if "src" in newprops:
-            commands.append(CommandType(self.underlying._setPixmap, _render_image(newprops.src)))
-        if "aspect_ratio_mode" in newprops:
-            commands.append(CommandType(self.underlying._setAspectRatioMode, newprops.aspect_ratio_mode))
+        commands = super()._qt_update_commands_super(widget_trees, diff_props, self.underlying, None)
+        match diff_props.get("src"):
+            case _, propnew:
+                commands.append(CommandType(self.underlying._setPixmap, _render_image(propnew)))
+        match diff_props.get("aspect_ratio_mode"):
+            case _, propnew:
+                commands.append(CommandType(self.underlying._setAspectRatioMode, propnew))
         return commands

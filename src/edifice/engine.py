@@ -42,7 +42,44 @@ def _dict_to_style(d: dict[str, tp.Any]) -> str:
     return "{" + (";".join(f"{k}: {stylevalue_to_str(v)}" for (k, v) in d.items())) + "}"
 
 
+
+PropsDiff = dict[str, tuple[tp.Any, tp.Any]]
+"""
+The difference between two PropsDict.
+
+The keys will be the union of the keys of old and new.
+
+The values will be a tuple of the values of old and new:
+
+    If the key was not in old:
+        (None, new[key])
+    If the key was not in new:
+        (old[key], None)
+    If the key was in both old and new:
+        (old[key], new[key])
+"""
+
+
+def props_diff(old: dict[str, tp.Any], new: dict[str, tp.Any]) -> PropsDiff:
+    """
+    Calculate the difference between two PropsDicts, except for "children".
+    """
+    diff = {}
+    for key in set(old) | set(new):
+        if key != "children":
+            if key not in old:
+                diff[key] = (None, new[key])
+            elif key not in new:
+                diff[key] = (old[key], None)
+            elif old[key] != new[key]:
+                diff[key] = (old[key], new[key])
+    return diff
+
 # TODO
+# It's time to delete _ensure_future.
+#
+# We should recommend use_async_call instead because it cancels on unmount.
+#
 # https://stackoverflow.com/questions/37278647/fire-and-forget-python-async-await/37345564#37345564
 # “Replace asyncio.ensure_future with asyncio.create_task everywhere if you're
 # using Python >= 3.7 It's a newer, nicer way to spawn tasks.”
@@ -103,82 +140,10 @@ Deferred function call. A tuple with a Callable, and all of the values of its ar
 """
 
 
-class PropsDict:
-    """An immutable dictionary for storing props.
-
-    Props may be accessed either by indexing
-
-        props["myprop"]
-
-    or by attribute
-
-        props.myprop
-
-    By convention, all PropsDict methods will start with :code:`_` to
-    not conflict with keys.
-
-    .. document private functions
-    .. autoproperty:: _keys
-    .. autoproperty:: _items
-    """
-
-    __slots__ = ("_d",)
-
-    def __init__(self, dictionary: tp.Mapping[str, tp.Any]):
-        super().__setattr__("_d", dictionary)
-
-    def __getitem__(self, key) -> tp.Any:
-        return self._d[key]
-
-    def __setitem__(self, key, value) -> tp.NoReturn:
-        raise ValueError("Props are immutable")
-
-    @property
-    def _keys(self) -> Iterator:
-        """Returns the keys of the props dict as a list."""
-        return self._d.keys()
-
-    @property
-    def _items(self) -> Iterator:
-        """Returns the (key, value) of the props dict as a list."""
-        return self._d.items()
-
-    def _get(self, key: str, default: tp.Any | None = None) -> tp.Any:
-        """Gets item by key.
-
-        Equivalent to dictionary.get(key, default)
-
-        Args:
-            key: key to the PropsDict
-            default: returned value if key is not found in props
-        Returns:
-            The corresponding value if key is in PropsDict, the default
-            value otherwise.
-        """
-        return self._d.get(key, default)
-
-    def __len__(self) -> int:
-        return len(self._d)
-
-    def __iter__(self):
-        return iter(self._d)
-
-    def __contains__(self, k) -> bool:
-        return k in self._d
-
-    def __getattr__(self, key) -> tp.Any:
-        if key in self._d:
-            return self._d[key]
-        raise KeyError(str(key) + " not in props")
-
-    def __repr__(self):
-        return "PropsDict(" + str(repr(self._d)) + ")"
-
-    def __str__(self) -> str:
-        return "PropsDict(" + str(self._d) + ")"
-
-    def __setattr__(self, key, value) -> tp.NoReturn:
-        raise ValueError("Props are immutable")
+PropsDict = dict[str, tp.Any]
+"""
+dict for storing immutable props.
+"""
 
 
 class Reference(tp.Generic[_T_Element]):
@@ -325,7 +290,7 @@ class _RenderContext:
     def mark_props_change(self, component: Element, newprops: PropsDict):
         if component not in self.component_to_old_props:
             self.component_to_old_props[component] = component.props
-        component._props = newprops._d
+        component._props = newprops
 
     def get_old_props(self, component):
         if component in self.component_to_old_props:
@@ -379,7 +344,7 @@ class Element:
 
     def __init__(self):
         super().__setattr__("_edifice_internal_references", set())
-        self._props: dict[str, tp.Any] = {"children": []}
+        self._props: PropsDict = {"children": []}
         # Ensure we only construct this element once
         assert getattr(self, "_initialized", False) is False
         self._initialized = True
@@ -479,7 +444,7 @@ class Element:
     @property
     def props(self) -> PropsDict:
         """The props of this Element."""
-        return PropsDict(self._props)
+        return self._props
 
     def _should_update(self, newprops: PropsDict) -> bool:
         """Determines if the Element should rerender upon receiving new props and state.
@@ -497,14 +462,15 @@ class Element:
             Whether or not the Element should be rerendered.
         """
 
-        # TODO if an Element has children, then _should_update will always
-        # return True, because the children will always be different, because
-        # _recycle_children hasn't been called yet. Is that correct behavior?
+        for k, v in newprops.items():
 
-        for k, v in newprops._items:
+            # TODO if an Element has children, then _should_update will always
+            # return True, because the children will always be different, because
+            # _recycle_children hasn't been called yet. Is that correct behavior?
+
             if k in self.props:
                 # If the prop is in the old props, then we check if it's changed.
-                v2 = self.props._get(k)
+                v2 = self.props.get(k)
                 if v2 != v:
                     return True
             else:
@@ -530,10 +496,10 @@ class Element:
         classname = self.__class__.__name__
         return [
             f"<{classname} id=0x%x %s>"
-            % (id(self), " ".join(f"{p}={val}" for (p, val) in self.props._items if p != "children")),
+            % (id(self), " ".join(f"{p}={val}" for (p, val) in self.props.items() if p != "children")),
             f"</{classname}>",
             f"<{classname} id=0x%x %s />"
-            % (id(self), " ".join(f"{p}={val}" for (p, val) in self.props._items if p != "children")),
+            % (id(self), " ".join(f"{p}={val}" for (p, val) in self.props.items() if p != "children")),
         ]
 
     def __str__(self):
@@ -677,7 +643,7 @@ def component(f: Callable[tp.Concatenate[selfT, P], None]) -> Callable[P, Elemen
             self._register_props(name_to_val)
 
         def _render_element(self):
-            props: dict[str, tp.Any] = self.props._d
+            props: dict[str, tp.Any] = self.props
             params = props.copy()
 
             if "children" not in varnames:
@@ -699,22 +665,24 @@ def Container(self):
     pass
 
 
-ContextMenuType = tp.Mapping[str, tp.Union[None, tp.Callable[[], tp.Any], "ContextMenuType"]]
+ContextMenuType = tuple[tuple[str, tp.Union[tp.Callable[[], None], "ContextMenuType"]], ...]
 
 
-def _create_qmenu(menu: ContextMenuType, parent, title: str | None = None):
+def _create_qmenu(menu: ContextMenuType, parent: QtWidgets.QWidget | None, title: str | None = None) -> QtWidgets.QMenu:
     widget = QtWidgets.QMenu(parent)
     if title is not None:
         widget.setTitle(title)
 
-    for key, value in menu.items():
-        if isinstance(value, dict):
+    for m in menu:
+        key, value = m
+        if callable(value):
+            widget.addAction(key, value)
+        elif type(value) is tuple:
             sub_menu = _create_qmenu(value, widget, key)
             widget.addMenu(sub_menu)
-        elif value is None:
-            widget.addSeparator()
-        else:
-            widget.addAction(key, value)
+        # TODO separator
+        # > elif value is None:
+        # >     widget.addSeparator()
     return widget
 
 
@@ -766,13 +734,26 @@ class QtWidgetElement(Element, tp.Generic[_T_widget]):
             :code:`"ns-resize"`, :code:`"nesw-resize"`, :code:`"nwse-resize"`,
             :code:`"not-allowed"`, :code:`"forbidden"`
         context_menu:
-            The context menu to display when the user right clicks on the widget.
-            Expressed as a dict mapping the name of the context menu entry to either a function
-            (which will be called when this entry is clicked) or to another sub context menu.
-            For example, :code:`{"Copy": copy_fun, "Share": {"Twitter": twitter_share_fun, "Facebook": facebook_share_fun}}`
+            Context menu to display when the user right-clicks on the widget.
+            Declared as pairs of the context menu label to either a function
+            (which will be called when this entry is clicked) or a sub context menu.
+
+            .. code-block:: python
+
+                context_menu=(
+                    ("Action 1", lambda: None),
+                    ("Action 2", lambda: None),
+                    ("Submenu", (
+                        ("Action 3", lambda: None),
+                        ("Action 4", lambda: None)
+                    )),
+                ),
+
         css_class:
             A string or a list of strings, which will be stored in the :code:`css_class` property of the Qt Widget.
-            This can be used in an application stylesheet, like:
+            This class can be styled with the application stylesheet, like:
+
+            .. code-block:: css
 
                 QLabel[css_class="heading"] { font-size: 18px; }
 
@@ -852,7 +833,10 @@ class QtWidgetElement(Element, tp.Generic[_T_widget]):
             * `QDropEvent <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QDropEvent.html>`_
               when the drop happens.
 
-            The handler function should handle all cases. Example::
+            The handler function should handle all four event types.
+
+            .. code-block:: python
+                :caption: Example of handling drop events
 
                 dropped_files, dropped_files_set = use_state(cast(list[str], []))
                 proposed_files, proposed_files_set = use_state(cast(list[str], []))
@@ -890,9 +874,9 @@ class QtWidgetElement(Element, tp.Generic[_T_widget]):
         self,
         style: tp.Mapping[str, tp.Any] | None = None,
         tool_tip: str | None = None,
-        cursor: str | None = None,
+        cursor: str | QtCore.Qt.CursorShape | None = None,
         context_menu: ContextMenuType | None = None,
-        css_class: tp.Any | None = None,
+        css_class: str | None = None,
         size_policy: QtWidgets.QSizePolicy | None = None,
         focus_policy: QtCore.Qt.FocusPolicy | None = None,
         _focus_open: bool = False,
@@ -972,10 +956,6 @@ class QtWidgetElement(Element, tp.Generic[_T_widget]):
         self._focus_open_needed = _focus_open
 
         self._context_menu = None
-        self._context_menu_connected = False
-        if cursor is not None:
-            if cursor not in _CURSORS:
-                raise ValueError(f"Unrecognized cursor {cursor}. Cursor must be one of {list(_CURSORS.keys())}")
 
         self._blur: QtWidgets.QGraphicsBlurEffect | None = None
         self._dropshadow: QtWidgets.QGraphicsDropShadowEffect | None = None
@@ -1228,12 +1208,13 @@ class QtWidgetElement(Element, tp.Generic[_T_widget]):
 
     def _gen_styling_commands(
         self,
-        style: dict[str, tp.Any],
+        styleold: dict[str, tp.Any],
+        stylenew: dict[str, tp.Any],
         underlying: QtWidgets.QWidget,
         underlying_layout: QtWidgets.QLayout | None = None,
     ):
         # shallow copy the style because we will be modifying it
-        cpstyle = copy(style)
+        cpstyle = copy(stylenew)
 
         commands: list[CommandType] = []
 
@@ -1387,7 +1368,7 @@ class QtWidgetElement(Element, tp.Generic[_T_widget]):
             blur = float(cpstyle["blur"])
             commands.append(CommandType(self._set_blur, underlying, blur))
             cpstyle.pop("blur")
-        elif self._blur is not None:
+        elif "blur" in styleold:
             commands.append(CommandType(self._set_blur, underlying, None))
 
         if "colorize" in cpstyle:
@@ -1398,7 +1379,7 @@ class QtWidgetElement(Element, tp.Generic[_T_widget]):
             assert type(colorize[1]) is float
             commands.append(CommandType(self._set_colorize, underlying, colorize))
             cpstyle.pop("colorize")
-        elif self._colorize is not None:
+        elif "colorize" in styleold:
             commands.append(CommandType(self._set_colorize, underlying, None))
 
         if "drop-shadow" in cpstyle:
@@ -1410,14 +1391,14 @@ class QtWidgetElement(Element, tp.Generic[_T_widget]):
             assert type(dropshadow[2]) is QtCore.QPointF
             commands.append(CommandType(self._set_dropshadow, underlying, (blur, dropshadow[1], dropshadow[2])))
             cpstyle.pop("drop-shadow")
-        elif self._dropshadow is not None:
+        elif "drop-shadow" in styleold:
             commands.append(CommandType(self._set_dropshadow, underlying, None))
 
         if "opacity" in cpstyle:
             assert type(cpstyle["opacity"]) is float
             commands.append(CommandType(self._set_opacity, underlying, cpstyle["opacity"]))
             cpstyle.pop("opacity")
-        elif self._opacity is not None:
+        elif "opacity" in styleold:
             commands.append(CommandType(self._set_opacity, underlying, None))
 
         # CSS style selection is matched by setting underlying.setObjectName(str(id(self)))
@@ -1427,24 +1408,26 @@ class QtWidgetElement(Element, tp.Generic[_T_widget]):
         commands.append(CommandType(underlying.setStyleSheet, css_string))
         return commands
 
-    def _set_context_menu(self, underlying: QtWidgets.QWidget):
-        if self._context_menu_connected:
+    def _set_context_menu(self, underlying: QtWidgets.QWidget, propold:ContextMenuType | None, propnew:ContextMenuType | None):
+        if propold is not None:
             underlying.customContextMenuRequested.disconnect()
-        self._context_menu_connected = True
+            underlying.setContextMenuPolicy(QtCore.Qt.ContextMenuPolicy.DefaultContextMenu)
 
-        def _show_context_menu(pos):
-            if self.props.context_menu is not None:
-                menu = _create_qmenu(self.props.context_menu, underlying)
+        if propnew is not None:
+
+            def _show_context_menu(pos):
+                menu = _create_qmenu(propnew, underlying)
                 pos = underlying.mapToGlobal(pos)
                 menu.move(pos)
                 menu.show()
 
-        underlying.customContextMenuRequested.connect(_show_context_menu)
+            underlying.customContextMenuRequested.connect(_show_context_menu)
+            underlying.setContextMenuPolicy(QtCore.Qt.ContextMenuPolicy.CustomContextMenu)
 
     def _qt_update_commands(
         self,
         widget_trees: dict[Element, _WidgetTree],
-        newprops: PropsDict,
+        diff_props: PropsDiff,
     ) -> list[CommandType]:
         raise NotImplementedError
 
@@ -1453,81 +1436,90 @@ class QtWidgetElement(Element, tp.Generic[_T_widget]):
         widget_trees: dict[Element, _WidgetTree],  # noqa: ARG002
         # We must pass all of the widget_trees because some elements
         # like TableGridView need to know the children of the children.
-        newprops: PropsDict,
+        diff_props: PropsDiff,
         underlying: QtWidgets.QWidget,
         underlying_layout: QtWidgets.QLayout | None = None,
     ) -> list[CommandType]:
         commands: list[CommandType] = []
-        for prop in newprops:
-            if prop == "style":
-                style = newprops.style or {}
-                commands.extend(self._gen_styling_commands(style, underlying, underlying_layout))
-            elif prop == "size_policy":
-                if newprops.size_policy is not None:
+        # match diff_props.get("style"):
+        #     case propold, propnew:
+        #         commands.extend(self._gen_styling_commands(propold or {}, propnew or {}, underlying, underlying_layout))
+
+
+
+        for propname, (propold, propnew) in diff_props.items():
+            if propname == "style":
+                commands.extend(self._gen_styling_commands(propold or {}, propnew or {}, underlying, underlying_layout))
+            elif propname == "size_policy":
+                if propnew is not None:
+                    assert type(propnew) is QtWidgets.QSizePolicy
                     if self._default_size_policy is None:
                         self._default_size_policy = underlying.sizePolicy()
-                    commands.append(CommandType(underlying.setSizePolicy, newprops.size_policy))
+                    commands.append(CommandType(underlying.setSizePolicy, propnew))
                 elif self._default_size_policy is not None:
                     commands.append(CommandType(underlying.setSizePolicy, self._default_size_policy))
-            elif prop == "focus_policy":
-                if newprops.focus_policy is not None:
-                    commands.append(CommandType(underlying.setFocusPolicy, newprops.focus_policy))
-            elif prop == "enabled":
-                if newprops.enabled is not None:
-                    commands.append(CommandType(underlying.setEnabled, newprops.enabled))
-            elif prop == "on_click":
-                commands.append(CommandType(self._set_on_click, underlying, newprops.on_click))
-                if newprops.on_click is not None and self.props.cursor is not None:
-                    commands.append(CommandType(underlying.setCursor, QtCore.Qt.CursorShape.PointingHandCursor))
-            elif prop == "on_key_down":
-                commands.append(CommandType(self._set_on_key_down, underlying, newprops.on_key_down))
-            elif prop == "on_key_up":
-                commands.append(CommandType(self._set_on_key_up, underlying, newprops.on_key_up))
-            elif prop == "on_mouse_down":
-                commands.append(CommandType(self._set_on_mouse_down, underlying, newprops.on_mouse_down))
-            elif prop == "on_mouse_up":
-                commands.append(CommandType(self._set_on_mouse_up, underlying, newprops.on_mouse_up))
-            elif prop == "on_mouse_enter":
-                commands.append(CommandType(self._set_on_mouse_enter, underlying, newprops.on_mouse_enter))
-            elif prop == "on_mouse_leave":
-                commands.append(CommandType(self._set_on_mouse_leave, underlying, newprops.on_mouse_leave))
-            elif prop == "on_mouse_move":
-                commands.append(CommandType(self._set_on_mouse_move, underlying, newprops.on_mouse_move))
-            elif prop == "on_mouse_wheel":
-                commands.append(CommandType(self._set_mouse_wheel, underlying, newprops.on_mouse_wheel))
-            elif prop == "on_drop":
-                commands.append(CommandType(self._set_on_drop, underlying, newprops.on_drop))
-            elif prop == "on_resize":
-                commands.append(CommandType(self._set_on_resize, underlying, newprops.on_resize))
-            elif prop == "tool_tip":
-                if newprops.tool_tip is not None:
-                    commands.append(CommandType(underlying.setToolTip, newprops.tool_tip))
-            elif prop == "css_class":
-                css_class = newprops.css_class
-                if css_class is None:
-                    css_class = []
-                commands.append(CommandType(underlying.setProperty, "css_class", css_class))
+            elif propname == "focus_policy":
+                if propnew is not None:
+                    assert type(propnew) is QtCore.Qt.FocusPolicy
+                    commands.append(CommandType(underlying.setFocusPolicy, propnew))
+                # TODO else
+            elif propname == "enabled":
+                if propnew is not None:
+                    assert type(propnew) is bool
+                    commands.append(CommandType(underlying.setEnabled, propnew))
+                else:
+                    commands.append(CommandType(underlying.setEnabled, True))
+            elif propname == "on_click":
+                commands.append(CommandType(self._set_on_click, underlying, propnew))
+                # TODO on_click cursor
+                # > if propnew is not None and self.props.cursor is None:
+                # >     commands.append(CommandType(underlying.setCursor, QtCore.Qt.CursorShape.PointingHandCursor))
+            elif propname == "on_key_down":
+                commands.append(CommandType(self._set_on_key_down, underlying, propnew))
+            elif propname == "on_key_up":
+                commands.append(CommandType(self._set_on_key_up, underlying, propnew))
+            elif propname == "on_mouse_down":
+                commands.append(CommandType(self._set_on_mouse_down, underlying, propnew))
+            elif propname == "on_mouse_up":
+                commands.append(CommandType(self._set_on_mouse_up, underlying, propnew))
+            elif propname == "on_mouse_enter":
+                commands.append(CommandType(self._set_on_mouse_enter, underlying, propnew))
+            elif propname == "on_mouse_leave":
+                commands.append(CommandType(self._set_on_mouse_leave, underlying, propnew))
+            elif propname == "on_mouse_move":
+                commands.append(CommandType(self._set_on_mouse_move, underlying, propnew))
+            elif propname == "on_mouse_wheel":
+                commands.append(CommandType(self._set_mouse_wheel, underlying, propnew))
+            elif propname == "on_drop":
+                commands.append(CommandType(self._set_on_drop, underlying, propnew))
+            elif propname == "on_resize":
+                commands.append(CommandType(self._set_on_resize, underlying, propnew))
+            elif propname == "tool_tip":
+                if propnew is not None:
+                    commands.append(CommandType(underlying.setToolTip, propnew))
+                else:
+                    commands.append(CommandType(underlying.setToolTip, ""))
+            elif propname == "css_class":
+                commands.append(CommandType(underlying.setProperty, "css_class", propnew or []))
                 commands.extend(
                     [
                         CommandType(underlying.style().unpolish, underlying),
                         CommandType(underlying.style().polish, underlying),
                     ],
                 )
-            elif prop == "cursor":
-                cursor = self.props.cursor or ("default" if self.props.on_click is None else "pointer")
-                commands.append(CommandType(underlying.setCursor, _CURSORS[cursor]))
-            elif prop == "context_menu":
-                if self._context_menu_connected:
-                    underlying.customContextMenuRequested.disconnect()
-                if self.props.context_menu is not None:
-                    commands.append(
-                        CommandType(underlying.setContextMenuPolicy, QtCore.Qt.ContextMenuPolicy.CustomContextMenu),
-                    )
-                    commands.append(CommandType(self._set_context_menu, underlying))
+            elif propname == "cursor":
+                # TODO
+                # > cursor = self.props.cursor or ("default" if self.props.on_click is None else "pointer")
+                if type(propnew) is str:
+                    if propnew not in _CURSORS:
+                        raise ValueError(f"Unrecognized cursor {propnew}. Cursor must be one of {list(_CURSORS.keys())}")
+                    commands.append(CommandType(underlying.setCursor, _CURSORS[propnew]))
+                elif type(propnew) is QtGui.QCursor:
+                    commands.append(CommandType(underlying.setCursor, propnew))
                 else:
-                    commands.append(
-                        CommandType(underlying.setContextMenuPolicy, QtCore.Qt.ContextMenuPolicy.DefaultContextMenu),
-                    )
+                    commands.append(CommandType(underlying.unsetCursor))
+            elif propname == "context_menu":
+                commands.append(CommandType(self._set_context_menu, underlying, propold, propnew))
         if self._focus_open_needed:
             # Only do this on first render
             self._focus_open_needed = False
@@ -1560,29 +1552,30 @@ def qt_component(
             super().__init__()
             name_to_val = defaults.copy()
             name_to_val.update(filter(not_ignored, zip(varnames, args, strict=False)))
-            # kwards prefixed with _ are excluded from props
+            # kwargs prefixed with _ are excluded from props
             name_to_val.update((k, v) for (k, v) in kwargs.items() if k[0] != "_")
             self._register_props(name_to_val)
 
         def _qt_update_commands(
             self,
             widget_trees: dict[Element, _WidgetTree],
-            newprops: PropsDict,
+            diff_props: PropsDiff,
         ) -> list[CommandType]:
-            props: dict[str, tp.Any] = self.props._d
+            props: dict[str, tp.Any] = self.props
             params = props.copy()
-            newkeys = list(newprops._d.keys())
+            newkeys = list(diff_props.keys())
 
             def super_commands(underlying: QtWidgets.QWidget, layout: QtWidgets.QLayout | None):
                 return super(ComponentElement, self)._qt_update_commands_super(
                     widget_trees,
-                    newprops,
+                    diff_props,
                     underlying,
                     layout,
                 )
 
             me = tp.cast(qtT, self)
-            return f(me, newkeys, super_commands, **params)
+            # TODO Pyright cannot typecheck this, I don't even know if it's correct
+            return f(me, newkeys, super_commands, **params) # type: ignore  # noqa: PGH003
 
         def __repr__(self):
             return f.__name__
@@ -2054,9 +2047,9 @@ class RenderEngine:
         # Figure out which children can be re-used
         children = self._recycle_children(component, render_context)
 
-        props_dict = dict(component.props._items)
+        props_dict = component.props.copy()
         props_dict["children"] = tuple(children)
-        render_context.mark_props_change(component, PropsDict(props_dict))
+        render_context.mark_props_change(component, props_dict)
         return render_context.widget_tree[component]
 
     def _render(self, component: Element, render_context: _RenderContext) -> _WidgetTree:
@@ -2151,12 +2144,12 @@ class RenderEngine:
             return commands
 
         old_props = render_context.get_old_props(element)
-        new_props = PropsDict({k: v for k, v in element.props._items if k not in old_props or old_props[k] != v})
+        diff_props = props_diff(old_props, element.props)
 
         # Call user provided render function and retrieve old results
         prev_element = render_context.current_element
         render_context.current_element = element
-        commands.extend(element._qt_update_commands(render_context.widget_tree, new_props))
+        commands.extend(element._qt_update_commands(render_context.widget_tree, diff_props))
         render_context.current_element = prev_element
         return commands
 
@@ -2332,9 +2325,10 @@ class RenderEngine:
                     # But then users would start defensively try-ing
                     # every use_async function and would forget to re-raise
                     # CancelledError. Which would be worse.
-                except BaseException as ex:  # noqa: BLE001
-                    if not isinstance(ex, asyncio.CancelledError):
-                        logger.debug("Non-CancelledError exception raised in use_async")
+                except asyncio.CancelledError:
+                    pass
+                except BaseException:  # noqa: BLE001
+                    logger.debug("Non-CancelledError exception raised in use_async")
                 hook.task = None
             if len(hook.queue) > 0:
                 # There is another async task waiting in the queue

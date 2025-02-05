@@ -20,7 +20,11 @@ else:
     from PySide6.QtCore import QPoint, QRect, QSize, Qt
     from PySide6.QtWidgets import QLayout, QLayoutItem, QSizePolicy, QWidget
 
+
 from .base_components import Element, QtWidgetElement, _get_widget_children, _LinearView, _WidgetTree
+
+if typing.TYPE_CHECKING:
+    from edifice.engine import PropsDiff
 
 logger = logging.getLogger("Edifice")
 
@@ -36,8 +40,8 @@ class FlowLayout(QLayout):
         while item:
             item = self.takeAt(0)
 
-    def addItem(self, item):
-        self._item_list.append(item)
+    def addItem(self, arg__1):
+        self._item_list.append(arg__1)
 
     def count(self):
         return len(self._item_list)
@@ -45,13 +49,13 @@ class FlowLayout(QLayout):
     def itemAt(self, index):
         if 0 <= index < len(self._item_list):
             return self._item_list[index]
-
         return None
 
-    def takeAt(self, index):
+    # Contradiction between the docs and the type.
+    # https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QLayout.html#PySide6.QtWidgets.QLayout.takeAt
+    def takeAt(self, index): # type: ignore  # noqa: PGH003
         if 0 <= index < len(self._item_list):
             return self._item_list.pop(index)
-
         return None
 
     # We need insertWidget like the one in QBoxLayout to support Edifice.
@@ -62,7 +66,7 @@ class FlowLayout(QLayout):
     #
     # So we have to write insertWidget in terms of addWidget and removeWidget.
     #
-    # This is crazy, but maybe we won’t do a lot of inserting into the middle
+    # This is crazy, but maybe we won't do a lot of inserting into the middle
     # of a large FlowLayout?
     def insertWidget(self, index, w: QWidget):
         stack = []
@@ -80,13 +84,12 @@ class FlowLayout(QLayout):
     def hasHeightForWidth(self):
         return True
 
-    def heightForWidth(self, width):
-        height = self._do_layout(QRect(0, 0, width, 0), True)
-        return height
+    def heightForWidth(self, arg__1):
+        return self._do_layout(QRect(0, 0, arg__1, 0), True)
 
-    def setGeometry(self, rect):
-        super().setGeometry(rect)
-        self._do_layout(rect, False)
+    def setGeometry(self, arg__1: QRect):
+        super().setGeometry(arg__1)
+        self._do_layout(arg__1, False)
 
     def sizeHint(self):
         return self.minimumSize()
@@ -163,13 +166,13 @@ class FlowView(_LinearView[QWidget]):
         super().__init__(**kwargs)
         self.underlying = None
 
-    def _delete_child(self, i, old_child: QtWidgetElement):
+    def _delete_child(self, i, old_child: QtWidgetElement):  # noqa: ARG002
         assert self.underlying_layout is not None
         child_node = self.underlying_layout.takeAt(i)
         assert child_node is not None
         child_node.widget().deleteLater()
 
-    def _soft_delete_child(self, i, old_child: QtWidgetElement):
+    def _soft_delete_child(self, i, old_child: QtWidgetElement):  # noqa: ARG002
         assert self.underlying_layout is not None
         child_node = self.underlying_layout.takeAt(i)
         assert child_node is not None
@@ -192,7 +195,7 @@ class FlowView(_LinearView[QWidget]):
     def _qt_update_commands(
         self,
         widget_trees: dict[Element, _WidgetTree],
-        newprops,
+        diff_props: PropsDiff,
     ):
         if self.underlying is None:
             self._initialize()
@@ -200,6 +203,6 @@ class FlowView(_LinearView[QWidget]):
         children = _get_widget_children(widget_trees, self)
         commands = self._recompute_children(children)
         commands.extend(
-            super()._qt_update_commands_super(widget_trees, newprops, self.underlying, self.underlying_layout)
+            super()._qt_update_commands_super(widget_trees, diff_props, self.underlying, self.underlying_layout),
         )
         return commands

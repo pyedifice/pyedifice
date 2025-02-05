@@ -17,6 +17,8 @@ from matplotlib.figure import Figure
 if tp.TYPE_CHECKING:
     from matplotlib.backend_bases import MouseEvent
 
+    from edifice.engine import PropsDiff
+
 
 class MatplotlibFigure(QtWidgetElement):
     """
@@ -72,7 +74,7 @@ class MatplotlibFigure(QtWidgetElement):
         self.current_plot_fun: tp.Callable[[Axes], None] | None = None
         self.on_mouse_move_connect_id: int | None = None
 
-    def _qt_update_commands(self, children, newprops):
+    def _qt_update_commands(self, widget_trees, diff_props: PropsDiff):
         if self.underlying is None:
             # Default to maximum figsize https://matplotlib.org/stable/api/figure_api.html#matplotlib.figure.figaspect
             # Constrain the Figure by putting it in a smaller View, it will resize itself correctly.
@@ -81,31 +83,33 @@ class MatplotlibFigure(QtWidgetElement):
         assert self.underlying is not None
         assert self.subplots is not None
 
-        commands = super()._qt_update_commands_super(children, newprops, self.underlying, None)
+        commands = super()._qt_update_commands_super(widget_trees, diff_props, self.underlying, None)
 
-        if "plot_fun" in newprops:
+        match diff_props.get("plot_fun"):
+            case _, propnew:
 
-            def _command_plot_fun(self):
-                self.current_plot_fun = tp.cast(tp.Callable[[Axes], None], self.props.plot_fun)
-                self.subplots.clear()
-                self.current_plot_fun(self.subplots)
-                self.underlying.draw()
-                # alternately we could do draw_idle() here, but I don't think it's
-                # any better and it messes up the mouse events.
+                def _command_plot_fun(self):
+                    self.current_plot_fun = tp.cast(tp.Callable[[Axes], None], propnew)
+                    self.subplots.clear()
+                    self.current_plot_fun(self.subplots)
+                    self.underlying.draw()
+                    # alternately we could do draw_idle() here, but I don't think it's
+                    # any better and it messes up the mouse events.
 
-            commands.append(CommandType(_command_plot_fun, self))
-        if "on_figure_mouse_move" in newprops:
+                commands.append(CommandType(_command_plot_fun, self))
+        match diff_props.get("on_figure_mouse_move"):
+            case _, propnew:
 
-            def _command_mouse_move(self):
-                if self.on_mouse_move_connect_id is not None:
-                    self.underlying.mpl_disconnect(self.on_mouse_move_connect_id)
-                if newprops["on_figure_mouse_move"] is not None:
-                    self.on_mouse_move_connect_id = self.underlying.mpl_connect(
-                        "motion_notify_event",
-                        newprops["on_figure_mouse_move"],
-                    )
-                else:
-                    self.on_mouse_move_connect_id = None
+                def _command_mouse_move(self):
+                    if self.on_mouse_move_connect_id is not None:
+                        self.underlying.mpl_disconnect(self.on_mouse_move_connect_id)
+                    if propnew is not None:
+                        self.on_mouse_move_connect_id = self.underlying.mpl_connect(
+                            "motion_notify_event",
+                            propnew,
+                        )
+                    else:
+                        self.on_mouse_move_connect_id = None
 
-            commands.append(CommandType(_command_mouse_move, self))
+                commands.append(CommandType(_command_mouse_move, self))
         return commands

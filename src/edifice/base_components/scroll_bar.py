@@ -12,10 +12,10 @@ else:
     from PySide6.QtCore import Qt
 
 
-from collections.abc import Awaitable, Callable  # noqa: TCH003
+from collections.abc import Awaitable, Callable  # noqa: TC003
 
 import edifice as ed
-from edifice.engine import CommandType, PropsDict, _ensure_future, _WidgetTree
+from edifice.engine import CommandType, PropsDiff, _ensure_future, _WidgetTree
 
 
 class ScrollBar(ed.QtWidgetElement[QtWidgets.QScrollBar]):
@@ -43,6 +43,7 @@ class ScrollBar(ed.QtWidgetElement[QtWidgets.QScrollBar]):
         on_slider_pressed: Callback for when the slider is pressed.
         on_slider_released: Callback for when the slider is released.
     """
+
     def __init__(
         self,
         value: int = 0,
@@ -73,16 +74,16 @@ class ScrollBar(ed.QtWidgetElement[QtWidgets.QScrollBar]):
         self._register_props(kwargs)
 
     def _on_value_changed_handler(self, value: int) -> None:
-        if self.props.on_value_changed is not None:
-            _ensure_future(self.props.on_value_changed)(value)
+        if self.props["on_value_changed"] is not None:
+            _ensure_future(self.props["on_value_changed"])(value)
 
     def _on_slider_pressed(self) -> None:
-        if self.props.on_slider_pressed is not None:
-            _ensure_future(self.props.on_slider_pressed)()
+        if self.props["on_slider_pressed"] is not None:
+            _ensure_future(self.props["on_slider_pressed"])()
 
     def _on_slider_released(self) -> None:
-        if self.props.on_slider_released is not None:
-            _ensure_future(self.props.on_slider_released)()
+        if self.props["on_slider_released"] is not None:
+            _ensure_future(self.props["on_slider_released"])()
 
     def _initialize(self) -> None:
         self.underlying = QtWidgets.QScrollBar()
@@ -97,24 +98,31 @@ class ScrollBar(ed.QtWidgetElement[QtWidgets.QScrollBar]):
     def _qt_update_commands(
         self,
         widget_trees: dict[ed.Element, _WidgetTree],
-        newprops: PropsDict,
+        diff_props: PropsDiff,
     ) -> list[CommandType]:
         if self.underlying is None:
             self._initialize()
         assert self.underlying is not None
 
-        commands = super()._qt_update_commands_super(widget_trees, newprops, self.underlying)
-        if "value" in newprops:
-            commands.append(CommandType(self.underlying.setValue, int(newprops.value)))
-        if "minimum" in newprops:
-            commands.append(CommandType(self.underlying.setMinimum, int(newprops.minimum)))
-        if "maximum" in newprops:
-            commands.append(CommandType(self.underlying.setMaximum, int(newprops.maximum)))
-        if "step_single" in newprops and newprops.step_single is not None:
-            commands.append(CommandType(self.underlying.setSingleStep, int(newprops.step_single)))
-        if "step_page" in newprops and newprops.step_page is not None:
-            commands.append(CommandType(self.underlying.setPageStep, int(newprops.step_page)))
-        if "orientation" in newprops:
-            commands.append(CommandType(self.underlying.setOrientation, newprops.orientation))
+        commands = super()._qt_update_commands_super(widget_trees, diff_props, self.underlying)
+        match diff_props.get("value"):
+            case _, propnew:
+                commands.append(CommandType(self.underlying.setValue, propnew))
+
+        match diff_props.get("minimum"):
+            case _, propnew:
+                commands.append(CommandType(self.underlying.setMinimum, propnew))
+        match diff_props.get("maximum"):
+            case _, propnew:
+                commands.append(CommandType(self.underlying.setMaximum, propnew))
+        match diff_props.get("step_single"):
+            case _, propnew:
+                commands.append(CommandType(self.underlying.setSingleStep, propnew))
+        match diff_props.get("step_page"):
+            case _, propnew:
+                commands.append(CommandType(self.underlying.setPageStep, propnew))
+        match diff_props.get("orientation"):
+            case _, propnew:
+                commands.append(CommandType(self.underlying.setOrientation, propnew))
 
         return commands

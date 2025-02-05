@@ -9,7 +9,11 @@ if QT_VERSION == "PyQt6" and not tp.TYPE_CHECKING:
 else:
     from PySide6 import QtCore, QtGui, QtWidgets
 
+
 from .base_components import CommandType, Element, QtWidgetElement, _image_descriptor_to_pixmap, _WidgetTree
+
+if tp.TYPE_CHECKING:
+    from edifice.engine import PropsDiff
 
 
 class _ScaledLabel(QtWidgets.QLabel):
@@ -17,13 +21,13 @@ class _ScaledLabel(QtWidgets.QLabel):
     https://stackoverflow.com/questions/72188903/pyside6-how-do-i-resize-a-qlabel-without-loosing-the-size-aspect-ratio
     """
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self):
         QtWidgets.QLabel.__init__(self)
         self._pixmap: QtGui.QPixmap | None = None
         self._aspect_ratio_mode: QtCore.Qt.AspectRatioMode | None = None
         self._rescale()
 
-    def resizeEvent(self, event):
+    def resizeEvent(self, event):  # noqa: ARG002
         self._rescale()
 
     def _rescale(self):
@@ -105,15 +109,17 @@ class Image(QtWidgetElement):
     def _qt_update_commands(
         self,
         widget_trees: dict[Element, _WidgetTree],
-        newprops,
+        diff_props: PropsDiff,
     ):
         if self.underlying is None:
             self._initialize()
         assert self.underlying is not None
 
-        commands = super()._qt_update_commands_super(widget_trees, newprops, self.underlying, None)
-        if "src" in newprops:
-            commands.append(CommandType(self.underlying._setPixmap, _image_descriptor_to_pixmap(newprops.src)))
-        if "aspect_ratio_mode" in newprops:
-            commands.append(CommandType(self.underlying._setAspectRatioMode, newprops.aspect_ratio_mode))
+        commands = super()._qt_update_commands_super(widget_trees, diff_props, self.underlying, None)
+        match diff_props.get("src"):
+            case _, propnew:
+                commands.append(CommandType(self.underlying._setPixmap, _image_descriptor_to_pixmap(propnew)))
+        match diff_props.get("aspect_ratio_mode"):
+            case _, propnew:
+                commands.append(CommandType(self.underlying._setAspectRatioMode, propnew))
         return commands

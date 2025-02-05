@@ -22,7 +22,14 @@ def Main(self):
 
     palette, _ = ed.use_state(initializer)
 
-    with ed.Window(title="Style Matrix"):
+    with ed.Window(
+        title="Style Matrix",
+        menu=(
+            ("Action 1", lambda: None),
+            ("Action 2", lambda: None),
+            ("Submenu", (("Action 3", lambda: None), ("Action 4", lambda: None))),
+        ),
+    ):
         with ed.TableGridView(style={"padding": 10}):
             with ed.TableGridRow():
                 ed.Label("Label")
@@ -159,6 +166,25 @@ def Main(self):
                 ed.Label(
                     text="Hover for tooltip",
                     tool_tip="This is a tooltip",
+                    enabled=False,
+                )
+            with ed.TableGridRow():
+                ed.Label("Context Menu")
+                ed.Label(
+                    text="Right-click for menu",
+                    context_menu=(
+                        ("Action 1", lambda: None),
+                        ("Action 2", lambda: None),
+                        ("Submenu", (("Action 3", lambda: None), ("Action 4", lambda: None))),
+                    ),
+                )
+                ed.Label(
+                    text="Right-click for menu",
+                    context_menu=(
+                        ("Action 1", lambda: None),
+                        ("Action 2", lambda: None),
+                        ("Submenu", (("Action 3", lambda: None), ("Action 4", lambda: None))),
+                    ),
                     enabled=False,
                 )
             with ed.TableGridRow():
