@@ -223,23 +223,34 @@ class RenderTestCase(unittest.TestCase):
         qt_tree = app._widget_tree[component]
         qt_commands = render_result.commands
 
-        def C(*args):
-            return _commands_for_address(app._widget_tree, qt_tree, args)
+        # def C(*args):
+        #     return _commands_for_address(app._widget_tree, qt_tree, args)
 
-        def V(*args):
-            view = _dereference_tree(app._widget_tree, qt_tree, list(args))
-            return [
-                CommandType(view.component._add_child, i, child.underlying) for (i, child) in enumerate(view.children)
+        # def V(*args):
+        #     view = _dereference_tree(app._widget_tree, qt_tree, list(args))
+        #     return [
+        #         CommandType(view.component._add_child, i, child.underlying) for (i, child) in enumerate(view.children)
+        #     ]
+
+        # expected_commands = C(0, 0) + C(0, 1) + V(0) + C(0) + C(1, 0) + C(1, 1) + V(1) + C(1) + C(2) + V() + C()
+
+        self.assertEqual(
+            [c.fn.__name__ for c in qt_commands],
+            [
+                "setText",
+                "setText",
+                "_add_child",
+                "_add_child",
+                "setText",
+                "setText",
+                "_add_child",
+                "_add_child",
+                "setText",
+                "_add_child",
+                "_add_child",
+                "_add_child",
             ]
-
-        expected_commands = C(0, 0) + C(0, 1) + V(0) + C(0) + C(1, 0) + C(1, 1) + V(1) + C(1) + C(2) + V() + C()
-
-        # Disabling this test.
-        # After changing the _request_rerender method so that commands run
-        # before use_effect, this test fails.
-        # self.assertEqual(qt_commands, expected_commands)
-        self.assertEqual(qt_commands[0], expected_commands[0])
-        self.assertEqual(qt_commands[-1], expected_commands[-1])
+        )
 
         # After everything rendered, a rerender shouldn't involve any commands
         # TODO: make sure this is actually true!
@@ -296,35 +307,18 @@ class RenderTestCase(unittest.TestCase):
         _new_qt_tree = app._widget_tree[component]
         qt_commands = render_result.commands
 
-        def new_V(*args):
-            view = _dereference_tree(app._widget_tree, _new_qt_tree, args)
-            return [
-                CommandType(view.component._add_child, i, child.underlying) for (i, child) in enumerate(view.children)
-            ]
-
-        self.assertEqual(_dereference_tree(app._widget_tree, _new_qt_tree, [2, 0]).component.props["text"], "D")
-
-        def new_C(*args):
-            return _commands_for_address(app._widget_tree, _new_qt_tree, args)
-
-        expected_commands = (
-            new_C(2, 0)
-            + new_C(2, 1)
-            + new_V(2)
-            + new_C(2)
-            + [
-                CommandType(qt_tree.component._soft_delete_child, 2, _new_qt_tree.children[3]),
-                CommandType(qt_tree.component._add_child, 2, _new_qt_tree.children[2].underlying),
-                CommandType(qt_tree.component._add_child, 3, _new_qt_tree.children[3].underlying),
-            ]
+        self.assertEqual(
+            [c.fn.__name__ for c in qt_commands],
+            [
+                "setText",
+                "setText",
+                "_add_child",
+                "_add_child",
+                "_soft_delete_child",
+                "_add_child",
+                "_add_child",
+            ],
         )
-
-        # Disabling this test.
-        # After changing the _request_rerender method so that commands run
-        # before use_effect, this test fails.
-        # self.assertEqual(qt_commands, expected_commands)
-        self.assertEqual(qt_commands[0], expected_commands[0])
-        self.assertEqual(qt_commands[-1], expected_commands[-1])
 
     def test_keyed_list_reshuffle(self):
         component = _TestElementOuterList(True, True)

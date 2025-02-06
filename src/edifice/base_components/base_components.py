@@ -12,7 +12,6 @@ from edifice.engine import (
     CommandType,
     ContextMenuType,
     Element,
-    PropsDict,
     PropsDiff,
     QtWidgetElement,
     _create_qmenu,
@@ -219,7 +218,11 @@ class Icon(QtWidgetElement[QtWidgets.QLabel]):
         ):
             commands.append(
                 CommandType(
-                    self._render_image, icon_path, self.props["size"], self.props["color"], self.props["rotation"],
+                    self._render_image,
+                    icon_path,
+                    self.props["size"],
+                    self.props["color"],
+                    self.props["rotation"],
                 ),
             )
 
@@ -275,9 +278,9 @@ class Button(QtWidgetElement[QtWidgets.QPushButton]):
             self._initialize()
         assert self.underlying is not None
         commands = super()._qt_update_commands_super(widget_trees, diff_props, self.underlying)
-        for propname, (_propold, propnew) in diff_props.items():
-            if propname == "title":
-                commands.append(CommandType(self.underlying.setText, propnew))
+        match diff_props.get("title"):
+            case _, propsnew:
+                commands.append(CommandType(self.underlying.setText, propsnew))
 
         return commands
 
@@ -521,7 +524,7 @@ class Label(QtWidgetElement[QtWidgets.QLabel]):
         self,
         text: str = "",
         selectable: bool = False,
-        word_wrap: bool = True,
+        word_wrap: bool = False,
         link_open: bool = False,
         text_format: QtCore.Qt.TextFormat = QtCore.Qt.TextFormat.AutoText,
         **kwargs,
@@ -1283,7 +1286,9 @@ class VBoxView(_LinearView[QtWidgets.QWidget]):
         return commands
 
     def _qt_stateless_commands(
-        self, widget_trees: dict[Element, _WidgetTree], diff_props: PropsDiff,
+        self,
+        widget_trees: dict[Element, _WidgetTree],
+        diff_props: PropsDiff,
     ) -> list[CommandType]:
         # This stateless render command is used to test rendering
         assert self.underlying is not None
@@ -1650,18 +1655,18 @@ class Window(VBoxView):
             self.underlying.closeEvent = self._handle_close
             self.underlying.changeEvent = self._handle_change
 
-            match self._size_open, diff_props.get("full_screen"):
-                case None, (_, False):
+            match self._size_open, self.props.get("full_screen"):
+                case None, False:
                     self.underlying.show()
-                case None, (_, True):
+                case None, True:
                     self.underlying.showFullScreen()
-                case (width, height), (_, False):
+                case (width, height), False:
                     self.underlying.resize(width, height)
                     self.underlying.show()
-                case (width, height), (_, True):
+                case (width, height), True:
                     self.underlying.resize(width, height)
                     self.underlying.showFullScreen()
-                case "Maximized", (_, False):
+                case "Maximized", False:
                     self.underlying.showMaximized()
                     # https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.showMaximized
                     #
@@ -1673,7 +1678,7 @@ class Window(VBoxView):
                     # By the way this works on X11 but its obviously very stupid:
                     # > self.underlying.show()
                     # > asyncio.get_event_loop().call_later(0.1, self.underlying.showMaximized)
-                case "Maximized", (_, True):
+                case "Maximized", True:
                     self.underlying.showFullScreen()
 
         commands: list[CommandType] = super()._qt_update_commands(widget_trees, diff_props)
@@ -1903,18 +1908,18 @@ class WindowPopView(VBoxView):
             assert isinstance(self.underlying, QtWidgets.QWidget)
             self.underlying_noparent.changeEvent = self._handle_change
 
-            match self._size_open, diff_props.get("full_screen"):
-                case None, (_, False):
+            match self._size_open, self.props.get("full_screen"):
+                case None, False:
                     self.underlying_noparent.show()
-                case None, (_, True):
+                case None, True:
                     self.underlying_noparent.showFullScreen()
-                case (width, height), (_, False):
+                case (width, height), False:
                     self.underlying_noparent.resize(width, height)
                     self.underlying_noparent.show()
-                case (width, height), (_, True):
+                case (width, height), True:
                     self.underlying_noparent.resize(width, height)
                     self.underlying_noparent.showFullScreen()
-                case "Maximized", (_, False):
+                case "Maximized", False:
                     self.underlying_noparent.showMaximized()
                     # https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.showMaximized
                     #
@@ -1922,7 +1927,7 @@ class WindowPopView(VBoxView):
                     #
                     # Does not work on X11 for opening the window Maximized.
                     # But from FullScreen, this function will change window to Maximized.
-                case "Maximized", (_, True):
+                case "Maximized", True:
                     self.underlying_noparent.showFullScreen()
 
         assert self.underlying_noparent is not None
