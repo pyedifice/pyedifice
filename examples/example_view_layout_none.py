@@ -34,7 +34,6 @@ def Main(self: ed.Element) -> None:
                 for v in items:
                     ed.Label(
                         text=str(v),
-                        word_wrap=False,
                         style={"top": v, "left": v},
                     )
 

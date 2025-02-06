@@ -150,7 +150,6 @@ def PlotDescriptor(
                         if plot.y_transform == "EMA":
                             ed.Label(
                                 text=f"half-life {plot.y_transform_param} days",
-                                word_wrap=False,
                                 tool_tip="Exponential Moving Average half-life",
                             )
                     with ed.HBoxView():
@@ -219,37 +218,31 @@ def App(self, plot_colors: list[str], plot_color_background: str):
 
     fetch_executor = ed.use_memo(ThreadPoolExecutor)
 
-    fetch_tasks, fetch_tasks_set = ed.use_state(tp.cast(list[asyncio.Task[None]], []))
+    fetch_tasks = ed.use_memo(set)
 
-    async def check_fetch_data():
+    def check_fetch_data():
         # If we need some ticker data and we don't have it yet, then
         # fetch it.
         for ticker in [t for t in tickers_needed if t not in tickers_requested]:
             tickers_requested_set(lambda tr_old, ticker=ticker: [*tr_old, ticker])
-            try:
-                data = await asyncio.get_event_loop().run_in_executor(fetch_executor, fetch_from_yahoo, ticker)
-                if data.empty:
-                    plot_data_set(lambda pltd, ticker=ticker: pltd | {ticker: Failed(Exception("No data"))})
-                else:
-                    plot_data_set(lambda pltd, ticker=ticker, data=data: pltd | {ticker: Received(data)})
-            except Exception as e:  # noqa: BLE001
-                plot_data_set(lambda pltd, ticker=ticker, e=e: pltd | {ticker: Failed(e)})
 
-    def check_fetch_data_start():
-        # We don't do
-        #
-        #     use_async(check_fetch_data, tickers_needed)
-        #
-        # because we don't want check_fetch_data to
-        # be cancelled if it is called again before the last call finishes.
+            async def async_fetch_data(ticker=ticker):
+                try:
+                    data = await asyncio.get_event_loop().run_in_executor(fetch_executor, fetch_from_yahoo, ticker)
+                    if data.empty:
+                        plot_data_set(lambda pltd, ticker=ticker: pltd | {ticker: Failed(Exception("No data"))})
+                    else:
+                        plot_data_set(lambda pltd, ticker=ticker, data=data: pltd | {ticker: Received(data)})
+                except Exception as e:  # noqa: BLE001
+                    plot_data_set(lambda pltd, ticker=ticker, e=e: pltd | {ticker: Failed(e)})
 
-        # first reap the finished tasks
-        fetch_tasks_set(lambda ft: [t for t in ft if not t.done()])
-        # then start a new task
-        t = asyncio.get_event_loop().create_task(check_fetch_data())
-        fetch_tasks_set(lambda ft: [*ft, t])
+            # We want fire-and-forget tasks that won't get cancelled by Edifice
+            # when the component is unmounted or another task starts.
+            t = asyncio.create_task(async_fetch_data(ticker))
+            fetch_tasks.add(t)
+            t.add_done_callback(fetch_tasks.remove)
 
-    ed.use_effect(check_fetch_data_start, tickers_needed)
+    ed.use_effect(check_fetch_data, tickers_needed)
 
     def plot_fun(plot_item: pg.PlotItem):
         """

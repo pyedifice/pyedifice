@@ -4,7 +4,7 @@ import typing as tp
 
 from edifice.qt import QT_VERSION
 
-from .base_components import CommandType, Element, QtWidgetElement, _ensure_future, _WidgetTree
+from .base_components import CommandType, Element, QtWidgetElement, _WidgetTree
 
 if tp.TYPE_CHECKING:
     from edifice.engine import PropsDiff
@@ -90,7 +90,7 @@ class RadioButton(QtWidgetElement[EdRadioButton]):
         self,
         checked: bool = False,
         text: str = "",
-        on_change: tp.Callable[[bool], None | tp.Awaitable[None]] | None = None,
+        on_change: tp.Callable[[bool], None] | None = None,
         **kwargs,
     ):
         super().__init__(**kwargs)
@@ -113,7 +113,7 @@ class RadioButton(QtWidgetElement[EdRadioButton]):
 
     def _on_clicked(self, checked: bool):
         if self.props["on_change"] is not None:
-            _ensure_future(self.props["on_change"])(not checked)
+            self.props["on_change"](not checked)
 
     def _set_checked(self, checked: bool):
         widget = tp.cast(EdRadioButton, self.underlying)

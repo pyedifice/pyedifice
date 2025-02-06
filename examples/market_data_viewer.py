@@ -73,7 +73,7 @@ def Book(self, book):
             PriceLevel(price=p, size=sizes[p], side="bid" if p < market_price else "ask", last=(p == 1)).set_key(str(p))
 
 
-book_init = {"price": 10, "sizes": [random.randint(100, 300) for _ in range(21)]}
+book_init = {"price": 10, "sizes": [random.randint(100, 300) for _ in range(21)]}  # noqa: S311
 
 
 @ed.component
@@ -84,7 +84,7 @@ def App(self):
     play_trigger, play_trigger_set = ed.use_state(False)
 
     def update_book():
-        book_set({"price": 10, "sizes": [random.randint(100, 300) for _ in range(21)]})
+        book_set({"price": 10, "sizes": [random.randint(100, 300) for _ in range(21)]})  # noqa: S311
 
     async def play_tick():
         if playing:

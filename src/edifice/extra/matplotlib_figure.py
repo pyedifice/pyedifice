@@ -20,7 +20,7 @@ if tp.TYPE_CHECKING:
     from edifice.engine import PropsDiff
 
 
-class MatplotlibFigure(QtWidgetElement):
+class MatplotlibFigure(QtWidgetElement[FigureCanvasQTAgg]):
     """
     A **matplotlib** `Figure <https://matplotlib.org/stable/api/figure_api.html#matplotlib.figure.Figure>`_.
 
@@ -88,7 +88,7 @@ class MatplotlibFigure(QtWidgetElement):
         match diff_props.get("plot_fun"):
             case _, propnew:
 
-                def _command_plot_fun(self):
+                def _command_plot_fun(self, propnew=propnew):
                     self.current_plot_fun = tp.cast(tp.Callable[[Axes], None], propnew)
                     self.subplots.clear()
                     self.current_plot_fun(self.subplots)
@@ -100,7 +100,8 @@ class MatplotlibFigure(QtWidgetElement):
         match diff_props.get("on_figure_mouse_move"):
             case _, propnew:
 
-                def _command_mouse_move(self):
+                def _command_mouse_move(self, propnew=propnew):
+                    # https://matplotlib.org/stable/api/backend_bases_api.html#matplotlib.backend_bases.FigureCanvasBase.mpl_connect
                     if self.on_mouse_move_connect_id is not None:
                         self.underlying.mpl_disconnect(self.on_mouse_move_connect_id)
                     if propnew is not None:

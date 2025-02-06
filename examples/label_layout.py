@@ -55,6 +55,7 @@ def SeparateLabels(self, text: str):
             ed.Label(
                 style={"margin-top": 10},
                 text=line,
+                word_wrap=True,
             )
 
 @ed.component
@@ -87,6 +88,7 @@ def Inner(self):
         ed.Label(
             text=str(winsize),
             style={"align": Qt.AlignmentFlag.AlignHCenter},
+            word_wrap=True,
         ).register_ref(label1_ref)
         # SeparateLabels(sample_text)
         ed.Label(
@@ -98,10 +100,12 @@ def Inner(self):
             # size_policy=QSizePolicy(
             #     QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Preferred, QSizePolicy.ControlType.Label,
             # ).setHeightForWidth(True),
+            word_wrap=True,
         )
         ed.Label(
             text=sample_text,
             style={},
+            word_wrap=True,
         )
         # SeparateLabels(sample_text)
 

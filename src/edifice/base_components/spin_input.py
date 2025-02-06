@@ -12,7 +12,7 @@ else:
     from PySide6.QtWidgets import QSpinBox
 
 
-from .base_components import CommandType, Element, QtWidgetElement, _ensure_future, _WidgetTree
+from .base_components import CommandType, Element, QtWidgetElement, _WidgetTree
 
 if tp.TYPE_CHECKING:
     from edifice.engine import PropsDiff
@@ -114,7 +114,7 @@ class SpinInput(QtWidgetElement[EdSpinBox]):
         value: int = 0,
         min_value: int = 0,
         max_value: int = 100,
-        on_change: tp.Callable[[int], None | tp.Awaitable[None]] | None = None,
+        on_change: tp.Callable[[int], None] | None = None,
         value_to_text: tp.Callable[[int], str] | None = None,
         text_to_value: tp.Callable[
             [str],
@@ -146,7 +146,7 @@ class SpinInput(QtWidgetElement[EdSpinBox]):
 
     def _on_change_handler(self, value: int):
         if self.props["on_change"] is not None:
-            _ensure_future(self.props["on_change"])(value)
+            self.props["on_change"](value)
 
     def _set_value(self, value: int):
         assert self.underlying is not None

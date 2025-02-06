@@ -11,7 +11,7 @@ else:
     from PySide6.QtWidgets import QGridLayout, QWidget
 
 
-from .base_components import CommandType, Element, PropsDict, QtWidgetElement, _get_widget_children, _WidgetTree
+from .base_components import CommandType, Element, QtWidgetElement, _get_widget_children, _WidgetTree
 
 if TYPE_CHECKING:
     from edifice.engine import PropsDiff

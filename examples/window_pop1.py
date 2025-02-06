@@ -69,7 +69,6 @@ def Main(self):
             ):
                 ed.Label(
                     text="This is a Pop-up Window",
-                    word_wrap=False,
                 )
                 Clock()
                 ed.CheckBox(
@@ -89,7 +88,6 @@ def Main(self):
                     ):
                         ed.Label(
                             text="This is a Pop-up Window 2",
-                            word_wrap=False,
                         )
                         Clock()
                     with ed.WindowPopView(
@@ -106,7 +104,6 @@ def Main(self):
                     ):
                         ed.Label(
                             text="This is the second Pop-up Window 2",
-                            word_wrap=False,
                         )
                         Clock()
 

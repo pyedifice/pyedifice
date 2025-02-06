@@ -15,7 +15,6 @@ from edifice.engine import (
     PropsDiff,
     QtWidgetElement,
     _create_qmenu,
-    _ensure_future,
     _get_widget_children,
     _WidgetTree,
 )
@@ -706,8 +705,8 @@ class TextInput(QtWidgetElement[QtWidgets.QLineEdit]):
         self,
         text: str = "",
         placeholder_text: str | None = None,
-        on_change: tp.Callable[[str], None | tp.Awaitable[None]] | None = None,
-        on_edit_finish: tp.Callable[[], None | tp.Awaitable[None]] | None = None,
+        on_change: tp.Callable[[str], None] | None = None,
+        on_edit_finish: tp.Callable[[], None] | None = None,
         completer: tuple[QtWidgets.QCompleter.CompletionMode, tuple[str, ...]] | QtWidgets.QCompleter | None = None,
         **kwargs,
     ):
@@ -731,11 +730,11 @@ class TextInput(QtWidgetElement[QtWidgets.QLineEdit]):
 
     def _on_change_handler(self, text: str):
         if self.props["on_change"] is not None:
-            _ensure_future(self.props["on_change"])(text)
+            self.props["on_change"](text)
 
     def _on_edit_finish(self):
         if self.props["on_edit_finish"] is not None:
-            _ensure_future(self.props["on_edit_finish"])()
+            self.props["on_edit_finish"]()
 
     def _set_completer(self, completer):
         assert self.underlying is not None
@@ -810,7 +809,7 @@ class TextInputMultiline(QtWidgetElement[QtWidgets.QTextEdit]):
         self,
         text: str = "",
         placeholder_text: str | None = None,
-        on_change: tp.Callable[[str], None | tp.Awaitable[None]] | None = None,
+        on_change: tp.Callable[[str], None] | None = None,
         **kwargs,
     ):
         super().__init__(**kwargs)
@@ -832,7 +831,7 @@ class TextInputMultiline(QtWidgetElement[QtWidgets.QTextEdit]):
     def _on_change_handler(self):
         if self.props["on_change"] is not None:
             assert self.underlying is not None
-            _ensure_future(self.props["on_change"])(self.underlying.toPlainText())
+            self.props["on_change"](self.underlying.toPlainText())
 
     def _set_text(self, text: str):
         assert self.underlying is not None
@@ -907,7 +906,7 @@ class Dropdown(QtWidgetElement[QtWidgets.QComboBox]):
         self,
         selection: int = 0,
         options: tp.Sequence[str] = [],
-        on_select: tp.Callable[[int], None | tp.Awaitable[None]] | None = None,
+        on_select: tp.Callable[[int], None] | None = None,
         enable_mouse_scroll: bool = True,
         **kwargs,
     ):
@@ -930,7 +929,7 @@ class Dropdown(QtWidgetElement[QtWidgets.QComboBox]):
 
     def _on_select(self, text):
         if self.props["on_select"] is not None:
-            _ensure_future(self.props["on_select"])(text)
+            self.props["on_select"](text)
 
     def _set_current_index(self, index: int):
         assert self.underlying is not None
@@ -1021,7 +1020,7 @@ class Slider(QtWidgetElement[QtWidgets.QSlider]):
         min_value: int = 0,
         max_value: int = 100,
         orientation: QtCore.Qt.Orientation = QtCore.Qt.Orientation.Horizontal,
-        on_change: tp.Callable[[int], None | tp.Awaitable[None]] | None = None,
+        on_change: tp.Callable[[int], None] | None = None,
         *,
         enable_mouse_scroll: bool = True,
         **kwargs,
@@ -1039,7 +1038,7 @@ class Slider(QtWidgetElement[QtWidgets.QSlider]):
         )
         self._register_props(kwargs)
         self._connected = False
-        self._on_change: tp.Callable[[int], None | tp.Awaitable[None]] | None = None
+        self._on_change: tp.Callable[[int], None] | None = None
 
     def _initialize(self, orientation):
         self.underlying = QtWidgets.QSlider(orientation)
@@ -1049,7 +1048,7 @@ class Slider(QtWidgetElement[QtWidgets.QSlider]):
 
     def _on_change_handle(self, position: int) -> None:
         if self._on_change is not None:
-            _ensure_future(self._on_change)(position)
+            self._on_change(position)
 
     def _set_on_change(self, on_change):
         self._on_change = on_change
@@ -1549,13 +1548,13 @@ class Window(VBoxView):
         icon: str | QtGui.QImage | QtGui.QPixmap | None = None,
         menu: ContextMenuType | None = None,
         _on_open: tp.Callable[[QtWidgets.QApplication], None] | None = None,
-        on_close: tp.Callable[[QtGui.QCloseEvent], None | tp.Awaitable[None]] | None = None,
+        on_close: tp.Callable[[QtGui.QCloseEvent], None] | None = None,
         on_window_state_change: tp.Callable[
             [
                 tp.Literal["Normal", "Maximized", "Minimized", "FullScreen"],
                 tp.Literal["Normal", "Maximized", "Minimized", "FullScreen"],
             ],
-            None | tp.Awaitable[None],
+            None,
         ]
         | None = None,
         full_screen: bool = False,
@@ -1575,14 +1574,14 @@ class Window(VBoxView):
         )
 
         self._menu_bar = None
-        self._on_close: tp.Callable[[QtGui.QCloseEvent], None | tp.Awaitable[None]] | None = None
+        self._on_close: tp.Callable[[QtGui.QCloseEvent], None] | None = None
         self._on_window_state_change: (
             tp.Callable[
                 [
                     tp.Literal["Normal", "Maximized", "Minimized", "FullScreen"],
                     tp.Literal["Normal", "Maximized", "Minimized", "FullScreen"],
                 ],
-                None | tp.Awaitable[None],
+                None,
             ]
             | None
         ) = None
@@ -1613,12 +1612,12 @@ class Window(VBoxView):
                         # we can start FullScreen or Maximized
                         self._window_old_state = window_old_state
                     if self._on_window_state_change:
-                        _ensure_future(self._on_window_state_change)(window_old_state, window_new_state)
+                        self._on_window_state_change(window_old_state, window_new_state)
 
     def _handle_close(self, event: QtGui.QCloseEvent):
         event.ignore()  # Don't kill the app yet, instead stop the app after the children are unmounted.
         if self._on_close:
-            _ensure_future(self._on_close)(event)
+            self._on_close(event)
         if self._controller is not None:
             self._controller.stop()
 
@@ -1801,13 +1800,13 @@ class WindowPopView(VBoxView):
         self,
         title: str = "",
         icon: str | QtGui.QImage | QtGui.QPixmap | None = None,
-        on_close: tp.Callable[[QtGui.QCloseEvent], None | tp.Awaitable[None]] | None = None,
+        on_close: tp.Callable[[QtGui.QCloseEvent], None] | None = None,
         on_window_state_change: tp.Callable[
             [
                 tp.Literal["Normal", "Maximized", "Minimized", "FullScreen"],
                 tp.Literal["Normal", "Maximized", "Minimized", "FullScreen"],
             ],
-            None | tp.Awaitable[None],
+            None,
         ]
         | None = None,
         full_screen: bool = False,
@@ -1825,7 +1824,7 @@ class WindowPopView(VBoxView):
             },
         )
 
-        self._on_close: tp.Callable[[QtGui.QCloseEvent], None | tp.Awaitable[None]] | None = None
+        self._on_close: tp.Callable[[QtGui.QCloseEvent], None] | None = None
 
         self.underlying_noparent: QtWidgets.QWidget | None = None
         """
@@ -1840,7 +1839,7 @@ class WindowPopView(VBoxView):
                     tp.Literal["Normal", "Maximized", "Minimized", "FullScreen"],
                     tp.Literal["Normal", "Maximized", "Minimized", "FullScreen"],
                 ],
-                None | tp.Awaitable[None],
+                None,
             ]
             | None
         ) = None
@@ -1867,7 +1866,7 @@ class WindowPopView(VBoxView):
                         # we can start FullScreen or Maximized
                         self._window_old_state = window_old_state
                     if self._on_window_state_change:
-                        _ensure_future(self._on_window_state_change)(window_old_state, window_new_state)
+                        self._on_window_state_change(window_old_state, window_new_state)
 
     def _set_on_close(self, on_close):
         self._on_close = on_close
@@ -1875,13 +1874,13 @@ class WindowPopView(VBoxView):
     def _handle_close(self, event: QtGui.QCloseEvent):
         event.ignore()
         if self._on_close:
-            _ensure_future(self._on_close)(event)
+            self._on_close(event)
 
     def _handle_destroyed(self):
         assert self.underlying_noparent is not None
         self.underlying_noparent.deleteLater()
         if self._on_close:
-            _ensure_future(self._on_close)(QtGui.QCloseEvent())
+            self._on_close(QtGui.QCloseEvent())
 
     def _qt_update_commands(
         self,

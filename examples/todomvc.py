@@ -86,6 +86,7 @@ def TodoItem(self, key: int, todo: Todo, set_complete, delete_todo, set_editing,
                     ),
                     style={"align": "left", "font-size": 20},
                     on_click=lambda _ev: set_editing(key, True),
+                    word_wrap=True,
                 )
             if hover1:
                 with ButtonView(
@@ -205,7 +206,6 @@ def TodoMVC(self):
                 ):
                     Label(
                         text=str(items_left) + (" item left" if items_left == 1 else " items left"),
-                        word_wrap=False,
                         style={"margin-right": 10},
                     )
                     with HBoxView(style={"padding-left": 10}):
@@ -247,7 +247,6 @@ def TodoMVC(self):
                 </div>
                 """,
                 style={"align": "center", "margin-top": 10},
-                word_wrap=False,
             )
 
 

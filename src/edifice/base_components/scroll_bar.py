@@ -12,10 +12,10 @@ else:
     from PySide6.QtCore import Qt
 
 
-from collections.abc import Awaitable, Callable  # noqa: TC003
+from collections.abc import Callable  # noqa: TC003
 
 import edifice as ed
-from edifice.engine import CommandType, PropsDiff, _ensure_future, _WidgetTree
+from edifice.engine import CommandType, PropsDiff, _WidgetTree
 
 
 class ScrollBar(ed.QtWidgetElement[QtWidgets.QScrollBar]):
@@ -52,9 +52,9 @@ class ScrollBar(ed.QtWidgetElement[QtWidgets.QScrollBar]):
         step_single: int | None = None,
         step_page: int | None = None,
         orientation: Qt.Orientation = Qt.Orientation.Vertical,
-        on_value_changed: Callable[[int], None | Awaitable[None]] | None = None,
-        on_slider_pressed: Callable[[], None | Awaitable[None]] | None = None,
-        on_slider_released: Callable[[], None | Awaitable[None]] | None = None,
+        on_value_changed: Callable[[int], None] | None = None,
+        on_slider_pressed: Callable[[], None] | None = None,
+        on_slider_released: Callable[[], None] | None = None,
         **kwargs: tp.Any,
     ) -> None:
         super().__init__(**kwargs)
@@ -75,15 +75,15 @@ class ScrollBar(ed.QtWidgetElement[QtWidgets.QScrollBar]):
 
     def _on_value_changed_handler(self, value: int) -> None:
         if self.props["on_value_changed"] is not None:
-            _ensure_future(self.props["on_value_changed"])(value)
+            self.props["on_value_changed"](value)
 
     def _on_slider_pressed(self) -> None:
         if self.props["on_slider_pressed"] is not None:
-            _ensure_future(self.props["on_slider_pressed"])()
+            self.props["on_slider_pressed"]()
 
     def _on_slider_released(self) -> None:
         if self.props["on_slider_released"] is not None:
-            _ensure_future(self.props["on_slider_released"])()
+            self.props["on_slider_released"]()
 
     def _initialize(self) -> None:
         self.underlying = QtWidgets.QScrollBar()

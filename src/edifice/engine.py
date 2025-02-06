@@ -83,28 +83,6 @@ def props_diff(old: dict[str, tp.Any], new: dict[str, tp.Any]) -> PropsDiff:
     return diff
 
 
-# TODO
-# It's time to delete _ensure_future.
-#
-# We should recommend use_async_call instead because it cancels on unmount.
-#
-# https://stackoverflow.com/questions/37278647/fire-and-forget-python-async-await/37345564#37345564
-# “Replace asyncio.ensure_future with asyncio.create_task everywhere if you're
-# using Python >= 3.7 It's a newer, nicer way to spawn tasks.”
-
-
-def _ensure_future(fn):
-    # Ensures future if fn is a coroutine, otherwise don't modify fn
-    if inspect.iscoroutinefunction(fn):
-
-        @functools.wraps(fn)
-        def wrapper(*args, **kwargs):
-            return asyncio.ensure_future(fn(*args, **kwargs))
-
-        return wrapper
-    return fn
-
-
 class CommandType:
     def __init__(self, fn: Callable[P, tp.Any], *args: P.args, **kwargs: P.kwargs):
         # The return value of fn is ignored and should thus return None. However, in
@@ -313,7 +291,11 @@ class _RenderContext:
         while True:
             signature = inspect.signature(thistype.__init__).parameters
             default_props.update(
-                {k: v.default for k, v in signature.items() if v.default is not inspect.Parameter.empty and k[0] != "_"},
+                {
+                    k: v.default
+                    for k, v in signature.items()
+                    if v.default is not inspect.Parameter.empty and k[0] != "_"
+                },
             )
             if thistype == QtWidgetElement:
                 break
@@ -906,21 +888,21 @@ class QtWidgetElement(Element, tp.Generic[_T_widget]):
         focus_policy: QtCore.Qt.FocusPolicy | None = None,
         _focus_open: bool | None = False,
         enabled: bool | None = True,
-        on_click: tp.Callable[[QtGui.QMouseEvent], None | tp.Awaitable[None]] | None = None,
-        on_key_down: tp.Callable[[QtGui.QKeyEvent], None | tp.Awaitable[None]] | None = None,
-        on_key_up: tp.Callable[[QtGui.QKeyEvent], None | tp.Awaitable[None]] | None = None,
-        on_mouse_down: tp.Callable[[QtGui.QMouseEvent], None | tp.Awaitable[None]] | None = None,
-        on_mouse_up: tp.Callable[[QtGui.QMouseEvent], None | tp.Awaitable[None]] | None = None,
-        on_mouse_enter: tp.Callable[[QtGui.QMouseEvent], None | tp.Awaitable[None]] | None = None,
-        on_mouse_leave: tp.Callable[[QtGui.QMouseEvent], None | tp.Awaitable[None]] | None = None,
-        on_mouse_move: tp.Callable[[QtGui.QMouseEvent], None | tp.Awaitable[None]] | None = None,
-        on_mouse_wheel: tp.Callable[[QtGui.QWheelEvent], None | tp.Awaitable[None]] | None = None,
+        on_click: tp.Callable[[QtGui.QMouseEvent], None] | None = None,
+        on_key_down: tp.Callable[[QtGui.QKeyEvent], None] | None = None,
+        on_key_up: tp.Callable[[QtGui.QKeyEvent], None] | None = None,
+        on_mouse_down: tp.Callable[[QtGui.QMouseEvent], None] | None = None,
+        on_mouse_up: tp.Callable[[QtGui.QMouseEvent], None] | None = None,
+        on_mouse_enter: tp.Callable[[QtGui.QMouseEvent], None] | None = None,
+        on_mouse_leave: tp.Callable[[QtGui.QMouseEvent], None] | None = None,
+        on_mouse_move: tp.Callable[[QtGui.QMouseEvent], None] | None = None,
+        on_mouse_wheel: tp.Callable[[QtGui.QWheelEvent], None] | None = None,
         on_drop: tp.Callable[
             [QtGui.QDragEnterEvent | QtGui.QDragMoveEvent | QtGui.QDragLeaveEvent | QtGui.QDropEvent],
             None,
         ]
         | None = None,
-        on_resize: tp.Callable[[QtGui.QResizeEvent], None | tp.Awaitable[None]] | None = None,
+        on_resize: tp.Callable[[QtGui.QResizeEvent], None] | None = None,
     ):
         super().__init__()
         self._register_props(
@@ -1020,7 +1002,7 @@ class QtWidgetElement(Element, tp.Generic[_T_widget]):
     def _set_on_click(self, underlying: QtWidgets.QWidget, on_click):
         # FIXME: Should this not use `underlying`?
         if on_click is not None:
-            self._on_click = _ensure_future(on_click)
+            self._on_click = on_click
         else:
             self._on_click = None
         if self._default_mouse_press_event is None:
@@ -1045,13 +1027,13 @@ class QtWidgetElement(Element, tp.Generic[_T_widget]):
             self._default_mouse_wheel_event = underlying.wheelEvent
             underlying.wheelEvent = self._handle_mouse_wheel
         if on_mouse_wheel is not None:
-            self._on_mouse_wheel = _ensure_future(on_mouse_wheel)
+            self._on_mouse_wheel =on_mouse_wheel
         else:
             self._on_mouse_wheel = None
 
     def _handle_key_down(self, event: QtGui.QKeyEvent):
         if self._on_key_down is not None:
-            _ensure_future(self._on_key_down)(event)
+            self._on_key_down(event)
         if self._default_on_key_down is not None:
             self._default_on_key_down(event)
 
@@ -1067,7 +1049,7 @@ class QtWidgetElement(Element, tp.Generic[_T_widget]):
 
     def _handle_key_up(self, event: QtGui.QKeyEvent):
         if self._on_key_up is not None:
-            _ensure_future(self._on_key_up)(event)
+            self._on_key_up(event)
         if self._default_on_key_up is not None:
             self._default_on_key_up(event)
 
@@ -1080,7 +1062,7 @@ class QtWidgetElement(Element, tp.Generic[_T_widget]):
 
     def _set_on_mouse_down(self, underlying: QtWidgets.QWidget, on_mouse_down):
         if on_mouse_down is not None:
-            self._on_mouse_down = _ensure_future(on_mouse_down)
+            self._on_mouse_down = on_mouse_down
         else:
             self._on_mouse_down = None
         if self._default_mouse_press_event is None:
@@ -1089,7 +1071,7 @@ class QtWidgetElement(Element, tp.Generic[_T_widget]):
 
     def _set_on_mouse_up(self, underlying: QtWidgets.QWidget, on_mouse_up):
         if on_mouse_up is not None:
-            self._on_mouse_up = _ensure_future(on_mouse_up)
+            self._on_mouse_up = on_mouse_up
         else:
             self._on_mouse_up = None
         if self._default_mouse_release_event is None:
@@ -1100,7 +1082,7 @@ class QtWidgetElement(Element, tp.Generic[_T_widget]):
         if self._default_mouse_enter_event is None:
             self._default_mouse_enter_event = underlying.enterEvent
         if on_mouse_enter is not None:
-            self._on_mouse_enter = _ensure_future(on_mouse_enter)
+            self._on_mouse_enter = on_mouse_enter
             underlying.enterEvent = self._on_mouse_enter
         else:
             self._on_mouse_enter = None
@@ -1110,7 +1092,7 @@ class QtWidgetElement(Element, tp.Generic[_T_widget]):
         if self._default_mouse_leave_event is None:
             self._default_mouse_leave_event = underlying.leaveEvent
         if on_mouse_leave is not None:
-            self._on_mouse_leave = _ensure_future(on_mouse_leave)
+            self._on_mouse_leave = on_mouse_leave
             underlying.leaveEvent = self._on_mouse_leave
         else:
             underlying.leaveEvent = self._default_mouse_leave_event
@@ -1120,7 +1102,7 @@ class QtWidgetElement(Element, tp.Generic[_T_widget]):
         if self._default_mouse_move_event is None:
             self._default_mouse_move_event = underlying.mouseMoveEvent
         if on_mouse_move is not None:
-            self._on_mouse_move = _ensure_future(on_mouse_move)
+            self._on_mouse_move = on_mouse_move
             underlying.mouseMoveEvent = self._on_mouse_move
             underlying.setMouseTracking(True)
         else:
@@ -1172,7 +1154,7 @@ class QtWidgetElement(Element, tp.Generic[_T_widget]):
             self._default_resize_event = underlying.resizeEvent
 
         if on_resize is not None:
-            self._on_resize = _ensure_future(on_resize)
+            self._on_resize = on_resize
             underlying.resizeEvent = self._resizeEvent
         else:
             self._on_resize = None

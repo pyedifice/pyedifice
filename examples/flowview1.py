@@ -22,24 +22,18 @@ def Thing(self, chrord:int, callback:tp.Callable[[], None]):
                     "font-family": "Segoe UI Emoji",
                 },
             )
-            ed.Label(text=str(id(callback)))
 
 @ed.component
 def Main(self):
     chars, chars_set = ed.use_state(50)
     x, x_set = ed.use_state(0)
 
-    # def bind_funcaller():
-    #     def funcaller():
-    #         print("funcaller")
-    #     return funcaller
-
     def funcaller():
-        print("funcaller")
+        print("funcaller")  # noqa: T201
 
     funcallback = ed.use_memo(lambda: funcaller, ())
 
-    with ed.Window(style={"align":"top"}):
+    with ed.Window(style={"align":"top"}, _size_open=(800, 800)):
         ed.Slider(
             value=chars,
             on_change=chars_set,

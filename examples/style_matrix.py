@@ -39,13 +39,11 @@ def Main(self):
                             <h2>Heading 2</h2>
                             <h3>Heading 3</h3>
                             <p>Normal</p>""",
-                        word_wrap=False,
                         selectable=True,
                     )
                     ed.Label(
                         text="""<a href='https://pyedifice.github.io'>https://pyedifice.github.io</a>""",
                         link_open=True,
-                        word_wrap=False,
                     )
                 with ed.VBoxView():
                     ed.Label(
@@ -53,14 +51,12 @@ def Main(self):
                             <h2>Heading 2</h2>
                             <h3>Heading 3</h3>
                             <p>Normal</p>""",
-                        word_wrap=False,
                         selectable=True,
                         enabled=False,
                     )
                     ed.Label(
                         text="""<a href='https://pyedifice.github.io'>https://pyedifice.github.io</a>""",
                         link_open=True,
-                        word_wrap=False,
                         enabled=False,
                     )
             with ed.TableGridRow():

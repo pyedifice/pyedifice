@@ -4,7 +4,6 @@
 
 
 import asyncio
-from concurrent.futures import ThreadPoolExecutor
 from typing import cast
 
 import edifice as ed
@@ -64,32 +63,24 @@ def Main(self):
     a, set_a = ed.use_state(0)
     b, set_b = ed.use_state(0)
 
-    async def _on_change1(v: int):
+    tasks = ed.use_memo(set)
+
+    def _on_change1(v: int):
         """
         Test regular async event handlers.
         """
         set_a(v)
-        await asyncio.sleep(1)
-        set_b(v)
+
+        # We want fire-and-forget tasks that won't get cancelled by Edifice
+        # when the component is unmounted or another task starts.
+        async def _on_change1_later():
+            await asyncio.sleep(1)
+            set_b(v)
+        t = asyncio.create_task(_on_change1_later())
+        tasks.add(t)
+        t.add_done_callback(tasks.remove)
 
     ##########
-
-    c, set_c = ed.use_state(0)
-
-    async def async_callback1(v: int):
-        set_c(v)
-
-    callback1, _ = ed.use_async_call(async_callback1)
-
-    async def _on_change2(v: int):
-        """
-        Test async callbacks from another thread.
-        """
-        loop = asyncio.get_event_loop()
-        with ThreadPoolExecutor() as pool:
-            await loop.run_in_executor(pool, lambda: callback1(v))
-
-    ###########
 
     d, set_d = ed.use_state(0)
     e, set_e = ed.use_state(0)
@@ -197,18 +188,6 @@ def Main(self):
             ed.Label(str(a))
             ed.Label(str(b))
             ed.Slider(a, min_value=0, max_value=100, on_change=_on_change1)
-
-        with ed.VBoxView(
-            style={
-                "padding-top": 20,
-                "padding-bottom": 20,
-                "border-top-width": "1px",
-                "border-top-style": "solid",
-                "border-top-color": "black",
-            },
-        ):
-            ed.Label(str(c))
-            ed.Slider(c, min_value=0, max_value=100, on_change=_on_change2)
 
         with ed.VBoxView(
             style={

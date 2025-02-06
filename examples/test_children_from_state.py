@@ -14,8 +14,8 @@ from edifice import (
     Image,
     Label,
     Slider,
-    TableGridView,
     TableGridRow,
+    TableGridView,
     VBoxView,
     Window,
     component,
@@ -34,7 +34,7 @@ else:
 logger = logging.getLogger("Edifice")
 logger.setLevel(logging.INFO)
 
-imgpath = os.path.join(os.path.dirname(__file__), "example_calculator.png")
+imgpath = os.path.join(os.path.dirname(__file__), "example_calculator.png")  # noqa: PTH118, PTH120
 
 
 @component

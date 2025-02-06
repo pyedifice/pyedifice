@@ -15,6 +15,7 @@ Breaking Changes:
 - :class:`ContextMenuType` changed from :code:`Mapping` to :code:`tuple`.
 - :class:`CustomWidget` deleted function :code:`paint`, added :func:`CustomWidget.update`.
 - TODO :class:`Label` prop :code:`word_wrap` now defaults to :code:`False`, as it does in Qt.
+- :ref:`Base Elements` event handlers no longer accept an :code:`async` coroutine function.
 
 
 v2.14.2

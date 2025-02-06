@@ -20,10 +20,10 @@ else:
 @ed.component
 def Main(self):
     def handle_open(qapp: QApplication):
-        print("Opening window")
+        print("Opening window")  # noqa: T201
 
     def handle_close(ev: QCloseEvent):
-        print("Closing window")
+        print("Closing window")  # noqa: T201
 
     def initializer():
         qapp = tp.cast(QApplication, QApplication.instance())
@@ -47,8 +47,8 @@ def Main(self):
     radio_value1, radio_value1_set = ed.use_state(tp.cast(tp.Literal["op1", "op2", "op3"], "op1"))
     radio_value2, radio_value2_set = ed.use_state(tp.cast(tp.Literal["op1", "op2", "op3"], "op1"))
     check_value1, check_value1_set = ed.use_state(True)
-    n = dt.datetime.now()
-    n = dt.datetime(n.year, n.month, n.day, n.hour, n.minute, n.second)  # remove microseconds
+    n = dt.datetime.now()  # noqa: DTZ005
+    n = dt.datetime(n.year, n.month, n.day, n.hour, n.minute, n.second)  # remove microseconds  # noqa: DTZ001
     date_value, date_value_set = ed.use_state(tp.cast(dt.date | ValueError, n.date()))
     date_text, date_text_set = ed.use_state(n.date().isoformat())
     time_value, time_value_set = ed.use_state(tp.cast(dt.time | ValueError, n.time()))
@@ -148,7 +148,7 @@ def Main(self):
                 enable_mouse_scroll=False,
             )
 
-            def text_to_meters(text: str) -> int | tp.Literal[QValidator.State.Intermediate, QValidator.State.Invalid]:
+            def text_to_meters(text: str) -> int | QValidator.State.Intermediate | QValidator.State.Invalid: # type: ignore  # noqa: PGH003
                 try:
                     # search for a decimal number in the text
                     matches = re.search(r"(\d*\.?\d*)", text)
@@ -172,7 +172,7 @@ def Main(self):
 
             def float1_to_text(value:int) -> str:
                 return f"{float(value)/100.0:.2f}"
-            def text_to_float1(text:str) -> int | QValidator.State:
+            def text_to_float1(text:str) -> int | QValidator.State.Intermediate | QValidator.State.Invalid: # type: ignore  # noqa: PGH003
                 try:
                     return int(float(text) * 100.0)
                 except ValueError:
@@ -314,7 +314,6 @@ def Main(self):
                     case dt.date():
                         ed.Label(
                             text=date_value.strftime("%Y %B %d %A"),
-                            word_wrap=False,
                         )
             with ed.TableGridRow():
 
@@ -343,7 +342,6 @@ def Main(self):
                     case dt.time():
                         ed.Label(
                             text=time_value.strftime("%H:%M:%S"),
-                            word_wrap=False,
                         )
         def handle_updown(event: QKeyEvent):
             # if event.modifiers() & Qt.KeyboardModifier.ControlModifier and event.key() == Qt.Key.Key_Up:

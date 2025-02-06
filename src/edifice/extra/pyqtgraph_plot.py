@@ -106,7 +106,7 @@ class PyQtPlot(QtWidgetElement[pg.PlotWidget]): # type: ignore  # noqa: PGH003
                 plot_widget = tp.cast(pg.PlotWidget, self.underlying)
                 plot_item = tp.cast(pg.PlotItem, plot_widget.getPlotItem())
 
-                def _update_plot():
+                def _update_plot(plot_item=plot_item, plot_fun=plot_fun):
                     plot_item.clear()
                     plot_fun(plot_item)
 

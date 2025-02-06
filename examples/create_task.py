@@ -23,7 +23,7 @@ def use_async(fn_coroutine):
     """
     def on_done(t: asyncio.Task) -> None:
         tasks.discard(t)
-        print("Task done")
+        print("Task done")  # noqa: T201
         # t.result()
 
     task = asyncio.create_task(fn_coroutine)

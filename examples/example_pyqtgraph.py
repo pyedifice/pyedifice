@@ -26,7 +26,7 @@ def Component(self):
     x_min, x_min_set = ed.use_state(-10.0)
 
     def plot_fn(plot_item: pg.PlotItem):
-        plot_item.setMouseEnabled(x=False, y=False)
+        plot_item.setMouseEnabled(x=False, y=False)  # type: ignore  # noqa: PGH003
         plot_item.hideButtons()
         grad = QtGui.QLinearGradient(0, -1.0, 0, 1.0)
         grad.setColorAt(0.0, pg.mkColor((127, 127, 127, 0)))
@@ -40,16 +40,19 @@ def Component(self):
         plot_item.plot(x=xs, y=ys, pen=pen, fillLevel=-1.0, brush=brush)
 
     with ed.VBoxView():
-        with ed.ButtonView(
-            on_trigger=lambda _: x_min_set(x_min + 1.0),
-            style={
-                "width": "200px",
-                "height": "50px",
-                "padding": "10px",
-            },
-        ):
-            ed.Label("Increment x_min")
-        PyQtPlot(plot_fun=plot_fn)
+        with ed.HBoxView(style={"align": "left"}):
+            with ed.ButtonView(
+                on_trigger=lambda _: x_min_set(x_min + 1.0),
+                style={"padding": 10},
+            ):
+                ed.Label("Increment x_min")
+            ed.Label(
+                text="F11 toggle full screen",
+                style={"margin-left": 10},
+            )
+        PyQtPlot(
+            plot_fun=plot_fn,
+        )
 
 
 @ed.component
@@ -61,7 +64,8 @@ def Main(self):
             full_screen_set(not full_screen)
 
     def handle_window_state(old_state, new_state):
-        print(f"Window state changed from {old_state} to {new_state}")
+        # print(f"Window state changed from {old_state} to {new_state}")
+        pass
 
     with ed.Window(
         title="PyQtPlot Example",
