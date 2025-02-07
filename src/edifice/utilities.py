@@ -252,7 +252,11 @@ def palette_edifice_light() -> QPalette:
 
 @deprecated("Instead use WindowPopView")
 def alert(message: str, choices: tp.Sequence[str] | None = None) -> int | None:
-    """Displays a message in an alert box.
+    """
+
+    .. warning:: Deprecated
+
+    Displays a message in an alert box.
 
     If choices is specified, the alert box contain a list of buttons showing each of the choices,
     and this function will return the user's choice.

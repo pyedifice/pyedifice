@@ -6,6 +6,8 @@ import logging
 import re
 import typing as tp
 
+from typing_extensions import deprecated
+
 import edifice.icons
 from edifice.engine import (
     _CURSORS,
@@ -115,8 +117,13 @@ class GroupBox(QtWidgetElement[QtWidgets.QGroupBox]):
         return commands
 
 
+@deprecated("Instead use ImageSvg")
 class Icon(QtWidgetElement[QtWidgets.QLabel]):
     """Display an Icon.
+
+    .. warning:: Deprecated
+
+        Instead use :class:`ImageSvg`.
 
     .. highlights::
         - Underlying Qt Widget
@@ -228,8 +235,13 @@ class Icon(QtWidgetElement[QtWidgets.QLabel]):
         return commands
 
 
+@deprecated("Instead use ButtonView")
 class Button(QtWidgetElement[QtWidgets.QPushButton]):
     """Basic button widget.
+
+    .. warning:: Deprecated
+
+        Instead use :class:`ButtonView`.
 
     .. highlights::
         - Underlying Qt Widget
@@ -284,8 +296,13 @@ class Button(QtWidgetElement[QtWidgets.QPushButton]):
         return commands
 
 
+@deprecated("Instead use ButtonView")
 class IconButton(Button):
     """Display an Icon Button.
+
+    .. warning:: Deprecated
+
+        Instead use :class:`ButtonView`.
 
     .. highlights::
         - Underlying Qt Widget

@@ -7,15 +7,40 @@
 Release Notes
 =============
 
-- Introduced internal type :code:`PropsDiff`.
-- Bugfix for removing :ref:`Graphics Effects`.
+v3.0.0
+------
 
-Breaking Changes:
+
+- Bugfix for unmounting :ref:`Graphics Effects`.
+- Deprecated :class:`Button`. Instead use :class:`ButtonView`.
+- Deprecated :class:`IconButton`. Instead use :class:`ButtonView`.
+- Deprecated :class:`Icon`. Instead use :class:`ImageSvg`.
+- Introduced internal type :code:`PropsDiff` which improves speed by reducing
+  the number of Qt mutation commands issued.
+
+Breaking Changes
+^^^^^^^^^^^^^^^^
 
 - :class:`ContextMenuType` changed from :code:`Mapping` to :code:`tuple`.
 - :class:`CustomWidget` deleted function :code:`paint`, added :func:`CustomWidget.update`.
-- TODO :class:`Label` prop :code:`word_wrap` now defaults to :code:`False`, as it does in Qt.
+- :class:`Label` prop :code:`word_wrap` now defaults to :code:`False`, as it does in Qt.
+
+  **Migration Guide:**
+
+  1. If a :class:`Label` has no :code:`word_wrap` prop, then add prop :code:`word_wrap=True`.
+  2. If a :class:`Label` has prop :code:`word_wrap=False`, then delete the :code:`word_wrap` prop.
+
 - :ref:`Base Elements` event handlers no longer accept an :code:`async` coroutine function.
+
+  **Migration Guide:**
+
+  *Pyright* will show errors for :code:`async` event handlers.
+
+  Instead use :func:`use_async_call` to asynchronously
+  handle an event, or use any of the usual methods from
+  `asyncio Coroutines and Tasks. <https://docs.python.org/3/library/asyncio-task.html>`_
+  such as
+  `create_task <https://docs.python.org/3/library/asyncio-task.html#asyncio.create_task>`_.
 
 
 v2.14.2

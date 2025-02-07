@@ -507,7 +507,7 @@ def use_ref() -> Reference:
 _P_callback = tp.ParamSpec("_P_callback")
 
 
-@deprecated("use_callback is deprecated, use use_memo instead")
+@deprecated("Instead use use_memo")
 def use_callback(
     fn: tp.Callable[[], tp.Callable[_P_callback, None]],
     dependencies: tp.Any,
