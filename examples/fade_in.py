@@ -20,7 +20,7 @@ def FadeIn(self, children: tuple[ed.Element, ...] = ()):
     # tick runs from 20 to 0 for 420ms
 
     async def fade_in():
-        for t in range(19, 0, -1):
+        for t in range(19, -1, -1):
             await asyncio.sleep(0.02)
             tick_set(t)
 
@@ -40,7 +40,7 @@ def FadeIn(self, children: tuple[ed.Element, ...] = ()):
 def MyComponent(self):
     show, show_set = ed.use_state(True)
     with ed.VBoxView(style={"align": "center"}):
-        ed.CheckBox(checked = show, on_change = show_set, text = "Show")
+        ed.CheckBox(checked=show, on_change=show_set, text="Show")
         with ed.HBoxView(style={"width": 500, "height": 200}):
             if show:
                 with FadeIn():
