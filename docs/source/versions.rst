@@ -21,6 +21,13 @@ v3.0.0
 Breaking Changes
 ^^^^^^^^^^^^^^^^
 
+- :code:`PropsDict` type is now an alias for :code:`dict[str, Any]`.
+
+  **Migration Guide:**
+
+  If you have a user subclass of :class:`QtWidgetElement` then you will need to
+  re-write the :code:`_qt_update_commands()` method.
+
 - :class:`ContextMenuType` changed from :code:`Mapping` to :code:`tuple`.
 - :class:`CustomWidget` deleted function :code:`paint`, added :func:`CustomWidget.update`.
 - :class:`Label` prop :code:`word_wrap` now defaults to :code:`False`, as it does in Qt.

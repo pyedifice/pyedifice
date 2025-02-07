@@ -78,12 +78,12 @@ def Oscillator(self, palette: QtGui.QPalette):
 
     def freq_slider_change(value):
         angular_frequency_set(float(value) / 20.0)
-        # simulation_time_set(0)
+        simulation_time_set(0)
         plot_fun_set((lambda figure: plot(figure),))
 
     def damp_slider_change(value):
         damping_set(float(value) / 100.0)
-        # simulation_time_set(0)
+        simulation_time_set(0)
         plot_fun_set((lambda figure: plot(figure),))
 
     owidth = 800
@@ -99,21 +99,28 @@ def Oscillator(self, palette: QtGui.QPalette):
             with ed.HBoxView(style={"align": "center"}):
                 with ed.FixView(style={"width": owidth, "height": oheight, "margin-top": 40}):
                     ed.Label(
-                        text="⬤",
+                        text="🟠",
                         style={
-                            "top": oheight -33 - (oheight / 2) - (oheight * 0.4 * calculate_harmonic_motion(simulation_time)),
-                            "left": 100,
+                            "top": oheight
+                            - 25
+                            - (oheight / 2)
+                            - (oheight * 0.45 * calculate_harmonic_motion(simulation_time)),
+                            "left": 50,
                             "font-size": 30,
+                            "font-family": "Noto Color Emoji",
                         },
                     )
             with ed.HBoxView(
                 style={
-                    "top": 10,
+                    "top": 15,
                     "left": 550,
                     "width": 200,
                     "background-color": shadowcolor,
                     "border-radius": 30,
-                    "padding": 30,
+                    "padding-left": 30,
+                    "padding-right": 30,
+                    "padding-top": 20,
+                    "padding-bottom": 20,
                 },
             ):
                 with ed.ButtonView(
@@ -122,10 +129,17 @@ def Oscillator(self, palette: QtGui.QPalette):
                         QtWidgets.QSizePolicy.Policy.Fixed,
                         QtWidgets.QSizePolicy.Policy.Fixed,
                     ),
+                    style={
+                        "padding": 6,
+                    },
                 ):
                     ed.Label(
                         text="⏸️" if is_playing else "▶️",
-                        style={"font-size": 40, "font-family": "Noto Emoji"},
+                        style={
+                            "font-size": 40,
+                            "font-family": "Noto Color Emoji",
+                            "height": 40,
+                        },
                     )
                 with ed.ButtonView(
                     on_trigger=lambda _: simulation_time_set(0),
@@ -133,14 +147,21 @@ def Oscillator(self, palette: QtGui.QPalette):
                         QtWidgets.QSizePolicy.Policy.Fixed,
                         QtWidgets.QSizePolicy.Policy.Fixed,
                     ),
+                    style={
+                        "padding": 6,
+                    },
                 ):
                     ed.Label(
-                        text="🔄",
-                        style={"font-size": 40, "font-family": "Noto Emoji"},
+                        text="🔁",
+                        style={
+                            "font-size": 40,
+                            "font-family": "Noto Color Emoji",
+                            "height": 40,
+                        },
                     )
             with ed.VBoxView(
                 style={
-                    "top": 125,
+                    "top": 120,
                     "left": 550,
                     "width": 200,
                     "background-color": shadowcolor,
@@ -160,7 +181,7 @@ def Oscillator(self, palette: QtGui.QPalette):
                 )
             with ed.VBoxView(
                 style={
-                    "top": 225,
+                    "top": 220,
                     "left": 550,
                     "width": 200,
                     "background-color": shadowcolor,

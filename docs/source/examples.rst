@@ -89,14 +89,11 @@ For comparison, the Edifice **TodoMVC** program is available at
 Harmonic Oscillator
 -------------------
 
-An example showing animation. The animation was rendered at 30 FPS (the GIF is only at 12 FPS so you won't be able to tell).
-You can interactively set the frequency and damping factors and instantly see the result,
-both in a graph and in the animation.
-Python of course has great numeric libraries, so we can work with complex numbers.
+An example of animation in Edifice.
 
 The code is available at `harmonic_oscillator.py <https://github.com/pyedifice/pyedifice/tree/master/examples/harmonic_oscillator.py>`_.
 
-.. figure:: /image/example_harmonic_oscillator.gif
+.. figure:: /image/example_harmonic_oscillator2.png
    :width: 500
 
 .. code-block:: shell
