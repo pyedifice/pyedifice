@@ -12,7 +12,6 @@ v3.0.0
 
 
 - Bugfix for unmounting :ref:`Graphics Effects`.
-- Deprecated :class:`Button`. Instead use :class:`ButtonView`.
 - Deprecated :class:`IconButton`. Instead use :class:`ButtonView`.
 - Deprecated :class:`Icon`. Instead use :class:`ImageSvg`.
 - Introduced internal type :code:`PropsDiff` which improves speed by reducing

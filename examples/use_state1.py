@@ -14,11 +14,11 @@ def UseState1(self):
     with Window():
         if show:
             with VBoxView():
-                Button(title="Hide", on_click=lambda _ev: set_show(False))
+                Label(text="Hide", on_click=lambda _ev: set_show(False))
                 TestComp()
         else:
             with VBoxView():
-                Button(title="Show", on_click=lambda _ev: set_show(True))
+                Label(text="Show", on_click=lambda _ev: set_show(True))
 
 
 @component

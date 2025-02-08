@@ -1027,7 +1027,7 @@ class QtWidgetElement(Element, tp.Generic[_T_widget]):
             self._default_mouse_wheel_event = underlying.wheelEvent
             underlying.wheelEvent = self._handle_mouse_wheel
         if on_mouse_wheel is not None:
-            self._on_mouse_wheel =on_mouse_wheel
+            self._on_mouse_wheel = on_mouse_wheel
         else:
             self._on_mouse_wheel = None
 
@@ -1453,6 +1453,10 @@ class QtWidgetElement(Element, tp.Generic[_T_widget]):
         underlying: QtWidgets.QWidget,
         underlying_layout: QtWidgets.QLayout | None = None,
     ) -> list[CommandType]:
+        # multiple props influence the cursor so we diff the cursor globally
+        cursor_old: QtCore.Qt.CursorShape | None = None
+        cursor_new: QtCore.Qt.CursorShape | None = None
+
         commands: list[CommandType] = []
         match diff_props.get("style"):
             case propold, propnew:
@@ -1477,11 +1481,16 @@ class QtWidgetElement(Element, tp.Generic[_T_widget]):
             case _, _:
                 commands.append(CommandType(underlying.setEnabled, True))
         match diff_props.get("on_click"):
-            case _, propnew:
+            case propold, None:
+                cursor_old = QtCore.Qt.CursorShape.PointingHandCursor
+                commands.append(CommandType(self._set_on_click, underlying, None))
+            case None, propnew:
+                cursor_new = QtCore.Qt.CursorShape.PointingHandCursor
                 commands.append(CommandType(self._set_on_click, underlying, propnew))
-                # TODO on_click cursor
-                # > if propnew is not None and self.props.cursor is None:
-                # >     commands.append(CommandType(underlying.setCursor, QtCore.Qt.CursorShape.PointingHandCursor))
+            case _, propnew:
+                cursor_old = QtCore.Qt.CursorShape.PointingHandCursor
+                cursor_new = QtCore.Qt.CursorShape.PointingHandCursor
+                commands.append(CommandType(self._set_on_click, underlying, propnew))
         match diff_props.get("on_key_down"):
             case _, propnew:
                 commands.append(CommandType(self._set_on_key_down, underlying, propnew))
@@ -1526,18 +1535,31 @@ class QtWidgetElement(Element, tp.Generic[_T_widget]):
                         CommandType(underlying.style().polish, underlying),
                     ],
                 )
-        match diff_props.get("cursor"):
-            case _, str() as propnew:
-                if propnew not in _CURSORS:
-                    raise ValueError(f"Unrecognized cursor {propnew}. Cursor must be one of {list(_CURSORS.keys())}")
-                commands.append(CommandType(underlying.setCursor, _CURSORS[propnew]))
-            case _, QtGui.QCursor() as propnew:
-                commands.append(CommandType(underlying.setCursor, propnew))
-            case _, None:
-                commands.append(CommandType(underlying.unsetCursor))
         match diff_props.get("context_menu"):
             case propold, propnew:
                 commands.append(CommandType(self._set_context_menu, underlying, propold, propnew))
+        # Cursor prop comes last because the cursor prop should override other cursors.
+        match diff_props.get("cursor"):
+            case propold, propnew:
+                match propold:
+                    case str():
+                        cursor_old = _CURSORS[propold]
+                    case QtCore.Qt.CursorShape():
+                        cursor_old = propold
+                match propnew:
+                    case str():
+                        if propnew not in _CURSORS:
+                            raise ValueError(
+                                f"Unrecognized cursor {propnew}. Cursor must be one of {list(_CURSORS.keys())}",
+                            )
+                        cursor_new = _CURSORS[propnew]
+                    case QtCore.Qt.CursorShape():
+                        cursor_new = propnew
+        if cursor_new != cursor_old:
+            if cursor_new is not None:
+                commands.append(CommandType(underlying.setCursor, cursor_new))
+            else:
+                commands.append(CommandType(underlying.unsetCursor))
         if self._focus_open_needed:
             # Only do this on first render
             self._focus_open_needed = False

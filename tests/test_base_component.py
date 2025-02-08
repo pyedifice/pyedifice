@@ -199,6 +199,7 @@ class WidgetTreeTestCase(unittest.TestCase):
             # which is very surprising. Why?
             [
                 "_set_on_click",
+                "setCursor",
                 "setText",
             ],
         )

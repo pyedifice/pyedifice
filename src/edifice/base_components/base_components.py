@@ -235,13 +235,8 @@ class Icon(QtWidgetElement[QtWidgets.QLabel]):
         return commands
 
 
-@deprecated("Instead use ButtonView")
 class Button(QtWidgetElement[QtWidgets.QPushButton]):
     """Basic button widget.
-
-    .. warning:: Deprecated
-
-        Instead use :class:`ButtonView`.
 
     .. highlights::
         - Underlying Qt Widget
