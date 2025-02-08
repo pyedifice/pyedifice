@@ -110,24 +110,29 @@ Events
 ------
 
 Each user interaction with a Base Element generates events, and you can specify
-how to handle the event by providing a callback function.
+how to handle the event by providing a handler function.
 
-These callbacks are passed into the Base Element as **props**, for example
+These handlers are passed into the Base Element as **props**, for example
 the :code:`on_click` **prop** of :class:`QtWidgetElement<edifice.QtWidgetElement>`,
 or the :code:`on_change` **prop** for checkboxes, radio buttons, sliders,
 and text input.
-When the event occurs the callback function will be called with an argument
+When the event occurs the handler function will be called with an argument
 describing the event.
 
-Usually, what you want to do in an event handler callback is to update some
+Usually, what you want to do in an event handler is to update some
 state with a :func:`use_state() <edifice.use_state>` **setter function**.
 
-These callbacks run in the same thread as the main application.
-This is handy, as you don't have to worry about locking and race conditions.
-However, a lengthy operation will block the application from interacting with the user,
+Async Event Handlers
+^^^^^^^^^^^^^^^^^^^^
+
+These event handlers run in the main event loop.
+A lengthy operation will block the application from interacting with the user,
 which is generally a bad user experience.
 
-Consider this code::
+Consider this code.
+
+.. code-block:: python
+    :caption: Blocking Event Handler
 
     @component
     def MyComponent(self):
@@ -143,47 +148,16 @@ Consider this code::
             if results:
                 Label(results)
 
-When the Fetch button is clicked, the event handler will call a lengthy :code:`fetch_from_network` function,
-blocking the application from further progress.
-In the mean time, if the user clicks the increment button, nothing will happen until the fetch is complete.
-
-For such cases, you can use an async callback function.
-
-To allow the rest of the application to run while the fetch is happening, you can define
-the :code:`on_click` handler as a coroutine::
-
-    @component
-    def MyComponent(self):
-
-        results, set_results = use_state("")
-        loading, set_loading = use_state(False)
-
-        async def on_click(event:QMouseEvent):
-            set_loading(True)
-            r = await fetch_from_network()
-            set_results(r)
-            set_loading(False)
-
-        with VBoxView():
-            Button("Fetch", on_click=on_click)
-            if loading:
-                Label("Loading")
-            elif results:
-                Label(results)
-
-While the :code:`fetch_from_network` function is running, control is returned to the event loop,
-allowing the application to continue handling button clicks.
-
-.. note::
-
-    In some cases you may have a bug from a race condition where the async
-    event handler completes after the Element has been unmounted.
-
-    For such cases use :func:`use_async_call<edifice.use_async_call>`.
+When the Fetch button is clicked, the event handler will call a :code:`fetch_from_network` function,
+blocking the application for an unbounded length of time.
+If the user clicks the increment button while waiting for the fetch then nothing will happen.
 
 Use the :func:`use_async_call<edifice.use_async_call>` Hook for an asynchronous event handler
 which will cancel automatically when :code:`MyComponent` is unmounted, or
-when the Fetch button is pressed again::
+when the Fetch button is pressed again.
+
+.. code-block:: python
+    :caption: Async Event Handler
 
     @component
     def MyComponent(self):
@@ -202,7 +176,7 @@ when the Fetch button is pressed again::
         with VBoxView():
             Button("Fetch", on_click=on_click_handler)
             if loading:
-                Label("Loading")
+                Label("Fetching...")
             elif results:
                 Label(results)
 

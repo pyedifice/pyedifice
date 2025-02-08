@@ -9,7 +9,7 @@ Release Notes
 
 v3.0.0
 ------
-
+Released: 2025-02-08
 
 - Bugfix for unmounting :ref:`Graphics Effects`.
 - Deprecated :class:`IconButton`. Instead use :class:`ButtonView`.
@@ -38,15 +38,24 @@ Breaking Changes
 
 - :ref:`Base Elements` event handlers no longer accept an :code:`async` coroutine function.
 
-  **Migration Guide:**
-
-  *Pyright* will show errors for :code:`async` event handlers.
+  We decided this because it is almost always a bug to start a new coroutine Task
+  from an event handler, because the :func:`@component<component>` may unmount
+  while the event handler Task is still running.
 
   Instead use :func:`use_async_call` to asynchronously
-  handle an event, or use any of the usual methods from
+  handle an event. Then the coroutine Task will be cancelled if the
+  :func:`@component<component>` unmounts.
+
+  If you are sure that you want to “fire-and-forget” a coroutine in response to an event,
+  then use any of the usual methods from
   `asyncio Coroutines and Tasks. <https://docs.python.org/3/library/asyncio-task.html>`_
   such as
   `create_task <https://docs.python.org/3/library/asyncio-task.html#asyncio.create_task>`_.
+
+
+  **Migration Guide:**
+
+  *Pyright* will show errors for :code:`async` event handlers.
 
 
 v2.14.2
