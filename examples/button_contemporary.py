@@ -1,0 +1,168 @@
+# python examples/todomvc.py
+#
+
+from __future__ import annotations
+
+import typing as tp
+from collections import OrderedDict
+from dataclasses import dataclass
+from typing import cast
+
+from edifice.qt import QT_VERSION
+
+if QT_VERSION == "PyQt6" and not tp.TYPE_CHECKING:
+    from PyQt6 import QtCore, QtGui, QtWidgets
+    from PyQt6.QtGui import QKeyEvent, QMouseEvent
+    from PyQt6.QtWidgets import QSizePolicy
+else:
+    from PySide6 import QtCore, QtGui, QtWidgets
+    from PySide6.QtGui import QKeyEvent, QMouseEvent
+    from PySide6.QtWidgets import QSizePolicy
+
+import edifice as ed
+
+
+@ed.component
+def ButtonContemporary(
+    self,
+    style: ed.PropsDict | None = None,
+    on_trigger: tp.Callable[[QKeyEvent], None] | tp.Callable[[QMouseEvent], None] | None = None,
+    children: tuple[ed.Element, ...] = (),
+    **kwargs,
+):
+    # palette = tp.cast(QtWidgets.QApplication, QtWidgets.QApplication.instance()).palette()
+
+    # step, step_set = ed.use_state(0)
+
+    hover, hover_set = ed.use_state(False)
+    mouse_down, mouse_down_set = ed.use_state(False)
+    is_light = ed.theme_is_light()
+
+    def on_mouse_enter(_ev: QtGui.QMouseEvent):
+        hover_set(True)
+
+    def on_mouse_leave(_ev: QtGui.QMouseEvent):
+        hover_set(False)
+        mouse_down_set(False)
+
+    def on_mouse_down(_ev: QtGui.QMouseEvent):
+        mouse_down_set(True)
+
+    def on_mouse_up(_ev: QtGui.QMouseEvent):
+        mouse_down_set(False)
+
+    match is_light, hover, mouse_down:
+        case False, False, False:
+            backcolor = QtGui.QColor(255, 255, 255, 0)
+            shadow = None
+        case False, True, False:
+            backcolor = QtGui.QColor(255, 255, 255, 10)
+            shadow = (4.0, QtGui.QColor(0, 0, 0, 100), QtCore.QPointF(0.0, 2.0))
+        case False, True, True:
+            backcolor = QtGui.QColor(255, 255, 255, 20)
+            shadow = None
+        case False, False, True:
+            raise ValueError("unreachable")
+        case True, False, False:
+            backcolor = QtGui.QColor(0, 0, 0, 0)
+            shadow = None
+        case True, True, False:
+            # backcolor = QtGui.QColor(0, 0, 0, 10)
+            shadow = (4.0, QtGui.QColor(0, 0, 0, 100), QtCore.QPointF(0.0, 2.0))
+            backcolor = QtGui.QColor(235,235,235,255)
+        case True, True, True:
+            backcolor = QtGui.QColor(0, 0, 0, 20)
+            shadow = None
+        case True, False, True:
+            raise ValueError("unreachable")
+
+    with ed.VBoxView(
+        style=
+        {"padding": 6} |
+        {"drop-shadow": shadow} if shadow else {},
+    ):
+        with ed.ButtonView(
+            # style={
+            #     "border-width": 0,
+            #     "border-radius": 6,
+            #     "padding": 6,
+            #     "background-color": backcolor,
+            # } | (style or {}),
+            # on_mouse_enter=on_mouse_enter,
+            # on_mouse_leave=on_mouse_leave,
+            # on_mouse_down=on_mouse_down,
+            # on_mouse_up=on_mouse_up,
+            # on_trigger=on_trigger,
+            # size_policy=QSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed),
+            **(
+                {
+                    # Props which can be overridden
+                    "on_trigger": on_trigger,
+                    "size_policy": QSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed),
+                }
+                | kwargs
+                | {
+                    # Style, which can be overridden
+                    "style": {
+                        "border-width": 0,
+                        "border-radius": 6,
+                        "padding": 6,
+                        "background-color": backcolor,
+                    }
+                    # | ({"drop-shadow": shadow} if shadow else {})
+                    | (style or {}),
+                    # Props which cannot be overridden
+                    "on_mouse_enter": on_mouse_enter,
+                    "on_mouse_leave": on_mouse_leave,
+                    "on_mouse_down": on_mouse_down,
+                    "on_mouse_up": on_mouse_up,
+                }
+            ),
+        ):
+            for child in children:
+                ed.child_place(child)
+
+
+@ed.component
+def Application(self):
+    with ed.Window(title="Button Contemporary Demo"):
+        with ed.VBoxView():
+            # with ed.HBoxView(
+            #     style={
+            #         "padding": 20,
+            #         "drop-shadow": (8.0, QtGui.QColor(0, 0, 0, 255), QtCore.QPointF(0.0, 4.0)),
+            #         "background-color": QtGui.QColor(255, 255, 255, 255),
+            #     },
+            # ):
+            #     with ed.HBoxView():
+            #         ed.Label(text="test")
+            with ed.HBoxView():
+                with ed.VBoxView(style={"padding": 20}):
+                    with ButtonContemporary():
+                        ed.Label(text="Muted")
+                with ed.VBoxView(style={"padding": 20}):
+                    with ButtonContemporary():
+                        ed.Label(text="Post")
+                with ed.VBoxView(style={"padding": 20}):
+                    with ButtonContemporary():
+                        ed.Label(text="Horn")
+
+
+@ed.component
+def Main(self):
+    def initializer():
+        qapp = tp.cast(QtWidgets.QApplication, QtWidgets.QApplication.instance())
+        qapp.setApplicationName("Button Contemporary Demo")
+        if ed.theme_is_light():
+            qapp.setPalette(ed.palette_edifice_light())
+        else:
+            qapp.setPalette(ed.palette_edifice_dark())
+
+    _, _ = ed.use_state(initializer)
+
+    with ed.Window(title="todos", _size_open=(520, 200)):
+        Application()
+
+
+if __name__ == "__main__":
+    ed.App(Main()).start()
