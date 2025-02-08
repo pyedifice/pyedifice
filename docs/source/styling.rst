@@ -158,11 +158,11 @@ Each effect style has a different set of parameters.
 - **blur**: :code:`float` The blur radius in pixels.
 
   See `QGraphicsBlurEffect <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGraphicsBlurEffect.html>`_.
-- **drop-shadow**: :code:`tuple[float, QColor, QRectF]`
+- **drop-shadow**: :code:`tuple[float, QColor, QPointF]`
 
   - :code:`float` The blur radius in pixels.
   - `QColor <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QColor.html>`_ Shadow color.
-  - `QRectF <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QRectF.html>`_ Shadow offset.
+  - `QPointF <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QPointF.html>`_ Shadow offset.
 
   See `QGraphicsDropShadowEffect <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGraphicsDropShadowEffect.html>`_.
 - **colorize**: :code:`tuple[QColor, float]`
