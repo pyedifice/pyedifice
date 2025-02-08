@@ -623,6 +623,17 @@ class ImageSvg(QtWidgetElement[QtSvgWidgets.QSvgWidget]):
             src=henomaru,
             style={"width": 100, "height": 100},
         )
+
+    Use the :class:`ImageSvg` Element to render icons.
+
+    Find icons on websites like Font Awesome: https://fontawesome.com/
+
+    The recommended method is to copy the icon’s SVG code and paste it into
+    :code:`QByteArray.fromStdString()` as in the example above. Then
+    pass the :code:`QByteArray` to the :code:`src` prop.
+
+    Or you can download an icon :code:`.svg` file
+    and render the icon by setting the :code:`src` prop to the path of the file.
     """
 
     def __init__(self, src: str | QtCore.QByteArray, **kwargs):

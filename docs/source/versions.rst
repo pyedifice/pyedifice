@@ -17,8 +17,7 @@ Released: 2025-02-08
 - Introduced internal type :code:`PropsDiff` which improves speed by reducing
   the number of Qt mutation commands issued.
 
-Breaking Changes
-^^^^^^^^^^^^^^^^
+**Breaking Changes**
 
 - :code:`PropsDict` type is now an alias for :code:`dict[str, Any]`.
 
