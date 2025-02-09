@@ -54,88 +54,66 @@ def ButtonContemporary(
     match is_light, hover, mouse_down:
         case False, False, False:
             backcolor = QtGui.QColor(255, 255, 255, 0)
-            shadow = None
         case False, True, False:
             backcolor = QtGui.QColor(255, 255, 255, 10)
-            shadow = (4.0, QtGui.QColor(0, 0, 0, 100), QtCore.QPointF(0.0, 2.0))
         case False, True, True:
             backcolor = QtGui.QColor(255, 255, 255, 20)
-            shadow = None
         case False, False, True:
             raise ValueError("unreachable")
         case True, False, False:
             backcolor = QtGui.QColor(0, 0, 0, 0)
-            shadow = None
         case True, True, False:
-            # backcolor = QtGui.QColor(0, 0, 0, 10)
-            shadow = (4.0, QtGui.QColor(0, 0, 0, 100), QtCore.QPointF(0.0, 2.0))
-            backcolor = QtGui.QColor(235,235,235,255)
+            backcolor = QtGui.QColor(0, 0, 0, 10)
         case True, True, True:
             backcolor = QtGui.QColor(0, 0, 0, 20)
-            shadow = None
         case True, False, True:
             raise ValueError("unreachable")
 
-    with ed.VBoxView(
-        style=
-        {"padding": 6} |
-        {"drop-shadow": shadow} if shadow else {},
+    with ed.ButtonView(
+        # style={
+        #     "border-width": 0,
+        #     "border-radius": 6,
+        #     "padding": 6,
+        #     "background-color": backcolor,
+        # } | (style or {}),
+        # on_mouse_enter=on_mouse_enter,
+        # on_mouse_leave=on_mouse_leave,
+        # on_mouse_down=on_mouse_down,
+        # on_mouse_up=on_mouse_up,
+        # on_trigger=on_trigger,
+        # size_policy=QSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed),
+        **(
+            {
+                # Props which can be overridden
+                "on_trigger": on_trigger,
+                "size_policy": QSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed),
+            }
+            | kwargs
+            | {
+                # Style, which can be overridden
+                "style": {
+                    "border-width": 0,
+                    "border-radius": 6,
+                    "padding": 6,
+                    "background-color": backcolor,
+                }
+                | (style or {}),
+                # Props which cannot be overridden
+                "on_mouse_enter": on_mouse_enter,
+                "on_mouse_leave": on_mouse_leave,
+                "on_mouse_down": on_mouse_down,
+                "on_mouse_up": on_mouse_up,
+            }
+        ),
     ):
-        with ed.ButtonView(
-            # style={
-            #     "border-width": 0,
-            #     "border-radius": 6,
-            #     "padding": 6,
-            #     "background-color": backcolor,
-            # } | (style or {}),
-            # on_mouse_enter=on_mouse_enter,
-            # on_mouse_leave=on_mouse_leave,
-            # on_mouse_down=on_mouse_down,
-            # on_mouse_up=on_mouse_up,
-            # on_trigger=on_trigger,
-            # size_policy=QSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed),
-            **(
-                {
-                    # Props which can be overridden
-                    "on_trigger": on_trigger,
-                    "size_policy": QSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed),
-                }
-                | kwargs
-                | {
-                    # Style, which can be overridden
-                    "style": {
-                        "border-width": 0,
-                        "border-radius": 6,
-                        "padding": 6,
-                        "background-color": backcolor,
-                    }
-                    # | ({"drop-shadow": shadow} if shadow else {})
-                    | (style or {}),
-                    # Props which cannot be overridden
-                    "on_mouse_enter": on_mouse_enter,
-                    "on_mouse_leave": on_mouse_leave,
-                    "on_mouse_down": on_mouse_down,
-                    "on_mouse_up": on_mouse_up,
-                }
-            ),
-        ):
-            for child in children:
-                ed.child_place(child)
+        for child in children:
+            ed.child_place(child)
 
 
 @ed.component
 def Application(self):
     with ed.Window(title="Button Contemporary Demo"):
         with ed.VBoxView():
-            # with ed.HBoxView(
-            #     style={
-            #         "padding": 20,
-            #         "drop-shadow": (8.0, QtGui.QColor(0, 0, 0, 255), QtCore.QPointF(0.0, 4.0)),
-            #         "background-color": QtGui.QColor(255, 255, 255, 255),
-            #     },
-            # ):
-            #     with ed.HBoxView():
-            #         ed.Label(text="test")
             with ed.HBoxView():
                 with ed.VBoxView(style={"padding": 20}):
                     with ButtonContemporary():
