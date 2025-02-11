@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import typing as tp
 from collections import OrderedDict
 from dataclasses import dataclass
@@ -32,42 +33,71 @@ def ButtonContemporary(
 ):
     # palette = tp.cast(QtWidgets.QApplication, QtWidgets.QApplication.instance()).palette()
 
-    # step, step_set = ed.use_state(0)
+    step, step_set = ed.use_state(0)
+    # step = 0: normal
+    # step = 5: hover
+    # step = 10: mouse down
+
+    async def step_to(target: int):
+        print(f"step_to({target})")
+        try:
+            while step != target:
+                await asyncio.sleep(0.05)
+                step_set(lambda step_old: step_old + 1 if step_old < target else step_old - 1)
+        except asyncio.CancelledError:
+            step_set(target)
+            raise
+
+    step_to_call, step_to_call_cancel = ed.use_async_call(step_to)
 
     hover, hover_set = ed.use_state(False)
     mouse_down, mouse_down_set = ed.use_state(False)
     is_light = ed.theme_is_light()
 
     def on_mouse_enter(_ev: QtGui.QMouseEvent):
+        print("on_mouse_enter")
         hover_set(True)
+        step_to_call(5)
 
     def on_mouse_leave(_ev: QtGui.QMouseEvent):
+        print("on_mouse_leave")
         hover_set(False)
         mouse_down_set(False)
+        step_to_call(0)
 
     def on_mouse_down(_ev: QtGui.QMouseEvent):
+        print("on_mouse_down")
         mouse_down_set(True)
+        # step_to_call(10)
+        step_to_call_cancel()
+        step_set(10)
 
     def on_mouse_up(_ev: QtGui.QMouseEvent):
+        print("on_mouse_up")
         mouse_down_set(False)
+        step_to_call(5)
 
-    match is_light, hover, mouse_down:
-        case False, False, False:
-            backcolor = QtGui.QColor(255, 255, 255, 0)
-        case False, True, False:
-            backcolor = QtGui.QColor(255, 255, 255, 10)
-        case False, True, True:
-            backcolor = QtGui.QColor(255, 255, 255, 20)
-        case False, False, True:
-            raise ValueError("unreachable")
-        case True, False, False:
-            backcolor = QtGui.QColor(0, 0, 0, 0)
-        case True, True, False:
-            backcolor = QtGui.QColor(0, 0, 0, 10)
-        case True, True, True:
-            backcolor = QtGui.QColor(0, 0, 0, 20)
-        case True, False, True:
-            raise ValueError("unreachable")
+    if is_light:
+        backcolor = QtGui.QColor(0, 0, 0, step * 2)
+    else:
+        backcolor = QtGui.QColor(255, 255, 255, step * 2)
+    # match is_light, hover, mouse_down:
+    #     case False, False, False:
+    #         backcolor = QtGui.QColor(255, 255, 255, 0)
+    #     case False, True, False:
+    #         backcolor = QtGui.QColor(255, 255, 255, 10)
+    #     case False, True, True:
+    #         backcolor = QtGui.QColor(255, 255, 255, 20)
+    #     case False, False, True:
+    #         raise ValueError("unreachable")
+    #     case True, False, False:
+    #         backcolor = QtGui.QColor(0, 0, 0, 0)
+    #     case True, True, False:
+    #         backcolor = QtGui.QColor(0, 0, 0, 10)
+    #     case True, True, True:
+    #         backcolor = QtGui.QColor(0, 0, 0, 20)
+    #     case True, False, True:
+    #         raise ValueError("unreachable")
 
     with ed.ButtonView(
         # style={
