@@ -28,52 +28,54 @@ See `Qt Stylesheet Reference List of Properties <https://doc.qt.io/qtforpython-6
 Note that sometimes Qt styling behaves differently from CSS styling
 (despite similar syntax and naming) and is not supported by all Widgets.
 
-Currently, the following styles are tested to be supported.
-
 Content Base Element Styling
 ----------------------------
 
 :ref:`Content Base Elements <Content Base Elements>` follow the
 `Qt Style Sheet Box Model <https://doc.qt.io/qtforpython-6/overviews/qtwidgets-stylesheet-customizing.html#the-box-model>`_.
 
-- **color**: See :ref:`Color`.
-- **font-size**: Font size in points.
-- **font-weight**: A number indicating how bold the font should be.
-- **font-family**: Font family name.
-- **font-style**: Font style, i.e. :code:`"italic"`.
-- **background-color**: See :ref:`Color`.
-- **margin**: Exterior margin in pixels.
+The following style
+`properties <https://doc.qt.io/qtforpython-6/overviews/qtwidgets-stylesheet-reference.html#list-of-properties>`_
+are tested to be supported.
 
-  - **margin-left**, **margin-right**, **margin-top**, **margin-bottom**: Exterior margin in pixels.
+- **color**: :code:`str | QColor` (See :ref:`Color`) Text color.
+- **font-size**: :code:`str | int | float` Font size.
+- **font-weight**: :code:`str | int | float` Font weight.
+- **font-family**: :code:`str` Font family name.
+- **font-style**: :code:`str` Font style, i.e. :code:`"italic"`.
+- **background-color**: :code:`str | QColor` (See :ref:`Color`) Background color.
+- **margin**: :code:`int | float` Exterior margin in pixels.
 
-- **padding**: Interior padding in pixels.
+  - **margin-left**, **margin-right**, **margin-top**, **margin-bottom**: :code:`int | float` Exterior margin in pixels.
 
-  - **padding-left**, **padding-right**, **padding-top**, **padding-bottom**: Interior padding in pixels.
+- **padding**: :code:`int | float` Interior padding in pixels.
 
-- **border**: For example :code:`"1px solid red"`
+  - **padding-left**, **padding-right**, **padding-top**, **padding-bottom**: :code:`int | float` Interior padding in pixels.
 
-  - **border-left**, **border-right**, **border-top**, **border-bottom**: For example :code:`"1px solid red"`
-  - **border-width**: Border width in pixels.
+- **border**: :code:`str` For example :code:`"1px solid red"`
 
-    - **border-left-width**, **border-right-width**, **border-top-width**, **border-bottom-width**: Border width in pixels.
+  - **border-left**, **border-right**, **border-top**, **border-bottom**: :code:`str` For example :code:`"1px solid red"`
+  - **border-width**: :code:`int | float` Border width in pixels.
 
-  - **border-style**: Border style.
+    - **border-left-width**, **border-right-width**, **border-top-width**, **border-bottom-width**: :code:`int | float` Border width in pixels.
 
-    - **border-left-style**, **border-right-style**, **border-top-style**, **border-bottom-style**: Border style.
+  - **border-style**: :code:`str` Border style.
 
-  - **border-color**: Border color. See :ref:`Color`.
+    - **border-left-style**, **border-right-style**, **border-top-style**, **border-bottom-style**: :code:`str` Border style.
 
-    - **border-left-color**, **border-right-color**, **border-top-color**, **border-bottom-color**: Border color.
+  - **border-color**: :code:`str | QColor` (See :ref:`Color`) Border color.
 
-  - **border-radius**: Border corner radius in pixels.
+    - **border-left-color**, **border-right-color**, **border-top-color**, **border-bottom-color**: :code:`str | QColor` (See :ref:`Color`) Border color.
 
-    - **border-top-left-radius**, **border-top-right-radius**, **border-bottom-right-radius**, **border-bottom-left-radius**: Border corner radius in pixels.
+  - **border-radius**: :code:`int | float` Border corner radius in pixels.
 
-- **height**, **width**: Height/width in pixels.
-- **min-height**, **max-height**, **min-width**, **max-width**: Min/max height/width in pixels.
+    - **border-top-left-radius**, **border-top-right-radius**, **border-bottom-right-radius**, **border-bottom-left-radius**: :code:`int | float` Border corner radius in pixels.
+
+- **height**, **width**: :code:`int | float` Height/width in pixels.
+- **min-height**, **max-height**, **min-width**, **max-width**: :code:`int | float` Min/max height/width in pixels.
 - **align**: :code:`str | AlignmentFlag` One of :code:`"left`, :code:`"right"`, :code:`"top"`, :code:`"bottom"`, :code:`"center"`, :code:`"justify"`.
   Or an `AlignmentFlag <https://doc.qt.io/qtforpython-6/PySide6/QtCore/Qt.html#PySide6.QtCore.Qt.AlignmentFlag>`_.
-- **top**, **left** (but not bottom, right): Position offset in pixels from a
+- **top**, **left** (but not bottom, right): :code:`int | float` Position offset in pixels from a
   :class:`FixView <edifice.FixView>`.
 
 Layout Base Element Styling
@@ -92,37 +94,41 @@ and follows slightly different rules than the
     if you want a *2px* border around the :code:`View` then you should also
     set at least *2px* of padding so that the content does not obscure the border.
 
-- **background-color**: See :ref:`Color`.
+The following style
+`properties <https://doc.qt.io/qtforpython-6/overviews/qtwidgets-stylesheet-reference.html#list-of-properties>`_
+are tested to be supported.
 
-- **padding**: Interior padding in pixels.
 
-  - **padding-left**, **padding-right**, **padding-top**, **padding-bottom**: Interior padding in pixels.
+- **background-color**: :code:`str | QColor` (See :ref:`Color`) Background color.
 
-- **border**: For example :code:`"1px solid red"`
+- **padding**: :code:`int | float` Interior padding in pixels.
 
-  - **border-left**, **border-right**, **border-top**, **border-bottom**: For example :code:`"1px solid red"`
-  - **border-width**: Border width in pixels.
+  - **padding-left**, **padding-right**, **padding-top**, **padding-bottom**: :code:`int | float` Interior padding in pixels.
 
-    - **border-left-width**, **border-right-width**, **border-top-width**, **border-bottom-width**: Border width in pixels.
+- **border**: :code:`str` For example :code:`"1px solid red"`
 
-  - **border-style**: Border style.
+  - **border-left**, **border-right**, **border-top**, **border-bottom**: :code:`str` For example :code:`"1px solid red"`
+  - **border-width**: :code:`int | float` Border width in pixels.
 
-    - **border-left-style**, **border-right-style**, **border-top-style**, **border-bottom-style**: Border style.
+    - **border-left-width**, **border-right-width**, **border-top-width**, **border-bottom-width**: :code:`int | float` Border width in pixels.
 
-  - **border-color**: Border color. See :ref:`Color`.
+  - **border-style**: :code:`str` Border style.
 
-    - **border-left-color**, **border-right-color**, **border-top-color**, **border-bottom-color**: Border color.
+    - **border-left-style**, **border-right-style**, **border-top-style**, **border-bottom-style**: :code:`str` Border style.
 
-  - **border-radius**: Border corner radius in pixels.
+  - **border-color**: :code:`str | QColor` (See :ref:`Color`) Border color.
 
-    - **border-top-left-radius**, **border-top-right-radius**, **border-bottom-right-radius**, **border-bottom-left-radius**: Border corner radius in pixels.
+    - **border-left-color**, **border-right-color**, **border-top-color**, **border-bottom-color**: :code:`str | QColor` Border color.
 
-- **height**, **width**: Height/width in pixels.
-- **min-height**, **max-height**, **min-width**, **max-width**: Min/max height/width in pixels.
-- **align**: One of :code:`"left`, :code:`"right"`, :code:`"top"`, :code:`"bottom"`, :code:`"center"`, :code:`"justify"`.
+  - **border-radius**: :code:`int | float` Border corner radius in pixels.
+
+    - **border-top-left-radius**, **border-top-right-radius**, **border-bottom-right-radius**, **border-bottom-left-radius**: :code:`int | float` Border corner radius in pixels.
+
+- **height**, **width**: :code:`int | float` Height/width in pixels.
+- **min-height**, **max-height**, **min-width**, **max-width**: :code:`int | float` Min/max height/width in pixels.
 - **align**: :code:`str | AlignmentFlag` One of :code:`"left`, :code:`"right"`, :code:`"top"`, :code:`"bottom"`, :code:`"center"`, :code:`"justify"`.
   Or an `AlignmentFlag <https://doc.qt.io/qtforpython-6/PySide6/QtCore/Qt.html#PySide6.QtCore.Qt.AlignmentFlag>`_.
-- **top**, **left** (but not bottom, right): Position offset in pixels from a
+- **top**, **left** (but not bottom, right): :code:`int | float` Position offset in pixels from a
   :class:`FixView <edifice.FixView>`.
 
 
@@ -135,7 +141,7 @@ There are two ways to specify a style value which takes a single color:
   `QColor.fromString <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QColor.html#PySide6.QtGui.QColor.fromString>`_,
   for example:
 
-  - :code:`"rgba(red, green, blue, alpha)"` decimal range *0—255*
+  - :code:`"rgba(red, green, blue, alpha)"` decimal range *0–255*
   - Named colors like :code:`"red"`
   - Hexadecimal :code:`"#rrggbb"`
   - Hexadecimal :code:`"#aarrggbb"`
@@ -220,7 +226,7 @@ For more information see :class:`App<edifice.App>`.
 
 If you think that Qt’s default color palette has weird choices, you can try
 the Edifice color palettes
-:func:`palette_edifice_light <edifice.utilities.palette_edifice_light>` and
-:func:`palette_edifice_dark <edifice.utilities.palette_edifice_dark>`.
-See :func:`theme_is_light<edifice.utilities.theme_is_light>` for instructions
+:func:`palette_edifice_light <edifice.palette_edifice_light>` and
+:func:`palette_edifice_dark <edifice.palette_edifice_dark>`.
+See :func:`theme_is_light<edifice.theme_is_light>` for instructions
 on how to use them.
