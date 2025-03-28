@@ -67,8 +67,12 @@ class ButtonView(HBoxView):
         with ButtonView(
             on_trigger=lambda _event: print("Button Triggered"),
         ):
-            Icon(name="share")
+            ImageSvg(
+                src=str(importlib.resources.files(edifice) / "icons/font-awesome/solid/share.svg"),
+                style={"width": 18, "height": 18 },
+            )
             Label(text="<i>Share the Content</i>")
+
 
     .. figure:: /image/button_view.png
 

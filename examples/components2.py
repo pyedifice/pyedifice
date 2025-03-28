@@ -1,30 +1,65 @@
-from edifice import App, Button, ButtonView, Icon, Label, VBoxView, Window, component
-from edifice.hooks import use_effect, use_state
+import importlib.resources
+import typing as tp
 
+import edifice
+from edifice import Button, ButtonView, ImageSvg, Label, VBoxView
+from edifice.qt import QT_VERSION
 
-@component
+if QT_VERSION == "PyQt6" and not tp.TYPE_CHECKING:
+    from PyQt6.QtCore import QByteArray
+    from PyQt6.QtWidgets import QApplication
+else:
+    from PySide6.QtCore import QByteArray
+    from PySide6.QtWidgets import QApplication
+
+henomaru = QByteArray.fromStdString(
+    '<svg viewBox="0 0 200 200"><circle fill="red" cx="100" cy="100" r="100"/></svg>'
+)
+
+@edifice.component
 def Main(self):
-    x, x_set = use_state(0)
+    def initializer():
+        palette = edifice.palette_edifice_light() if edifice.theme_is_light() else edifice.palette_edifice_dark()
+        tp.cast(QApplication, QApplication.instance()).setPalette(palette)
+        return palette
+
+    edifice.use_memo(initializer)
+
+    x, x_set = edifice.use_state(0)
 
     def setup_print():
-        print("print setup")
+        print("print setup")  # noqa: T201
 
         def cleanup_print():
-            print("print cleanup")
+            print("print cleanup")  # noqa: T201
 
         return cleanup_print
 
-    use_effect(setup_print, x)
+    edifice.use_effect(setup_print, x)
 
-    with Window():
-        with VBoxView():
+    with edifice.Window():
+        with edifice.VBoxView():
             with VBoxView(style={"padding": 30}):
                 with ButtonView(
                     on_click=lambda _event: None,
-                    style={"padding": 10},
+                    style={"padding": 15},
                 ):
-                    Icon(name="share", style={"margin": 10})
-                    Label(text="<i>Share the Content<i>")
+                    ImageSvg(
+                        src=str(importlib.resources.files(edifice) / "icons/font-awesome/solid/share.svg"),
+                        style={"width": 18, "height": 18},
+                    )
+
+                    Label(
+                        text="<i>Share the Content<i>",
+                        style={"margin-left": 10},
+                    )
+
+
+            with VBoxView(style={"padding": 30}):
+                ImageSvg(
+                    src=henomaru,
+                    style={"width": 100, "height": 100},
+                )
             Button(
                 title="asd + 1",
                 on_click=lambda _ev: x_set(x + 1),
@@ -35,5 +70,5 @@ def Main(self):
 
 
 if __name__ == "__main__":
-    my_app = App(Main())
+    my_app = edifice.App(Main())
     my_app.start()

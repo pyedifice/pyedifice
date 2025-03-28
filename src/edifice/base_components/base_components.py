@@ -614,26 +614,45 @@ class ImageSvg(QtWidgetElement[QtSvgWidgets.QSvgWidget]):
     .. rubric:: Usage
 
     .. code-block:: python
+        :caption: Example SVG image constant
 
         henomaru = QByteArray.fromStdString(
             '<svg viewBox="0 0 200 200"><circle fill="red" cx="100" cy="100" r="100"/></svg>'
         )
+
+    .. code-block:: python
+        :caption: Example ImageSvg
 
         ImageSvg(
             src=henomaru,
             style={"width": 100, "height": 100},
         )
 
-    Use the :class:`ImageSvg` Element to render icons.
+    We can use the :class:`ImageSvg` Element to render SVG icons.
 
-    Find icons on websites like Font Awesome: https://fontawesome.com/
+    Find SVG icons on websites like Font Awesome: https://fontawesome.com/
 
     The recommended method is to copy the icon’s SVG code and paste it into
+    a constant
     :code:`QByteArray.fromStdString()` as in the example above. Then
     pass the :code:`QByteArray` to the :code:`src` prop.
 
     Or you can download an icon :code:`.svg` file
     and render the icon by setting the :code:`src` prop to the path of the file.
+
+    There is also a copy of some Font Awesome icons
+    `in the Edifice package <https://github.com/pyedifice/pyedifice/tree/master/src/edifice/icons/font-awesome>`_,
+    for convenience.
+
+    .. code-block:: python
+        :caption: Example Font Awesome Share Icon
+
+        ImageSvg(
+            src=str(importlib.resources.files(edifice) / "icons/font-awesome/solid/share.svg"),
+            style={"width": 18, "height": 18 },
+        )
+
+    .. figure:: /image/button_view.png
     """
 
     def __init__(self, src: str | QtCore.QByteArray, **kwargs):
