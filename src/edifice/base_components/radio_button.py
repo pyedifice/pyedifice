@@ -82,7 +82,7 @@ class RadioButton(QtWidgetElement[EdRadioButton]):
                     checked = value == "op2",
                     on_change = lambda checked: value_set("op2") if checked else None,
                     text = "Option 2",
-                    style = {} if value == "op1" else { "color": "grey" },
+                    style = {} if value == "op2" else { "color": "grey" },
                 )
     """
 
