@@ -264,8 +264,13 @@ async def run_subprocess_with_callback(
 
             # In this example we use gather() to run these 2 functions
             # concurrently (“at the same time”).
+            #
             # 1. run_subprocess_with_callback()
             # 2. send_messages()
+            #
+            # In your code you will probably instead want to send_messages()
+            # in reaction to some event.
+            #
             y, _ = await asyncio.gather(
                 run_subprocess_with_callback(
                     functools.partial(my_subprocess, msg_queue),
