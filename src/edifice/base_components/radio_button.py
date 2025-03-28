@@ -69,16 +69,16 @@ class RadioButton(QtWidgetElement[EdRadioButton]):
 
         value, value_set = use_state(cast(Literal["op1", "op2"], "op1"))
 
-        with ed.VBoxView():
-            with ed.VBoxView():
-                ed.RadioButton(
+        with VBoxView():
+            with VBoxView():
+                RadioButton(
                     checked = value == "op1",
                     on_change = lambda checked: value_set("op1") if checked else None,
                     text = "Option 1",
                     style = {} if value == "op1" else { "color": "grey" },
                 )
-            with ed.VBoxView():
-                ed.RadioButton(
+            with VBoxView():
+                RadioButton(
                     checked = value == "op2",
                     on_change = lambda checked: value_set("op2") if checked else None,
                     text = "Option 2",
