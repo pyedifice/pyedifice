@@ -37,7 +37,9 @@ class RadioButton(QtWidgetElement[EdRadioButton]):
         - Underlying Qt Widget
           `QRadioButton <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QRadioButton.html>`_
 
-    Radio buttons are used to specify a single choice out of many.
+    Radio buttons are used to select a single choice out of many.
+
+    .. figure:: /image/radio_button.png
 
     .. rubric:: Props
 
@@ -54,11 +56,6 @@ class RadioButton(QtWidgetElement[EdRadioButton]):
             changes.
 
     .. rubric:: Usage
-
-    .. figure:: /image/radio_button.png
-       :width: 300
-
-       Three RadioButtons
 
     Because of the declarative nature of Edifice, we can ignore all of the
     Qt mechanisms for radio button “groups” and “exclusivity.”
