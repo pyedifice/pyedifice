@@ -170,6 +170,13 @@ Each effect style has a different set of parameters.
   - `QColor <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QColor.html>`_ Shadow color.
   - `QPointF <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QPointF.html>`_ Shadow offset.
 
+  .. code-block:: python
+     :caption: Example drop-shadow
+
+      style = {
+          "drop-shadow": (10.0, QColor("black"), QPointF(-1.0, 5.0)),
+      },
+
   See `QGraphicsDropShadowEffect <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGraphicsDropShadowEffect.html>`_.
 - **colorize**: :code:`tuple[QColor, float]`
 
