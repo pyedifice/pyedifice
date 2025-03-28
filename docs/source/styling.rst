@@ -154,10 +154,9 @@ Graphics Effects
 Edifice styles support the four stock `QGraphicsEffect <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGraphicsEffect.html>`_
 effects for any :ref:`Base Element <Base Elements>`.
 
-.. note::
-
-  Due to limitations in the Qt API, only one graphic effect can be applied to
-  a :ref:`Base Element <Base Elements>` at a time.
+.. figure:: image/graphics_effects.png
+   :alt: Graphics Effects
+   :align: center
 
 Each effect style has a different set of parameters.
 
@@ -187,6 +186,11 @@ Each effect style has a different set of parameters.
 - **opacity**: :code:`float` The opacity of the widget.
 
   See `QGraphicsOpacityEffect <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGraphicsOpacityEffect.html>`_.
+
+.. note::
+
+  Due to limitations in the Qt API, only one graphic effect can be applied to
+  a :ref:`Base Element <Base Elements>` at a time.
 
 
 
