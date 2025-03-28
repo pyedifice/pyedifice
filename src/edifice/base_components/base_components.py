@@ -511,24 +511,25 @@ class Label(QtWidgetElement[QtWidgets.QLabel]):
     .. code-block:: python
 
         Label(
+            word_wrap=True,
+            link_open=True,
             text='''
-                <h1>QLabel</h1>
+                <h1><a href="https://doc.qt.io/qt-6/qlabel.html">QLabel</a></h1>
 
-                <p style='line-height:1.5;'>
-                <code>QLabel</code> is used for displaying text or an image.
-                No user interaction functionality is provided.The visual appearance of the
+                <p style="line-height:1.5">
+                <code>QLabel</code> is used for <b>displaying text</b> or an image.
+                No user interaction functionality is provided. The visual appearance of the
                 label can be configured in various ways, and it can be used for specifying
                 a focus mnemonic key for another widget.
                 </p>
                 ''',
         )
 
+    .. figure:: /image/label.png
+
     .. note::
         The combination of rich text and :code:`word_wrap` can sometimes cause
-        `Qt Layout Issues <https://doc.qt.io/qtforpython-6/overviews/layout.html#layout-issues>`_.
-
-    .. figure:: /image/label.png
-       :width: 500
+        `Qt Layout Issues <https://doc.qt.io/qt-6/layout.html#layout-issues>`_.
     """
 
     def __init__(

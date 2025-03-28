@@ -13,8 +13,9 @@ else:
     from PySide6.QtWidgets import QApplication
 
 henomaru = QByteArray.fromStdString(
-    '<svg viewBox="0 0 200 200"><circle fill="red" cx="100" cy="100" r="100"/></svg>'
+    '<svg viewBox="0 0 200 200"><circle fill="red" cx="100" cy="100" r="100"/></svg>',
 )
+
 
 @edifice.component
 def Main(self):
@@ -54,7 +55,6 @@ def Main(self):
                         style={"margin-left": 10},
                     )
 
-
             with VBoxView(style={"padding": 30}):
                 ImageSvg(
                     src=henomaru,
@@ -67,6 +67,21 @@ def Main(self):
             Label("asd " + str(x))
             for i in range(x):
                 Label(text=str(i))
+            with VBoxView(style={"padding": 30}):
+                Label(
+                    word_wrap=True,
+                    link_open=True,
+                    text="""
+                        <h1><a href="https://doc.qt.io/qt-6/qlabel.html">QLabel</a></h1>
+
+                        <p style="line-height:1.5">
+                        <code>QLabel</code> is used for <b>displaying text</b> or an image.
+                        No user interaction functionality is provided. The visual appearance of the
+                        label can be configured in various ways, and it can be used for specifying
+                        a focus mnemonic key for another widget.
+                        </p>
+                        """,
+                )
 
 
 if __name__ == "__main__":
