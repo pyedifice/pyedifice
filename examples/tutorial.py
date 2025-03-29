@@ -12,7 +12,7 @@ METERS_TO_FEET = 3.28084
 
 
 @component
-def ConversionWidget(self, from_unit, to_unit, factor):
+def ConversionWidget(self, from_unit:str, to_unit:str, factor:float):
     current_text, current_text_set = use_state("0.0")
 
     from_label_style = {"width": 170}
@@ -22,7 +22,7 @@ def ConversionWidget(self, from_unit, to_unit, factor):
         Label(f"Measurement in {from_unit}:", style=from_label_style)
         TextInput(current_text, style=input_style, on_change=current_text_set)
         try:
-            to_text = "%.3f" % (float(current_text) * factor)
+            to_text = f"{float(current_text) * factor :.3f}"
             Label(f"Measurement in {to_unit}: {to_text}", style=to_label_style)
         except ValueError:  # Could not convert string to float
             pass  # So don't render the Label

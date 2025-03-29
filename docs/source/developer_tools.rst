@@ -3,6 +3,12 @@ Developer Tools
 
 The Edifice Runner provides some useful tools for developing Edifice applications.
 
+To use the Edifice Runner, you must install the :code:`watchdog` package.
+
+.. code-block:: shell
+
+    pip install watchdog
+
 Dynamic hot-reload
 ------------------
 
@@ -77,8 +83,8 @@ To launch the Element Inspector, use the :code:`--inspect` flag for the Edifice 
 
     python -m edifice --inspect path/to/your/app.py RootElement
 
-The Element Inspector, like the Inspect Elements tool of web browsers
-or the React inspector tool,
-allows you to inspect the internal state of your components.
+The Element Inspector allows you to inspect the running state of the application.
 It displays the entire Element Tree, as well as the props and state of
 every component.
+It is like the Inspect Elements tool of web browsers
+or the React inspector tool.
