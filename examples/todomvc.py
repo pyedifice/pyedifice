@@ -17,23 +17,6 @@ else:
     from PySide6 import QtCore, QtGui, QtWidgets
 
 import edifice as ed
-from edifice import (
-    App,
-    Button,
-    ButtonView,
-    CheckBox,
-    HBoxView,
-    Label,
-    RadioButton,
-    TableGridRow,
-    TableGridView,
-    TextInput,
-    VBoxView,
-    Window,
-    component,
-    use_hover,
-    use_state,
-)
 
 
 @dataclass(frozen=True)
@@ -43,11 +26,19 @@ class Todo:
     editing: bool = False
 
 
-@component
-def TodoItem(self, key: int, todo: Todo, set_complete, delete_todo, set_editing, set_text):
-    hover1, on_mouse_enter1, on_mouse_leave1 = use_hover()
-    with TableGridRow():
-        with VBoxView(
+@ed.component
+def TodoItem(
+    self,
+    key: int,
+    todo: Todo,
+    set_complete: tp.Callable[[int, bool], None],
+    delete_todo: tp.Callable[[int], None],
+    set_editing: tp.Callable[[int, bool]],
+    set_text: tp.Callable[[int, str], None],
+):
+    hover1, on_mouse_enter1, on_mouse_leave1 = ed.use_hover()
+    with ed.TableGridRow():
+        with ed.VBoxView(
             on_mouse_enter=on_mouse_enter1,
             on_mouse_leave=on_mouse_leave1,
             style={
@@ -55,12 +46,12 @@ def TodoItem(self, key: int, todo: Todo, set_complete, delete_todo, set_editing,
             }
             | ({"background-color": "rgba(0,0,0,0.2)"} if hover1 else {}),
         ):
-            CheckBox(
+            ed.CheckBox(
                 checked=todo.completed,
                 on_click=lambda _ev: set_complete(key, not todo.completed),
                 style={"margin": 5},
             )
-        with HBoxView(
+        with ed.HBoxView(
             on_mouse_enter=on_mouse_enter1,
             on_mouse_leave=on_mouse_leave1,
             style={
@@ -70,7 +61,7 @@ def TodoItem(self, key: int, todo: Todo, set_complete, delete_todo, set_editing,
             | ({"background-color": "rgba(0,0,0,0.2)"} if hover1 else {}),
         ):
             if todo.editing:
-                TextInput(
+                ed.TextInput(
                     text=todo.text,
                     on_change=lambda t: set_text(key, t),
                     on_edit_finish=lambda: set_editing(key, False),
@@ -78,7 +69,7 @@ def TodoItem(self, key: int, todo: Todo, set_complete, delete_todo, set_editing,
                     _focus_open=True,
                 )
             else:
-                Label(
+                ed.Label(
                     text=(
                         f"""<span style='text-decoration:line-through;color:grey'>{todo.text}</span>"""
                         if todo.completed
@@ -89,7 +80,7 @@ def TodoItem(self, key: int, todo: Todo, set_complete, delete_todo, set_editing,
                     word_wrap=True,
                 )
             if hover1:
-                with ButtonView(
+                with ed.ButtonView(
                     on_click=lambda _ev: delete_todo(key),
                     style={
                         "padding-left": 4,
@@ -98,23 +89,24 @@ def TodoItem(self, key: int, todo: Todo, set_complete, delete_todo, set_editing,
                     },
                     tool_tip="Clear " + todo.text,
                     size_policy=QtWidgets.QSizePolicy(
-                        QtWidgets.QSizePolicy.Policy.Fixed, QtWidgets.QSizePolicy.Policy.Fixed,
+                        QtWidgets.QSizePolicy.Policy.Fixed,
+                        QtWidgets.QSizePolicy.Policy.Fixed,
                     ),
                 ):
-                    Label(
+                    ed.Label(
                         text="×",  # noqa: RUF001
                         style={"font-size": 30},
                     )
 
 
-@component
+@ed.component
 def TodoMVC(self):
-    todos, todos_set = use_state(cast(OrderedDict[int, Todo], OrderedDict([])))
+    todos, todos_set = ed.use_state(cast(OrderedDict[int, Todo], OrderedDict([])))
 
-    item_filter, item_filter_set = use_state("All")
-    next_key, next_key_set = use_state(0)
-    item_text, item_text_set = use_state("")
-    complete_all_toggle, complete_all_toggle_set = use_state(False)
+    item_filter, item_filter_set = ed.use_state("All")
+    next_key, next_key_set = ed.use_state(0)
+    item_text, item_text_set = ed.use_state("")
+    complete_all_toggle, complete_all_toggle_set = ed.use_state(False)
 
     def handle_change(text: str):
         item_text_set(text)
@@ -172,19 +164,20 @@ def TodoMVC(self):
         if not todo.completed:
             items_left += 1
 
-    with VBoxView(style={"align": "top", "padding-top": 10}):
-        with TableGridView():
-            with TableGridRow():
-                with VBoxView(
+    # Render the UI
+    with ed.VBoxView(style={"align": "top", "padding-top": 10}):
+        with ed.TableGridView():
+            with ed.TableGridRow():
+                with ed.VBoxView(
                     style={"padding-left": 5},
                 ):
                     if len(todos) > 0:
-                        CheckBox(
+                        ed.CheckBox(
                             checked=complete_all_toggle,
                             on_change=set_complete_all,
                             style={"margin": 5},
                         )
-                TextInput(
+                ed.TextInput(
                     text=item_text,
                     on_change=handle_change,
                     on_key_up=handle_key_up,
@@ -194,9 +187,9 @@ def TodoMVC(self):
             for key, todo in todos.items():
                 if item_filter == "All" or (item_filter == "Completed") == todo.completed:
                     TodoItem(key, todo, set_complete, delete_todo, set_editing, set_text)
-        with VBoxView(style={"padding": 10}):
+        with ed.VBoxView(style={"padding": 10}):
             if len(todos) > 0:
-                with HBoxView(
+                with ed.HBoxView(
                     style={
                         "border-top-width": "2px",
                         "border-top-style": "solid",
@@ -204,41 +197,41 @@ def TodoMVC(self):
                         "padding-top": 10,
                     },
                 ):
-                    Label(
+                    ed.Label(
                         text=str(items_left) + (" item left" if items_left == 1 else " items left"),
                         style={"margin-right": 10},
                     )
-                    with HBoxView(style={"padding-left": 10}):
-                        RadioButton(
+                    with ed.HBoxView(style={"padding-left": 10}):
+                        ed.RadioButton(
                             checked=item_filter == "All",
                             text="All",
                             on_click=lambda _ev: item_filter_set("All"),
                             style={} if item_filter == "All" else {"color": "grey"},
                         )
-                        RadioButton(
+                        ed.RadioButton(
                             checked=item_filter == "Active",
                             text="Active",
                             on_click=lambda _ev: item_filter_set("Active"),
                             style={} if item_filter == "Active" else {"color": "grey"},
                         )
-                        RadioButton(
+                        ed.RadioButton(
                             checked=item_filter == "Completed",
                             text="Completed",
                             on_click=lambda _ev: item_filter_set("Completed"),
                             style={} if item_filter == "Completed" else {"color": "grey"},
                         )
-                    with VBoxView(style={"min-width": 180, "padding-left": 10, "align": "right"}):
+                    with ed.VBoxView(style={"min-width": 180, "padding-left": 10, "align": "right"}):
                         if len(todos) > items_left:
-                            Button(
+                            ed.Button(
                                 title="Clear completed (" + str(len(todos) - items_left) + ")",
                                 on_click=clear_completed,
                                 style={"width": 150},
                             )
-                Label(
+                ed.Label(
                     text="Click to edit a todo",
                     style={"color": "grey"},
                 )
-            Label(
+            ed.Label(
                 link_open=True,
                 text="""<div>
                 <a href='https://todomvc.com/'>TodoMVC</a>
@@ -250,7 +243,7 @@ def TodoMVC(self):
             )
 
 
-@component
+@ed.component
 def Main(self):
     def initializer():
         qapp = tp.cast(QtWidgets.QApplication, QtWidgets.QApplication.instance())
@@ -262,9 +255,9 @@ def Main(self):
 
     _, _ = ed.use_state(initializer)
 
-    with Window(title="todos", _size_open=(520, 200)):
+    with ed.Window(title="todos", _size_open=(520, 200)):
         TodoMVC()
 
 
 if __name__ == "__main__":
-    App(Main()).start()
+    ed.App(Main()).start()
