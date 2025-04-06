@@ -7,6 +7,10 @@
 Release Notes
 =============
 
+v3.1.0
+------
+Released: 2025-04-07
+
 - New Hook :func:`use_context_select`.
 - Bugfix in :func:`use_context`: too many setters registered to the global context.
 
