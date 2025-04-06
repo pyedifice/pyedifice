@@ -19,11 +19,11 @@ def Display(self):
 
 
 @component
-def UseContext1(self):
+def Main(self):
     show_a, set_show_a = provide_context("show_a", False)
     show_b, set_show_b = provide_context("show_b", False)
     show_c, _ = provide_context("show_c", True)
-    with Window():
+    with Window(_size_open=(400, 300)):
         with VBoxView():
             with HBoxView():
                 if show_a:
@@ -51,4 +51,4 @@ def TestComp(self):
 
 
 if __name__ == "__main__":
-    App(UseContext1()).start()
+    App(Main()).start()

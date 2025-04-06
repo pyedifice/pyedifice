@@ -514,6 +514,13 @@ def use_callback(
 ) -> tp.Callable[_P_callback, None]:
     """
     Deprecated alias for :func:`use_memo`.
+
+    .. warning::
+
+        Deprecated
+
+    Returns:
+        The memoized **value** from calling :code:`fn`.
     """
     return use_memo(fn, dependencies)
 
@@ -934,10 +941,11 @@ def provide_context(
     context_key: str,
     initial_state: _T_provide_context | Callable[[], _T_provide_context],
 ) -> tuple[
-    _T_provide_context, Callable[[_T_provide_context | Callable[[_T_provide_context], _T_provide_context]], None],
+    _T_provide_context,
+    Callable[[_T_provide_context | Callable[[_T_provide_context], _T_provide_context]], None],
 ]:
     """
-    Context state provider Hook for *prop drilling*.
+    Context shared state provider.
 
     Provides similar features to React `useContext <https://react.dev/reference/react/useContext>`_.
 
@@ -954,7 +962,7 @@ def provide_context(
 
     Use this Hook to transmit state without passing the state down through
     the **props** to a child :func:`@component<edifice.component>` using
-    :func:`use_context`.
+    :func:`use_context` or :func:`use_context_select`.
 
     :func:`provide_context` is called with a :code:`context_key` and an **initial value**.
     It returns a **state value** and a **setter function**. The **initial value**,
@@ -987,6 +995,22 @@ def provide_context(
                 Label(text=str(x))
                 ContextChild()
                 ContextChild()
+
+
+    Editorial Comments
+    ^^^^^^^^^^^^^^^^^^
+
+        `The primary purpose for using Context is to avoid “prop drilling” <https://blog.isquaredsoftware.com/2021/01/context-redux-differences/#purpose-and-use-cases-for-context>`_.
+
+    Prop drilling is when you pass a **prop** down through many
+    levels of components to get the **prop** to a child component. This sounds
+    arduous but most of the time prop drilling is what you should do.
+    Prop drilling makes your program easier to understand and maintain
+    because it makes the dependencies between components explicit.
+
+    :func:`provide_context` and :func:`use_context` should be used rarely
+    or never.
+
     """
 
     local_state, local_setter = use_state(initial_state)
@@ -1018,6 +1042,7 @@ def provide_context(
 
 
 _T_use_context = tp.TypeVar("_T_use_context")
+_T_use_context_select = tp.TypeVar("_T_use_context_select")
 
 
 def use_context(
@@ -1025,7 +1050,7 @@ def use_context(
     value_type: type[_T_use_context],
 ) -> tuple[_T_use_context, Callable[[_T_use_context | Callable[[_T_use_context], _T_use_context]], None]]:
     """
-    Context state consumer Hook for *prop drilling*.
+    Context shared state consumer.
 
     Provides similar features to React `useContext <https://react.dev/reference/react/useContext>`_.
 
@@ -1060,7 +1085,7 @@ def use_context(
 
     local_state, local_setter = use_state(context.value)
 
-    if context_key not in context.setters:
+    if local_setter not in context.setters:
         context.setters.add(local_setter)
         # call the local setter so that it gets the value if the context_key
         # changed.
@@ -1074,3 +1099,72 @@ def use_context(
     use_effect(lambda: cleanup, context_key)
 
     return local_state, context.stable_setter
+
+
+def use_context_select(
+    context_key: str,
+    selector: Callable[[_T_use_context], _T_use_context_select],
+) -> _T_use_context_select:
+    """
+    Context shared state consumer for selected read-only shared state.
+
+    Use this Hook to consume state transmitted by the :func:`provide_context` with
+    the same :code:`context_key`.
+
+    Like :func:`use_context`, but selects only part of the
+    :func:`provide_context` shared state, and cannot update the shared state.
+
+    Provides similar features to React Redux
+    `useSelector <https://react-redux.js.org/api/hooks#useselector>`_.
+
+    Args:
+        context_key:
+            Identifier for a shared context.
+        selector:
+            A pure function which takes the shared context value and returns a
+            selected part of the shared context value.
+    Returns:
+        A **state value** which is the selected part of the current shared
+        context **state value** for the given :code:`context_key`.
+
+    :func:`use_context_select` is called with a :code:`context_key` and a :code:`selector`
+    function.  It returns a **state value**.
+
+    A :func:`@component<component>` which uses :func:`use_context_select` will
+    only re-render when the *selected* part of the context **state value**
+    is not :code:`__eq__` to the previous *selected* part.
+
+    The :code:`selector` function passed into
+    :func:`use_context_select` for the first render of the
+    :func:`@component<component>` will be the one used for the lifetime
+    of the :func:`@component<component>`.
+    """
+    if context_key not in _edifice_provide_context:
+        raise ValueError(f"use_context_select context_key '{context_key}' has no provide_context.")
+    context = _edifice_provide_context[context_key]
+
+    local_state, local_setter = use_state(selector(context.value))
+
+    def local_setter_select_construct() -> Callable[[_T_use_context], None]:
+        def setter(new: _T_use_context) -> None:
+            local_setter(selector(new))
+
+        return setter
+
+    # local_setter_select must be a stable function reference
+    local_setter_select = use_memo(local_setter_select_construct)
+
+    if local_setter_select not in context.setters:
+        context.setters.add(local_setter_select)
+        # call the local setter so that it gets the value if the context_key
+        # changed.
+        if local_state != selector(context.value):
+            local_setter_select(context.value)
+
+    def cleanup():
+        # We want the cleanup function bound to the context_key before it changed
+        _edifice_provide_context[context_key].setters.remove(local_setter_select)
+
+    use_effect(lambda: cleanup, context_key)
+
+    return local_state
