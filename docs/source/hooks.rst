@@ -47,12 +47,13 @@ These Derived Hooks are provided by Edifice.
    use_ref
    use_effect_final
    use_async_call
-   use_callback
    use_memo
    provide_context
    use_context
+   use_context_select
    use_hover
    use_stop
+   use_callback
 
 Custom Hooks
 ------------
