@@ -7,6 +7,11 @@
 Release Notes
 =============
 
+- New :ref:`Base Elements`
+
+  - :class:`StackedView`
+  - :class:`GroupBoxView`
+
 v3.1.0
 ------
 Released: 2025-04-07
