@@ -78,44 +78,6 @@ def _get_svg_image(icon_path, size: int, rotation=0, color=(0, 0, 0, 255)) -> Qt
     return pixmap
 
 
-class GroupBox(QtWidgetElement[QtWidgets.QGroupBox]):
-    # TODO GroupBox is busted. Should inherit from _LinearView.
-    """
-    Underlying
-    `QGroupBox <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGroupBox.html>`_
-    """
-
-    def __init__(self, title: str):
-        super().__init__()
-        self._register_props(
-            {
-                "title": title,
-            },
-        )
-
-    def _initialize(self):
-        self.underlying = QtWidgets.QGroupBox(self.props["title"])
-        self.underlying.setObjectName(str(id(self)))
-
-    def _qt_update_commands(
-        self,
-        widget_trees: dict[Element, _WidgetTree],
-        diff_props: PropsDiff,
-    ):
-        children = _get_widget_children(widget_trees, self)
-        if self.underlying is None:
-            self._initialize()
-        assert self.underlying is not None
-        if len(children) != 1:
-            raise ValueError(f"GroupBox expects exactly 1 child, got {len(children)}")
-        commands = super()._qt_update_commands_super(widget_trees, diff_props, self.underlying)
-        child_underlying = children[0].underlying
-        assert child_underlying is not None
-        widget = tp.cast(QtWidgets.QGroupBox, self.underlying)
-        commands.append(CommandType(child_underlying.setParent, self.underlying))
-        commands.append(CommandType(widget.setTitle, self.props["title"]))
-        return commands
-
 
 @deprecated("Instead use ImageSvg")
 class Icon(QtWidgetElement[QtWidgets.QLabel]):
@@ -2734,3 +2696,228 @@ class ProgressBar(QtWidgetElement[QtWidgets.QProgressBar]):
             case _, propnew:
                 commands.append(CommandType(widget.setValue, propnew))
         return commands
+
+class GroupBoxView(_LinearView[QtWidgets.QGroupBox]):
+    """Group Box layout element with title.
+
+    .. highlights::
+
+        - Underlying Qt Layout
+        `QGroupBox <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGroupBox.html>`_
+
+    .. rubric:: Props
+
+    All **props** from :class:`QtWidgetElement` plus:
+
+    Args:
+        title:
+            The group box title text
+
+    .. rubric:: Usage
+
+    .. code-block:: python
+        :caption: Example
+
+        with GroupBoxView(
+            title = "My Group Box",
+        ):
+            Label(text="Hello")
+            Label(text="World")
+
+    .. note::
+
+        The :class:`GroupBoxView` is limited by the underlying Qt Layout
+        `QGroupBox <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGroupBox.html>`_
+        because the title is just a :code:`str`.
+
+        There is a better Edifice-based :code:`GroupBoxTitleView` component
+        example in
+        `pyedifice/examples/groupbox.py <https://github.com/pyedifice/pyedifice/tree/master/examples/groupbox.py>`_
+        which allows you to set the title to any Edifice element tree.
+
+    .. figure:: /image/groupbox.png
+    """
+
+    def __init__(self, title: str | None = None, **kwargs):
+        super().__init__(**kwargs)
+        self._register_props(
+            {
+                "title": title,
+            },
+        )
+    def _delete_child(self, i, old_child: QtWidgetElement):  # noqa: ARG002
+        # https://doc.qt.io/qtforpython-6/PySide6/QtCore/QObject.html#detailed-description
+        # “The parent takes ownership of the object; i.e., it will automatically delete its children in its destructor.”
+        if (child_node := self.underlying_layout.takeAt(i)) is None:
+            logger.warning(f"_delete_child takeAt failed {i} {self}")  # noqa: G004
+        else:  # noqa: PLR5501
+            if (w := child_node.widget()) is None:
+                logger.warning(f"_delete_child widget is None {i} {self}")  # noqa: G004
+            else:
+                w.deleteLater()
+
+    def _soft_delete_child(self, i, old_child: QtWidgetElement):  # noqa: ARG002
+        if self.underlying_layout.takeAt(i) is None:
+            logger.warning(f"_soft_delete_child takeAt failed {i} {self}")  # noqa: G004
+
+    def _add_child(self, i, child_component: QtWidgets.QWidget):
+        if self.underlying_layout is not None:
+            self.underlying_layout.insertWidget(i, child_component)
+
+    def _initialize(self):
+        self.underlying = QtWidgets.QGroupBox()
+        self.underlying_layout = QtWidgets.QVBoxLayout()
+        self.underlying.setObjectName(str(id(self)))
+        self.underlying.setLayout(self.underlying_layout)
+        self.underlying_layout.setContentsMargins(0, 0, 0, 0)
+        self.underlying_layout.setSpacing(0)
+
+    def _qt_update_commands(
+        self,
+        widget_trees: dict[Element, _WidgetTree],
+        diff_props: PropsDiff,
+    ) -> list[CommandType]:
+        if self.underlying is None:
+            self._initialize()
+        assert self.underlying is not None
+        children = _get_widget_children(widget_trees, self)
+        commands = []
+        commands = super()._qt_update_commands_super(widget_trees, diff_props, self.underlying)
+        match diff_props.get("title"):
+            case _, None:
+                pass
+                # TODO QGroupBox should have an unsetTitle method but it doesn't.
+            case _, propnew:
+                commands.append(CommandType(self.underlying.setTitle, propnew))
+        # Should we run the child commands after the View commands?
+        # No because children must be able to delete themselves before parent
+        # deletes them.
+        # https://doc.qt.io/qtforpython-6/PySide6/QtCore/QObject.html#detailed-description
+        # “The parent takes ownership of the object; i.e., it will automatically delete its children in its destructor.”
+        commands.extend(self._recompute_children(children))
+        commands.extend(self._qt_stateless_commands(widget_trees, diff_props))
+        return commands
+
+    def _qt_stateless_commands(
+        self,
+        widget_trees: dict[Element, _WidgetTree],
+        diff_props: PropsDiff,
+    ) -> list[CommandType]:
+        # This stateless render command is used to test rendering
+        assert self.underlying is not None
+        return super()._qt_update_commands_super(widget_trees, diff_props, self.underlying, self.underlying_layout)
+
+
+
+class StackedView(_LinearView[QtWidgets.QWidget]):
+    """Stacked layout.
+
+    .. highlights::
+
+        - Underlying Qt Widget
+        `QWidget <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html>`_
+        - Underlying Qt Layout
+        `QStackedLayout <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QStackedLayout.html>`_
+
+    .. rubric:: Props
+
+    All **props** from :class:`QtWidgetElement`.
+
+    .. rubric:: Usage
+
+    Children of the :class:`StackedView` will be stacked on top of each other.
+    The first child will be on the top, the last child on the bottom.
+    The top (first) child will occlude the bottom children.
+
+    If the top child has visual transparency then the bottom children
+    will be visible through the top child.
+
+    If the top child has mouse event transparency then the bottom children
+    will be clickable.
+
+    In the following example, the Label will be rendered on top of the CheckBox.
+    The Checkbox will be partly visible in places where the Label is transparent.
+    The CheckBox, not the Label, will be clickable because the Label is
+    transparent to mouse events.
+
+    .. code-block:: python
+        :caption: Example with clickable bottom CheckBox
+
+        from PySide6.QtCore import Qt
+
+        label_ref: ed.Reference[ed.Label] = ed.use_ref()
+
+        def label_command():
+            label = label_ref()
+            if label and label.underlying:
+                label.underlying.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents, True)
+
+        ed.use_effect(label_command, ())
+
+        with StackedView():
+            Label(text="Top Label").register_ref(label_ref)
+            CheckBox(text="Bottom Checkbox")
+    """
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self._register_props(
+            {
+            },
+        )
+    def _delete_child(self, i, old_child: QtWidgetElement):  # noqa: ARG002
+        # https://doc.qt.io/qtforpython-6/PySide6/QtCore/QObject.html#detailed-description
+        # “The parent takes ownership of the object; i.e., it will automatically delete its children in its destructor.”
+        if (child_node := self.underlying_layout.takeAt(i)) is None:
+            logger.warning(f"_delete_child takeAt failed {i} {self}")  # noqa: G004
+        else:  # noqa: PLR5501
+            if (w := child_node.widget()) is None:
+                logger.warning(f"_delete_child widget is None {i} {self}")  # noqa: G004
+            else:
+                w.deleteLater()
+
+    def _soft_delete_child(self, i, old_child: QtWidgetElement):  # noqa: ARG002
+        if self.underlying_layout.takeAt(i) is None:
+            logger.warning(f"_soft_delete_child takeAt failed {i} {self}")  # noqa: G004
+
+    def _add_child(self, i, child_component: QtWidgets.QWidget):
+        if self.underlying_layout is not None:
+            self.underlying_layout.insertWidget(i, child_component)
+
+    def _initialize(self):
+        self.underlying = QtWidgets.QWidget()
+        self.underlying_layout = QtWidgets.QStackedLayout()
+        self.underlying.setObjectName(str(id(self)))
+        self.underlying.setLayout(self.underlying_layout)
+        self.underlying_layout.setStackingMode(QtWidgets.QStackedLayout.StackingMode.StackAll)
+        self.underlying_layout.setContentsMargins(0, 0, 0, 0)
+        self.underlying_layout.setSpacing(0)
+
+    def _qt_update_commands(
+        self,
+        widget_trees: dict[Element, _WidgetTree],
+        diff_props: PropsDiff,
+    ) -> list[CommandType]:
+        if self.underlying is None:
+            self._initialize()
+        assert self.underlying is not None
+        children = _get_widget_children(widget_trees, self)
+        commands = []
+        commands = super()._qt_update_commands_super(widget_trees, diff_props, self.underlying)
+        # Should we run the child commands after the View commands?
+        # No because children must be able to delete themselves before parent
+        # deletes them.
+        # https://doc.qt.io/qtforpython-6/PySide6/QtCore/QObject.html#detailed-description
+        # “The parent takes ownership of the object; i.e., it will automatically delete its children in its destructor.”
+        commands.extend(self._recompute_children(children))
+        commands.extend(self._qt_stateless_commands(widget_trees, diff_props))
+        return commands
+
+    def _qt_stateless_commands(
+        self,
+        widget_trees: dict[Element, _WidgetTree],
+        diff_props: PropsDiff,
+    ) -> list[CommandType]:
+        # This stateless render command is used to test rendering
+        assert self.underlying is not None
+        return super()._qt_update_commands_super(widget_trees, diff_props, self.underlying, self.underlying_layout)
