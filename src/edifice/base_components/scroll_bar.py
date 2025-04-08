@@ -25,8 +25,8 @@ class ScrollBar(ed.QtWidgetElement[QtWidgets.QScrollBar]):
     Render a scroll bar widget that allows the user to scroll through a range of values.
 
     .. highlights::
-        - Underlying Qt Widget:
-          `QScrollBar <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QScrollBar.html>`_
+
+        - Underlying Qt Widget: `QScrollBar <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QScrollBar.html>`_
 
     .. rubric:: Props
 

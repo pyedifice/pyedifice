@@ -42,8 +42,8 @@ class ButtonView(HBoxView):
     A Button where the label is the Button’s children rendered in a :class:`edifice.HBoxView`.
 
     .. highlights::
-        - Underlying Qt Widget
-          `QPushButton <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QPushButton.html>`_
+
+        - Underlying Qt Widget `QPushButton <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QPushButton.html>`_
 
     .. rubric:: Props
 

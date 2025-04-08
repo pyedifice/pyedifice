@@ -59,8 +59,8 @@ class Image(QtWidgetElement):
     """Render an image.
 
     .. highlights::
-        - Underlying Qt Widget
-          `QLabel <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QLabel.html>`_
+
+        - Underlying Qt Widget `QLabel <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QLabel.html>`_
 
     .. rubric:: Props
 

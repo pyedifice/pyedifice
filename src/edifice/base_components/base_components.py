@@ -88,8 +88,8 @@ class Icon(QtWidgetElement[QtWidgets.QLabel]):
         Instead use :class:`ImageSvg`.
 
     .. highlights::
-        - Underlying Qt Widget
-          `QLabel <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QLabel.html>`_
+
+        - Underlying Qt Widget `QLabel <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QLabel.html>`_
 
     .. rubric:: Props
 
@@ -201,8 +201,8 @@ class Button(QtWidgetElement[QtWidgets.QPushButton]):
     """Basic button widget.
 
     .. highlights::
-        - Underlying Qt Widget
-          `QPushButton <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QPushButton.html>`_
+
+        - Underlying Qt Widget `QPushButton <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QPushButton.html>`_
 
     .. rubric:: Props
 
@@ -262,8 +262,8 @@ class IconButton(Button):
         Instead use :class:`ButtonView`.
 
     .. highlights::
-        - Underlying Qt Widget
-          `QPushButton <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QPushButton.html>`_
+
+        - Underlying Qt Widget `QPushButton <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QPushButton.html>`_
 
     .. rubric:: Props
 
@@ -448,8 +448,8 @@ class Label(QtWidgetElement[QtWidgets.QLabel]):
     """Text display widget.
 
     .. highlights::
-        - Underlying Qt Widget
-          `QLabel <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QLabel.html>`_
+
+        - Underlying Qt Widget `QLabel <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QLabel.html>`_
 
     .. rubric:: Props
 
@@ -561,8 +561,8 @@ class ImageSvg(QtWidgetElement[QtSvgWidgets.QSvgWidget]):
     """Render an SVG image.
 
     .. highlights::
-        - Underlying Qt Widget
-          `QSvgWidget <https://doc.qt.io/qtforpython-6/PySide6/QtSvgWidgets/QSvgWidget.html>`_
+
+        - Underlying Qt Widget `QSvgWidget <https://doc.qt.io/qtforpython-6/PySide6/QtSvgWidgets/QSvgWidget.html>`_
 
     .. rubric:: Props
 
@@ -650,8 +650,8 @@ class TextInput(QtWidgetElement[QtWidgets.QLineEdit]):
     """One line text input widget.
 
     .. highlights::
-        - Underlying Qt Widget
-          `QLineEdit <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QLineEdit.html>`_
+
+        - Underlying Qt Widget `QLineEdit <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QLineEdit.html>`_
 
     .. rubric:: Props
 
@@ -788,8 +788,8 @@ class TextInputMultiline(QtWidgetElement[QtWidgets.QTextEdit]):
     """Multiline text input widget.
 
     .. highlights::
-        - Underlying Qt Widget
-          `QTextEdit <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QTextEdit.html>`_
+
+        - Underlying Qt Widget `QTextEdit <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QTextEdit.html>`_
 
     Accepts only plain text, not “rich text.”
 
@@ -869,8 +869,8 @@ class Dropdown(QtWidgetElement[QtWidgets.QComboBox]):
     """Dropdown selection widget.
 
     .. highlights::
-        - Underlying Qt Widget
-          `QComboBox <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QComboBox.html>`_
+
+        - Underlying Qt Widget `QComboBox <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QComboBox.html>`_
 
     .. rubric:: Props
 
@@ -986,8 +986,8 @@ class Slider(QtWidgetElement[QtWidgets.QSlider]):
     A Slider bar allows the user to input a continuous value.
 
     .. highlights::
-        - Underlying Qt Widget
-          `QSlider <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QSlider.html>`_
+
+        - Underlying Qt Widget `QSlider <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QSlider.html>`_
 
     .. rubric:: Props
 
@@ -1217,8 +1217,8 @@ class VBoxView(_LinearView[QtWidgets.QWidget]):
 
     .. highlights::
 
-        - Underlying Qt Layout
-          `QVBoxLayout <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QVBoxLayout.html>`_
+        - Underlying Qt Widget `QWidget <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html>`_
+        - Underlying Qt Layout `QVBoxLayout <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QVBoxLayout.html>`_
 
     Content that does not fit into the VBoxView layout will be clipped.
     To allow scrolling in case of overflow, use :class:`VScrollView<edifice.VScrollView>`.
@@ -1304,8 +1304,8 @@ class HBoxView(_LinearView[QtWidgets.QWidget]):
 
     .. highlights::
 
-        - Underlying Qt Layout
-          `QHBoxLayout <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QHBoxLayout.html>`_
+        - Underlying Qt Widget `QWidget <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html>`_
+        - Underlying Qt Layout `QHBoxLayout <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QHBoxLayout.html>`_
 
     Content that does not fit into the HBoxView layout will be clipped.
     To allow scrolling in case of overflow, use :class:`HScrollView<edifice.HScrollView>`.
@@ -1991,10 +1991,9 @@ class VScrollView(_LinearView[QtWidgets.QScrollArea]):
     """Scrollable vertical column layout.
 
     .. highlights::
-        - Underlying Qt Widget
-          `QScrollArea <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QScrollArea.html>`_
-        - Underlying Qt Layout
-          `QVBoxLayout <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QVBoxLayout.html>`_
+
+        - Underlying Qt Widget `QScrollArea <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QScrollArea.html>`_
+        - Underlying Qt Layout `QVBoxLayout <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QVBoxLayout.html>`_
 
     .. figure:: /image/scroll_view.png
        :width: 500
@@ -2059,10 +2058,9 @@ class HScrollView(_LinearView[QtWidgets.QScrollArea]):
     """Scrollable horizontal row layout widget.
 
     .. highlights::
-        - Underlying Qt Widget
-          `QScrollArea <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QScrollArea.html>`_
-        - Underlying Qt Layout
-          `QHBoxLayout <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QHBoxLayout.html>`_
+
+        - Underlying Qt Widget `QScrollArea <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QScrollArea.html>`_
+        - Underlying Qt Layout `QHBoxLayout <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QHBoxLayout.html>`_
 
     .. figure:: /image/scroll_view.png
        :width: 500
@@ -2128,8 +2126,7 @@ class FixScrollView(_LinearView[QtWidgets.QScrollArea]):
 
     .. highlights::
 
-        - Underlying Qt Widget
-          `QScrollArea <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QScrollArea.html>`_
+        - Underlying Qt Widget `QScrollArea <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QScrollArea.html>`_
 
     .. figure:: /image/scroll_view.png
        :width: 500
@@ -2276,8 +2273,9 @@ class GridView(QtWidgetElement[QtWidgets.QWidget]):
     """Grid layout widget for rendering children on a 2D rectangular grid.
 
     .. highlights::
-        - Underlying Qt Layout
-          `QGridLayout <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGridLayout.html>`_
+
+        - Underlying Qt Widget `QWidget <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html>`_
+        - Underlying Qt Layout `QGridLayout <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGridLayout.html>`_
 
     Grid Layout Element.
 
@@ -2387,8 +2385,8 @@ class TabView(_LinearView[QtWidgets.QTabWidget]):
     """Layout widget with multiple tabs.
 
     .. highlights::
-        - Underlying Qt Widget
-          `QTabWidget <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QTabWidget.html>`_
+
+        - Underlying Qt Widget `QTabWidget <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QTabWidget.html>`_
 
     Each child of a :class:`TabView` will be the content of one tab.
 
@@ -2615,8 +2613,8 @@ class ProgressBar(QtWidgetElement[QtWidgets.QProgressBar]):
     """Progress bar widget.
 
     .. highlights::
-        - Underlying Qt Widget
-          `QProgressBar <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QProgressBar.html>`_.
+
+        - Underlying Qt Widget `QProgressBar <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QProgressBar.html>`_.
 
     A progress bar is used to give the user an indication of the progress of an operation.
 
@@ -2702,8 +2700,8 @@ class GroupBoxView(_LinearView[QtWidgets.QGroupBox]):
 
     .. highlights::
 
-        - Underlying Qt Layout
-        `QGroupBox <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGroupBox.html>`_
+        - Underlying Qt Widget `QWidget <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html>`_
+        - Underlying Qt Layout `QGroupBox <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGroupBox.html>`_
 
     .. rubric:: Props
 
@@ -2814,10 +2812,8 @@ class StackedView(_LinearView[QtWidgets.QWidget]):
 
     .. highlights::
 
-        - Underlying Qt Widget
-        `QWidget <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html>`_
-        - Underlying Qt Layout
-        `QStackedLayout <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QStackedLayout.html>`_
+        - Underlying Qt Widget `QWidget <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html>`_
+        - Underlying Qt Layout `QStackedLayout <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QStackedLayout.html>`_
 
     .. rubric:: Props
 
