@@ -48,8 +48,9 @@ class TableGridView(QtWidgetElement[QWidget]):
     """Table-style grid layout displays its children as aligned rows of columns.
 
     .. highlights::
-        - Underlying Qt Layout
-          `QGridLayout <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGridLayout.html>`_
+
+        - Underlying Qt Widget `QWidget <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html>`_
+        - Underlying Qt Layout `QGridLayout <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGridLayout.html>`_
 
     This component has similar behavior to an `HTML
     table <https://developer.mozilla.org/en-US/docs/Web/HTML/Element/table>`_.

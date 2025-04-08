@@ -65,8 +65,7 @@ class SpinInput(QtWidgetElement[EdSpinBox]):
 
     .. highlights::
 
-        - Underlying Qt Widget
-          `QSpinBox <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QSpinBox.html>`_
+        - Underlying Qt Widget `QSpinBox <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QSpinBox.html>`_
 
     .. rubric::
         Props

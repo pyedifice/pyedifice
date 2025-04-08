@@ -143,6 +143,11 @@ class FlowView(_LinearView[QWidget]):
     """
     Flow-style layout.
 
+    .. highlights::
+
+        - Underlying Qt Widget `QWidget <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html>`_
+        - Underlying Qt Layout `QLayout <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QLayout.html>`_
+
     Displays its children horizonally left-to-right and wraps into multiple rows.
 
     The height of each row is determined by the tallest child in that row.

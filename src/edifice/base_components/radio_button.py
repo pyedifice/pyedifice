@@ -34,8 +34,8 @@ class RadioButton(QtWidgetElement[EdRadioButton]):
     """Radio buttons.
 
     .. highlights::
-        - Underlying Qt Widget
-          `QRadioButton <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QRadioButton.html>`_
+
+        - Underlying Qt Widget `QRadioButton <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QRadioButton.html>`_
 
     Radio buttons are used to select a single choice out of many.
 

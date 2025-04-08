@@ -38,8 +38,8 @@ class CheckBox(QtWidgetElement[EdCheckBox]):
     A CheckBox allows the user to select a boolean.
 
     .. highlights::
-        - Underlying Qt Widget
-          `QCheckBox <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QCheckBox.html>`_
+
+        - Underlying Qt Widget `QCheckBox <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QCheckBox.html>`_
 
     .. rubric:: Props
 
