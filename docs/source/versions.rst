@@ -7,6 +7,10 @@
 Release Notes
 =============
 
+v3.2.0
+------
+Released: 2025-04-09
+
 - New :ref:`Base Elements`
 
   - :class:`StackedView`
