@@ -7,6 +7,13 @@
 Release Notes
 =============
 
+v3.2.1
+------
+Released: 2025-04-10
+
+- Bugfix: :func:`use_state` and :func:`use_context_select`: When the state
+  setter is called with the same state it should not cause re-render.
+
 v3.2.0
 ------
 Released: 2025-04-09
