@@ -21,7 +21,7 @@ def UseState1(self):
 
 @component
 def TestComp(self):
-    print("TestComp instance " + str(id(self)))
+    print("TestComp instance " + str(id(self)))  # noqa: T201
     x, x_setter = use_state(0)
     stop = use_stop()
 

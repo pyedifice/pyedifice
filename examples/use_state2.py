@@ -32,18 +32,21 @@ def Main(self):
             ):
                 ed.Label(text="1")
                 ed.Button(title=f"Prop {x1} + 1", on_click=lambda _: x1_setter(lambda old: old + 1))
+                ed.Button(title="Prop No-op", on_click=lambda _: x1_setter(lambda old: old))
                 TestComp(1, x1)
             with ed.VBoxView(
                 size_policy=QSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed),
             ):
                 ed.Label(text="2")
                 ed.Button(title=f"Prop {x2} + 1", on_click=lambda _: x2_setter(lambda old: old + 1))
+                ed.Button(title="Prop No-op", on_click=lambda _: x2_setter(lambda old: old))
                 TestComp(2, x2)
             with ed.VBoxView(
                 size_policy=QSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed),
             ):
                 ed.Label(text="3")
                 ed.Button(title=f"Prop {x3} + 1", on_click=lambda _: x3_setter(lambda old: old + 1))
+                ed.Button(title="Prop No-op", on_click=lambda _: x3_setter(lambda old: old))
                 TestComp(3, x3)
 
 @ed.component
@@ -57,7 +60,7 @@ def TestComp(self, prop1: int, prop2: int):
     ):
         ed.Label(text=f"{x}")
         ed.Button(title="State " + str(x) + " + 1", on_click=lambda _: x_setter(lambda y: y + 1))
-        ed.Button(title="No-op", on_click=lambda _: x_setter(lambda y: y))
+        ed.Button(title="State No-op", on_click=lambda _: x_setter(lambda y: y))
 
 
 if __name__ == "__main__":

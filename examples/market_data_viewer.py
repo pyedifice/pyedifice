@@ -81,18 +81,16 @@ def App(self):
     book, book_set = ed.use_state(book_init)
 
     playing, playing_set = ed.use_state(False)
-    play_trigger, play_trigger_set = ed.use_state(False)
 
     def update_book():
         book_set({"price": 10, "sizes": [random.randint(100, 300) for _ in range(21)]})  # noqa: S311
 
     async def play_tick():
-        if playing:
+        while playing:
             update_book()
             await asyncio.sleep(0.05)
-            play_trigger_set(lambda p: not p)
 
-    ed.use_async(play_tick, (playing, play_trigger))
+    ed.use_async(play_tick, playing)
 
     def play(e):
         playing_set(lambda p: not p)
