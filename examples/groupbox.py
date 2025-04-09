@@ -97,10 +97,18 @@ def Main(self):
 
     ed.use_memo(initializer)
 
+    bigness, bigness_set = ed.use_state(1)
+
     with ed.Window(title="Group Box Example", _size_open=(500, 500)):
         with ed.VBoxView(
             style={"padding": 10},
         ):
+            ed.Slider(
+                value=bigness,
+                min_value=0,
+                max_value=10,
+                on_change=bigness_set,
+            )
             with ed.FlowView():
                 with ed.HBoxView(
                     style={"padding": 20},
@@ -133,7 +141,8 @@ def Main(self):
                                 word_wrap=True,
                                 text="A group box provides a frame, a title on top, a keyboard shortcut, and displays various other widgets inside itself. The keyboard shortcut moves keyboard focus to one of the group box’s child widgets.",  # noqa: RUF001
                             )
-                        ed.CheckBox(text="CheckBox")
+                        for _ in range(bigness):
+                            ed.CheckBox(text="CheckBox")
 
                 with ed.HBoxView(
                     style={"padding": 20},
@@ -193,7 +202,8 @@ The first child element is the title of the group box.
 
 The rest of the children are the contents of the group box.""",
                                 )
-                            ed.CheckBox(text="CheckBox")
+                            for _ in range(bigness):
+                                ed.CheckBox(text="CheckBox")
 
 
 if __name__ == "__main__":
