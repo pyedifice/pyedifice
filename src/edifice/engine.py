@@ -369,6 +369,8 @@ class Element:
         """use_effect hook index for current render."""
         self._hook_async_index: int = 0
         """use_async hook index for current render."""
+        self._state_unrendered: bool = False
+        """Element has some unrendered state change so needs a re-render"""
 
     def __enter__(self: Self) -> Self:
         ctx = get_render_context()
@@ -1982,7 +1984,7 @@ class RenderEngine:
         if (
             component._should_update(newprops)
             or len(component._edifice_internal_references) > 0
-            or component in self._hook_state_setted
+            or component._state_unrendered
         ):
             render_context.mark_props_change(component, newprops)
             rerendered_obj = self._render(component, render_context)
@@ -2116,6 +2118,7 @@ class RenderEngine:
 
         # Record that we are rendering this component with current use_state
         self._hook_state_setted.discard(component)
+        component._state_unrendered = False
 
         # Call user provided render function and retrieve old results
         with Container() as container:
@@ -2213,6 +2216,7 @@ class RenderEngine:
                         hook.state = updater
                 if state0 != hook.state:
                     # State changed so we need to re-render this component.
+                    element._state_unrendered = True
                     if element not in components_:
                         components_.append(element)
                 hook.updaters.clear()

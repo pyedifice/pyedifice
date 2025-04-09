@@ -2,8 +2,6 @@
 # python examples/use_state1.py
 #
 
-import asyncio
-
 from edifice import App, Button, Label, VBoxView, Window, component, use_state, use_stop
 
 

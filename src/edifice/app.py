@@ -283,22 +283,21 @@ class App:
 
         self._rerender_called_soon = False
         self._is_rerendering = False
-        self._rerender_wanted: list[Element] = []
+        self._rerender_wanted: bool = False
 
     def __hash__(self):
         return id(self)
 
     def _rerender_callback(self):
         self._rerender_called_soon = False
-        self._request_rerender(self._rerender_wanted[:])
+        self._request_rerender([])
 
     def _defer_rerender(self, element: Element):
         """
         Rerender on the next event loop iteration.
         Idempotent.
         """
-        if element not in self._rerender_wanted:
-            self._rerender_wanted.append(element)
+        self._rerender_wanted = True
         if not self._rerender_called_soon and not self._is_rerendering:
             asyncio.get_event_loop().call_soon(self._rerender_callback)
             self._rerender_called_soon = True
@@ -308,7 +307,7 @@ class App:
         Call the RenderEngine to immediately render the widget tree.
         """
         self._is_rerendering = True
-        self._rerender_wanted.clear()
+        self._rerender_wanted = False
 
         start_time = time.process_time()
 
@@ -332,7 +331,7 @@ class App:
             self._inspector_component.force_refresh()  # type: ignore  # noqa: PGH003
 
         self._is_rerendering = False
-        if len(self._rerender_wanted) > 0 and not self._rerender_called_soon:
+        if self._rerender_wanted and not self._rerender_called_soon:
             asyncio.get_event_loop().call_soon(self._rerender_callback)
 
     def export_widgets(self) -> list[QtWidgets.QWidget]:

@@ -16,6 +16,7 @@ def ProviderComponent(self):
     intxt: str
     intxt, intxt_set = ed.provide_context("ctxkey", "")
 
+    print("render ProviderComponent")
     with ed.VBoxView():
         ed.TextInput(
             text=intxt,
@@ -38,13 +39,15 @@ def Item(self, i: int):
     intxt_item: str | None
     intxt_item = ed.use_context_select("ctxkey", selector_fn)
 
-    with ed.HBoxView(style={"padding": 5}):
+    print(f"render Item {i} with value {intxt_item}")
+
+    with ed.VBoxView(style={"padding": 5}):
+        ed.Label(text=f"Item {i}")
         with ed.HBoxView(style={"padding": 5, "border": "1px solid black", "min-width": 30}):
             if intxt_item is None:
                 ed.Label(
                     text="🥚",
                     style={
-                        "color": "yellow",
                         "font-family": "Noto Color Emoji",
                         "font-size": 20,
                     },
