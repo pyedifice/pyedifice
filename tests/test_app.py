@@ -1,9 +1,7 @@
-import asyncio as asyncio
+import asyncio
 import unittest
 
-import edifice.app as app
 import edifice as ed
-
 from edifice.qt import QT_VERSION
 
 if QT_VERSION == "PyQt6":
@@ -13,27 +11,6 @@ else:
 
 if QtWidgets.QApplication.instance() is None:
     app_obj = QtWidgets.QApplication(["-platform", "offscreen"])
-
-
-class TimingAvgTestCase(unittest.TestCase):
-    def test_timing(self):
-        avg = app._TimingAvg()
-
-        avg.update(2)
-        self.assertEqual(avg.count(), 1)
-        self.assertEqual(avg.mean(), 2)
-        self.assertEqual(avg.max(), 2)
-
-        avg.update(6)
-        self.assertEqual(avg.count(), 2)
-        self.assertEqual(avg.mean(), 4)
-        self.assertEqual(avg.max(), 6)
-
-        avg.update(4)
-        self.assertEqual(avg.count(), 3)
-        self.assertEqual(avg.mean(), 4)
-        self.assertEqual(avg.max(), 6)
-
 
 class IntegrationTestCase(unittest.TestCase):
     def test_export_widgets(self):

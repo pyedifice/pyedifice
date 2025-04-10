@@ -8,6 +8,7 @@ import sys
 import time
 import traceback
 import typing as tp
+from dataclasses import dataclass
 
 from edifice import logger as _logger_module
 
@@ -37,38 +38,12 @@ COLOR_SEQ = "\033[1;%dm"
 BOLD_SEQ = "\033[1m"
 
 
+@dataclass
 class _TimingAvg:
-    def __init__(self):
-        self.total_time = 0
-        self.total_count = 0
-        self.max_time = 0
-
-    def update(self, new_t):
-        self.max_time = max(self.max_time, new_t)
-        self.total_time += new_t
-        self.total_count += 1
-
-    def count(self):
-        return self.total_count
-
-    def mean(self):
-        return self.total_time / self.total_count
-
-    def max(self):
-        # TODO: consider using EMA max
-        return self.max_time
-
-
-class _RateLimitedLogger:
-    def __init__(self, gap):
-        self._last_log_time = 0
-        self._gap = gap
-
-    def info(self, *args, **kwargs):
-        cur_time = time.process_time()
-        if cur_time - self._last_log_time > self._gap:
-            logger.info(*args, **kwargs)
-            self._last_log_time = cur_time
+    first_clock_time: float
+    total_time: float = 0
+    total_count: int = 0
+    max_time: float = 0
 
 
 class App:
@@ -218,8 +193,7 @@ class App:
 
         self._root: Element = root_element
         self._render_engine = RenderEngine(self._root, self)  # type: ignore  # noqa: PGH003
-        self._logger = _RateLimitedLogger(1)
-        self._render_timing = _TimingAvg()
+        self._render_timing = _TimingAvg(time.time())
         self._first_render = True
 
         # Support for reloading on file change
@@ -309,23 +283,29 @@ class App:
         self._is_rerendering = True
         self._rerender_wanted = False
 
-        start_time = time.process_time()
+        start_time: float = time.process_time()
 
         self._render_engine._request_rerender(components)
+
+        end_time: float = time.process_time()
+
         if self._inspector_component is not None:
             self._render_engine._request_rerender([self._inspector_component])
 
-        end_time = time.process_time()
+        clock_time = time.time()
+        new_t = end_time - start_time
+        self._render_timing.max_time = max(self._render_timing.max_time, new_t)
+        self._render_timing.total_time += new_t
+        self._render_timing.total_count += 1
 
-        if not self._first_render:
-            render_timing = self._render_timing
-            render_timing.update(end_time - start_time)
-            self._logger.info(
-                "Rendered %d times, with average render time of %.2f ms and worst render time of %.2f ms",
-                render_timing.count(),
-                1000 * render_timing.mean(),
-                1000 * render_timing.max(),
+        if self._render_timing.total_count >= 100 or (clock_time - self._render_timing.first_clock_time) > 1.0:
+            mean: float = self._render_timing.total_time / self._render_timing.total_count
+            logger.info(
+                f"Rendered {self._render_timing.total_count} times. Average render time "  # noqa: G004
+                f"{1000 * mean:.2f} ms. Worst render time {1000 * self._render_timing.max_time:.2f} ms.",
             )
+            self._render_timing = _TimingAvg(clock_time)
+
         self._first_render = False
 
         self._is_rerendering = False

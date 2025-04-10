@@ -4,6 +4,7 @@
 
 from __future__ import annotations
 
+import logging
 import typing as tp
 from collections import OrderedDict
 from dataclasses import dataclass
@@ -18,6 +19,8 @@ else:
 
 import edifice as ed
 
+logger = logging.getLogger("Edifice")
+logger.setLevel(logging.INFO)
 
 @dataclass(frozen=True)
 class Todo:

@@ -3,6 +3,7 @@
 #
 
 import asyncio
+import logging
 import random
 
 import edifice as ed
@@ -35,6 +36,8 @@ stylesheet = {
     "play_button": {"width": "50px", "height": "25px", "left": 150, "margin-left": "5px"},
 }
 
+logger = logging.getLogger("Edifice")
+logger.setLevel(logging.INFO)
 
 @ed.component
 def PriceLevel(self, price, size, side, last=False):

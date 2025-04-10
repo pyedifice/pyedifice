@@ -11,6 +11,7 @@ import typing as tp
 from collections import OrderedDict
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, replace
+import logging
 
 import yfinance as yf
 
@@ -32,6 +33,8 @@ else:
     from PySide6.QtGui import QColor, QPen
     from PySide6.QtWidgets import QApplication, QSizePolicy
 
+logger = logging.getLogger("Edifice")
+logger.setLevel(logging.INFO)
 
 @dataclass(frozen=True)
 class PlotParams:
