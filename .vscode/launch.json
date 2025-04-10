@@ -29,12 +29,12 @@
 			"args": ["--inspect", "examples/calculator.py", "Main"]
 		},
 		{
-			"name": "Runner financial_charts.py",
+			"name": "Runner --inspect financial_charts.py",
 			"type": "debugpy",
 			"request": "launch",
 			"module": "edifice",
 			"justMyCode": true,
-			"args": ["examples/financial_charts.py", "Main"]
+			"args": ["--inspect", "examples/financial_charts.py", "Main"]
 		},
 		{
 			"name": "Runner --inspect todomvc.py",

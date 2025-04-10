@@ -292,7 +292,7 @@ class App:
         self._rerender_called_soon = False
         self._request_rerender([])
 
-    def _defer_rerender(self, element: Element):
+    def _defer_rerender(self):
         """
         Rerender on the next event loop iteration.
         Idempotent.
@@ -312,6 +312,9 @@ class App:
         start_time = time.process_time()
 
         self._render_engine._request_rerender(components)
+        if self._inspector_component is not None:
+            self._render_engine._request_rerender([self._inspector_component])
+
         end_time = time.process_time()
 
         if not self._first_render:
@@ -324,11 +327,6 @@ class App:
                 1000 * render_timing.max(),
             )
         self._first_render = False
-
-        if self._inspector_component is not None and not any(
-            hasattr(comp, "__edifice_inspector_element") for comp in components
-        ):
-            self._inspector_component.force_refresh()  # type: ignore  # noqa: PGH003
 
         self._is_rerendering = False
         if self._rerender_wanted and not self._rerender_called_soon:

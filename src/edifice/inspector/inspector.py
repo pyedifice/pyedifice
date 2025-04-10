@@ -4,8 +4,10 @@ import inspect
 import typing as tp
 
 import edifice as ed
-from edifice.engine import _HookState
 from edifice.qt import QT_VERSION
+
+if tp.TYPE_CHECKING:
+    from edifice.engine import _HookState
 
 if QT_VERSION == "PyQt6" and not tp.TYPE_CHECKING:
     from PyQt6 import QtWidgets
@@ -17,7 +19,6 @@ SELECTION_COLOR = "#ACCEF7"
 
 @ed.component
 def ElementLabel(self, root: ed.Element, current_selection: ed.Element | None, on_click: tp.Callable[[], None]):
-    setattr(self, "__edifice_inspector_element", True)
     ed.Label(
         root.__class__.__name__,
         style={"background-color": SELECTION_COLOR} if root == current_selection else {},
@@ -34,7 +35,6 @@ def Collapsible(
     on_click: tp.Callable[[], None],
     toggle: tp.Callable[[], None],
 ):
-    setattr(self, "__edifice_inspector_element", True)
     root_style: dict[str, tp.Any] = {"margin-left": 5}
     if root == current_selection:
         root_style["background-color"] = SELECTION_COLOR
@@ -55,8 +55,6 @@ def TreeView(
     on_click: tp.Callable[[], None],
     load_fun: list[tp.Callable[[], None]],
 ):
-    setattr(self, "__edifice_inspector_element", True)
-
     collapsed, collapsed_set = ed.use_state(True)
 
     child_style = {"align": "top", "padding-left": 20}
@@ -84,8 +82,6 @@ def StateView(
     component_hook_state: list[_HookState],
     refresh_trigger: bool,  # force a refresh when this changes
 ):
-    setattr(self, "__edifice_inspector_element", True)
-
     with ed.VScrollView(
         style={"align": "top", "padding-left": 15},
     ):
@@ -105,7 +101,6 @@ def StateView(
 
 @ed.component
 def PropsView(self, props: dict[str, tp.Any], refresh_trigger: bool):
-    setattr(self, "__edifice_inspector_element", True)
     with ed.VScrollView(style={"align": "top", "padding-left": 15}):
         for k, v in props.items():
             if k != "children":
@@ -140,7 +135,6 @@ def ElementView(
     component_hook_state: list[_HookState],
     refresh_trigger: bool,  # force a refresh when this changes
 ):
-    setattr(self, "__edifice_inspector_element", True)
     cls = component.__class__
     if value := getattr(cls, "_edifice_original", None):
         cls = value
@@ -174,24 +168,10 @@ def Inspector(
         tuple[dict[ed.Element, list[ed.Element]], ed.Element, dict[ed.Element, list[_HookState]]],
     ],
 ):
-    setattr(self, "__edifice_inspector_element", True)
-    component_tree, component_tree_set = ed.use_state(tp.cast(dict[ed.Element, list[ed.Element]], {}))
-    (root_component,), root_component_set = ed.use_state(tp.cast(tuple[ed.Element | None], (None,)))
-    hook_state, hook_state_set = ed.use_state(tp.cast(dict[ed.Element, list[_HookState]] | None, None))
     (selected,), selected_set = ed.use_state(tp.cast(tuple[ed.Element | None], (None,)))
-    refresh_trigger, refresh_trigger_set = ed.use_state(False)
+    self._refresh_trigger = not getattr(self, "_refresh_trigger", False)
 
-    def _force_refresh():
-        component_tree_, root_component_, hook_state_ = refresh()
-        component_tree_set(component_tree_)
-        root_component_set((root_component_,))
-        hook_state_set(hook_state_)
-        refresh_trigger_set(lambda t: not t)
-
-    def setup():
-        self.force_refresh = _force_refresh
-
-    ed.use_effect(setup, [])
+    component_tree, root_component, hook_state = ed.use_memo(refresh)
 
     def _build_tree(root: ed.Element, recurse_level=0) -> None:
         children = component_tree[root]
@@ -210,7 +190,6 @@ def Inspector(
             with ed.VBoxView(style={"align": "top", "width": 251, "border-right": "1px solid gray"}):
                 with ed.HBoxView(style={"align": "left", "height": 30}):
                     ed.Label("Edifice Inspector", style={"font-size": 18, "margin-left": 10, "width": 160})
-                    ed.Icon("sync-alt", size=20, on_click=lambda _e: _force_refresh(), tool_tip="Reload component tree")
                 with ed.VScrollView(style={"width": 250, "min-height": 450, "padding-top": 10}):
                     if root_component is not None:
                         _build_tree(root_component)
@@ -220,5 +199,5 @@ def Inspector(
                         selected,
                         selected.props,
                         hook_state[selected],
-                        refresh_trigger,
+                        self._refresh_trigger,
                     )

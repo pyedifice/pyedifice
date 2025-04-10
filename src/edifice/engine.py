@@ -14,7 +14,7 @@ from textwrap import dedent
 
 from typing_extensions import Self
 
-from .qt import QT_VERSION
+from edifice.qt import QT_VERSION
 
 if QT_VERSION == "PyQt6" and not tp.TYPE_CHECKING:
     from PyQt6 import QtCore, QtGui, QtWidgets
@@ -202,7 +202,7 @@ class AppProtocol(tp.Protocol):
     def _request_rerender(self, components: Iterable[Element], kwargs: dict[str, tp.Any]):
         pass
 
-    def _defer_rerender(self, element: Element):
+    def _defer_rerender(self):
         pass
 
     def stop(self):
@@ -1699,7 +1699,7 @@ class _HookState:
         self.updaters.append(updater)
         self.engine._hook_state_setted.add(self.element)
         assert self.engine._app is not None
-        self.engine._app._defer_rerender(self.element)
+        self.engine._app._defer_rerender()
 
 
 @dataclass
