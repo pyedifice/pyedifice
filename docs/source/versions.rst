@@ -7,11 +7,18 @@
 Release Notes
 =============
 
+v3.2.2
+------
+Released: 2025-04-10
+
+- Bugfix: Inspector spinning refresh loop introduced in v3.2.1.
+- :code:`logging.getLogger("Edifice")` mean time resets after each log print.
+
 v3.2.1
 ------
 Released: 2025-04-10
 
-- Bugfix: :func:`use_state` and :func:`use_context_select`: When the state
+- Bugfix :func:`use_state`, :func:`use_context_select`: when the state
   setter is called with the same state it should not cause re-render.
 
 v3.2.0
