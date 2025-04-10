@@ -194,7 +194,6 @@ class App:
         self._root: Element = root_element
         self._render_engine = RenderEngine(self._root, self)  # type: ignore  # noqa: PGH003
         self._render_timing = _TimingAvg(time.time())
-        self._first_render = True
 
         # Support for reloading on file change
         self._file_change_rerender_event_type = QtCore.QEvent.registerEventType()
@@ -305,8 +304,6 @@ class App:
                 f"{1000 * mean:.2f} ms. Worst render time {1000 * self._render_timing.max_time:.2f} ms.",
             )
             self._render_timing = _TimingAvg(clock_time)
-
-        self._first_render = False
 
         self._is_rerendering = False
         if self._rerender_wanted and not self._rerender_called_soon:
