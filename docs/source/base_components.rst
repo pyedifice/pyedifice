@@ -154,7 +154,6 @@ Consider this code.
 
 When the Fetch button is clicked, the event handler will call a :code:`fetch_from_network` function,
 blocking the application for an unbounded length of time.
-If the user clicks the increment button while waiting for the fetch then nothing will happen.
 
 Use the :func:`use_async_call<edifice.use_async_call>` Hook for an asynchronous event handler
 which will cancel automatically when :code:`MyComponent` is unmounted, or
