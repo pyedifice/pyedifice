@@ -57,8 +57,9 @@ There is a lot of imperative and object-oriented Qt API which is meaningless
 or unnecessary in Edifice. In a normal Edifice application you will never (rarely)
 “inherit” from a class or override a “virtual” method.
 
-You never “delete” or “remove” a widget in Edifice, instead you just conditionally
-declare it. When the condition is no longer true the widget will be removed.
+You never “add” or “remove” a widget in Edifice, instead you conditionally
+render it. When the condition is no longer true the widget will be removed,
+see :ref:`Dynamic Rendering`.
 
 `QWidgets <https://doc.qt.io/qtforpython-6/api/qtwidgets/qwidget.html>`_
 are stateful objects but Edifice is designed to provide a
@@ -77,21 +78,17 @@ Reactive
 
 For handling :ref:`Events`, pass a event-handling function as a **prop**.
 
-Do not use Signals and Slots.
-The
+Never (rarely) use Signals and Slots. The
 `Signals and Slots <https://doc.qt.io/qtforpython-6/tutorials/basictutorial/signals_and_slots.html>`_
 tutorial explains that
 “Due to the nature of Qt, QObjects require a way to communicate” but
-due to the nature of Edifice, QObjects are forbidden to communicate
-because they are stateless and therefore have nothing to say.
+due to the nature of Edifice, QObjects are mostly forbidden to communicate
+because it would violate the *one-way information flow* of :ref:`Model-View-Update`.
 
 Application state is managed with :func:`use_state` Hooks.
 
 Application side-effects triggered by state changes are performed by
 :func:`use_effect` and :func:`use_async` Hooks.
-
-For more more information about Edifice reactivity see
-:ref:`Model-View-Update`.
 
 Rules of Edifice
 ----------------
@@ -196,7 +193,8 @@ which has child Elements representing different parts of your application.
 Dynamic Rendering
 ^^^^^^^^^^^^^^^^^
 
-For dynamism, use conditions and loops in your rendering declaration.
+For dynamism, use conditions and loops in your :func:`@component <component>`
+render function.
 The conditions and loops can depend on **props** or **state**. For example,
 this :func:`@component <component>` will render input fields only while
 the **props** indicate that they are wanted.
