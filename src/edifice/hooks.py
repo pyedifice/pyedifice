@@ -352,7 +352,7 @@ def use_async(
                 Button(text="Cancel fetch", on_click=lambda _:cancel_fetcher())
 
     Cancellation
-    ============
+    ------------
 
     Edifice will call
     `cancel() <https://docs.python.org/3/library/asyncio-task.html#asyncio.Task.cancel>`_
@@ -385,7 +385,7 @@ def use_async(
     `Task Cancellation <https://docs.python.org/3/library/asyncio-task.html#task-cancellation>`_.
 
     Timers
-    ======
+    ------
 
     The :code:`use_async` Hook is useful for timers and animation.
 
@@ -442,7 +442,7 @@ def use_async(
                     )
 
     Worker Process
-    ==============
+    --------------
 
     We can run an
     :code:`async def my_subprocess` function in a worker
@@ -487,6 +487,20 @@ def use_async(
             use_async(run_my_subprocess)
 
             Label(text=calculation_progress)
+
+    Yielding to Qt
+    --------------
+
+    Python :code:`async` coroutines are a form of
+    `cooperative multitasking <https://en.wikipedia.org/wiki/Cooperative_multitasking>`_.
+    During an :code:`async` function, Qt will get a chance to render the UI
+    and process events every time there is an :code:`await`. Sometimes you may want
+    to deliberately yield to the Qt event loop to allow it to render and process
+    events. The way to do that is:
+
+    .. code-block:: python
+
+        await asyncio.sleep(0)
 
     """
     context = get_render_context_maybe()

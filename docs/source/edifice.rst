@@ -21,6 +21,101 @@ Class overview
    component
    child_place
 
+Edifice Programming Style
+-------------
+
+Edifice favors a very opinionated “asynchronous” “declarative” “reactive”
+style of Python and Qt which will be familiar to React users or
+`Functional Programming <https://docs.python.org/3/howto/functional.html>`_
+enthusiasts.
+
+Asynchronous
+^^^^^^^^^^^^
+
+The `asyncio eventloop <https://docs.python.org/3/library/asyncio-eventloop.html>`_
+is how Edifice programs structure control flow. Your Edifice
+application should never (rarely) create a
+`Thread <https://docs.python.org/3/library/threading.html#threading.Thread>`_
+or
+`QThread <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QThread.html>`_
+because there is no clean way to cancel or kill a Thread. Instead use
+the :func:`use_async` or :func:`use_async_call` Hooks for asynchronous concurrency.
+
+If you’re using a library which requires you to call a brief “blocking” function
+then use
+`run_in_executor <https://docs.python.org/3/library/asyncio-eventloop.html#asyncio.loop.run_in_executor>`_
+with a
+`ThreadPoolExecutor <https://docs.python.org/3/library/concurrent.futures.html#concurrent.futures.ThreadPoolExecutor>`_.
+
+If you’re using a library which requires you to call a long-running “blocking” function
+then use :func:`run_subprocess_with_callback`.
+
+Declarative
+^^^^^^^^^^^
+
+There is a lot of imperative and object-oriented Qt API which is meaningless
+or unnecessary in Edifice. In a normal Edifice application you will never (rarely)
+“inherit” from a class or override a “virtual” method.
+
+You never “delete” or “remove” a widget in Edifice, instead you just conditionally
+declare it. When the condition is no longer true the widget will be removed.
+
+`QWidgets <https://doc.qt.io/qtforpython-6/api/qtwidgets/qwidget.html>`_
+are stateful objects but Edifice is designed to provide a
+*stateless* API for QWidgets. Each :doc:`Base Element <base_components>` wraps
+a QWidget and presents it as a pure stateless function which depends only on
+its **props**.
+
+In Edifice there are no :code:`QAbstractItemModel` interfaces
+`“used by views and delegates to access data” <https://doc.qt.io/qtforpython-6/overviews/qtwidgets-model-view-programming.html#models>`_
+because in Edifice the data is passed as **props** and no other way.
+
+For more information see :ref:`Declaring Element Trees`.
+
+Reactive
+^^^^^^^^
+
+For handling :ref:`Events`, pass a event-handling function as a **prop**.
+
+Do not use Signals and Slots.
+The
+`Signals and Slots <https://doc.qt.io/qtforpython-6/tutorials/basictutorial/signals_and_slots.html>`_
+tutorial explains that
+“Due to the nature of Qt, QObjects require a way to communicate” but
+due to the nature of Edifice, QObjects are forbidden to communicate
+because they are stateless and therefore have nothing to say.
+
+Application state is managed with :func:`use_state` Hooks.
+
+Application side-effects triggered by state changes are performed by
+:func:`use_effect` and :func:`use_async` Hooks.
+
+For more more information about Edifice reactivity see
+:ref:`Model-View-Update`.
+
+Rules of Edifice
+----------------
+
+Are the same as the `Rules of React <https://react.dev/reference/rules>`_.
+
+**Components and Hooks must be pure**
+
+Purity in Components and Hooks is a key rule of Edifice that makes your app
+predictable, easy to debug, and allows Edifice to automatically optimize your code.
+
+- **Components must be idempotent** – Edifice components are assumed to always
+  return the same output with respect to their inputs – props, state, and context.
+- **Side effects must run outside of render** – Side effects should not run in
+  render.
+- **Props and state are immutable** – A component’s props and state are
+  immutable snapshots with respect to a single render. Never mutate them directly.
+- **Return values and arguments to Hooks are immutable** – Once values are
+  passed to a Hook, you should not modify them. Like props in an Element,
+  values become immutable when passed to a Hook.
+- **Values are immutable after being passed to an Element** – Don’t mutate
+  values after they’ve been used in an Element. Move the mutation before the
+  Element is created.
+
 Declaring Element Trees
 -----------------------
 
@@ -34,26 +129,30 @@ An Element may be either a
 :doc:`Base Element <base_components>`
 or a :func:`@component <component>` Element.
 
-A :func:`@component <component>` Element is a function which renders an
-:class:`Element` tree.
+A :func:`@component <component>` Element is a render function decorated by
+:code:`@component` which renders an :class:`Element` tree.
 
-Elements have both internal state and external properties.
-The external properties, **props**, are passed as arguments to the Element::
+.. code-block:: python
 
     @component
-    def Foo(self, a, b, c): # a, b, c are the props
+    def Foo(self, a:int, b:str, c:float): # a, b, c are the props
+
+The properties of an Element, the **props**, are passed as arguments to
+the Element:
 
 The **props** are owned by the external caller and must not be modified by
-this :func:`@component <component>` Element.
+the Element.
 
-Render a :code:`Foo` with props :code:`a=1, b=2, c=3`::
+Render a :code:`Foo` with props:
 
-    Foo(a=1, b=2, c=3)
+.. code-block:: python
 
-The internal **state** belongs to the Element.
-In a :func:`@component <component>` Element, the internal state is managed by :doc:`hooks`.
+    Foo(a=1, b="2", c=3.0)
 
-Changes in **state** or **props** will automatically trigger a re-render.
+A :func:`@component <component>` Element can have internal **state** managed
+by the :func:`use_state` Hook.
+
+Changes in **props** or **state** will automatically trigger a re-render.
 
 Declaring an Element tree in a :func:`@component <component>` Element render function looks
 like this.
@@ -93,7 +192,29 @@ In HTML/XML/JSX, this would be written as:
 
 You describe your entire application as a single root Element,
 which has child Elements representing different parts of your application.
-Each Element is responsible for managing its own state.
+
+Dynamic Rendering
+^^^^^^^^^^^^^^^^^
+
+For dynamism, use conditions and loops in your rendering declaration.
+The conditions and loops can depend on **props** or **state**. For example,
+this :func:`@component <component>` will render input fields only while
+the **props** indicate that they are wanted.
+
+.. code-block:: python
+
+    @component
+    def MyApp(self, want_username:bool, want_email:bool):
+        with Window():
+            with VBoxView():
+                if want_username:
+                    with HBoxView():
+                        Label(text="Username: ")
+                        TextInput()
+                if want_email:
+                    with HBoxView():
+                        Label(text="Email: ")
+                        TextInput()
 
 
 Model-View-Update
@@ -137,7 +258,7 @@ That sounds expensive and slow, and it would be if it weren't for
 the diffing algorithm.
 
 The diffing algorithm
----------------------
+^^^^^^^^^^^^^^^^^^^^^
 
 When Elements are rendered,
 the Element tree is then compared against the result
@@ -272,33 +393,3 @@ which means that subsequent renders will be skipped if the **props** didn’t ch
 Also we need an :func:`@component <component>` to
 be able to use Hooks such as :func:`use_state`, because those are bound to
 an :class:`Element`.
-
-Rules of Edifice
-----------------
-
-Are the same as the `Rules of React <https://react.dev/reference/rules>`_.
-
-**Components and Hooks must be pure**
-
-Purity in Components and Hooks is a key rule of Edifice that makes your app
-predictable, easy to debug, and allows Edifice to automatically optimize your code.
-
-- **Components must be idempotent** – Edifice components are assumed to always
-  return the same output with respect to their inputs – props, state, and context.
-- **Side effects must run outside of render** – Side effects should not run in
-  render.
-- **Props and state are immutable** – A component’s props and state are
-  immutable snapshots with respect to a single render. Never mutate them directly.
-- **Return values and arguments to Hooks are immutable** – Once values are
-  passed to a Hook, you should not modify them. Like props in an Element,
-  values become immutable when passed to a Hook.
-- **Values are immutable after being passed to an Element** – Don’t mutate
-  values after they’ve been used in an Element. Move the mutation before the
-  Element is created.
-
-Functional Programming
-----------------------
-
-Edifice works best when you follow the principles of functional programming.
-For advice, see the
-`Python Functional Programming HOWTO <https://docs.python.org/3/howto/functional.html>`_.

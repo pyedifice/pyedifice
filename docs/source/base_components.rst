@@ -7,12 +7,14 @@ Base Elements are the building blocks for an Edifice application.
 
 Each Base Element manages an underlying
 `QWidget <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html>`_.
+Base Elements are stateless, meaning they do not have any internal state.
+Instead all of their state is passed in as **props**.
 
 All Base Elements in this module inherit from :class:`QtWidgetElement<edifice.QtWidgetElement>`
-and its props.
+and its **props**.
 This means that all Base Elements can be made to respond to clicks by passing
-a handler function to the :code:`on_click` prop. All Base Elements are
-stylable using the :code:`style` prop, see :doc:`Styling<styling>`.
+a handler function to the :code:`on_click` **prop**. All Base Elements are
+stylable using the :code:`style` **prop**, see :doc:`Styling<styling>`.
 
 .. currentmodule:: edifice
 .. autosummary::

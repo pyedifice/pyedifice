@@ -1,3 +1,5 @@
+.. currentmodule:: edifice
+
 API
 ===
 
