@@ -80,7 +80,7 @@ class ButtonView(HBoxView):
 
     def __init__(
         self,
-        on_trigger: tp.Callable[[QKeyEvent], None] | tp.Callable[[QMouseEvent], None] | None = None,
+        on_trigger: tp.Callable[[QKeyEvent | QMouseEvent], None] | None = None,
         **kwargs,
     ):
         super().__init__(**kwargs)
