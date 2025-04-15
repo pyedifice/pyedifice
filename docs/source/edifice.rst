@@ -341,9 +341,12 @@ for a Python class. The :class:`Element` constructor function also has
 the side-effect of inserting itself to the rendered :class:`Element` tree,
 as a child of the :code:`with` context layout Element.
 
-We like this style of declaring Element trees in Python code because it forces
-the indentation structure of the Python code to reflect the structure of the
-Element tree.
+We like this style of declaring Element trees in Python code because
+
+1. The indentation structure of the Python code reflects the
+   structure of the Element tree.
+2. We can use Python control flow statements :code:`if` :code:`for`
+   :code:`match` to dynamically render Elements.
 
 Because Element initialization is a render side-effect,
 we have to be careful about binding Elements to variables
