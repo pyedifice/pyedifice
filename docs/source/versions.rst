@@ -7,6 +7,12 @@
 Release Notes
 =============
 
+v3.2.3
+------
+Released: 2025-04-19
+
+- Bugfix: :class:`ButtonView` :code:`on_trigger` type hint.
+
 v3.2.2
 ------
 Released: 2025-04-10
