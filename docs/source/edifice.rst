@@ -34,27 +34,27 @@ Asynchronous
 
 The `asyncio eventloop <https://docs.python.org/3/library/asyncio-eventloop.html>`_
 is how Edifice programs structure control flow. Your Edifice
-application should never (rarely) create a
+application should never (or rarely) create a
 `Thread <https://docs.python.org/3/library/threading.html#threading.Thread>`_
 or
 `QThread <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QThread.html>`_
 because there is no clean way to cancel or kill a Thread. Instead use
 the :func:`use_async` or :func:`use_async_call` Hooks for asynchronous concurrency.
 
-If you’re using a library which requires you to call a brief “blocking” function
-then use
+If you’re using a library which requires you to call an I/O-bound “blocking” function
+then call it with
 `run_in_executor <https://docs.python.org/3/library/asyncio-eventloop.html#asyncio.loop.run_in_executor>`_
 with a
 `ThreadPoolExecutor <https://docs.python.org/3/library/concurrent.futures.html#concurrent.futures.ThreadPoolExecutor>`_.
 
-If you’re using a library which requires you to call a long-running “blocking” function
-then use :func:`run_subprocess_with_callback`.
+If you’re using a library which requires you to call a CPU-bound “blocking” function
+then call it with :func:`run_subprocess_with_callback`.
 
 Declarative
 ^^^^^^^^^^^
 
 There is a lot of imperative and object-oriented Qt API which is meaningless
-or unnecessary in Edifice. In a normal Edifice application you will never (rarely)
+or unnecessary in Edifice. In a normal Edifice application you will never (or rarely)
 “inherit” from a class or override a “virtual” method.
 
 You never “add” or “remove” a widget in Edifice, instead you conditionally
@@ -78,7 +78,7 @@ Reactive
 
 For handling :ref:`Events`, pass a event-handling function as a **prop**.
 
-Never (rarely) use Signals and Slots. The
+Never (or rarely) use Signals and Slots. The
 `Signals and Slots <https://doc.qt.io/qtforpython-6/tutorials/basictutorial/signals_and_slots.html>`_
 tutorial explains that
 “Due to the nature of Qt, QObjects require a way to communicate” but
