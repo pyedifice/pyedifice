@@ -50,7 +50,8 @@ class PlotParams:
 
 @dataclass
 class Received:
-    dataframe: pd.DataFrame
+    longName: str
+    history: pd.DataFrame
 
     def __bool__(self):
         """
@@ -106,7 +107,7 @@ def PlotDescriptor(
     def handle_param(param_val: int):
         plot_change(key, lambda p: replace(p, y_transform_param=param_val))
 
-    with ed.HBoxView(style={"align": "left", "width": 300, "height": 100}):
+    with ed.HBoxView(style={"align": "left", "width": 300, "height": 120}):
         with ed.VBoxView(style={"align": "top"}):
             with ed.HBoxView(style={"align": "left"}):
                 ed.TextInput(
@@ -133,8 +134,8 @@ def PlotDescriptor(
                                 selection=plot_colors.index(plot.color),
                                 options=plot_colors,
                                 on_select=handle_color,
-                                size_policy=QSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed),
                                 focus_policy=Qt.FocusPolicy.ClickFocus,
+                                size_policy=QSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed),
                             )
                         case NoData():
                             ed.Label(
@@ -152,39 +153,56 @@ def PlotDescriptor(
                 style={"align": "left", "padding-top": 5},
                 size_policy=QSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed),
             ):
-                if plot.x_ticker != "" and isinstance(plot_data, Received):
-                    with ed.HBoxView(
-                        style={"padding-right": 10, "align": "left"},
-                    ):
-                        ed.Label("Transform")
-                        with ed.HBoxView(style={"padding-left": 10, "padding-right": 10, "align": "left"}):
-                            ed.Dropdown(
-                                selection=transform_types.index(plot.y_transform),
-                                options=transform_types,
-                                on_select=handle_transform_type,
-                                size_policy=QSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed),
-                                focus_policy=Qt.FocusPolicy.ClickFocus,
-                            )
-                        if plot.y_transform == "EMA":
-                            ed.Label(
-                                text=f"half-life {plot.y_transform_param} days",
-                                tool_tip="Exponential Moving Average half-life",
-                            )
-                    with ed.HBoxView():
-                        if plot.y_transform == "EMA":
-                            ed.Slider(
-                                value=plot.y_transform_param,
-                                min_value=1,
-                                max_value=90,
-                                style={"min-width": 200},
-                                on_change=handle_param,
-                                tool_tip="Exponential Moving Average half-life",
-                                focus_policy=Qt.FocusPolicy.ClickFocus,
-                            )
+                match plot_data:
+                    case Received(longName):
+                        with ed.VBoxView():
+                            ed.Label(text=longName, style={"margin-bottom": 5})
+                            with ed.HBoxView(
+                                style={"padding-right": 10, "align": "left"},
+                            ):
+                                ed.Label("Transform")
+                                with ed.HBoxView(style={"padding-left": 10, "padding-right": 10, "align": "left"}):
+                                    ed.Dropdown(
+                                        selection=transform_types.index(plot.y_transform),
+                                        options=transform_types,
+                                        on_select=handle_transform_type,
+                                        size_policy=QSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed),
+                                        focus_policy=Qt.FocusPolicy.ClickFocus,
+                                    )
+                                if plot.y_transform == "EMA":
+                                    ed.Label(
+                                        text=f"half-life {plot.y_transform_param} days",
+                                        tool_tip="Exponential Moving Average half-life",
+                                    )
+                            with ed.HBoxView():
+                                if plot.y_transform == "EMA":
+                                    ed.Slider(
+                                        value=plot.y_transform_param,
+                                        min_value=1,
+                                        max_value=90,
+                                        style={"min-width": 200},
+                                        on_change=handle_param,
+                                        tool_tip="Exponential Moving Average half-life",
+                                        focus_policy=Qt.FocusPolicy.ClickFocus,
+                                    )
 
 
-def fetch_from_yahoo(ticker: str) -> pd.DataFrame:
-    return yf.Ticker(ticker).history("1y")
+async def fetch_from_yahoo(fetch_executor: ThreadPoolExecutor, ticker: str) -> Failed | Received | NoData:
+    def fetcher():
+        t = yf.Ticker(ticker)
+        try:
+            longName = t.info["longName"]
+            history = t.history("1y")
+            if history.empty:
+                return NoData()
+            return Received(longName, history)
+        except KeyError:
+            return NoData()
+        except Exception as e:  # noqa: BLE001
+            return Failed(e)
+
+    return await asyncio.get_event_loop().run_in_executor(fetch_executor, fetcher)
+    # fetch the name of the company from the ticker
 
 
 # Finally, we create a component that contains the plot descriptions
@@ -245,17 +263,12 @@ def App(self, plot_colors: list[str], plot_color_background: str):
             tickers_requested_set(lambda tr_old, ticker=ticker: [*tr_old, ticker])
 
             async def async_fetch_data(ticker=ticker):
-                try:
-                    data = await asyncio.get_event_loop().run_in_executor(fetch_executor, fetch_from_yahoo, ticker)
-                    if data.empty:
-                        plot_data_set(lambda pltd, ticker=ticker: pltd | {ticker: NoData()})
-                    else:
-                        plot_data_set(lambda pltd, ticker=ticker, data=data: pltd | {ticker: Received(data)})
-                except Exception as e:  # noqa: BLE001
-                    plot_data_set(lambda pltd, ticker=ticker, e=e: pltd | {ticker: Failed(e)})
+                result = await fetch_from_yahoo(fetch_executor, ticker)
+                plot_data_set(lambda pltd, ticker=ticker, result=result: pltd | {ticker: result})
 
             # We want fire-and-forget tasks that won't get cancelled by Edifice
-            # when the component is unmounted or another task starts.
+            # when the component is unmounted or another task starts,
+            # so we don't use the use_async hook.
             t = asyncio.create_task(async_fetch_data(ticker))
             fetch_tasks.add(t)
             t.add_done_callback(fetch_tasks.remove)
@@ -275,15 +288,15 @@ def App(self, plot_colors: list[str], plot_color_background: str):
 
         for plot in plots.values():
             match plot_data.get(plot.x_ticker, None):
-                case Received(dataframe):
+                case Received(_longName, history):
                     ys = (
-                        dataframe[plot.y_label].ewm(halflife=plot.y_transform_param).mean()
+                        history[plot.y_label].ewm(halflife=plot.y_transform_param).mean()
                         if plot.y_transform == "EMA"
-                        else dataframe[plot.y_label]
+                        else history[plot.y_label]
                     )
                     plot_item.plot(
                         # https://stackoverflow.com/questions/11865458/how-to-get-unix-timestamp-from-numpy-datetime64/45968949#45968949
-                        x=[x.astype("datetime64[s]").astype("int") for x in dataframe.index.values],  # noqa: PD011
+                        x=[x.astype("datetime64[s]").astype("int") for x in history.index.values],  # noqa: PD011
                         y=ys.values,
                         pen=pg.mkPen(QColor(plot.color), width=2),
                     )
