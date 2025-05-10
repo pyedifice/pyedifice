@@ -26,15 +26,16 @@ if tp.TYPE_CHECKING:
 
 if QT_VERSION == "PyQt6" and not tp.TYPE_CHECKING:
     from PyQt6.QtCore import Qt
-    from PyQt6.QtGui import QColor, QPen
+    from PyQt6.QtGui import QColor
     from PyQt6.QtWidgets import QApplication, QSizePolicy
 else:
     from PySide6.QtCore import Qt
-    from PySide6.QtGui import QColor, QPen
+    from PySide6.QtGui import QColor
     from PySide6.QtWidgets import QApplication, QSizePolicy
 
 logger = logging.getLogger("Edifice")
 logger.setLevel(logging.INFO)
+
 
 @dataclass(frozen=True)
 class PlotParams:
@@ -114,24 +115,28 @@ def PlotDescriptor(
                     on_change=handle_ticker,
                 )
                 with ed.HBoxView(style={"padding-left": 10, "align": "left"}):
-                    if isinstance(plot_data, Failed):
-                        ed.Label(
-                            f"No data for {plot.x_ticker}",
-                            size_policy=QSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed),
-                        )
-                    elif isinstance(plot_data, Received):
-                        ed.Dropdown(
-                            selection=plot_colors.index(plot.color),
-                            options=plot_colors,
-                            on_select=handle_color,
-                            size_policy=QSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed),
-                            focus_policy=Qt.FocusPolicy.ClickFocus,
-                        )
-                    elif plot.x_ticker:
-                        ed.Label(
-                            text=f"Fetching {plot.x_ticker}...",
-                            size_policy=QSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed),
-                        )
+                    match plot_data:
+                        case Failed(e):
+                            ed.Label(
+                                text=str(e),
+                                size_policy=QSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed),
+                                style={"font-size": 12},
+                                word_wrap=True,
+                            )
+                        case Received():
+                            ed.Dropdown(
+                                selection=plot_colors.index(plot.color),
+                                options=plot_colors,
+                                on_select=handle_color,
+                                size_policy=QSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed),
+                                focus_policy=Qt.FocusPolicy.ClickFocus,
+                            )
+                        case None:
+                            if plot.x_ticker:
+                                ed.Label(
+                                    text=f"Fetching {plot.x_ticker}...",
+                                    size_policy=QSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed),
+                                )
 
             with ed.VBoxView(
                 style={"align": "left", "padding-top": 5},
