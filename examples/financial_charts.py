@@ -202,7 +202,6 @@ async def fetch_from_yahoo(fetch_executor: ThreadPoolExecutor, ticker: str) -> F
             return Failed(e)
 
     return await asyncio.get_event_loop().run_in_executor(fetch_executor, fetcher)
-    # fetch the name of the company from the ticker
 
 
 # Finally, we create a component that contains the plot descriptions
@@ -267,8 +266,7 @@ def App(self, plot_colors: list[str], plot_color_background: str):
                 plot_data_set(lambda pltd, ticker=ticker, result=result: pltd | {ticker: result})
 
             # We want fire-and-forget tasks that won't get cancelled by Edifice
-            # when the component is unmounted or another task starts,
-            # so we don't use the use_async hook.
+            # when another task starts, so we don't use the use_async hook.
             t = asyncio.create_task(async_fetch_data(ticker))
             fetch_tasks.add(t)
             t.add_done_callback(fetch_tasks.remove)
