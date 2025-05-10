@@ -72,6 +72,11 @@ class Failed:
     error: Exception
 
 
+@dataclass(frozen=True)
+class NoData:
+    pass
+
+
 label_types = ["Date", "Close", "Volume"]
 transform_types = ["None", "EMA"]
 
@@ -81,7 +86,7 @@ def PlotDescriptor(
     self,
     key: int,
     plot: PlotParams,
-    plot_data: None | Received | Failed,
+    plot_data: None | Received | NoData | Failed,
     plot_colors: list[str],
     plot_change: tp.Callable[[int, tp.Callable[[PlotParams], PlotParams]], None],
 ):
@@ -130,6 +135,11 @@ def PlotDescriptor(
                                 on_select=handle_color,
                                 size_policy=QSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed),
                                 focus_policy=Qt.FocusPolicy.ClickFocus,
+                            )
+                        case NoData():
+                            ed.Label(
+                                text="No data",
+                                size_policy=QSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed),
                             )
                         case None:
                             if plot.x_ticker:
@@ -191,8 +201,8 @@ def App(self, plot_colors: list[str], plot_color_background: str):
     plots, plots_set = ed.use_state(one_plot_aapl)
 
     # The plot_data is what we fetch from Yahoo Finance.
-    plot_data: dict[str, Received | Failed]
-    plot_data, plot_data_set = ed.use_state(tp.cast(dict[str, Received | Failed], {}))
+    plot_data: dict[str, Received | Failed | NoData]
+    plot_data, plot_data_set = ed.use_state(tp.cast(dict[str, Received | Failed | NoData], {}))
 
     def check_insert_blank_plot():
         """
@@ -238,7 +248,7 @@ def App(self, plot_colors: list[str], plot_color_background: str):
                 try:
                     data = await asyncio.get_event_loop().run_in_executor(fetch_executor, fetch_from_yahoo, ticker)
                     if data.empty:
-                        plot_data_set(lambda pltd, ticker=ticker: pltd | {ticker: Failed(Exception("No data"))})
+                        plot_data_set(lambda pltd, ticker=ticker: pltd | {ticker: NoData()})
                     else:
                         plot_data_set(lambda pltd, ticker=ticker, data=data: pltd | {ticker: Received(data)})
                 except Exception as e:  # noqa: BLE001
