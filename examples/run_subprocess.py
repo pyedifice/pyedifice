@@ -3,21 +3,20 @@
 #
 
 
-import asyncio
-import functools
+import time
 from collections.abc import Callable
 from typing import cast
 
 import edifice as ed
 
 
-async def my_subprocess(
+def my_subprocess(
     callback: Callable[[str], None],
 ) -> None:
     callback("Step 1")
-    await asyncio.sleep(1)
+    time.sleep(1)
     callback("Step 2")
-    await asyncio.sleep(1)
+    time.sleep(1)
     callback("Step 3")
 
 @ed.component

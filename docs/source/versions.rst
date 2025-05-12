@@ -7,6 +7,32 @@
 Release Notes
 =============
 
+**Breaking Changes**
+
+- :func:`run_subprocess_with_callback` takes a normal function instead of an
+  :code:`async` coroutine for the :code:`subprocess` argument.
+
+  If you want the :code:`subprocess` to be an :code:`async` function then
+  make a new event loop and use that as the event loop for the Process.
+
+  .. code-block:: python
+      :caption: Example async subprocess function
+
+      def my_subprocess(callback: typing.Callable[[int], None]) -> str:
+
+          async def work() -> str:
+              callback(1)
+              await asyncio.sleep(1)
+              return "done"
+
+          return asyncio.new_event_loop().run_until_complete(work())
+
+  **Migration Guide:**
+
+  Unfortunately Pyright will not error on this change. You must check each
+  :func:`run_subprocess_with_callback` call site and make sure that the
+  :code:`subprocess` argument is a normal function, not an :code:`async` function.
+
 v3.2.3
 ------
 Released: 2025-04-19

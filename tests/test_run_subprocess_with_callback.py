@@ -2,58 +2,65 @@ from __future__ import annotations
 
 import asyncio
 import functools
-import os
 import multiprocessing
 import multiprocessing.connection
 import multiprocessing.queues
 import multiprocessing.synchronize
-import sys
+import os
+import time
 import typing
 import unittest
 
 from edifice import run_subprocess_with_callback
 
 
-def callback_return(x:int) -> None:
+def callback_return(x: int) -> None:
     return
 
-def callback_throw(x:int) -> None:
+
+def callback_throw(x: int) -> None:
     raise ValueError("interrupt the callback")
 
-async def subprocess_return(callback: typing.Callable[[int], None]) -> str:
+
+def subprocess_return(callback: typing.Callable[[int], None]) -> str:
     callback(1)
     callback(2)
     return "done"
 
-async def subprocess_throw(callback: typing.Callable[[int], None]) -> str:
+
+def subprocess_throw(callback: typing.Callable[[int], None]) -> str:
     callback(1)
     raise ValueError("interrupt the subprocess")
 
-def callback_closure(x:int, y:int) -> None:
+
+def callback_closure(x: int, y: int) -> None:
     return
 
-async def subprocess_closure(retval:str, callback: typing.Callable[[int], None]) -> str:
+
+def subprocess_closure(retval: str, callback: typing.Callable[[int], None]) -> str:
     callback(1)
     callback(2)
     return retval
 
-async def subprocess_event(
+
+def subprocess_event(
     event: multiprocessing.synchronize.Event,
     callback: typing.Callable[[bool], None],
 ) -> str:
     if event.is_set():
         return "early"
     callback(False)
-    await asyncio.sleep(0.1)
+    time.sleep(0.1)
     if event.is_set():
         return "early"
     callback(True)
     while not event.is_set():
-        await asyncio.sleep(0.1)
-        return "return here" # We will return here.
+        time.sleep(0.1)
+        return "return here"  # We will return here.
     return "done"
 
-async def subprocess_queue(
+
+def subprocess_queue(
     msg_queue: multiprocessing.queues.Queue[str],
     callback: typing.Callable[[int], None],
 ) -> str:
@@ -61,7 +68,8 @@ async def subprocess_queue(
         callback(len(i))
     return "done"
 
-async def subprocess_pipe(
+
+def subprocess_pipe(
     rx: multiprocessing.connection.Connection[str, str],
     callback: typing.Callable[[int], None],
 ) -> str:
@@ -69,9 +77,27 @@ async def subprocess_pipe(
         callback(len(i))
     return "done"
 
-async def subprocess_exit(callback: typing.Callable[[str], None]) -> str:
+
+def subprocess_exit(callback: typing.Callable[[str], None]) -> str:
     callback("one and done")
     os._exit(1)
+
+
+def subprocess_async(callback: typing.Callable[[int], None]) -> str:
+    async def work() -> str:
+        callback(1)
+        return "done"
+
+    return asyncio.new_event_loop().run_until_complete(work())
+
+
+def subprocess_async_cancel(callback: typing.Callable[[int], None]) -> str:
+    async def work() -> str:
+        raise asyncio.CancelledError
+        return "done"
+
+    return asyncio.new_event_loop().run_until_complete(work())
+
 
 class IntegrationTestCase(unittest.IsolatedAsyncioTestCase):
     async def test_success(self):
@@ -79,9 +105,11 @@ class IntegrationTestCase(unittest.IsolatedAsyncioTestCase):
 
     async def test_cancel(self):
         y_task = asyncio.create_task(run_subprocess_with_callback(subprocess_return, callback_return))
+
         async def canceller():
             await asyncio.sleep(0.05)
             y_task.cancel()
+
         await asyncio.create_task(canceller())
         try:
             await y_task
@@ -114,8 +142,9 @@ class IntegrationTestCase(unittest.IsolatedAsyncioTestCase):
             assert False
 
     async def test_closure(self):
-        def callback_local(x:int) -> None:
+        def callback_local(x: int) -> None:
             return
+
         retval = "closuredone"
         assert retval == await run_subprocess_with_callback(
             functools.partial(subprocess_closure, retval),
@@ -127,6 +156,19 @@ class IntegrationTestCase(unittest.IsolatedAsyncioTestCase):
             await run_subprocess_with_callback(subprocess_exit, lambda _: None, daemon=True)
             assert False
         except multiprocessing.ProcessError:
+            assert True
+        except:
+            assert False
+
+    async def test_subprocess_async(self):
+        await run_subprocess_with_callback(subprocess_async, callback_return)
+        assert True
+
+    async def test_subprocess_async_cancel(self) -> None:
+        try:
+            await run_subprocess_with_callback(subprocess_async_cancel, callback_return)
+            assert False
+        except asyncio.CancelledError:
             assert True
         except:
             assert False
@@ -148,7 +190,7 @@ class IntegrationTestCase(unittest.IsolatedAsyncioTestCase):
     async def test_queue(self) -> None:
         msg_queue: multiprocessing.queues.Queue[str] = multiprocessing.get_context("spawn").Queue()
 
-        def local_callback(x:int) -> None:
+        def local_callback(x: int) -> None:
             # This function will run in the main process event loop.
             pass
 
@@ -170,14 +212,16 @@ class IntegrationTestCase(unittest.IsolatedAsyncioTestCase):
     async def test_queue_cancel(self) -> None:
         msg_queue: multiprocessing.queues.Queue[str] = multiprocessing.get_context("spawn").Queue()
 
-        def local_callback(x:int) -> None:
+        def local_callback(x: int) -> None:
             # This function will run in the main process event loop.
             pass
 
-        y = asyncio.create_task(run_subprocess_with_callback(
-            functools.partial(subprocess_queue, msg_queue),
-            local_callback,
-        ))
+        y = asyncio.create_task(
+            run_subprocess_with_callback(
+                functools.partial(subprocess_queue, msg_queue),
+                local_callback,
+            )
+        )
         for i in range(1000):
             msg_queue.put(str(i))
         y.cancel()
@@ -195,7 +239,7 @@ class IntegrationTestCase(unittest.IsolatedAsyncioTestCase):
         tx: multiprocessing.connection.Connection[str, str]
         rx, tx = multiprocessing.get_context("spawn").Pipe(duplex=False)
 
-        def local_callback(x:int) -> None:
+        def local_callback(x: int) -> None:
             # This function will run in the main process event loop.
             pass
 
@@ -235,14 +279,16 @@ class IntegrationTestCase(unittest.IsolatedAsyncioTestCase):
         tx: multiprocessing.connection.Connection[str, str]
         rx, tx = multiprocessing.get_context("spawn").Pipe(duplex=False)
 
-        def local_callback(x:int) -> None:
+        def local_callback(x: int) -> None:
             # This function will run in the main process event loop.
             pass
 
-        y = asyncio.get_event_loop().create_task(run_subprocess_with_callback(
-            functools.partial(subprocess_pipe, rx),
-            local_callback,
-        ))
+        y = asyncio.get_event_loop().create_task(
+            run_subprocess_with_callback(
+                functools.partial(subprocess_pipe, rx),
+                local_callback,
+            )
+        )
         await asyncio.sleep(0.1)
         tx.send("one")
         await asyncio.sleep(0.1)
@@ -255,6 +301,7 @@ class IntegrationTestCase(unittest.IsolatedAsyncioTestCase):
             assert True
         except:
             assert False
+
 
 if __name__ == "__main__":
     unittest.main()

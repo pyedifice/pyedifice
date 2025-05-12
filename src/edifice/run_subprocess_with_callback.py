@@ -33,7 +33,6 @@ from __future__ import annotations
 import asyncio
 import dataclasses
 import multiprocessing
-import multiprocessing.process
 import multiprocessing.queues
 import queue
 import traceback
@@ -66,35 +65,20 @@ class _ExceptionWrapper:
 
 
 def _run_subprocess(
-    subprocess: typing.Callable[[typing.Callable[_P_callback, None]], typing.Awaitable[_T_subprocess]],
+    subprocess: typing.Callable[[typing.Callable[_P_callback, None]], _T_subprocess],
     callback_send: multiprocessing.queues.Queue,
 ) -> None:
-    subloop = asyncio.new_event_loop()
 
-    async def work() -> None:
-        def _run_callback(*args: _P_callback.args, **kwargs: _P_callback.kwargs) -> None:
-            callback_send.put((args, kwargs))
+    def _run_callback(*args: _P_callback.args, **kwargs: _P_callback.kwargs) -> None:
+        callback_send.put((args, kwargs))
 
-        try:
-            r = await subprocess(_run_callback)
+    try:
+        r = subprocess(_run_callback)
+    except BaseException as e:  # noqa: BLE001
+        callback_send.put(_ExceptionWrapper(e, traceback.format_exception(e)))
+    else:
+        callback_send.put(_EndProcess(r))
 
-            # It would be nice if the subprocess could be cancelled
-            # by .cancel() so it it could have a chance to handle CancelledError
-            # and clean up before it gets .terminate()ed.
-            #
-            # But we have to ask: what if the subprocess is blocked?
-            # Making blocking I/O calls in a subprocess should be supported
-            # and encouranged. That's the whole point of using a subprocess.
-            #
-            # So I think the best and simplest thing to do is to terminate
-            # on cancellation.
-
-        except BaseException as e:  # noqa: BLE001
-            callback_send.put(_ExceptionWrapper(e, traceback.format_exception(e)))
-        else:
-            callback_send.put(_EndProcess(r))
-
-    return subloop.run_until_complete(work())
     # https://docs.python.org/3/library/multiprocessing.html#multiprocessing.Queue.join_thread
     # > “By default if a process is not the creator of the queue then on
     # > exit it will attempt to join the queue's background thread.”
@@ -106,21 +90,20 @@ def _run_subprocess(
 
 
 async def run_subprocess_with_callback(
-    subprocess: typing.Callable[[typing.Callable[_P_callback, None]], typing.Awaitable[_T_subprocess]],
+    subprocess: typing.Callable[[typing.Callable[_P_callback, None]], _T_subprocess],
     callback: typing.Callable[_P_callback, None],
     daemon: bool | None = None,
 ) -> _T_subprocess:
     """
-    Run an
-    :code:`async def subprocess` function in a
+    Run a
+    :code:`def subprocess` function in a
     `Process <https://docs.python.org/3/library/multiprocessing.html#multiprocessing.Process>`_
     and return the result.
 
     Args:
         subprocess:
-            The async function to run in a
+            The function to run in a
             `Process <https://docs.python.org/3/library/multiprocessing.html#multiprocessing.Process>`_.
-            The :code:`subprocess` function will run in a sub-process in a new event loop.
             This :code:`subprocess` function takes a single argument: a function with the same type
             as the :code:`callback` function.
             The :code:`subprocess` function must be picklable.
@@ -140,7 +123,8 @@ async def run_subprocess_with_callback(
     well and cleans up properly in the event of
     `cancellation <https://docs.python.org/3/library/asyncio-task.html#task-cancellation>`_,
     exceptions, and crashes.
-    This function is useful for a long-running parallel worker
+    `ProcessPoolExecutor cannot be cancelled. <https://discuss.python.org/t/cancel-running-work-in-processpoolexecutor/58605>`_.
+    This function is useful for a CPU-bound parallel worker
     subprocess for which we want to report progress back to the main GUI event loop.
     Like *PyTorch* stuff.
 
@@ -158,12 +142,12 @@ async def run_subprocess_with_callback(
     .. code-block:: python
         :caption: Example
 
-        async def my_subprocess(callback: Callable[[int], None]) -> str:
-            # This function will run in a new Process in a new event loop.
+        def my_subprocess(callback: Callable[[int], None]) -> str:
+            # This function will run in a new Process.
             callback(1)
-            await asyncio.sleep(1)
+            time.sleep(1)
             callback(2)
-            await asyncio.sleep(1)
+            time.sleep(1)
             callback(3)
             return "done"
 
@@ -242,8 +226,8 @@ async def run_subprocess_with_callback(
     .. code-block:: python
         :caption: Example of Queue messaging from the main process to the subprocess
 
-        async def my_subprocess(
-            # This function will run in a new Process in a new event loop.
+        def my_subprocess(
+            # This function will run in a new Process.
             msg_queue: multiprocessing.queues.Queue[str],
             callback: typing.Callable[[int], None],
         ) -> str:
@@ -289,7 +273,33 @@ async def run_subprocess_with_callback(
 
             from __future__ import annotations
 
+    Async in the subprocess
+    ^^^^^^^^^^^^^^^^^^^^^^^
+
+    If you want the :code:`subprocess` to run an :code:`async` function then
+    make a new event loop and use that as the event loop in the
+    :code:`subprocess`.
+
+    .. code-block:: python
+        :caption: Example async subprocess function
+
+        def my_subprocess(callback: typing.Callable[[int], None]) -> str:
+            # This function will run in a new Process.
+
+            async def work() -> str:
+                callback(1)
+                await asyncio.sleep(1)
+                return "done"
+
+            return asyncio.new_event_loop().run_until_complete(work())
+
+    A cancelled :code:`await` in the :code:`subprocess` will raise
+    `CancelledError <https://docs.python.org/3/library/asyncio-exceptions.html#asyncio.CancelledError>`_
+    which will be propagated and re-raised from
+    :func:`run_subprocess_with_callback` in the usual way.
+
     """
+
 
     # multiprocessing.Queue can only be used with spawn startmethod
     # if we get it from a spawn context.
