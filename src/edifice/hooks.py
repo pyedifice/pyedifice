@@ -444,8 +444,8 @@ def use_async(
     Worker Process
     --------------
 
-    We can run an
-    :code:`async def my_subprocess` function in a worker
+    We can run a
+    :code:`def my_subprocess` function in a worker
     `Process <https://docs.python.org/3/library/multiprocessing.html#multiprocessing.Process>`_
     by using :func:`run_subprocess_with_callback`.
 
@@ -459,8 +459,8 @@ def use_async(
     .. code-block:: python
         :caption: use_async with run_subprocess_with_callback
 
-        async def my_subprocess(callback: Callable[[str], None]) -> int:
-            # This function will run in a new Process in a new event loop.
+        def my_subprocess(callback: Callable[[str], None]) -> int:
+            # This function will run in a new Process.
             callback("Starting long calculation")
             await asyncio.sleep(100.0)
             x = 1 + 2
