@@ -7,6 +7,10 @@
 Release Notes
 =============
 
+v4.0.0
+------
+Released: 2025-05-14
+
 **Breaking Changes**
 
 - :func:`run_subprocess_with_callback` takes a normal function instead of an
