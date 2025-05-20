@@ -105,10 +105,13 @@ Edifice code looks like this:
     number, set_number = use_state(0)
 
     with VBoxView():
-        Button("Add 5", on_click=lambda event: set_number(number+5))
-        Label(str(number))
+        Button(title="Add 5", on_click=lambda event: set_number(number+5))
+        Label(text=str(number))
         if number > 30 and number < 70:
-            Label("Number is mid")
+            Label(
+                text="Number is mid",
+                style={"color": "green"},
+            )
 
 The GUI displays
 a button and a label with the current value of :code:`number`.
@@ -123,7 +126,7 @@ code. If you have a Python script which does a long-running computation,
 Edifice provides an API for running that script while presenting
 a responsive GUI to the user.
 
-1. Paste the script into an :code:`async def worker()` function.
+1. Paste the script into an :code:`worker()` function.
 2. Call :func:`run_subprocess_with_callback`
    on that :code:`worker` function with a :func:`use_async`
    Hook. Replace the :code:`print` statements with calls to

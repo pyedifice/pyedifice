@@ -56,10 +56,13 @@ Edifice code looks like this:
     number, set_number = use_state(0)
 
     with VBoxView():
-        Button("Add 5", on_click=lambda event: set_number(number+5))
-        Label(str(number))
+        Button(title="Add 5", on_click=lambda event: set_number(number+5))
+        Label(text=str(number))
         if number > 30 and number < 70:
-            Label("Number is mid")
+            Label(
+              text="Number is mid",
+              style={"color": "green"},
+            )
 ```
 
 The GUI displays
