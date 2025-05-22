@@ -92,17 +92,17 @@ declaratively in one language.
 
 ## How it works
 
-An Edifice component is a render function which declares the mapping from the state to UI.
-The state of a component is divided into **props** and **state**.
-**props** are passed to the component in the constructor,
-whereas **state** is the component’s own internal state.
+An Edifice component is a render function which declares a mapping
+from **props** and **state** to UI widgets.
+**props** are passed as arguments to the component when it renders.
+**state** is the component’s own internal state.
 
 Changes to **props** or **state** will trigger a re-render of the component.
 The old and new component trees will be compared to one another,
-and a diffing algorithm will determine which components previously existed and which ones are new
-(the algorithm behaves similarly to the React diffing algorithm).
-Components that previously existed will maintain their **state**, whereas their **props** will be updated.
-Finally, Edifice will issue the minimal update commands to update the UI.
+and a diffing algorithm
+(similar to the [React diffing algorithm](https://legacy.reactjs.org/docs/reconciliation.html))
+will determine which UI widgets must be added, removed or modified.
+Then Edifice will issue the minimal commands to update the UI.
 
 ![MANUFACIA-Vision_capture1](https://github.com/user-attachments/assets/eab9ec8e-1334-4d79-ae0e-f1ecd7f8adac)
 
