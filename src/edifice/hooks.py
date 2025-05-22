@@ -462,7 +462,7 @@ def use_async(
         def my_subprocess(callback: Callable[[str], None]) -> int:
             # This function will run in a new Process.
             callback("Starting long calculation")
-            await asyncio.sleep(100.0)
+            time.sleep(100.0)
             x = 1 + 2
             callback(f"Finished long calculation"))
             return x
@@ -496,7 +496,7 @@ def use_async(
     During an :code:`async` function, Qt will get a chance to render the UI
     and process events every time there is an :code:`await`. Sometimes you may want
     to deliberately yield to the Qt event loop to allow it to render and process
-    events. The way to do that is:
+    events. The way to do that is `asyncio.sleep(0) <https://docs.python.org/3/library/asyncio-task.html#asyncio.sleep>`_.
 
     .. code-block:: python
 

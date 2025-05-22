@@ -96,7 +96,7 @@ async def run_subprocess_with_callback(
 ) -> _T_subprocess:
     """
     Run a
-    :code:`def subprocess` function in a
+    :code:`subprocess` function in a
     `Process <https://docs.python.org/3/library/multiprocessing.html#multiprocessing.Process>`_
     and return the result.
 
@@ -109,7 +109,9 @@ async def run_subprocess_with_callback(
             The :code:`subprocess` function must be picklable.
         callback:
             The :code:`callback` function to pass to the :code:`subprocess` when it starts.
-            This function will run in the main process event loop.
+            The :code:`subprocess` may call the :code:`callback` function
+            at any time.
+            The :code:`callback` function will run in the main process event loop.
             All of the arguments to the :code:`callback` function must be picklable.
         daemon:
             Optional argument which will be passed to the Process
@@ -158,8 +160,8 @@ async def run_subprocess_with_callback(
         async def main() -> None:
             y = await run_subprocess_with_callback(my_subprocess, my_callback)
 
-            # If this main() function is cancelled while awaiting the
-            # subprocess then the subprocess will be terminated.
+            # If this main() function is cancelled while awaiting
+            # run_subprocess_with_callback then the subprocess will be terminated.
 
             print(f"my_subprocess returned {y}")
 
