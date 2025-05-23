@@ -300,62 +300,6 @@ async def run_subprocess_with_callback(
     which will be propagated and re-raised from
     :func:`run_subprocess_with_callback` in the usual way.
 
-    Process "spawn" start method and the main module
-    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-    Here is some general advice about using the multiprocessing :code:`"spawn"`
-    `start method <https://docs.python.org/3/library/multiprocessing.html#contexts-and-start-methods>`_
-    which applies to all multiprocessing :code:`"spawn"` code, not just
-    :func:`run_subprocess_with_callback`.
-
-    Advice from the Python docs:
-
-        Make sure that the main module can be safely imported by a new Python interpreter
-        without causing unintended side effects (such as starting a new process).
-
-        -- `multiprocessing: The "spawn" and "forkserver" start methods <https://docs.python.org/3/library/multiprocessing.html#the-spawn-and-forkserver-start-methods>`_
-
-    I advise you to go further than that. You should make sure your
-    :code:`main` module doesn't import any modules or do anything at all.
-
-    The :code:`"spawn"` start method will start a new Python interpreter
-    and enter the :code:`main` module of your program before calling the
-    :code:`subprocess` function.
-
-    When the :code:`"spawn"` start method enters the following :code:`main` module,
-    it will import all of the huge and expensive top-level modules
-    before calling the :code:`subprocess` function.
-
-    .. code-block:: python
-        :caption: Example of a bad main.py module for the "spawn" start method
-
-        import edifice
-        import PySide6
-        import torch
-        from components import Main
-
-        def main() -> None:
-            edifice.App(Main()).start()
-
-        if __name__ == "__main__":
-            main()
-
-
-    When the :code:`"spawn"` start method enters the following :code:`main` module,
-    it will do nothing at all before calling the :code:`subprocess` function.
-
-    This following :code:`main` runs the :code:`start()` function in another
-    module named :code:`main_start.py` which starts the application.
-
-    .. code-block:: python
-        :caption: Example of a good main.py module for the "spawn" start method
-
-        def main() -> None:
-            from main_start import start
-            start()
-
-        if __name__ == "__main__":
-            main()
     """
 
 
