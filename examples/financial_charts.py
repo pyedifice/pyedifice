@@ -253,6 +253,7 @@ def App(self, plot_colors: list[str], plot_color_background: str):
 
     fetch_executor = ed.use_memo(ThreadPoolExecutor)
 
+    fetch_tasks: set[asyncio.Task[None]]
     fetch_tasks = ed.use_memo(set)
 
     def check_fetch_data():
