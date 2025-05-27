@@ -8,7 +8,6 @@
 
 from __future__ import annotations
 
-import logging
 import typing
 
 from edifice.qt import QT_VERSION
@@ -21,12 +20,11 @@ else:
     from PySide6.QtWidgets import QLayout, QLayoutItem, QSizePolicy, QWidget
 
 
-from .base_components import Element, QtWidgetElement, _get_widget_children, _LinearView, _WidgetTree
+from edifice.base_components.base_components import QtWidgetElement, _LinearView
+from edifice.engine import Element, _get_widget_children, _WidgetTree
 
 if typing.TYPE_CHECKING:
     from edifice.engine import PropsDiff
-
-logger = logging.getLogger("Edifice")
 
 
 class FlowLayout(QLayout):
@@ -40,20 +38,20 @@ class FlowLayout(QLayout):
         while item:
             item = self.takeAt(0)
 
-    def addItem(self, arg__1):
+    def addItem(self, arg__1: QLayoutItem) -> None:
         self._item_list.append(arg__1)
 
-    def count(self):
+    def count(self) -> int:
         return len(self._item_list)
 
-    def itemAt(self, index):
+    def itemAt(self, index) -> QLayoutItem | None:
         if 0 <= index < len(self._item_list):
             return self._item_list[index]
         return None
 
     # Contradiction between the docs and the type.
     # https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QLayout.html#PySide6.QtWidgets.QLayout.takeAt
-    def takeAt(self, index): # type: ignore  # noqa: PGH003
+    def takeAt(self, index: int) -> QLayoutItem | None:  # type: ignore  # noqa: PGH003
         if 0 <= index < len(self._item_list):
             return self._item_list.pop(index)
         return None
@@ -66,9 +64,8 @@ class FlowLayout(QLayout):
     #
     # So we have to write insertWidget in terms of addWidget and removeWidget.
     #
-    # This is crazy, but maybe we won't do a lot of inserting into the middle
-    # of a large FlowLayout?
-    def insertWidget(self, index, w: QWidget):
+    # This is O(N) for inserting at the beginning of a FlowLayout.
+    def insertWidget(self, index: int, w: QWidget) -> None:
         stack = []
         while len(self._item_list) > index:
             w_ = self._item_list[-1].widget()
@@ -159,8 +156,8 @@ class FlowView(_LinearView[QWidget]):
 
         The :class:`FlowView` element is implemented in Python because Qt does not provide
         any native :code:`QLayout` which behaves this way. Currently the :class:`FlowView`
-        has worst-case O(N :sup:`2`) time complexity for inserting children
-        because of technical limitations of the Qt API.
+        has *O(N)* time complexity for inserting a child at the beginning
+        of *N* children because of technical limitations of the Qt API.
 
     .. rubric:: Props
 
@@ -169,7 +166,6 @@ class FlowView(_LinearView[QWidget]):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.underlying = None
 
     def _delete_child(self, i, old_child: QtWidgetElement):  # noqa: ARG002
         assert self.underlying_layout is not None
@@ -188,14 +184,10 @@ class FlowView(_LinearView[QWidget]):
     def _initialize(self):
         self.underlying = QWidget()
         self.underlying_layout = FlowLayout()
-
         self.underlying.setObjectName(str(id(self)))
-        if self.underlying_layout is not None:
-            self.underlying.setLayout(self.underlying_layout)
-            self.underlying_layout.setContentsMargins(0, 0, 0, 0)
-            self.underlying_layout.setSpacing(0)
-        else:
-            self.underlying.setMinimumSize(100, 100)
+        self.underlying.setLayout(self.underlying_layout)
+        self.underlying_layout.setContentsMargins(0, 0, 0, 0)
+        self.underlying_layout.setSpacing(0)
 
     def _qt_update_commands(
         self,

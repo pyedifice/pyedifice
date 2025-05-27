@@ -1246,21 +1246,18 @@ class VBoxView(_LinearView[QtWidgets.QWidget]):
     def _delete_child(self, i, old_child: QtWidgetElement):  # noqa: ARG002
         # https://doc.qt.io/qtforpython-6/PySide6/QtCore/QObject.html#detailed-description
         # “The parent takes ownership of the object; i.e., it will automatically delete its children in its destructor.”
-        if (child_node := self.underlying_layout.takeAt(i)) is None:
-            logger.warning(f"_delete_child takeAt failed {i} {self}")  # noqa: G004
-        else:  # noqa: PLR5501
-            if (w := child_node.widget()) is None:
-                logger.warning(f"_delete_child widget is None {i} {self}")  # noqa: G004
-            else:
-                w.deleteLater()
+        assert self.underlying_layout is not None
+        child_node = self.underlying_layout.takeAt(i)
+        assert child_node is not None
+        child_node.widget().deleteLater()
 
     def _soft_delete_child(self, i, old_child: QtWidgetElement):  # noqa: ARG002
-        if self.underlying_layout.takeAt(i) is None:
-            logger.warning(f"_soft_delete_child takeAt failed {i} {self}")  # noqa: G004
+        assert self.underlying_layout is not None
+        child_node = self.underlying_layout.takeAt(i)
+        assert child_node is not None
 
     def _add_child(self, i, child_component: QtWidgets.QWidget):
-        if self.underlying_layout is not None:
-            self.underlying_layout.insertWidget(i, child_component)
+        self.underlying_layout.insertWidget(i, child_component)
 
     def _initialize(self):
         self.underlying = QtWidgets.QWidget()
@@ -1333,21 +1330,18 @@ class HBoxView(_LinearView[QtWidgets.QWidget]):
     def _delete_child(self, i, old_child: QtWidgetElement):  # noqa: ARG002
         # https://doc.qt.io/qtforpython-6/PySide6/QtCore/QObject.html#detailed-description
         # “The parent takes ownership of the object; i.e., it will automatically delete its children in its destructor.”
-        if (child_node := self.underlying_layout.takeAt(i)) is None:
-            logger.warning(f"_delete_child takeAt failed {i} {self}")  # noqa: G004
-        else:  # noqa: PLR5501
-            if (w := child_node.widget()) is None:
-                logger.warning(f"_delete_child widget is None {i} {self}")  # noqa: G004
-            else:
-                w.deleteLater()
+        assert self.underlying_layout is not None
+        child_node = self.underlying_layout.takeAt(i)
+        assert child_node is not None
+        child_node.widget().deleteLater()
 
     def _soft_delete_child(self, i, old_child: QtWidgetElement):  # noqa: ARG002
-        if self.underlying_layout.takeAt(i) is None:
-            logger.warning(f"_soft_delete_child takeAt failed {i} {self}")  # noqa: G004
+        assert self.underlying_layout is not None
+        child_node = self.underlying_layout.takeAt(i)
+        assert child_node is not None
 
     def _add_child(self, i, child_component: QtWidgets.QWidget):
-        if self.underlying_layout is not None:
-            self.underlying_layout.insertWidget(i, child_component)
+        self.underlying_layout.insertWidget(i, child_component)
 
     def _initialize(self):
         self.underlying = QtWidgets.QWidget()
@@ -2012,17 +2006,15 @@ class VScrollView(_LinearView[QtWidgets.QScrollArea]):
         super().__init__(**kwargs)
 
     def _delete_child(self, i, old_child: QtWidgetElement):  # noqa: ARG002
-        if (child_node := self.underlying_layout.takeAt(i)) is None:
-            logger.warning(f"_delete_child takeAt failed {i} {self}")  # noqa: G004
-        else:  # noqa: PLR5501
-            if (w := child_node.widget()) is None:
-                logger.warning(f"_delete_child widget is None {i} {self}")  # noqa: G004
-            else:
-                w.deleteLater()
+        assert self.underlying_layout is not None
+        child_node = self.underlying_layout.takeAt(i)
+        assert child_node is not None
+        child_node.widget().deleteLater()
 
     def _soft_delete_child(self, i, old_child: QtWidgetElement):  # noqa: ARG002
-        if self.underlying_layout.takeAt(i) is None:
-            logger.warning(f"_soft_delete_child takeAt failed {i} {self}")  # noqa: G004
+        assert self.underlying_layout is not None
+        child_node = self.underlying_layout.takeAt(i)
+        assert child_node is not None
 
     def _add_child(self, i, child_component):
         self.underlying_layout.insertWidget(i, child_component)
@@ -2079,17 +2071,15 @@ class HScrollView(_LinearView[QtWidgets.QScrollArea]):
         super().__init__(**kwargs)
 
     def _delete_child(self, i, old_child: QtWidgetElement):  # noqa: ARG002
-        if (child_node := self.underlying_layout.takeAt(i)) is None:
-            logger.warning(f"_delete_child takeAt failed {i} {self}")  # noqa: G004
-        else:  # noqa: PLR5501
-            if (w := child_node.widget()) is None:
-                logger.warning(f"_delete_child widget is None {i} {self}")  # noqa: G004
-            else:
-                w.deleteLater()
+        assert self.underlying_layout is not None
+        child_node = self.underlying_layout.takeAt(i)
+        assert child_node is not None
+        child_node.widget().deleteLater()
 
     def _soft_delete_child(self, i, old_child: QtWidgetElement):  # noqa: ARG002
-        if self.underlying_layout.takeAt(i) is None:
-            logger.warning(f"_soft_delete_child takeAt failed {i} {self}")  # noqa: G004
+        assert self.underlying_layout is not None
+        child_node = self.underlying_layout.takeAt(i)
+        assert child_node is not None
 
     def _add_child(self, i, child_component):
         self.underlying_layout.insertWidget(i, child_component)
@@ -2746,21 +2736,18 @@ class GroupBoxView(_LinearView[QtWidgets.QGroupBox]):
     def _delete_child(self, i, old_child: QtWidgetElement):  # noqa: ARG002
         # https://doc.qt.io/qtforpython-6/PySide6/QtCore/QObject.html#detailed-description
         # “The parent takes ownership of the object; i.e., it will automatically delete its children in its destructor.”
-        if (child_node := self.underlying_layout.takeAt(i)) is None:
-            logger.warning(f"_delete_child takeAt failed {i} {self}")  # noqa: G004
-        else:  # noqa: PLR5501
-            if (w := child_node.widget()) is None:
-                logger.warning(f"_delete_child widget is None {i} {self}")  # noqa: G004
-            else:
-                w.deleteLater()
+        assert self.underlying_layout is not None
+        child_node = self.underlying_layout.takeAt(i)
+        assert child_node is not None
+        child_node.widget().deleteLater()
 
     def _soft_delete_child(self, i, old_child: QtWidgetElement):  # noqa: ARG002
-        if self.underlying_layout.takeAt(i) is None:
-            logger.warning(f"_soft_delete_child takeAt failed {i} {self}")  # noqa: G004
+        assert self.underlying_layout is not None
+        child_node = self.underlying_layout.takeAt(i)
+        assert child_node is not None
 
     def _add_child(self, i, child_component: QtWidgets.QWidget):
-        if self.underlying_layout is not None:
-            self.underlying_layout.insertWidget(i, child_component)
+        self.underlying_layout.insertWidget(i, child_component)
 
     def _initialize(self):
         self.underlying = QtWidgets.QGroupBox()
@@ -2864,21 +2851,18 @@ class StackedView(_LinearView[QtWidgets.QWidget]):
     def _delete_child(self, i, old_child: QtWidgetElement):  # noqa: ARG002
         # https://doc.qt.io/qtforpython-6/PySide6/QtCore/QObject.html#detailed-description
         # “The parent takes ownership of the object; i.e., it will automatically delete its children in its destructor.”
-        if (child_node := self.underlying_layout.takeAt(i)) is None:
-            logger.warning(f"_delete_child takeAt failed {i} {self}")  # noqa: G004
-        else:  # noqa: PLR5501
-            if (w := child_node.widget()) is None:
-                logger.warning(f"_delete_child widget is None {i} {self}")  # noqa: G004
-            else:
-                w.deleteLater()
+        assert self.underlying_layout is not None
+        child_node = self.underlying_layout.takeAt(i)
+        assert child_node is not None
+        child_node.widget().deleteLater()
 
     def _soft_delete_child(self, i, old_child: QtWidgetElement):  # noqa: ARG002
-        if self.underlying_layout.takeAt(i) is None:
-            logger.warning(f"_soft_delete_child takeAt failed {i} {self}")  # noqa: G004
+        assert self.underlying_layout is not None
+        child_node = self.underlying_layout.takeAt(i)
+        assert child_node is not None
 
     def _add_child(self, i, child_component: QtWidgets.QWidget):
-        if self.underlying_layout is not None:
-            self.underlying_layout.insertWidget(i, child_component)
+        self.underlying_layout.insertWidget(i, child_component)
 
     def _initialize(self):
         self.underlying = QtWidgets.QWidget()
