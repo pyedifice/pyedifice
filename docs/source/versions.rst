@@ -7,6 +7,12 @@
 Release Notes
 =============
 
+v4.0.1
+------
+Released: 2025-05-27
+
+- Bugfix: :class:`FlowView` children re-ordering layout update bug.
+
 v4.0.0
 ------
 Released: 2025-05-14
