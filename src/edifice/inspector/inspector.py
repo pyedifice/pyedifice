@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import importlib.resources
 import inspect
 import typing as tp
 
@@ -38,12 +39,25 @@ def Collapsible(
     root_style: dict[str, tp.Any] = {"margin-left": 5}
     if root == current_selection:
         root_style["background-color"] = SELECTION_COLOR
-    with ed.HBoxView(style={"align": "left"}):
-        ed.Icon(
-            "caret-right",
-            rotation=0 if collapsed else 90,
-            on_click=lambda _ev: toggle(),
-        )
+    with ed.HBoxView(style={"align": "left", "padding-left": 2}):
+        if collapsed:
+            with ed.VBoxView(
+                style={"padding-right": 3, "padding-top": 4, "padding-bottom": 4},
+                on_click=lambda _ev: toggle(),
+            ):
+                ed.ImageSvg(
+                    src=str(importlib.resources.files("edifice") / "icons/font-awesome/solid/caret-right.svg"),
+                    style={"width": 10, "height": 17},
+                )
+        else:
+            with ed.VBoxView(
+                style={"padding-right": 2},
+                on_click=lambda _ev: toggle(),
+            ):
+                ed.ImageSvg(
+                    src=str(importlib.resources.files("edifice") / "icons/font-awesome/solid/caret-down.svg"),
+                    style={"width": 11, "height": 25},
+                )
         ed.Label(root.__class__.__name__, style=root_style, on_click=lambda _ev: on_click())
 
 
