@@ -262,7 +262,7 @@ async def run_subprocess_with_callback(
                     functools.partial(my_subprocess, msg_queue),
                     local_callback,
                 ),
-                send_messages())
+                send_messages(),
             )
 
             print(f"my_subprocess returned {y}")
