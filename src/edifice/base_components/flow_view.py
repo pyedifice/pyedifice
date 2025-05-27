@@ -21,7 +21,7 @@ else:
 
 
 from edifice.base_components.base_components import QtWidgetElement, _LinearView
-from edifice.engine import Element, _get_widget_children, _WidgetTree
+from edifice.engine import CommandType, Element, _get_widget_children, _WidgetTree
 
 if typing.TYPE_CHECKING:
     from edifice.engine import PropsDiff
@@ -198,7 +198,20 @@ class FlowView(_LinearView[QWidget]):
             self._initialize()
         assert self.underlying is not None
         children = _get_widget_children(widget_trees, self)
-        commands = self._recompute_children(children)
+        commands: list[CommandType] = []
+        child_commands = self._recompute_children(children)
+        commands.extend(child_commands)
+        if len(child_commands) > 0:
+            # If we have children commands then we update the underlying layout.
+            # This is to mitigate a bug in which the FlowLayout does not update
+            # sometimes when children are re-ordered.
+            #
+            # https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QLayout.html#PySide6.QtWidgets.QLayout.update
+            # https://doc.qt.io/qt-6/qlayout.html#update
+            #
+            # “You should generally not need to call this because it is automatically called at
+            # the most appropriate times.”
+            commands.append(CommandType(self.underlying_layout.update))
         commands.extend(
             super()._qt_update_commands_super(widget_trees, diff_props, self.underlying, self.underlying_layout),
         )
