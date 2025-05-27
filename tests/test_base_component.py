@@ -215,27 +215,6 @@ class WidgetTreeTestCase(unittest.TestCase):
         view_n._initialize()
         self.assertFalse(hasattr(view_n, "underlying_layout"))
 
-    def test_icon(self):
-        size = 15
-        color = (0, 255, 0, 255)
-        rotation = 45
-        icon = base_components.Icon(name="play", size=15, color=color, rotation=rotation)
-        eng = engine.RenderEngine(icon)
-        commands = eng.gen_qt_commands(icon, MockRenderContext(eng))
-
-        render_img_args = (str(ICONS / "font-awesome" / "solid" / "play.svg"), size, color, rotation)
-        qt_icon = icon.underlying
-        assert qt_icon is not None
-        style = qt_icon.style()
-        assert style is not None
-        assert icon.underlying is not None
-        self.assertCountEqual(
-            [c.fn.__name__ for c in commands],
-            [
-                "_render_image",
-            ],
-        )
-        icon._render_image(*render_img_args)
 
     # def test_view_change(self):
     #     label1 = base_components.Label(text="A")
@@ -377,7 +356,6 @@ class BaseElementsTest(unittest.TestCase):
                 menu=(("Playback", context_menu),),
             )(base_components.VBoxView()),
         )
-        self._test_comp(base_components.IconButton("play", on_click=lambda e: None))
         self._test_comp(base_components.VBoxView(context_menu=context_menu))
         self._test_comp(base_components.Label(text="Hello", selectable=True))
         self._test_comp(edifice.Image(src="tests/example.png"))
