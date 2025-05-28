@@ -1,5 +1,18 @@
 """
-Display a matrix of most of the available widgets.
+Display a matrix of most of the available widgets with the Edifice palette.
+
+Run with default theme.
+
+    python examples/style_matrix.py
+
+Run with light theme.
+
+    GTK_THEME=Adwaita:light python examples/style_matrix.py
+
+Run with dark theme.
+
+    GTK_THEME=Adwaita:dark python examples/style_matrix.py
+
 """
 from __future__ import annotations
 
