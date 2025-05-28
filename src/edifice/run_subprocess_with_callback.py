@@ -197,18 +197,18 @@ async def run_subprocess_with_callback(
     Pickling the subprocess
     ^^^^^^^^^^^^^^^^^^^^^^^
 
-    .. note::
+    Because “only picklable objects can be executed” by a
+    `Process <https://docs.python.org/3/library/multiprocessing.html#multiprocessing.Process>`_.
+    we cannot pass a local function with local variable bindings
+    as the :code:`subprocess`. The best workaround is to define at the module
+    top-level a :code:`subprocess` function which takes all its parameters as
+    arguments, and then use
+    `functools.partial <https://docs.python.org/3/library/functools.html#functools.partial>`_
+    to bind local values to the :code:`subprocess` parameters.
+    See below `Example of Queue messaging.`
 
-        Because “only picklable objects can be executed” by a
-        `Process <https://docs.python.org/3/library/multiprocessing.html#multiprocessing.Process>`_.
-        we cannot pass a local function as the :code:`subprocess`. The best
-        workaround is to define at the module top-level a :code:`subprocess`
-        function which takes all its parameters as arguments, and then use
-        `functools.partial <https://docs.python.org/3/library/functools.html#functools.partial>`_
-        to bind local values to the :code:`subprocess` parameters.
-
-        The :code:`callback` does not have this problem; we can pass a local
-        function as the :code:`callback`.
+    The :code:`callback` does not have this problem; we can pass a local
+    function as the :code:`callback`.
 
     Messaging to the subprocess
     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -299,6 +299,16 @@ async def run_subprocess_with_callback(
     `CancelledError <https://docs.python.org/3/library/asyncio-exceptions.html#asyncio.CancelledError>`_
     which will be propagated and re-raised from
     :func:`run_subprocess_with_callback` in the usual way.
+
+    PyInstaller
+    ^^^^^^^^^^^
+
+    If you build a distribution with `PyInstaller <https://pyinstaller.org/>`_
+    then you should call
+    `multiprocessing.freeze_support() <https://docs.python.org/3/library/multiprocessing.html#multiprocessing.freeze_support>`_
+    to divert the spawn Process
+    `before the __main__ imports <https://pyinstaller.org/en/stable/common-issues-and-pitfalls.html#when-to-call-multiprocessing-freeze-support>`_
+    so that the spawn Process starts up faster.
 
     """
 
