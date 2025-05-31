@@ -16,7 +16,9 @@ Edifice uses [PySide6](https://doc.qt.io/qtforpython-6/)
 or [PyQt6](https://www.riverbankcomputing.com/static/Docs/PyQt6/introduction.html)
 as a backend. Edifice is like
 [React](https://react.dev/), but with
-Python instead of JavaScript, and [Qt Widgets](https://doc.qt.io/qt-6/qtwidgets-index.html) instead of the HTML DOM.
+Python instead of JavaScript, and
+[Qt Widgets](https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/index.html)
+instead of the HTML DOM.
 
 If you have React experience, you’ll find Edifice easy to learn.
 Edifice has function Components, Props, and Hooks just like React.
@@ -84,7 +86,7 @@ UI is much more straightforward.
 Edifice makes it easy to dynamically create, mutate, shuffle, and destroy sections of the UI.
 Qt Quick assumes a much more static interface.
 
-Qt Quick is like DOM + HTML + JavaScript, whereas Edifice is like React.
+Qt Quick is like DOM + HTML + JavaScript. Edifice is like React.
 QML and HTML are both declarative UI languages but
 they require imperative logic in another language for dynamism.
 Edifice and React allow fully dynamic applications to be specified
