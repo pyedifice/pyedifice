@@ -4,6 +4,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import logging
 import typing as tp
 from collections import OrderedDict
@@ -21,6 +22,80 @@ import edifice as ed
 
 logger = logging.getLogger("Edifice")
 logger.setLevel(logging.INFO)
+
+def use_clocktick() -> int:
+    tick, tick_set = ed.use_state(0)
+
+    async def increment():
+        while True:
+            await asyncio.sleep(1)
+            tick_set(lambda t: t + 1)
+
+    ed.use_async(increment)
+
+    return tick
+
+def use_drag(
+    dragSource: ed.Reference,
+    dropAction: QtCore.Qt.DropAction,
+    mimeData_properties: dict[str, tp.Any] | None = None,
+) -> tuple[
+    QtGui.QDrag | None,
+    tp.Callable[[QtGui.QMouseEvent], None],
+    tp.Callable[[QtGui.QMouseEvent], None],
+    tp.Callable[[QtGui.QMouseEvent], None],
+]:
+    drag_pos_start, drag_pos_start_set = ed.use_state(cast(QtCore.QPointF | None, None))
+    drag, drag_set = ed.use_state(cast(QtGui.QDrag | None, None))
+
+    def on_mouse_down(event: QtGui.QMouseEvent) -> None:
+        if QtCore.Qt.MouseButton.LeftButton in event.buttons():
+            drag_pos_start_set(event.position())
+            # drag_set(None)
+    def on_mouse_up(event: QtGui.QMouseEvent) -> None:
+        if QtCore.Qt.MouseButton.LeftButton in event.button():
+            drag_pos_start_set(None)
+            if drag is not None:
+                drag.cancel()
+                drag_set(None)
+    async def mouse_drag_trigger_async(underlying: QtWidgets.QWidget) -> None:
+        # underlying: QtWidgets.QWidget
+        # # We want to crash if dragSource().underlying is None. Should be impossible.
+        # underlying = dragSource().underlying # type: ignore  # noqa: PGH003
+        # if drag is None and QtCore.Qt.MouseButton.LeftButton in event.buttons():
+        #    if drag_pos_start is not None and (drag_pos_start - event.position()).manhattanLength() > 5.0:
+        newdrag = QtGui.QDrag(underlying)
+        mimeData = QtCore.QMimeData()
+        if mimeData_properties is not None:
+            for key, value in mimeData_properties.items():
+                mimeData.setProperty(key, value)
+        newdrag.setMimeData(mimeData)
+        # newdropaction = await asyncio.to_thread(newdrag.exec, dropAction) # crash entire computer
+        drag_set(newdrag)
+        await asyncio.sleep(0.0)
+        # https://doc.qt.io/qtforpython-6/overviews/qtgui-dnd.html
+        #
+        # > “Note that the exec() function does not block the main event loop.”
+        #
+        # This is a lie, the exec() function blocks the main event loop.
+        newdropaction = newdrag.exec(dropAction)
+
+    mouse_drag_trigger, _ = ed.use_async_call(mouse_drag_trigger_async)
+    def on_mouse_move(event: QtGui.QMouseEvent) -> None:
+        print("move")
+        underlying: QtWidgets.QWidget
+        # We want to crash if dragSource().underlying is None. Should be impossible.
+        underlying = dragSource().underlying # type: ignore  # noqa: PGH003
+        if drag is None and QtCore.Qt.MouseButton.LeftButton in event.buttons():
+            if drag_pos_start is not None and (drag_pos_start - event.position()).manhattanLength() > 5.0:
+                drag_pos_start_set(None)
+                mouse_drag_trigger(underlying)
+
+    # def on_mouse_leave(event: QtGui.QMouseEvent) -> None:
+    #         drag_pos_start_set(None)
+    return drag, on_mouse_down, on_mouse_up, on_mouse_move
+
+
 
 @dataclass(frozen=True)
 class Todo:
@@ -40,6 +115,10 @@ def TodoItem(
     set_text: tp.Callable[[int, str], None],
 ):
     hover1, on_mouse_enter1, on_mouse_leave1 = ed.use_hover()
+
+    itemref: ed.Reference[ed.HBoxView] = ed.use_ref()
+
+    drag, on_mouse_down, on_mouse_up, on_mouse_move = use_drag(itemref, QtCore.Qt.DropAction.MoveAction, mimeData_properties={"key": key})
     with ed.TableGridRow():
         with ed.VBoxView(
             on_mouse_enter=on_mouse_enter1,
@@ -57,12 +136,17 @@ def TodoItem(
         with ed.HBoxView(
             on_mouse_enter=on_mouse_enter1,
             on_mouse_leave=on_mouse_leave1,
+            on_mouse_down=on_mouse_down,
+            on_mouse_up=on_mouse_up,
+            on_mouse_move=on_mouse_move,
             style={
                 "padding-right": 10,
                 "min-height": 30,
             }
             | ({"background-color": "rgba(0,0,0,0.2)"} if hover1 else {}),
-        ):
+        ).register_ref(itemref):
+            tick = use_clocktick()
+            ed.Label(text=str(tick))
             if todo.editing:
                 ed.TextInput(
                     text=todo.text,
@@ -100,6 +184,8 @@ def TodoItem(
                         text="×",  # noqa: RUF001
                         style={"font-size": 30},
                     )
+            if drag is not None:
+                ed.Label(text="DRAG")
 
 
 @ed.component
