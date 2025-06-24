@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pyedifice"
-version = "4.0.1"
+version = "4.1.0"
 description = "Declarative GUI framework for Python and Qt"
 authors = [
     {name = "David Ding"},
