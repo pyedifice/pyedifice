@@ -11,6 +11,7 @@ from collections.abc import Callable, Coroutine, Iterable
 from copy import copy
 from dataclasses import dataclass
 from textwrap import dedent
+from types import MethodType
 
 from typing_extensions import Self
 
@@ -876,6 +877,13 @@ class QtWidgetElement(Element, tp.Generic[_T_widget]):
             Callback for `resize events <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.resizeEvent>`_.
             Takes a `QResizeEvent <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QResizeEvent.html>`_
             as argument.
+        on_focus:
+            Callback for
+            `focusOutEvent <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.focusOutEvent>`_ and
+            `focusInEvent <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.focusInEvent>`_.
+            Takes a
+            `QFocusEvent <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QFocusEvent.html>`_
+            as argument.
 
     """
 
@@ -905,6 +913,7 @@ class QtWidgetElement(Element, tp.Generic[_T_widget]):
         ]
         | None = None,
         on_resize: tp.Callable[[QtGui.QResizeEvent], None] | None = None,
+        on_focus: tp.Callable[[QtGui.QFocusEvent], None] | None = None,
     ):
         super().__init__()
         self._register_props(
@@ -928,6 +937,7 @@ class QtWidgetElement(Element, tp.Generic[_T_widget]):
                 "on_mouse_wheel": on_mouse_wheel,
                 "on_drop": on_drop,
                 "on_resize": on_resize,
+                "on_focus": on_focus,
             },
         )
         self._top = 0
@@ -948,6 +958,7 @@ class QtWidgetElement(Element, tp.Generic[_T_widget]):
             | None
         ) = None
         self._on_resize: tp.Callable[[QtGui.QResizeEvent], None] | None = None
+        self._on_focus: tp.Callable[[QtGui.QFocusEvent], None] | None = None
         self._default_mouse_press_event = None
         self._default_mouse_release_event = None
         self._default_mouse_move_event = None
@@ -1161,6 +1172,29 @@ class QtWidgetElement(Element, tp.Generic[_T_widget]):
         else:
             self._on_resize = None
             underlying.resizeEvent = self._default_resize_event
+
+    def _focusInEvent(self, event: QtGui.QFocusEvent):
+        if self._on_focus is not None:
+            self._on_focus(event)
+            type(self.underlying).focusInEvent(self.underlying, event)  # type: ignore  # noqa: PGH003
+
+    def _focusOutEvent(self, event: QtGui.QFocusEvent):
+        if self._on_focus is not None:
+            self._on_focus(event)
+            type(self.underlying).focusOutEvent(self.underlying, event)  # type: ignore  # noqa: PGH003
+
+    def _set_on_focus(self, underlying: QtWidgets.QWidget, on_focus: tp.Callable[[QtGui.QFocusEvent], None] | None):
+        # https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.focusInEvent
+        # https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.focusOutEvent
+
+        if on_focus is not None:
+            self._on_focus = on_focus
+            underlying.focusInEvent = self._focusInEvent
+            underlying.focusOutEvent = self._focusOutEvent
+        else:
+            self._on_focus = None
+            underlying.focusInEvent = MethodType(type(underlying).focusInEvent, underlying)
+            underlying.focusOutEvent = MethodType(type(underlying).focusOutEvent, underlying)
 
     def _set_blur(self, underlying: QtWidgets.QWidget, radius: float | None):
         # https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGraphicsBlurEffect.html
@@ -1523,6 +1557,9 @@ class QtWidgetElement(Element, tp.Generic[_T_widget]):
         match diff_props.get("on_resize"):
             case _, propnew:
                 commands.append(CommandType(self._set_on_resize, underlying, propnew))
+        match diff_props.get("on_focus"):
+            case _, propnew:
+                commands.append(CommandType(self._set_on_focus, underlying, propnew))
         match diff_props.get("tool_tip"):
             case _, str() as propnew:
                 commands.append(CommandType(underlying.setToolTip, propnew))

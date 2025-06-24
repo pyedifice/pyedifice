@@ -38,6 +38,9 @@ def Main(self):
 
     edifice.use_effect(setup_print, x)
 
+    handle_focus, handle_focus_set = edifice.use_state(False)
+    focused, focused_set = edifice.use_state(False)
+
     with edifice.Window():
         with edifice.VBoxView():
             with VBoxView(style={"padding": 30}):
@@ -81,6 +84,17 @@ def Main(self):
                         a focus mnemonic key for another widget.
                         </p>
                         """,
+                )
+            with edifice.HBoxView(style={"padding": 30}):
+                edifice.CheckBox(
+                    checked=handle_focus,
+                    on_change=lambda value: handle_focus_set(value),
+                    text="Handle Focus",
+                )
+                edifice.SpinInput(
+                    value=1,
+                    style={"background-color": "red"} if focused else {},
+                    on_focus=(lambda event: focused_set(event.gotFocus())) if handle_focus else None,
                 )
 
 

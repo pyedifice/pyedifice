@@ -7,6 +7,8 @@
 Release Notes
 =============
 
+- New :class:`QtWidgetElement` prop :code:`on_focus`.
+
 v4.0.1
 ------
 Released: 2025-05-27
