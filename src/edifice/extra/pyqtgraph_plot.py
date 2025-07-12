@@ -47,7 +47,7 @@ class PyQtPlot(QtWidgetElement[pg.PlotWidget]): # type: ignore  # noqa: PGH003
 
         import numpy as np
         from edifice import View, component
-        from edifice.extra import PyQtPlot
+        from edifice.extra.pyqtgraph_plot import PyQtPlot
         import pyqtgraph as pg
 
         @component
