@@ -88,9 +88,7 @@ def Main(self):
                                     on_click=lambda _ev, idx=i: handle_selected_change(idx),
                                     style={"background-color": "blue", "color": "white"} if selected == i else {},
                                 )
-                    with ed.VBoxView(
-                        style={"align": "top"},
-                    ):
+                    with ed.VBoxView(style={"align": "top"}):
                         with ed.TableGridView(
                             size_policy=QSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed),
                         ):

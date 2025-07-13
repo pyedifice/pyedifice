@@ -49,9 +49,10 @@ def Main(self):
                 )
                 ed.Button(
                     title="Book",
-                    enabled=(not twoway and t1_date is not None)
-                    or (twoway and t1_date is not None and t2_date is not None and t1_date <= t2_date),
                     on_click=lambda _: booked_set(True),
+                    enabled=t1_date is not None and t2_date is not None and t1_date <= t2_date
+                    if twoway
+                    else t1_date is not None,
                 )
             elif not twoway:
                 assert t1_date is not None

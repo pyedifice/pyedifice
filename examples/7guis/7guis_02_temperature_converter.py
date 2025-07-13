@@ -28,9 +28,9 @@ def Main(self):
 
     with ed.Window(title="TempConv"):
         with ed.HBoxView(style={"padding": 10}):
-            ed.TextInput(text=str(tc), on_change=tc_changed)
+            ed.TextInput(text=tc, on_change=tc_changed)
             ed.Label(text="Celsius = ", style={"margin-left": 10})
-            ed.TextInput(text=str(tf), on_change=tf_changed, style={"margin-left": 10})
+            ed.TextInput(text=tf, on_change=tf_changed, style={"margin-left": 10})
             ed.Label(text="Fahrenheit", style={"margin-left": 10})
 
 

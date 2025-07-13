@@ -60,13 +60,14 @@ def Main(self):
     # Fold the circles with their adjustments up to the current history index.
     folded_circles: OrderedDict[int, Circle] = OrderedDict()
     for action in history[:history_index]:
-        if isinstance(action, Circle):
-            folded_circles[action.circle_index] = action
-        elif isinstance(action, ActionAdjust):
-            folded_circles[action.circle_index] = replace(
-                folded_circles[action.circle_index],
-                radius=action.radius_new,
-            )
+        match action:
+            case Circle(circle_index=circle_index):
+                folded_circles[circle_index] = action
+            case ActionAdjust(circle_index=circle_index, radius_new=radius_new):
+                folded_circles[circle_index] = replace(
+                    folded_circles[circle_index],
+                    radius=radius_new,
+                )
 
     def handle_click(event: QMouseEvent):
         # First check if we have right-clicked on an existing circle

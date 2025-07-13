@@ -293,6 +293,90 @@
               type = "app";
               program = "${script}/bin/edifice-example";
             };
+          example-7guis-01-counter =
+            let
+              script = pkgs.writeShellApplication {
+                name = "edifice-example";
+                runtimeInputs = [ virtualenv-all ];
+                text = "python ${inputs.self.outPath}/examples/7guis/7guis_01_counter.py";
+              };
+            in
+            {
+              type = "app";
+              program = "${script}/bin/edifice-example";
+            };
+          example-7guis-02-temperature-converter =
+            let
+              script = pkgs.writeShellApplication {
+                name = "edifice-example";
+                runtimeInputs = [ virtualenv-all ];
+                text = "python ${inputs.self.outPath}/examples/7guis/7guis_02_temperature_converter.py";
+              };
+            in
+            {
+              type = "app";
+              program = "${script}/bin/edifice-example";
+            };
+          example-7guis-03-flight-booker =
+            let
+              script = pkgs.writeShellApplication {
+                name = "edifice-example";
+                runtimeInputs = [ virtualenv-all ];
+                text = "python ${inputs.self.outPath}/examples/7guis/7guis_03_flight_booker.py";
+              };
+            in
+            {
+              type = "app";
+              program = "${script}/bin/edifice-example";
+            };
+          example-7guis-04-timer =
+            let
+              script = pkgs.writeShellApplication {
+                name = "edifice-example";
+                runtimeInputs = [ virtualenv-all ];
+                text = "python ${inputs.self.outPath}/examples/7guis/7guis_04_timer.py";
+              };
+            in
+            {
+              type = "app";
+              program = "${script}/bin/edifice-example";
+            };
+          example-7guis-05-crud =
+            let
+              script = pkgs.writeShellApplication {
+                name = "edifice-example";
+                runtimeInputs = [ virtualenv-all ];
+                text = "python ${inputs.self.outPath}/examples/7guis/7guis_05_crud.py";
+              };
+            in
+            {
+              type = "app";
+              program = "${script}/bin/edifice-example";
+            };
+          example-7guis-06-circle-drawer =
+            let
+              script = pkgs.writeShellApplication {
+                name = "edifice-example";
+                runtimeInputs = [ virtualenv-all ];
+                text = "python ${inputs.self.outPath}/examples/7guis/7guis_06_circle_drawer.py";
+              };
+            in
+            {
+              type = "app";
+              program = "${script}/bin/edifice-example";
+            };
+          example-7guis-07-cells =
+            let
+              script = pkgs.writeShellApplication {
+                name = "edifice-example";
+                runtimeInputs = [ virtualenv-all ];
+                text = "python ${inputs.self.outPath}/examples/7guis/7guis_07_cells.py";
+              };
+            in
+            {
+              type = "app";
+              program = "${script}/bin/edifice-example";
+            };
         };
     };
 }
