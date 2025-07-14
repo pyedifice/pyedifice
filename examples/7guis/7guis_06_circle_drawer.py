@@ -72,7 +72,7 @@ def Main(self):
     def handle_click(event: QMouseEvent):
         # First check if we have right-clicked on an existing circle
         if event.button() == Qt.MouseButton.RightButton:
-            for i, circle in folded_circles.items():
+            for i, circle in reversed(folded_circles.items()):
                 x_diff = event.position().x() - circle.x
                 y_diff = height - event.position().y() - circle.y
                 if (x_diff**2 + y_diff**2) <= circle.radius**2:
