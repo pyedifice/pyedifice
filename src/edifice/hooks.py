@@ -291,6 +291,50 @@ def use_effect(
                 return cleanup_handler
 
             use_effect(setup_handler, handler)
+
+    You can use :code:`use_effect` to attach :code:`QWidget` event handlers that
+    are not supported by Edifice. For example, Edifice supports the
+    `resizeEvent <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.resizeEvent>`_
+    with the :code:`on_resize` **prop** for all
+    :doc:`Base Elements <../base_components>`, but if it didn’t, then
+    you could assign a custom `on_resize_handler` function this way.
+
+    .. code-block:: python
+        :caption: use_effect to attach and remove a QWidget event handler
+
+        @component
+        def MyComponent(self):
+
+            ref_textinput: Reference[TextInput] = use_ref()
+            textinput_size, textinput_size_set = use_state((0, 0))
+
+            def setup_resize_handler() -> Callable[[], None] | None:
+                textinput = ref_textinput()
+
+                if textinput is None or textinput.underlying is None:
+                    return
+
+                def on_resize_handler(event: QtGui.QResizeEvent):
+                    textinput_size_set((event.size().width(), event.size().height()))
+
+                # The resizeEvent method “can be reimplemented in a subclass to
+                # receive widget resize events.” Or we can just assign to the
+                # method because this is Python.
+                textinput.underlying.resizeEvent = on_resize_handler
+
+                def cleanup_resize_handler():
+                    # Restore the original resizeEvent method.
+                    textinput.underlying.resizeEvent = types.MethodType(
+                        type(textinput.underlying).resizeEvent, textinput.underlying
+                    )
+
+                return cleanup_resize_handler
+
+            use_effect(setup_resize_handler)
+
+            with VBoxView():
+                TextInput(text="Type here").register_ref(ref_textinput)
+                Label(text=f"TextInput size: {ref_textinput().size()}")
     """
     context = get_render_context_maybe()
     if context is None or context.current_element is None:
