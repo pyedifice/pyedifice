@@ -36,6 +36,8 @@ _T_underlying = tp.TypeVar("_T_underlying", bound=QtWidgets.QWidget)
 
 RGBAType = tuple[int, int, int, int]
 
+_T_boxlayout = tp.TypeVar("_T_boxlayout", bound=QtWidgets.QBoxLayout)
+
 
 @functools.lru_cache(30)
 def _get_image(path) -> QtGui.QPixmap:
@@ -76,7 +78,6 @@ def _get_svg_image(icon_path, size: int, rotation=0, color=(0, 0, 0, 255)) -> Qt
         new_w, new_h = pixmap.width(), pixmap.height()
         pixmap = pixmap.copy((new_w - w) // 2, (new_h - h) // 2, w, h)
     return pixmap
-
 
 
 @deprecated("Instead use ImageSvg")
@@ -1981,7 +1982,101 @@ class WindowPopView(VBoxView):
         return commands
 
 
-class VScrollView(_LinearView[QtWidgets.QScrollArea]):
+class _ScrollView(_LinearView[QtWidgets.QScrollArea], tp.Generic[_T_boxlayout]):
+    """Scrollable view parameterized by layout."""
+
+    def __init__(
+        self,
+        on_scroll_vertical: tp.Callable[[int], None] | None = None,
+        on_scroll_horizontal: tp.Callable[[int], None] | None = None,
+        on_range_vertical: tp.Callable[[int, int], None] | None = None,
+        on_range_horizontal: tp.Callable[[int, int], None] | None = None,
+        **kwargs,
+    ):
+        super().__init__(**kwargs)
+        self._register_props(
+            {
+                "on_scroll_vertical": on_scroll_vertical,
+                "on_scroll_horizontal": on_scroll_horizontal,
+                "on_range_vertical": on_range_vertical,
+                "on_range_horizontal": on_range_horizontal,
+            },
+        )
+        self.underlying_layout: _T_boxlayout | None = None
+
+    def _delete_child(self, i, old_child: QtWidgetElement):  # noqa: ARG002
+        assert self.underlying_layout is not None
+        child_node = self.underlying_layout.takeAt(i)
+        assert child_node is not None
+        child_node.widget().deleteLater()
+
+    def _soft_delete_child(self, i, old_child: QtWidgetElement):  # noqa: ARG002
+        assert self.underlying_layout is not None
+        child_node = self.underlying_layout.takeAt(i)
+        assert child_node is not None
+
+    def _add_child(self, i, child_component):
+        assert self.underlying_layout is not None
+        self.underlying_layout.insertWidget(i, child_component)
+
+    def _initialize(self):
+        assert self.underlying_layout is not None
+        self.underlying = QtWidgets.QScrollArea()
+        self.underlying.setWidgetResizable(True)
+        self.inner_widget = QtWidgets.QWidget()
+        self.underlying_layout.setContentsMargins(0, 0, 0, 0)
+        self.underlying_layout.setSpacing(0)
+        self.inner_widget.setLayout(self.underlying_layout)
+        self.underlying.setWidget(self.inner_widget)
+        self.underlying.setObjectName(str(id(self)))
+
+    def _qt_update_commands(
+        self,
+        widget_trees: dict[Element, _WidgetTree],
+        diff_props: PropsDiff,
+    ):
+        if self.underlying is None:
+            self._initialize()
+        assert self.underlying is not None
+        children = _get_widget_children(widget_trees, self)
+        commands = self._recompute_children(children)
+        commands.extend(
+            super()._qt_update_commands_super(widget_trees, diff_props, self.underlying, self.underlying_layout),
+        )
+        match diff_props.get("on_scroll_vertical"):
+            case propsold, propsnew:
+                if propsold is not None:
+                    commands.append(CommandType(self.underlying.verticalScrollBar().valueChanged.disconnect, propsold))
+                if propsnew is not None:
+                    commands.append(CommandType(self.underlying.verticalScrollBar().valueChanged.connect, propsnew))
+        match diff_props.get("on_scroll_horizontal"):
+            case propsold, propsnew:
+                if propsold is not None:
+                    commands.append(
+                        CommandType(self.underlying.horizontalScrollBar().valueChanged.disconnect, propsold),
+                    )
+                if propsnew is not None:
+                    commands.append(CommandType(self.underlying.horizontalScrollBar().valueChanged.connect, propsnew))
+        match diff_props.get("on_range_vertical"):
+            case propsold, propsnew:
+                if propsold is not None:
+                    commands.append(
+                        CommandType(self.underlying.verticalScrollBar().rangeChanged.disconnect, propsold),
+                    )
+                if propsnew is not None:
+                    commands.append(CommandType(self.underlying.verticalScrollBar().rangeChanged.connect, propsnew))
+        match diff_props.get("on_range_horizontal"):
+            case propsold, propsnew:
+                if propsold is not None:
+                    commands.append(
+                        CommandType(self.underlying.horizontalScrollBar().rangeChanged.disconnect, propsold),
+                    )
+                if propsnew is not None:
+                    commands.append(CommandType(self.underlying.horizontalScrollBar().rangeChanged.connect, propsnew))
+        return commands
+
+
+class VScrollView(_ScrollView[QtWidgets.QVBoxLayout]):
     """Scrollable vertical column layout.
 
     .. highlights::
@@ -1999,55 +2094,46 @@ class VScrollView(_LinearView[QtWidgets.QScrollArea]):
     .. rubric::
         Props
 
-    All **props** from :class:`QtWidgetElement`.
+    All **props** from :class:`QtWidgetElement` plus:
+
+    Args:
+        on_scroll_vertical:
+            Event handler for when the vertical scrollbar position changes.
+            See `QScrollBar.valueChanged <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QAbstractSlider.html#PySide6.QtWidgets.QAbstractSlider.valueChanged>`.
+        on_scroll_horizontal:
+            Event handler for when the horizontal scrollbar position changes.
+            See `QScrollBar.valueChanged <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QAbstractSlider.html#PySide6.QtWidgets.QAbstractSlider.valueChanged>`.
+        on_range_vertical:
+            Event handler for when the vertical scrollbar range changes.
+            See `QScrollBar.rangeChanged <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QAbstractSlider.html#PySide6.QtWidgets.QAbstractSlider.rangeChanged>`.
+        on_range_horizontal:
+            Event handler for when the horizontal scrollbar range changes.
+            See `QScrollBar.rangeChanged <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QAbstractSlider.html#PySide6.QtWidgets.QAbstractSlider.rangeChanged>`.
     """
 
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-
-    def _delete_child(self, i, old_child: QtWidgetElement):  # noqa: ARG002
-        assert self.underlying_layout is not None
-        child_node = self.underlying_layout.takeAt(i)
-        assert child_node is not None
-        child_node.widget().deleteLater()
-
-    def _soft_delete_child(self, i, old_child: QtWidgetElement):  # noqa: ARG002
-        assert self.underlying_layout is not None
-        child_node = self.underlying_layout.takeAt(i)
-        assert child_node is not None
-
-    def _add_child(self, i, child_component):
-        self.underlying_layout.insertWidget(i, child_component)
+    def __init__(
+        self,
+        on_scroll_vertical: tp.Callable[[int], None] | None = None,
+        on_scroll_horizontal: tp.Callable[[int], None] | None = None,
+        on_range_vertical: tp.Callable[[int, int], None] | None = None,
+        on_range_horizontal: tp.Callable[[int, int], None] | None = None,
+        **kwargs,
+    ):
+        super().__init__(
+            on_scroll_vertical=on_scroll_vertical,
+            on_scroll_horizontal=on_scroll_horizontal,
+            on_range_vertical=on_range_vertical,
+            on_range_horizontal=on_range_horizontal,
+            **kwargs,
+        )
 
     def _initialize(self):
-        self.underlying = QtWidgets.QScrollArea()
-        self.underlying.setWidgetResizable(True)
-        self.inner_widget = QtWidgets.QWidget()
         self.underlying_layout = QtWidgets.QVBoxLayout()
-        self.underlying_layout.setContentsMargins(0, 0, 0, 0)
-        self.underlying_layout.setSpacing(0)
-        self.inner_widget.setLayout(self.underlying_layout)
-        self.underlying.setWidget(self.inner_widget)
-        self.underlying.setObjectName(str(id(self)))
-
-    def _qt_update_commands(
-        self,
-        widget_trees: dict[Element, _WidgetTree],
-        diff_props: PropsDiff,
-    ):
-        if self.underlying is None:
-            self._initialize()
-        assert self.underlying is not None
-        children = _get_widget_children(widget_trees, self)
-        commands = self._recompute_children(children)
-        commands.extend(
-            super()._qt_update_commands_super(widget_trees, diff_props, self.underlying, self.underlying_layout),
-        )
-        return commands
+        super()._initialize()
 
 
-class HScrollView(_LinearView[QtWidgets.QScrollArea]):
-    """Scrollable horizontal row layout widget.
+class HScrollView(_ScrollView[QtWidgets.QHBoxLayout]):
+    """Scrollable vertical column layout.
 
     .. highlights::
 
@@ -2064,51 +2150,43 @@ class HScrollView(_LinearView[QtWidgets.QScrollArea]):
     .. rubric::
         Props
 
-    All **props** from :class:`QtWidgetElement`.
+    All **props** from :class:`QtWidgetElement` plus:
+
+    Args:
+        on_scroll_vertical:
+            Event handler for when the vertical scrollbar position changes.
+            See `QScrollBar.valueChanged <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QAbstractSlider.html#PySide6.QtWidgets.QAbstractSlider.valueChanged>`.
+        on_scroll_horizontal:
+            Event handler for when the horizontal scrollbar position changes.
+            See `QScrollBar.valueChanged <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QAbstractSlider.html#PySide6.QtWidgets.QAbstractSlider.valueChanged>`.
+        on_range_vertical:
+            Event handler for when the vertical scrollbar range changes.
+            See `QScrollBar.rangeChanged <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QAbstractSlider.html#PySide6.QtWidgets.QAbstractSlider.rangeChanged>`.
+        on_range_horizontal:
+            Event handler for when the horizontal scrollbar range changes.
+            See `QScrollBar.rangeChanged <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QAbstractSlider.html#PySide6.QtWidgets.QAbstractSlider.rangeChanged>`.
+            The event handler function will be passed the new range as a tuple of
     """
 
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-
-    def _delete_child(self, i, old_child: QtWidgetElement):  # noqa: ARG002
-        assert self.underlying_layout is not None
-        child_node = self.underlying_layout.takeAt(i)
-        assert child_node is not None
-        child_node.widget().deleteLater()
-
-    def _soft_delete_child(self, i, old_child: QtWidgetElement):  # noqa: ARG002
-        assert self.underlying_layout is not None
-        child_node = self.underlying_layout.takeAt(i)
-        assert child_node is not None
-
-    def _add_child(self, i, child_component):
-        self.underlying_layout.insertWidget(i, child_component)
+    def __init__(
+        self,
+        on_scroll_vertical: tp.Callable[[int], None] | None = None,
+        on_scroll_horizontal: tp.Callable[[int], None] | None = None,
+        on_range_vertical: tp.Callable[[int, int], None] | None = None,
+        on_range_horizontal: tp.Callable[[int, int], None] | None = None,
+        **kwargs,
+    ):
+        super().__init__(
+            on_scroll_vertical=on_scroll_vertical,
+            on_scroll_horizontal=on_scroll_horizontal,
+            on_range_vertical=on_range_vertical,
+            on_range_horizontal=on_range_horizontal,
+            **kwargs,
+        )
 
     def _initialize(self):
-        self.underlying = QtWidgets.QScrollArea()
-        self.underlying.setWidgetResizable(True)
-        self.inner_widget = QtWidgets.QWidget()
         self.underlying_layout = QtWidgets.QHBoxLayout()
-        self.underlying_layout.setContentsMargins(0, 0, 0, 0)
-        self.underlying_layout.setSpacing(0)
-        self.inner_widget.setLayout(self.underlying_layout)
-        self.underlying.setWidget(self.inner_widget)
-        self.underlying.setObjectName(str(id(self)))
-
-    def _qt_update_commands(
-        self,
-        widget_trees: dict[Element, _WidgetTree],
-        diff_props: PropsDiff,
-    ):
-        if self.underlying is None:
-            self._initialize()
-        assert self.underlying is not None
-        children = _get_widget_children(widget_trees, self)
-        commands = self._recompute_children(children)
-        commands.extend(
-            super()._qt_update_commands_super(widget_trees, diff_props, self.underlying, self.underlying_layout),
-        )
-        return commands
+        super()._initialize()
 
 
 class FixScrollView(_LinearView[QtWidgets.QScrollArea]):
@@ -2139,11 +2217,38 @@ class FixScrollView(_LinearView[QtWidgets.QScrollArea]):
     .. rubric::
         Props
 
-    All **props** from :class:`QtWidgetElement`.
+    All **props** from :class:`QtWidgetElement` plus:
+
+    Args:
+        on_scroll_vertical:
+            Event handler for when the vertical scrollbar position changes.
+            See `QScrollBar.valueChanged <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QAbstractSlider.html#PySide6.QtWidgets.QAbstractSlider.valueChanged>`.
+        on_scroll_horizontal:
+            Event handler for when the horizontal scrollbar position changes.
+            See `QScrollBar.valueChanged <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QAbstractSlider.html#PySide6.QtWidgets.QAbstractSlider.valueChanged>`.
+        on_range_vertical:
+            Event handler for when the vertical scrollbar range changes.
+            See `QScrollBar.rangeChanged <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QAbstractSlider.html#PySide6.QtWidgets.QAbstractSlider.rangeChanged>`.
+        on_range_horizontal:
+            Event handler for when the horizontal scrollbar range changes.
+            See `QScrollBar.rangeChanged <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QAbstractSlider.html#PySide6.QtWidgets.QAbstractSlider.rangeChanged>`.
     """
 
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+    def __init__(
+        self,
+        on_scroll_vertical: tp.Callable[[int], None] | None = None,
+        on_scroll_horizontal: tp.Callable[[int], None] | None = None,
+        on_range_vertical: tp.Callable[[int, int], None] | None = None,
+        on_range_horizontal: tp.Callable[[int, int], None] | None = None,
+        **kwargs,
+    ):
+        super().__init__(
+            on_scroll_vertical=on_scroll_vertical,
+            on_scroll_horizontal=on_scroll_horizontal,
+            on_range_vertical=on_range_vertical,
+            on_range_horizontal=on_range_horizontal,
+            **kwargs,
+        )
 
     def _delete_child(self, i, old_child: QtWidgetElement):  # noqa: ARG002
         # https://doc.qt.io/qtforpython-6/PySide6/QtCore/QObject.html#detailed-description
@@ -2180,6 +2285,36 @@ class FixScrollView(_LinearView[QtWidgets.QScrollArea]):
         commands.extend(
             super()._qt_update_commands_super(widget_trees, diff_props, self.underlying),
         )
+        match diff_props.get("on_scroll_vertical"):
+            case propsold, propsnew:
+                if propsold is not None:
+                    commands.append(CommandType(self.underlying.verticalScrollBar().valueChanged.disconnect, propsold))
+                if propsnew is not None:
+                    commands.append(CommandType(self.underlying.verticalScrollBar().valueChanged.connect, propsnew))
+        match diff_props.get("on_scroll_horizontal"):
+            case propsold, propsnew:
+                if propsold is not None:
+                    commands.append(
+                        CommandType(self.underlying.horizontalScrollBar().valueChanged.disconnect, propsold),
+                    )
+                if propsnew is not None:
+                    commands.append(CommandType(self.underlying.horizontalScrollBar().valueChanged.connect, propsnew))
+        match diff_props.get("on_range_vertical"):
+            case propsold, propsnew:
+                if propsold is not None:
+                    commands.append(
+                        CommandType(self.underlying.verticalScrollBar().rangeChanged.disconnect, propsold),
+                    )
+                if propsnew is not None:
+                    commands.append(CommandType(self.underlying.verticalScrollBar().rangeChanged.connect, propsnew))
+        match diff_props.get("on_range_horizontal"):
+            case propsold, propsnew:
+                if propsold is not None:
+                    commands.append(
+                        CommandType(self.underlying.horizontalScrollBar().rangeChanged.disconnect, propsold),
+                    )
+                if propsnew is not None:
+                    commands.append(CommandType(self.underlying.horizontalScrollBar().rangeChanged.connect, propsnew))
         return commands
 
 
@@ -2320,7 +2455,7 @@ class GridView(QtWidgetElement[QtWidgets.QWidget]):
                 ed.Button("0").set_key("0"),                              ed.Button(".").set_key("."), ed.Button("*").set_key("/"),
             )
 
-    """
+    """  # noqa: E501
 
     def __init__(self, layout: str = "", key_to_code: tp.Mapping[str, str] | None = None, **kwargs):
         super().__init__(**kwargs)
@@ -2569,12 +2704,12 @@ class ExportList(QtWidgetElement):
 # >                 if newprops[prop] is not None:
 # >                     commands.append(CommandType(widget.setVerticalHeaderLabels, list(map(str, newprops[prop]))))
 # >                 else:
-# >                     commands.append(CommandType(widget.setVerticalHeaderLabels, list(map(str, range(newprops.rows)))))
+# >                     commands.append(CommandType(widget.setVerticalHeaderLabels, list(map(str, range(newprops.rows)))))  # noqa: E501
 # >             elif prop == "column_headers":
 # >                 if newprops[prop] is not None:
 # >                     commands.append(CommandType(widget.setHorizontalHeaderLabels, list(map(str, newprops[prop]))))
 # >                 else:
-# >                     commands.append(CommandType(widget.setHorizontalHeaderLabels, list(map(str, range(newprops.columns)))))
+# >                     commands.append(CommandType(widget.setHorizontalHeaderLabels, list(map(str, range(newprops.columns)))))  # noqa: E501
 #
 # >         new_children = set()
 # >         for child in children:
@@ -2685,6 +2820,7 @@ class ProgressBar(QtWidgetElement[QtWidgets.QProgressBar]):
                 commands.append(CommandType(widget.setValue, propnew))
         return commands
 
+
 class GroupBoxView(_LinearView[QtWidgets.QGroupBox]):
     """Group Box layout element with title.
 
@@ -2733,6 +2869,7 @@ class GroupBoxView(_LinearView[QtWidgets.QGroupBox]):
                 "title": title,
             },
         )
+
     def _delete_child(self, i, old_child: QtWidgetElement):  # noqa: ARG002
         # https://doc.qt.io/qtforpython-6/PySide6/QtCore/QObject.html#detailed-description
         # “The parent takes ownership of the object; i.e., it will automatically delete its children in its destructor.”
@@ -2793,7 +2930,6 @@ class GroupBoxView(_LinearView[QtWidgets.QGroupBox]):
         return super()._qt_update_commands_super(widget_trees, diff_props, self.underlying, self.underlying_layout)
 
 
-
 class StackedView(_LinearView[QtWidgets.QWidget]):
     """Stacked layout.
 
@@ -2845,9 +2981,9 @@ class StackedView(_LinearView[QtWidgets.QWidget]):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self._register_props(
-            {
-            },
+            {},
         )
+
     def _delete_child(self, i, old_child: QtWidgetElement):  # noqa: ARG002
         # https://doc.qt.io/qtforpython-6/PySide6/QtCore/QObject.html#detailed-description
         # “The parent takes ownership of the object; i.e., it will automatically delete its children in its destructor.”

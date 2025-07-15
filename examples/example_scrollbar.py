@@ -21,6 +21,8 @@ def MyComponent(self):
         y_delta = event.angleDelta().y() // 120
         s1_set(lambda s: s + y_delta)
 
+    scroll_events, scroll_events_set = ed.use_state(True)
+
     with ed.VBoxView():
         with ed.HBoxView():
                 ed.ScrollBar(
@@ -62,10 +64,20 @@ def MyComponent(self):
             orientation=Qt.Orientation.Horizontal,
             focus_policy=Qt.FocusPolicy.StrongFocus,
         )
-        with ed.VScrollView():
+        ed.CheckBox(
+            checked=scroll_events,
+            text="Scroll Events",
+            on_change=scroll_events_set,
+        )
+        with ed.VScrollView(
+            on_scroll_vertical=lambda x: print(f"Vertical Scroll: {x}") if scroll_events else None,  # noqa: T201
+            on_scroll_horizontal=lambda x: print(f"Horizontal Scroll: {x}") if scroll_events else None,  # noqa: T201
+            on_range_vertical=lambda x1, x2: print(f"Vertical Range: {x1} {x2}") if scroll_events else None,  # noqa: T201
+            on_range_horizontal=lambda x1, x2: print(f"Horizontal Range: {x1} {x2}") if scroll_events else None,  # noqa: T201
+        ):
             with ed.HBoxView(
                 style={
-                    "width": 200,
+                    "width": 1000,
                     "height": 1000,
                 },
             ):

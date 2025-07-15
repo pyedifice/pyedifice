@@ -7,6 +7,11 @@
 Release Notes
 =============
 
+
+- :class:`VScrollView`, :class:`HScrollView`, :class:`FixScrollView` new props
+  :code:`on_scroll_vertical`, :code:`on_scroll_horizontal`,
+  :code:`on_range_vertical`, :code:`on_range_horizontal`.
+
 v4.1.0
 ------
 Released: 2025-06-24
