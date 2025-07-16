@@ -228,7 +228,7 @@ Circle Drawer
 `7guis_06_circle_drawer.py <https://github.com/pyedifice/pyedifice/tree/master/examples/7guis/7guis_06_circle_drawer.py>`_
 
 .. code-block:: shell
-   :caption: Run in Python environment (requires `pyqtgraph <https://pypi.org/project/pyqtgraph/>`_)
+   :caption: Run in Python environment
 
    python examples/7guis/7guis_06_circle_drawer.py
 

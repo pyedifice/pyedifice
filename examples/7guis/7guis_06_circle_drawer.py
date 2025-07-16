@@ -9,23 +9,16 @@ from dataclasses import dataclass, replace
 from typing import TYPE_CHECKING, cast
 
 import edifice as ed
-from edifice.extra.pyqtgraph_plot import PyQtPlot
 from edifice.qt import QT_VERSION
 
 if QT_VERSION == "PyQt6" and not TYPE_CHECKING:
-    from PyQt6.QtCore import Qt
-    from PyQt6.QtGui import QBrush, QMouseEvent
-    from PyQt6.QtWidgets import QGraphicsEllipseItem, QSizePolicy
+    from PyQt6.QtCore import QSize, Qt
+    from PyQt6.QtGui import QBrush, QMouseEvent, QPainter, QPen, QPixmap
+    from PyQt6.QtWidgets import QSizePolicy
 else:
-    from PySide6.QtCore import Qt
-    from PySide6.QtGui import QBrush, QMouseEvent
-    from PySide6.QtWidgets import QGraphicsEllipseItem, QSizePolicy
-
-import pyqtgraph as pg
-
-pg.setConfigOption("antialias", True)
-pg.setConfigOption("background", "white")
-pg.setConfigOption("foreground", "black")
+    from PySide6.QtCore import QSize, Qt
+    from PySide6.QtGui import QBrush, QMouseEvent, QPainter, QPen, QPixmap
+    from PySide6.QtWidgets import QSizePolicy
 
 
 @dataclass(frozen=True)
@@ -44,10 +37,9 @@ class ActionAdjust:
 
 @ed.component
 def Main(self):
-
-    width = 600
-    height = 400
     radius_default = 25.0
+
+    size, size_set = ed.use_state(QSize(0, 0))
 
     # History of circle actions. Most recent action is history[-1].
     # It is always true that history[i].circle_index == i.
@@ -74,7 +66,7 @@ def Main(self):
         if event.button() == Qt.MouseButton.RightButton:
             for i, circle in reversed(folded_circles.items()):
                 x_diff = event.position().x() - circle.x
-                y_diff = height - event.position().y() - circle.y
+                y_diff = event.position().y() - circle.y
                 if (x_diff**2 + y_diff**2) <= circle.radius**2:
                     # If we clicked on an existing circle, select it
                     circle_selected_set(i)
@@ -87,7 +79,7 @@ def Main(self):
                     *history[:history_index],
                     Circle(
                         x=event.position().x(),
-                        y=height - event.position().y(),
+                        y=event.position().y(),
                         radius=radius_default,
                         circle_index=history_index,
                     ),
@@ -121,35 +113,32 @@ def Main(self):
         history_set(new_history)
         history_index_set(len(new_history))
 
-    def plot_fun(plot_item: pg.PlotItem):
-        plot_item.hideButtons()
-        plot_item.showAxes(False, showValues=False)
-        view_widget = cast("pg.PlotWidget", plot_item.getViewWidget())
-        view_widget.setRenderHint(pg.QtGui.QPainter.RenderHint.Antialiasing)
-        view_box = cast("pg.ViewBox", plot_item.getViewBox())
-        view_box.setMouseEnabled(x=False, y=False)
-        view_box.setMenuEnabled(False)
-        view_box.setRange(
-            xRange=(0.0, width),
-            yRange=(0.0, height),
-            padding=0.0,
-            disableAutoRange=True,
-        )
+    def draw_circles() -> QPixmap:
+        pixmap = QPixmap(size)
+        pixmap.fill(Qt.GlobalColor.white)
+        painter = QPainter(pixmap)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
         for i, circle in folded_circles.items():
-            circle_item = QGraphicsEllipseItem(
-                circle.x - circle.radius,
-                circle.y - circle.radius,
-                circle.radius * 2,
-                circle.radius * 2,
-            )
-            circle_item.setPen(pg.mkPen(color="black", width=2))
+            painter.setPen(QPen(Qt.GlobalColor.black, 2))
+            painter.setBrush(QBrush(Qt.GlobalColor.transparent))
             if circle_selected is not None and circle_selected == i:
-                circle_item.setBrush(QBrush("grey"))
-            plot_item.addItem(circle_item)
+                painter.setBrush(QBrush(Qt.GlobalColor.gray))
+            painter.drawEllipse(
+                int(circle.x - circle.radius),
+                int(circle.y - circle.radius),
+                int(circle.radius * 2),
+                int(circle.radius * 2),
+            )
+        return pixmap
 
-    with ed.Window(title="Circle Drawer"):
+    img: QPixmap = ed.use_memo(draw_circles, [folded_circles, circle_selected, size])
+
+    with ed.Window(title="Circle Drawer", _size_open=(800, 600)):
         with ed.VBoxView(style={"padding": 10}):
-            with ed.HBoxView(style={"padding-bottom": 10, "align": "center"}):
+            with ed.HBoxView(
+                style={"padding-bottom": 10, "align": "center"},
+                size_policy=QSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed),
+            ):
                 ed.Button(
                     title="Undo",
                     size_policy=QSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed),
@@ -162,11 +151,10 @@ def Main(self):
                     on_click=handle_redo,
                     enabled=history_index < len(history),
                 )
-            with ed.VBoxView(style={"width": width, "height": height}):
-                PyQtPlot(
-                    plot_fun=plot_fun,
+            with ed.VBoxView(on_resize=lambda event: size_set(event.size())):
+                ed.Image(
+                    src=img,
                     on_click=handle_click,
-                    style={"width": width, "height": height},
                 )
         if circle_selected is not None:
             with ed.WindowPopView(
