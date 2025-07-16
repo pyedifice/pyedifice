@@ -2099,16 +2099,16 @@ class VScrollView(_ScrollView[QtWidgets.QVBoxLayout]):
     Args:
         on_scroll_vertical:
             Event handler for when the vertical scrollbar position changes.
-            See `QScrollBar.valueChanged <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QAbstractSlider.html#PySide6.QtWidgets.QAbstractSlider.valueChanged>`.
+            See `QScrollBar.valueChanged <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QAbstractSlider.html#PySide6.QtWidgets.QAbstractSlider.valueChanged>`_.
         on_scroll_horizontal:
             Event handler for when the horizontal scrollbar position changes.
-            See `QScrollBar.valueChanged <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QAbstractSlider.html#PySide6.QtWidgets.QAbstractSlider.valueChanged>`.
+            See `QScrollBar.valueChanged <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QAbstractSlider.html#PySide6.QtWidgets.QAbstractSlider.valueChanged>`_.
         on_range_vertical:
             Event handler for when the vertical scrollbar range changes.
-            See `QScrollBar.rangeChanged <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QAbstractSlider.html#PySide6.QtWidgets.QAbstractSlider.rangeChanged>`.
+            See `QScrollBar.rangeChanged <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QAbstractSlider.html#PySide6.QtWidgets.QAbstractSlider.rangeChanged>`_.
         on_range_horizontal:
             Event handler for when the horizontal scrollbar range changes.
-            See `QScrollBar.rangeChanged <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QAbstractSlider.html#PySide6.QtWidgets.QAbstractSlider.rangeChanged>`.
+            See `QScrollBar.rangeChanged <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QAbstractSlider.html#PySide6.QtWidgets.QAbstractSlider.rangeChanged>`_.
     """
 
     def __init__(
@@ -2155,16 +2155,16 @@ class HScrollView(_ScrollView[QtWidgets.QHBoxLayout]):
     Args:
         on_scroll_vertical:
             Event handler for when the vertical scrollbar position changes.
-            See `QScrollBar.valueChanged <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QAbstractSlider.html#PySide6.QtWidgets.QAbstractSlider.valueChanged>`.
+            See `QScrollBar.valueChanged <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QAbstractSlider.html#PySide6.QtWidgets.QAbstractSlider.valueChanged>`_.
         on_scroll_horizontal:
             Event handler for when the horizontal scrollbar position changes.
-            See `QScrollBar.valueChanged <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QAbstractSlider.html#PySide6.QtWidgets.QAbstractSlider.valueChanged>`.
+            See `QScrollBar.valueChanged <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QAbstractSlider.html#PySide6.QtWidgets.QAbstractSlider.valueChanged>`_.
         on_range_vertical:
             Event handler for when the vertical scrollbar range changes.
-            See `QScrollBar.rangeChanged <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QAbstractSlider.html#PySide6.QtWidgets.QAbstractSlider.rangeChanged>`.
+            See `QScrollBar.rangeChanged <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QAbstractSlider.html#PySide6.QtWidgets.QAbstractSlider.rangeChanged>`_.
         on_range_horizontal:
             Event handler for when the horizontal scrollbar range changes.
-            See `QScrollBar.rangeChanged <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QAbstractSlider.html#PySide6.QtWidgets.QAbstractSlider.rangeChanged>`.
+            See `QScrollBar.rangeChanged <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QAbstractSlider.html#PySide6.QtWidgets.QAbstractSlider.rangeChanged>`_.
             The event handler function will be passed the new range as a tuple of
     """
 
@@ -2222,16 +2222,16 @@ class FixScrollView(_LinearView[QtWidgets.QScrollArea]):
     Args:
         on_scroll_vertical:
             Event handler for when the vertical scrollbar position changes.
-            See `QScrollBar.valueChanged <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QAbstractSlider.html#PySide6.QtWidgets.QAbstractSlider.valueChanged>`.
+            See `QScrollBar.valueChanged <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QAbstractSlider.html#PySide6.QtWidgets.QAbstractSlider.valueChanged>`_.
         on_scroll_horizontal:
             Event handler for when the horizontal scrollbar position changes.
-            See `QScrollBar.valueChanged <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QAbstractSlider.html#PySide6.QtWidgets.QAbstractSlider.valueChanged>`.
+            See `QScrollBar.valueChanged <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QAbstractSlider.html#PySide6.QtWidgets.QAbstractSlider.valueChanged>`_.
         on_range_vertical:
             Event handler for when the vertical scrollbar range changes.
-            See `QScrollBar.rangeChanged <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QAbstractSlider.html#PySide6.QtWidgets.QAbstractSlider.rangeChanged>`.
+            See `QScrollBar.rangeChanged <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QAbstractSlider.html#PySide6.QtWidgets.QAbstractSlider.rangeChanged>`_.
         on_range_horizontal:
             Event handler for when the horizontal scrollbar range changes.
-            See `QScrollBar.rangeChanged <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QAbstractSlider.html#PySide6.QtWidgets.QAbstractSlider.rangeChanged>`.
+            See `QScrollBar.rangeChanged <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QAbstractSlider.html#PySide6.QtWidgets.QAbstractSlider.rangeChanged>`_.
     """
 
     def __init__(
