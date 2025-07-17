@@ -246,16 +246,6 @@ Cells
 
 `7guis_07_cells.py <https://github.com/pyedifice/pyedifice/tree/master/examples/7guis/7guis_07_cells.py>`_
 
-This is only a partial implementation of **Cells**. The basic GUI works but the formula language evaluation is not
-fully implemented yet.
-
-The spreadsheet is *10×10* instead of *100×100*.
-
-Formulas which are working:
-
-- `=2` evaluates to `2`
-- `=B2` evaluates to the value of cell `B2`, recursively.
-
 .. code-block:: shell
    :caption: Run in Python environment
 
@@ -265,3 +255,60 @@ Formulas which are working:
    :caption: Run with `Nix <https://determinate.systems/posts/nix-run>`__
 
    nix run github:pyedifice/pyedifice#example-7guis-07-cells
+
+This is a modified implementation of **Cells**.
+
+The spreadsheet is *10×10* instead of *100×100*.
+
+We can use the
+`Qt supported HTML subset <https://doc.qt.io/qtforpython-6.5/overviews/richtext-html-subset.html>`_
+to markup text in the cells.
+
+Cells Formulas
+^^^^^^^^^^^^^^
+
+I didn’t feel like implementing the whole
+`SCells spreadsheet formula language <https://www.artima.com/pins1ed/the-scells-spreadsheet.html#33.3>`_
+so instead the spreadsheet formula language is Python.
+
+If a cell begins with an equals sign :code:`=` then it is parsed as a formula expression.
+The formula expression following :code:`=` will be passed to Python
+`eval <https://docs.python.org/3/library/functions.html#eval>`_
+with one variable in scope: :code:`sheet`.
+
+.. code-block:: python
+   :caption: sheet variable type
+
+   sheet:tuple[tuple[int | float | str, ...], ...]
+
+The formula expression can use the :code:`sheet` variable to access the other cells
+in the spreadsheet.
+The :code:`sheet` variable is the spreadsheet as a tuple of tuples.
+It is column-major order, and the indices are *0*-based.
+The formula expression must evaluate to :code:`int`, :code:`float`, or :code:`str`.
+
+Python
+`filtered list comprehensions <https://docs.python.org/3.13/tutorial/datastructures.html#list-comprehensions>`_
+are good for writing formulas. The
+`Common Sequence Operations <https://docs.python.org/3.13/library/stdtypes.html#common-sequence-operations>`_
+also supply a lot of the features of a spreadsheet formula language.
+
+.. code-block:: python
+   :caption: Example formula: Copy the value from column 5, row 6
+
+   =sheet[5][6]
+
+.. code-block:: python
+   :caption: Example formula: Sum all numbers in column 0
+
+   =sum(x for x in sheet[0] if isinstance(x, (int, float)))
+
+.. code-block:: python
+   :caption: Example formula: Join all strings in row 0
+
+   =",".join(col[0] for col in sheet if isinstance(col[0], str))
+
+.. code-block:: python
+   :caption: Example formula: Find the maximum of all numbers in the range of rows *0 to 4* in columns *0 to 4*
+
+   =max(x for r in sheet[:5] for x in r[:5] if isinstance(x, (int, float)))

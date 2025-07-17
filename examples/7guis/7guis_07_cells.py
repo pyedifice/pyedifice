@@ -1,12 +1,15 @@
 #
 # https://7guis.github.io/7guis/tasks#cells
 #
-# Work-In-Progress
+# There are three types of formulas in a spreadsheet:
 #
+# Numeric values such as 1.22, -3, or 0.
+# Textual labels such as Annual sales, Deprecation, or total.
+# Formulas that compute a new value from the contents of cells, such as "=add(A1,B2)", or "=sum(mul(2, A2), C1:D16)"
+
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 from typing import TYPE_CHECKING, cast
 
 import edifice as ed
@@ -20,114 +23,96 @@ else:
     from PySide6.QtWidgets import QSizePolicy
 
 
-# https://www.artima.com/pins1ed/the-scells-spreadsheet.html#33.3
-#
-# There are three types of formulas in a spreadsheet:
-#
-# Numeric values such as 1.22, -3, or 0.
-# Textual labels such as Annual sales, Deprecation, or total.
-# Formulas that compute a new value from the contents of cells, such as "=add(A1,B2)", or "=sum(mul(2, A2), C1:D16)"
-
-
-@dataclass(frozen=True)
-class Numeric:
-    value: float
-
-
-@dataclass(frozen=True)
-class Textual:
-    value: str
-
-
-@dataclass(frozen=True)
-class Formula:
-    value: str
-
-
-def parse_cell_value(value: str) -> Numeric | Textual | Formula:
-    if value.startswith("="):
-        return Formula(value=value)
-    try:
-        num_value = float(value)
-        return Numeric(value=num_value)
-    except ValueError:
-        return Textual(value=value)
+def transpose(matrix):
+    "Swap the rows and columns of a 2-D matrix. https://docs.python.org/3/library/itertools.html#itertools-recipes"
+    return zip(*matrix, strict=True)
 
 
 def eval_cell(
-    cell: Numeric | Textual | Formula,
-    spreadsheet: list[list[Numeric | Textual | Formula]],
-) -> Numeric | Textual | Formula:
+    cell: str,
+    sheet: tuple[tuple[str, ...], ...],
+    cell_fixpoint: str | int | float,  # noqa: PYI041
+    sheet_fixpoint: tuple[tuple[str | int | float, ...], ...],
+) -> str | int | float:
     """Evaluate a cell, returning its value."""
-    match cell:
-        case Numeric(value) as v:
-            return v
-        case Textual(value) as v:
-            return v
-        case Formula(value) as v:
+    if cell.startswith("="):
+        # If the original cell starts with "=", it is a formula.
+        # We evaluate it as a Python expression, where the `sheet` is in scope.
+        try:
+            cellprime = eval(cell[1:], {"sheet": sheet_fixpoint})  # noqa: S307
+            match cellprime:
+                case int() | float() | str():
+                    return cellprime
+        except Exception:  # noqa: BLE001, S110
+            pass
+        return cell
+
+    match cell_fixpoint:
+        case int():
+            return cell_fixpoint
+        case float():
+            return cell_fixpoint
+        case str():
             try:
-                # eval a reference to another cell
-                if value.startswith("="):
-                    # Extract the cell reference, e.g., "A1" or "B2"
-                    col = ord(value[1].upper()) - ord("A")
-                    row = int(value[2:])
-                    return spreadsheet[row][col]
-            except (IndexError, ValueError):
-                pass
-            try:
-                # eval a literal number
-                return Numeric(value=float(value[1:]))
+                # try to parse as an int value
+                return int(cell_fixpoint)
             except ValueError:
                 pass
-            return v
+            try:
+                # try to parse as a float value
+                return float(cell_fixpoint)
+            except ValueError:
+                pass
+            return cell_fixpoint
 
 
-def eval_spreadsheet(spreadsheet: list[list[Numeric | Textual | Formula]]) -> list[list[Numeric | Textual | Formula]]:
+def eval_spreadsheet(
+    sheet: list[list[str]],
+    sheet_fixpoint: list[list[str | int | float]],
+) -> list[list[str | int | float]]:
     """Evaluate the entire spreadsheet, returning a new spreadsheet with evaluated values."""
-    return [[eval_cell(cell, spreadsheet) for cell in row] for row in spreadsheet]
+    sheet_t = tuple(transpose(sheet))
+    sheet_fixpoint_t = tuple(transpose(sheet_fixpoint))
+    return [
+        [
+            eval_cell(cell, sheet_t, cell_fixpoint, sheet_fixpoint_t)
+            for cell, cell_fixpoint in zip(row, row_fixpoint, strict=True)
+        ]
+        for row, row_fixpoint in zip(sheet, sheet_fixpoint, strict=True)
+    ]
 
 
 @ed.component
 def Main(self):
     spreadsheet, spreadsheet_set = ed.use_state(
-        cast(list[list[Numeric | Textual | Formula]], [[Textual("") for _ in range(10)] for _ in range(10)]),
+        cast(list[list[str]], [["" for _ in range(10)] for _ in range(10)]),
     )
     edit_cell, edit_cell_set = ed.use_state(cast(tuple[int, int] | None, None))
-    edit_cell_value, edit_cell_value_set = ed.use_state(cast(str, ""))
 
     # We evaluate the spreadsheet repeatedly until it does not change anymore.
     # What remains is a fixed point of the evaluation.
-    spreadsheet_prior = spreadsheet
-    spreadsheet_fixedpoint = eval_spreadsheet(spreadsheet_prior)
+    spreadsheet_prior: list[list[str | int | float]] = spreadsheet  # type: ignore  # noqa: PGH003
+    spreadsheet_fixpoint: list[list[str | int | float]] = eval_spreadsheet(spreadsheet, spreadsheet_prior)
 
-    while spreadsheet_fixedpoint != spreadsheet_prior:
-        spreadsheet_prior = spreadsheet_fixedpoint
-        spreadsheet_fixedpoint = eval_spreadsheet(spreadsheet_prior)
+    while spreadsheet_fixpoint != spreadsheet_prior:
+        spreadsheet_prior = spreadsheet_fixpoint
+        spreadsheet_fixpoint = eval_spreadsheet(spreadsheet, spreadsheet_prior)
 
     def handle_begin_edit_cell(r: int, c: int):
         edit_cell_set((r, c))
-        match spreadsheet[r][c]:
-            case Numeric(value):
-                edit_cell_value_set(str(value))
-            case Textual(value):
-                edit_cell_value_set(value)
-            case Formula(value):
-                edit_cell_value_set(value)
 
     def handle_edit_cell(r: int, c: int, value: str):
-        edit_cell_value_set(value)
-        new_cell = parse_cell_value(value)
         new_spreadsheet = [row.copy() for row in spreadsheet]  # Create a copy of the spreadsheet
-        new_spreadsheet[r][c] = new_cell
+        new_spreadsheet[r][c] = value
         spreadsheet_set(new_spreadsheet)
 
     with ed.Window(title="Cells", _size_open=(800, 400)):
         with ed.VScrollView():
             with ed.TableGridView():
                 with ed.TableGridRow():
-                    with ed.HBoxView(style={"border-bottom": "1px solid black", "border-right": "1px solid black"}):
+                    with ed.HBoxView():
                         ed.Label(text="")
-                    for r, _ in enumerate(spreadsheet_fixedpoint):
+                    for r, _ in enumerate(spreadsheet_fixpoint):
                         with ed.HBoxView(
                             style={
                                 "align": "bottom",
@@ -136,8 +121,8 @@ def Main(self):
                                 "padding-left": 5,
                             },
                         ):
-                            ed.Label(text=chr(ord("A") + r))
-                for r, row in enumerate(spreadsheet_fixedpoint):
+                            ed.Label(text=str(r))  # instead of ed.Label(text=chr(ord("A") + r))
+                for r, row in enumerate(spreadsheet_fixpoint):
                     with ed.TableGridRow():
                         with ed.HBoxView(
                             style={"align": "right", "border-right": "1px solid black", "padding-right": 5},
@@ -150,7 +135,7 @@ def Main(self):
                                     size_policy=QSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed),
                                 ):
                                     ed.TextInput(
-                                        text=edit_cell_value,
+                                        text=spreadsheet[r][c],
                                         on_edit_finish=lambda: edit_cell_set(None),
                                         on_change=lambda new_value, r=r, c=c: handle_edit_cell(r, c, new_value),
                                         _focus_open=True,
@@ -164,9 +149,9 @@ def Main(self):
                                     style={"border-bottom": "1px solid black", "border-right": "1px solid black"},
                                 ):
                                     match cell:
-                                        case Numeric(value):
+                                        case int():
                                             ed.Label(
-                                                text=str(value),
+                                                text=str(cell),
                                                 on_click=lambda _ev, r=r, c=c: handle_begin_edit_cell(r, c),
                                                 style={
                                                     "align": Qt.AlignmentFlag.AlignVCenter
@@ -174,16 +159,21 @@ def Main(self):
                                                     "padding-right": 5,
                                                 },
                                             )
-                                        case Textual(value):
+                                        case float():
                                             ed.Label(
-                                                text=value,
+                                                text=str(cell),
                                                 on_click=lambda _ev, r=r, c=c: handle_begin_edit_cell(r, c),
+                                                style={
+                                                    "align": Qt.AlignmentFlag.AlignVCenter
+                                                    | Qt.AlignmentFlag.AlignRight,
+                                                    "padding-right": 5,
+                                                },
                                             )
-                                        case Formula(value):
+                                        case str():
                                             ed.Label(
-                                                text=value,
+                                                text=cell,
                                                 on_click=lambda _ev, r=r, c=c: handle_begin_edit_cell(r, c),
-                                                style={"font-style": "italic"},
+                                                style={"padding-left": 5, "padding-right": 5},
                                             )
 
 
