@@ -339,7 +339,7 @@ also supply a lot of the features of a spreadsheet formula language.
 .. code-block:: python
    :caption: Example formula: The maximum of all numbers in the range of  columns *0 to 2*, rows *0 to 4*
 
-   =max(x for c in sheet[:5] for x in c[:3] if isinstance(x, (int, float)))
+   =max(x for c in sheet[:3] for x in c[:5] if isinstance(x, (int, float)))
 
 .. code-block:: python
    :caption: Example formula: Sum of all numbers in the range of columns *1 to 2*, rows *1 to 4*
