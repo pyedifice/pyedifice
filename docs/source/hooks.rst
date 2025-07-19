@@ -53,6 +53,7 @@ These Derived Hooks are provided by Edifice.
    use_context_select
    use_hover
    use_stop
+   use_palette_edifice
    use_callback
 
 Custom Hooks

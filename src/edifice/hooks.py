@@ -10,11 +10,12 @@ from typing_extensions import deprecated
 
 from edifice.engine import Reference, _T_use_state, get_render_context_maybe
 from edifice.qt import QT_VERSION
+from edifice.utilities import palette_edifice_dark, palette_edifice_light, theme_is_light
 
 if QT_VERSION == "PyQt6" and not tp.TYPE_CHECKING:
-    from PyQt6 import QtGui
+    from PyQt6 import QtGui, QtWidgets
 else:
-    from PySide6 import QtGui  # noqa: TC002
+    from PySide6 import QtGui, QtWidgets
 
 
 def use_state(
@@ -1226,3 +1227,18 @@ def use_context_select(
     use_effect(lambda: cleanup, context_key)
 
     return local_state
+
+def use_palette_edifice() -> QtGui.QPalette:
+    """Use the global Edifice color palette
+    :func:`palette_edifice_light` or :func:`palette_edifice_dark`
+    depending on :func:`theme_is_light`.
+
+    Returns:
+        `QPalette <https://doc.qt.io/qtforpython/PySide6/QtGui/QPalette.html>`_
+    """
+    def initializer():
+        palette = palette_edifice_light() if theme_is_light() else palette_edifice_dark()
+        tp.cast(QtWidgets.QApplication, QtWidgets.QApplication.instance()).setPalette(palette)
+        return palette
+
+    return use_memo(initializer)

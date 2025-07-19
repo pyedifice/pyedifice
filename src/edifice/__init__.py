@@ -57,6 +57,7 @@ from edifice.hooks import (
     use_state,
     use_context,
     use_context_select,
+    use_palette_edifice,
 )
 from edifice.utilities import alert, file_dialog, palette_edifice_dark, palette_edifice_light, set_trace, theme_is_light, run_subprocess_with_callback
 
@@ -120,6 +121,7 @@ __all__ = [
     "use_effect_final",
     "use_hover",
     "use_memo",
+    "use_palette_edifice",
     "use_ref",
     "use_state",
     "use_stop",
