@@ -7,6 +7,12 @@
 Release Notes
 =============
 
+v4.3.0
+------
+Released: 2025-07-20
+
+- New Hook :func:`use_palette_edifice`.
+
 v4.2.0
 ------
 Released: 2025-07-15
