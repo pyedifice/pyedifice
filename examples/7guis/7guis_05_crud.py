@@ -18,6 +18,7 @@ import edifice as ed
 
 @ed.component
 def Main(self):
+    ed.use_palette_edifice()
     filter_prefix, filter_prefix_set = ed.use_state("")
     name, name_set = ed.use_state("")
     surname, surname_set = ed.use_state("")

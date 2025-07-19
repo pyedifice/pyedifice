@@ -9,6 +9,7 @@ import edifice as ed
 
 @ed.component
 def Main(self):
+    ed.use_palette_edifice()
     tc, tc_set = ed.use_state("0")
     tf, tf_set = ed.use_state("32")
 

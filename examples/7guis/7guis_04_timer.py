@@ -11,6 +11,7 @@ import edifice as ed
 
 @ed.component
 def Main(self):
+    ed.use_palette_edifice()
     elapsed_time, elapsed_time_set = ed.use_state(0.0)
     duration, duration_set = ed.use_state(20)
 
@@ -23,8 +24,8 @@ def Main(self):
 
     with ed.Window(title="Timer"):
         with ed.VBoxView(style={"padding": 10}):
-            with ed.HBoxView():
-                ed.Label(text="Elapsed Time:")
+            with ed.HBoxView(style={"padding-bottom": 10}):
+                ed.Label(text="Elapsed Time:", style={"margin-right": 5})
                 if duration > 0:
                     ed.ProgressBar(
                         value=int(elapsed_time / float(duration) * 1000.0),
@@ -33,11 +34,11 @@ def Main(self):
                         format="",
                     )
             ed.Label(
-                text=f"{elapsed_time:.1f}",
-                style={"margin-top": 10, "margin-bottom": 10},
+                text=f"{elapsed_time:.1f}s",
+                style={"margin-bottom": 10},
             )
-            with ed.HBoxView():
-                ed.Label(text="Duration:")
+            with ed.HBoxView(style={"padding-bottom": 10}):
+                ed.Label(text="Duration:", style={"margin-right": 5})
                 ed.Slider(
                     value=duration,
                     min_value=0,

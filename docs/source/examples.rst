@@ -9,7 +9,7 @@ It's easy to create a good-looking program with Edifice.
 In this example, we imitate the look of the MacOS *Calculator* app
 in 100 lines of code (most of which is implementing the calculator state machine).
 
-The code is available at `calculator.py <https://github.com/pyedifice/pyedifice/tree/master/examples/calculator.py>`_.
+Source code `calculator.py <https://github.com/pyedifice/pyedifice/tree/master/examples/calculator.py>`_.
 
 .. figure:: /image/example_calculator.png
    :width: 300
@@ -35,7 +35,7 @@ Financial Charting
 In this example, we create a reactive charting application with Edifice
 which fetches stock data from `Yahoo Finance <https://pypi.org/project/yfinance/>`_.
 
-The code is available at `financial_charts.py <https://github.com/pyedifice/pyedifice/tree/master/examples/financial_charts.py>`_.
+Source code `financial_charts.py <https://github.com/pyedifice/pyedifice/tree/master/examples/financial_charts.py>`_.
 
 .. figure:: /image/example_financial_charting4.png
    :width: 600
@@ -65,7 +65,7 @@ An implementation of `TodoMVC <https://todomvc.com/>`_ in Edifice.
 so that web developers can compare the frameworks by comparing the **TodoMVC**
 implementations.
 
-For comparison, the Edifice **TodoMVC** program is available at
+For comparison, see the Edifice **TodoMVC** source code
 `todomvc.py <https://github.com/pyedifice/pyedifice/tree/master/examples/todomvc.py>`_.
 
 .. figure:: /image/example_todomvc.png
@@ -91,7 +91,7 @@ Harmonic Oscillator
 
 An example of animation in Edifice.
 
-The code is available at `harmonic_oscillator.py <https://github.com/pyedifice/pyedifice/tree/master/examples/harmonic_oscillator.py>`_.
+Source code `harmonic_oscillator.py <https://github.com/pyedifice/pyedifice/tree/master/examples/harmonic_oscillator.py>`_.
 
 .. figure:: /image/example_harmonic_oscillator2.png
    :width: 500
@@ -131,10 +131,14 @@ in Edifice for
 Counter
 -------
 
+Source code `7guis_01_counter.py <https://github.com/pyedifice/pyedifice/tree/master/examples/7guis/7guis_01_counter.py>`_
+
+.. figure:: /image/7guis_01_counter.png
+
+..
+
    `Counter <https://7guis.github.io/7guis/tasks#counter>`_ serves as a gentle introduction to the basics of the
    language, paradigm and toolkit for one of the simplest GUI applications imaginable.
-
-`7guis_01_counter.py <https://github.com/pyedifice/pyedifice/tree/master/examples/7guis/7guis_01_counter.py>`_
 
 .. code-block:: shell
    :caption: Run in Python environment
@@ -149,11 +153,15 @@ Counter
 Temperature Converter
 --------------------
 
+Source code `7guis_02_temperature_converter.py <https://github.com/pyedifice/pyedifice/tree/master/examples/7guis/7guis_02_temperature_converter.py>`_
+
+.. figure:: /image/7guis_02_temperature_converter.png
+
+..
+
    `Temperature Converter <https://7guis.github.io/7guis/tasks#temp>`_
    increases the complexity of Counter by having bidirectional data flow between the Celsius and Fahrenheit inputs and
    the need to check the user input for validity.
-
-`7guis_02_temperature_converter.py <https://github.com/pyedifice/pyedifice/tree/master/examples/7guis/7guis_02_temperature_converter.py>`_
 
 .. code-block:: shell
    :caption: Run in Python environment
@@ -168,10 +176,14 @@ Temperature Converter
 Flight Booker
 -------------
 
+Source code `7guis_03_flight_booker.py <https://github.com/pyedifice/pyedifice/tree/master/examples/7guis/7guis_03_flight_booker.py>`_
+
+.. figure:: /image/7guis_03_flight_booker.png
+
+..
+
    The focus of `Flight Booker <https://7guis.github.io/7guis/tasks#flight>`_ lies on modelling constraints between
    widgets on the one hand and modelling constraints within a widget on the other hand.
-
-`7guis_03_flight_booker.py <https://github.com/pyedifice/pyedifice/tree/master/examples/7guis/7guis_03_flight_booker.py>`_
 
 .. code-block:: shell
    :caption: Run in Python environment
@@ -186,10 +198,14 @@ Flight Booker
 Timer
 -----
 
+Source code `7guis_04_timer.py <https://github.com/pyedifice/pyedifice/tree/master/examples/7guis/7guis_04_timer.py>`_
+
+.. figure:: /image/7guis_04_timer.png
+
+..
+
    `Timer <https://7guis.github.io/7guis/tasks#timer>`_ deals with concurrency in the sense that a timer process that
    updates the elapsed time runs concurrently to the user’s interactions with the GUI application.
-
-`7guis_04_timer.py <https://github.com/pyedifice/pyedifice/tree/master/examples/7guis/7guis_04_timer.py>`_
 
 .. code-block:: shell
    :caption: Run in Python environment
@@ -204,10 +220,14 @@ Timer
 CRUD
 ----
 
+Source code `7guis_05_crud.py <https://github.com/pyedifice/pyedifice/tree/master/examples/7guis/7guis_05_crud.py>`_
+
+.. figure:: /image/7guis_05_crud.png
+
+..
+
    `CRUD <https://7guis.github.io/7guis/tasks#crud>`_ (Create, Read, Update and Delete) represents a typical graphical
    business application.
-
-`7guis_05_crud.py <https://github.com/pyedifice/pyedifice/tree/master/examples/7guis/7guis_05_crud.py>`_
 
 .. code-block:: shell
    :caption: Run in Python environment
@@ -222,10 +242,14 @@ CRUD
 Circle Drawer
 -------------
 
+Source code `7guis_06_circle_drawer.py <https://github.com/pyedifice/pyedifice/tree/master/examples/7guis/7guis_06_circle_drawer.py>`_
+
+.. figure:: /image/7guis_06_circle_drawer.png
+
+..
+
    `Circle Drawer <https://7guis.github.io/7guis/tasks#circle>`_ ’s goal is, among other things, to test how good the
    common challenge of implementing an undo/redo functionality for a GUI application can be solved.
-
-`7guis_06_circle_drawer.py <https://github.com/pyedifice/pyedifice/tree/master/examples/7guis/7guis_06_circle_drawer.py>`_
 
 .. code-block:: shell
    :caption: Run in Python environment
@@ -240,11 +264,15 @@ Circle Drawer
 Cells
 -----
 
+Source code `7guis_07_cells.py <https://github.com/pyedifice/pyedifice/tree/master/examples/7guis/7guis_07_cells.py>`_
+
+.. figure:: /image/7guis_07_cells.png
+
+..
+
    `Cells <https://7guis.github.io/7guis/tasks#cells>`_ is a more authentic and involved task that tests if a
    particular approach also scales to a somewhat bigger application. The two primary GUI-related challenges are
    intelligent propagation of changes and widget customization.
-
-`7guis_07_cells.py <https://github.com/pyedifice/pyedifice/tree/master/examples/7guis/7guis_07_cells.py>`_
 
 .. code-block:: shell
    :caption: Run in Python environment
@@ -294,21 +322,26 @@ are good for writing formulas. The
 also supply a lot of the features of a spreadsheet formula language.
 
 .. code-block:: python
-   :caption: Example formula: Copy the value from column 5, row 6
+   :caption: Example formula: Copy the value from column *5*, row *6*
 
    =sheet[5][6]
 
 .. code-block:: python
-   :caption: Example formula: Sum all numbers in column 0
+   :caption: Example formula: Sum all numbers in column *0*
 
    =sum(x for x in sheet[0] if isinstance(x, (int, float)))
 
 .. code-block:: python
-   :caption: Example formula: Join all strings in row 0
+   :caption: Example formula: Join all strings in row *0*
 
    =",".join(col[0] for col in sheet if isinstance(col[0], str))
 
 .. code-block:: python
-   :caption: Example formula: Find the maximum of all numbers in the range of rows *0 to 4* in columns *0 to 4*
+   :caption: Example formula: The maximum of all numbers in the range of  columns *0 to 2*, rows *0 to 4*
 
-   =max(x for r in sheet[:5] for x in r[:5] if isinstance(x, (int, float)))
+   =max(x for c in sheet[:5] for x in c[:3] if isinstance(x, (int, float)))
+
+.. code-block:: python
+   :caption: Example formula: Sum of all numbers in the range of columns *1 to 2*, rows *1 to 4*
+
+   =sum(x for c in sheet[1:3] for x in c[1:5] if isinstance(x, (int, float)))

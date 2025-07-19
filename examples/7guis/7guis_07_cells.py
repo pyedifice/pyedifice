@@ -84,6 +84,8 @@ def eval_spreadsheet(
 
 @ed.component
 def Main(self):
+    ed.use_palette_edifice()
+    # spreadsheet is row-major.
     spreadsheet, spreadsheet_set = ed.use_state(
         cast(list[list[str]], [["" for _ in range(10)] for _ in range(10)]),
     )
@@ -116,22 +118,22 @@ def Main(self):
                         with ed.HBoxView(
                             style={
                                 "align": "bottom",
-                                "border-bottom": "1px solid black",
+                                "border-bottom": "1px solid grey",
                                 "padding-bottom": 5,
                                 "padding-left": 5,
                             },
                         ):
-                            ed.Label(text=str(r))  # instead of ed.Label(text=chr(ord("A") + r))
+                            ed.Label(text=str(r), style={"align": "center"})  # instead ed.Label(text=chr(ord("A") + r))
                 for r, row in enumerate(spreadsheet_fixpoint):
                     with ed.TableGridRow():
                         with ed.HBoxView(
-                            style={"align": "right", "border-right": "1px solid black", "padding-right": 5},
+                            style={"align": "right", "border-right": "1px solid grey", "padding-right": 5},
                         ):
                             ed.Label(str(r))
                         for c, cell in enumerate(row):
                             if edit_cell == (r, c):
                                 with ed.HBoxView(
-                                    style={"border-bottom": "1px solid black", "border-right": "1px solid black"},
+                                    style={"border-bottom": "1px solid grey", "border-right": "1px solid grey"},
                                     size_policy=QSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed),
                                 ):
                                     ed.TextInput(
@@ -146,7 +148,7 @@ def Main(self):
                                     )
                             else:
                                 with ed.HBoxView(
-                                    style={"border-bottom": "1px solid black", "border-right": "1px solid black"},
+                                    style={"border-bottom": "1px solid grey", "border-right": "1px solid grey"},
                                 ):
                                     match cell:
                                         case int():

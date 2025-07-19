@@ -2,6 +2,7 @@
 # https://7guis.github.io/7guis/tasks#flight
 #
 
+
 from __future__ import annotations
 
 import datetime
@@ -11,6 +12,7 @@ import edifice as ed
 
 @ed.component
 def Main(self):
+    ed.use_palette_edifice()
     twoway, twoway_set = ed.use_state(False)
     t1, t1_set = ed.use_state("27.03.2014")
     t2, t2_set = ed.use_state("27.03.2014")
@@ -28,24 +30,25 @@ def Main(self):
     except ValueError:
         pass
 
-    with ed.Window(title="Flight Booker"):
+    with ed.Window(title="Book Flight"):
         with ed.VBoxView(style={"padding": 10}):
             if not booked:
                 ed.Dropdown(
                     selection=0,
                     options=["one-way flight", "return flight"],
                     on_select=lambda index: twoway_set(index == 1),
+                    style={"margin-bottom": 6, "padding": 2},
                 )
                 ed.TextInput(
                     text=t1,
                     on_change=t1_set,
-                    style={"background-color": "red"} if t1_date is None else {},
+                    style={"margin-bottom": 6} | ({"background-color": "red"} if t1_date is None else {}),
                 )
                 ed.TextInput(
                     text=t2,
                     on_change=t2_set,
                     enabled=twoway,
-                    style={"background-color": "red"} if twoway and t2_date is None else {},
+                    style={"margin-bottom": 6} | ({"background-color": "red"} if twoway and t2_date is None else {}),
                 )
                 ed.Button(
                     title="Book",

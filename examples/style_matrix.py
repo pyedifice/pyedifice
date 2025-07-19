@@ -48,7 +48,7 @@ def Main(self):
         tp.cast(QtWidgets.QApplication, QtWidgets.QApplication.instance()).setPalette(palette)
         return palette
 
-    palette, _ = ed.use_state(initializer)
+    palette = ed.use_memo(initializer)
 
     with ed.Window(
         title="Style Matrix",

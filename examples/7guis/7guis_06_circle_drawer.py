@@ -34,11 +34,11 @@ class ActionAdjust:
     circle_index: int
     radius_new: float
 
+radius_default = 25.0
 
 @ed.component
 def Main(self):
-    radius_default = 25.0
-
+    ed.use_palette_edifice()
     size, size_set = ed.use_state(QSize(0, 0))
 
     # History of circle actions. Most recent action is history[-1].
@@ -119,7 +119,7 @@ def Main(self):
         painter = QPainter(pixmap)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
         for i, circle in folded_circles.items():
-            painter.setPen(QPen(Qt.GlobalColor.black, 2))
+            painter.setPen(QPen(Qt.GlobalColor.black, 1))
             painter.setBrush(QBrush(Qt.GlobalColor.transparent))
             if circle_selected is not None and circle_selected == i:
                 painter.setBrush(QBrush(Qt.GlobalColor.gray))
@@ -133,11 +133,11 @@ def Main(self):
 
     img: QPixmap = ed.use_memo(draw_circles, [folded_circles, circle_selected, size])
 
-    with ed.Window(title="Circle Drawer", _size_open=(800, 600)):
+    with ed.Window(title="Circle Drawer", _size_open=(400, 300)):
         with ed.VBoxView(style={"padding": 10}):
             with ed.HBoxView(
                 style={"padding-bottom": 10, "align": "center"},
-                size_policy=QSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed),
+                size_policy=QSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed),
             ):
                 ed.Button(
                     title="Undo",
@@ -151,11 +151,17 @@ def Main(self):
                     on_click=handle_redo,
                     enabled=history_index < len(history),
                 )
-            with ed.VBoxView(on_resize=lambda event: size_set(event.size())):
-                ed.Image(
-                    src=img,
-                    on_click=handle_click,
-                )
+
+            with ed.VBoxView(
+                style={"border": "1px solid black", "padding": 1},
+            ):
+                with ed.VBoxView(
+                    on_resize=lambda event: size_set(event.size()),
+                ):
+                    ed.Image(
+                        src=img,
+                        on_click=handle_click,
+                    )
         if circle_selected is not None:
             with ed.WindowPopView(
                 title="Adjust Circle",
@@ -165,7 +171,7 @@ def Main(self):
                     style={"padding": 20, "align": Qt.AlignmentFlag.AlignHCenter | Qt.AlignmentFlag.AlignTop},
                 ):
                     circle = folded_circles[circle_selected]
-                    ed.Label(text=f"Adjust the diameter of circle at ({circle.x}, {circle.y}).")
+                    ed.Label(text=f"Adjust the diameter of circle at ({circle.x:.0f}, {circle.y:.0f}).")
                     with ed.HBoxView(style={"padding-top": 10, "align": Qt.AlignmentFlag.AlignHCenter}):
                         with ed.HBoxView(style={"width": 200}):
                             ed.Slider(
