@@ -7,6 +7,13 @@
 Release Notes
 =============
 
+v4.4.0
+------
+Released: 2025-08-23
+
+- :class:`VScrollView`, :class:`HScrollView`, :class:`FixScrollView` new props
+  :code:`scrollbar_policy_horizontal`, :code:`scrollbar_policy_vertical`.
+
 v4.3.0
 ------
 Released: 2025-07-20
