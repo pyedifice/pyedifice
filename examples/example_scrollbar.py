@@ -10,14 +10,14 @@ else:
     from PySide6.QtCore import Qt
     from PySide6.QtGui import QWheelEvent
 
+
 @ed.component
 def MyComponent(self):
-
     s1, s1_set = ed.use_state(0)
     s2, s2_set = ed.use_state(0)
     s1_wheel, s1_wheel_set = ed.use_state(True)
 
-    def wheel_move(event:QWheelEvent):
+    def wheel_move(event: QWheelEvent):
         y_delta = event.angleDelta().y() // 120
         s1_set(lambda s: s + y_delta)
 
@@ -25,28 +25,28 @@ def MyComponent(self):
 
     with ed.VBoxView():
         with ed.HBoxView():
-                ed.ScrollBar(
-                    value=s1,
-                    minimum=0,
-                    maximum=100,
-                    orientation=Qt.Orientation.Vertical,
-                    on_value_changed=s1_set,
-                    focus_policy=Qt.FocusPolicy.StrongFocus,
+            ed.ScrollBar(
+                value=s1,
+                minimum=0,
+                maximum=100,
+                orientation=Qt.Orientation.Vertical,
+                on_value_changed=s1_set,
+                focus_policy=Qt.FocusPolicy.StrongFocus,
+            )
+            with ed.VBoxView():
+                ed.Label(
+                    text=f"Vertical ScrollBar: {s1}",
+                    on_mouse_wheel=wheel_move if s1_wheel else None,
+                    style={
+                        "padding": 30,
+                        "border": "3px solid orange",
+                    },
                 )
-                with ed.VBoxView():
-                    ed.Label(
-                        text=f"Vertical ScrollBar: {s1}",
-                        on_mouse_wheel=wheel_move if s1_wheel else None,
-                        style={
-                            "padding": 30,
-                            "border": "3px solid orange",
-                        },
-                    )
-                    ed.CheckBox(
-                        checked = s1_wheel,
-                        text="Label Wheel Capture",
-                        on_change=s1_wheel_set,
-                    )
+                ed.CheckBox(
+                    checked=s1_wheel,
+                    text="Label Wheel Capture",
+                    on_change=s1_wheel_set,
+                )
 
         ed.Label(text=f"Horizontal ScrollBar: {s2}")
         ed.ScrollBar(
@@ -82,6 +82,38 @@ def MyComponent(self):
                 },
             ):
                 ed.Label(text="Label1")
+        with ed.TableGridView():
+            with ed.TableGridRow():
+                v_policy_horizontal, v_policy_horizontal_set = ed.use_state(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+                h_policy_vertical, h_policy_vertical_set = ed.use_state(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+                with ed.VScrollView(
+                    scrollbar_policy_horizontal=v_policy_horizontal,
+                    scrollbar_policy_vertical=h_policy_vertical,
+                ):
+                    ed.Dropdown(
+                        options=[
+                            "vertical ScrollBarAsNeeded",
+                            "vertical ScrollBarAlwaysOff",
+                            "vertical ScrollBarAlwaysOn",
+                        ],
+                        selection=h_policy_vertical.value,
+                        on_select=lambda val: h_policy_vertical_set(Qt.ScrollBarPolicy(val)),
+                    )
+                    ed.Dropdown(
+                        options=[
+                            "horizontal ScrollBarAsNeeded",
+                            "horizontal ScrollBarAlwaysOff",
+                            "horizontal ScrollBarAlwaysOn",
+                        ],
+                        selection=v_policy_horizontal.value,
+                        on_select=lambda val: v_policy_horizontal_set(Qt.ScrollBarPolicy(val)),
+                    )
+                    ed.Label(
+                        text="VScrollView",
+                        style={"width": 200, "height": 200},
+                        word_wrap=True,
+                    )
+
 
 @ed.component
 def Main(self):
