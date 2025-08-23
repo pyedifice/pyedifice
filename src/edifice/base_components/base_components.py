@@ -1991,6 +1991,8 @@ class _ScrollView(_LinearView[QtWidgets.QScrollArea], tp.Generic[_T_boxlayout]):
         on_scroll_horizontal: tp.Callable[[int], None] | None = None,
         on_range_vertical: tp.Callable[[int, int], None] | None = None,
         on_range_horizontal: tp.Callable[[int, int], None] | None = None,
+        scrollbar_policy_horizontal: QtCore.Qt.ScrollBarPolicy = QtCore.Qt.ScrollBarPolicy.ScrollBarAsNeeded,
+        scrollbar_policy_vertical: QtCore.Qt.ScrollBarPolicy = QtCore.Qt.ScrollBarPolicy.ScrollBarAsNeeded,
         **kwargs,
     ):
         super().__init__(**kwargs)
@@ -2000,6 +2002,8 @@ class _ScrollView(_LinearView[QtWidgets.QScrollArea], tp.Generic[_T_boxlayout]):
                 "on_scroll_horizontal": on_scroll_horizontal,
                 "on_range_vertical": on_range_vertical,
                 "on_range_horizontal": on_range_horizontal,
+                "scrollbar_policy_horizontal": scrollbar_policy_horizontal,
+                "scrollbar_policy_vertical": scrollbar_policy_vertical,
             },
         )
         self.underlying_layout: _T_boxlayout | None = None
@@ -2073,6 +2077,12 @@ class _ScrollView(_LinearView[QtWidgets.QScrollArea], tp.Generic[_T_boxlayout]):
                     )
                 if propsnew is not None:
                     commands.append(CommandType(self.underlying.horizontalScrollBar().rangeChanged.connect, propsnew))
+        match diff_props.get("scrollbar_policy_horizontal"):
+            case _, propsnew:
+                commands.append(CommandType(self.underlying.setHorizontalScrollBarPolicy, propsnew))
+        match diff_props.get("scrollbar_policy_vertical"):
+            case _, propsnew:
+                commands.append(CommandType(self.underlying.setVerticalScrollBarPolicy, propsnew))
         return commands
 
 
@@ -2109,6 +2119,12 @@ class VScrollView(_ScrollView[QtWidgets.QVBoxLayout]):
         on_range_horizontal:
             Event handler for when the horizontal scrollbar range changes.
             See `QScrollBar.rangeChanged <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QAbstractSlider.html#PySide6.QtWidgets.QAbstractSlider.rangeChanged>`_.
+        scrollbar_policy_horizontal:
+            The policy for the horizontal scrollbar.
+            See `QAbstractScrollArea.setHorizontalScrollBarPolicy <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QAbstractScrollArea.html#PySide6.QtWidgets.QAbstractScrollArea.setHorizontalScrollBarPolicy>`_.
+        scrollbar_policy_vertical:
+            The policy for the vertical scrollbar.
+            See `QAbstractScrollArea.setVerticalScrollBarPolicy <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QAbstractScrollArea.html#PySide6.QtWidgets.QAbstractScrollArea.setVerticalScrollBarPolicy>`_.
     """
 
     def __init__(
@@ -2117,6 +2133,8 @@ class VScrollView(_ScrollView[QtWidgets.QVBoxLayout]):
         on_scroll_horizontal: tp.Callable[[int], None] | None = None,
         on_range_vertical: tp.Callable[[int, int], None] | None = None,
         on_range_horizontal: tp.Callable[[int, int], None] | None = None,
+        scrollbar_policy_horizontal: QtCore.Qt.ScrollBarPolicy = QtCore.Qt.ScrollBarPolicy.ScrollBarAsNeeded,
+        scrollbar_policy_vertical: QtCore.Qt.ScrollBarPolicy = QtCore.Qt.ScrollBarPolicy.ScrollBarAsNeeded,
         **kwargs,
     ):
         super().__init__(
@@ -2124,6 +2142,8 @@ class VScrollView(_ScrollView[QtWidgets.QVBoxLayout]):
             on_scroll_horizontal=on_scroll_horizontal,
             on_range_vertical=on_range_vertical,
             on_range_horizontal=on_range_horizontal,
+            scrollbar_policy_horizontal=scrollbar_policy_horizontal,
+            scrollbar_policy_vertical=scrollbar_policy_vertical,
             **kwargs,
         )
 
@@ -2166,6 +2186,13 @@ class HScrollView(_ScrollView[QtWidgets.QHBoxLayout]):
             Event handler for when the horizontal scrollbar range changes.
             See `QScrollBar.rangeChanged <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QAbstractSlider.html#PySide6.QtWidgets.QAbstractSlider.rangeChanged>`_.
             The event handler function will be passed the new range as a tuple of
+        scrollbar_policy_horizontal:
+            The policy for the horizontal scrollbar.
+            See `QAbstractScrollArea.setHorizontalScrollBarPolicy <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QAbstractScrollArea.html#PySide6.QtWidgets.QAbstractScrollArea.setHorizontalScrollBarPolicy>`_.
+        scrollbar_policy_vertical:
+            The policy for the vertical scrollbar.
+            See `QAbstractScrollArea.setVerticalScrollBarPolicy <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QAbstractScrollArea.html#PySide6.QtWidgets.QAbstractScrollArea.setVerticalScrollBarPolicy>`_.
+
     """
 
     def __init__(
@@ -2174,6 +2201,8 @@ class HScrollView(_ScrollView[QtWidgets.QHBoxLayout]):
         on_scroll_horizontal: tp.Callable[[int], None] | None = None,
         on_range_vertical: tp.Callable[[int, int], None] | None = None,
         on_range_horizontal: tp.Callable[[int, int], None] | None = None,
+        scrollbar_policy_horizontal: QtCore.Qt.ScrollBarPolicy = QtCore.Qt.ScrollBarPolicy.ScrollBarAsNeeded,
+        scrollbar_policy_vertical: QtCore.Qt.ScrollBarPolicy = QtCore.Qt.ScrollBarPolicy.ScrollBarAsNeeded,
         **kwargs,
     ):
         super().__init__(
@@ -2181,6 +2210,8 @@ class HScrollView(_ScrollView[QtWidgets.QHBoxLayout]):
             on_scroll_horizontal=on_scroll_horizontal,
             on_range_vertical=on_range_vertical,
             on_range_horizontal=on_range_horizontal,
+            scrollbar_policy_horizontal=scrollbar_policy_horizontal,
+            scrollbar_policy_vertical=scrollbar_policy_vertical,
             **kwargs,
         )
 
@@ -2232,6 +2263,12 @@ class FixScrollView(_LinearView[QtWidgets.QScrollArea]):
         on_range_horizontal:
             Event handler for when the horizontal scrollbar range changes.
             See `QScrollBar.rangeChanged <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QAbstractSlider.html#PySide6.QtWidgets.QAbstractSlider.rangeChanged>`_.
+        scrollbar_policy_horizontal:
+            The policy for the horizontal scrollbar.
+            See `QAbstractScrollArea.setHorizontalScrollBarPolicy <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QAbstractScrollArea.html#PySide6.QtWidgets.QAbstractScrollArea.setHorizontalScrollBarPolicy>`_.
+        scrollbar_policy_vertical:
+            The policy for the vertical scrollbar.
+            See `QAbstractScrollArea.setVerticalScrollBarPolicy <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QAbstractScrollArea.html#PySide6.QtWidgets.QAbstractScrollArea.setVerticalScrollBarPolicy>`_.
     """
 
     def __init__(
@@ -2240,6 +2277,8 @@ class FixScrollView(_LinearView[QtWidgets.QScrollArea]):
         on_scroll_horizontal: tp.Callable[[int], None] | None = None,
         on_range_vertical: tp.Callable[[int, int], None] | None = None,
         on_range_horizontal: tp.Callable[[int, int], None] | None = None,
+        scrollbar_policy_horizontal: QtCore.Qt.ScrollBarPolicy = QtCore.Qt.ScrollBarPolicy.ScrollBarAsNeeded,
+        scrollbar_policy_vertical: QtCore.Qt.ScrollBarPolicy = QtCore.Qt.ScrollBarPolicy.ScrollBarAsNeeded,
         **kwargs,
     ):
         super().__init__(
@@ -2247,6 +2286,8 @@ class FixScrollView(_LinearView[QtWidgets.QScrollArea]):
             on_scroll_horizontal=on_scroll_horizontal,
             on_range_vertical=on_range_vertical,
             on_range_horizontal=on_range_horizontal,
+            scrollbar_policy_horizontal=scrollbar_policy_horizontal,
+            scrollbar_policy_vertical=scrollbar_policy_vertical,
             **kwargs,
         )
 
