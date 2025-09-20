@@ -23,9 +23,9 @@
 
 # Edifice run_subprocess_with_callback 2025 by James D. Brock
 #
-# This run_subprocess_with_callback module file depends only on the Python
-# standard library so it can copied and pasted into any project without
-# modification.
+# This run_subprocess_with_callback module depends only on the
+# Python standard library so this module file can be copied and pasted into
+# another project without depending on the Edifice package.
 
 
 from __future__ import annotations
@@ -310,6 +310,12 @@ async def run_subprocess_with_callback(
     `before the __main__ imports <https://pyinstaller.org/en/stable/common-issues-and-pitfalls.html#when-to-call-multiprocessing-freeze-support>`_
     so that the spawn Process starts up faster.
 
+    Independence
+    ^^^^^^^^^^^^
+
+    This :func:`run_subprocess_with_callback` module depends only on the
+    Python standard library so this module file can be copied and pasted into
+    another project without depending on the Edifice package.
     """
 
 

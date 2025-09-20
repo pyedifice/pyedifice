@@ -193,11 +193,15 @@ which has child Elements representing different parts of your application.
 Dynamic Rendering
 ^^^^^^^^^^^^^^^^^
 
-For dynamism, use conditions and loops in your :func:`@component <component>`
-render function.
-The conditions and loops can depend on **props** or **state**. For example,
+For dynamism, use Python control flow
+statements :code:`if` :code:`for` :code:`match` in
+your :func:`@component <component>` render function.
+The control flow statements can depend on **props** or **state**. For example,
 this :func:`@component <component>` will render input fields only while
 the **props** indicate that they are wanted.
+
+- When the :code:`want_username` **prop** becomes :code:`True` then the entire username subtree will be added.
+- When the :code:`want_username` **prop** becomes :code:`False` then the entire username subtree will be removed.
 
 .. code-block:: python
 

@@ -83,7 +83,8 @@ Edifice programs are written in Python.
 
 Because Edifice programs are only Python, binding to the
 UI is much more straightforward.
-Edifice makes it easy to dynamically create, mutate, shuffle, and destroy sections of the UI.
+Edifice makes it easy to dynamically create, mutate, shuffle, and destroy
+sections of the UI with Python control flow statements `if` `for` `match`.
 Qt Quick assumes a much more static interface.
 
 Qt Quick is like DOM + HTML + JavaScript. Edifice is like React.
