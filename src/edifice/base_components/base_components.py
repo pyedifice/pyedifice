@@ -2683,6 +2683,7 @@ class CustomWidget(QtWidgetElement[_T_customwidget]):
     ):
         if self.underlying is None:
             self.underlying = self.create_widget()
+            self.underlying.setObjectName(str(id(self)))
         commands = super()._qt_update_commands_super(widget_trees, diff_props, self.underlying, None)
         commands.append(CommandType(self.update, self.underlying, diff_props))
         return commands
