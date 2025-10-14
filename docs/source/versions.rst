@@ -7,6 +7,12 @@
 Release Notes
 =============
 
+v4.4.1
+------
+Released: 2025-10-14
+
+- Bugfix: :class:`CustomWidget` :code:`style` prop applies to the widget.
+
 v4.4.0
 ------
 Released: 2025-08-23
