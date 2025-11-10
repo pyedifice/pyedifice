@@ -22,6 +22,7 @@ import edifice as ed
 logger = logging.getLogger("Edifice")
 logger.setLevel(logging.INFO)
 
+
 @dataclass(frozen=True)
 class Todo:
     completed: bool = False
@@ -86,9 +87,10 @@ def TodoItem(
                 with ed.ButtonView(
                     on_click=lambda _ev: delete_todo(key),
                     style={
-                        "padding-left": 4,
+                        "padding-bottom": 3,
                         "width": 24,
                         "height": 24,
+                        "align": "center",
                     },
                     tool_tip="Clear " + todo.text,
                     size_policy=QtWidgets.QSizePolicy(
@@ -155,7 +157,7 @@ def TodoMVC(self):
         complete_all_toggle_set(complete)
         todos_set(new_todos)
 
-    def clear_completed(ev: QtGui.QMouseEvent):
+    def clear_completed(ev: QtGui.QMouseEvent | QtGui.QKeyEvent):
         new_todos = OrderedDict([])
         for key, todo in todos.items():
             if not todo.completed:
@@ -225,11 +227,23 @@ def TodoMVC(self):
                         )
                     with ed.VBoxView(style={"min-width": 180, "padding-left": 10, "align": "right"}):
                         if len(todos) > items_left:
-                            ed.Button(
-                                title="Clear completed (" + str(len(todos) - items_left) + ")",
-                                on_click=clear_completed,
-                                style={"width": 150},
-                            )
+                            with ed.ButtonView(
+                                on_trigger=clear_completed,
+                                style={
+                                    "width": 150,
+                                    "padding-left": 5,
+                                    "padding-right": 5,
+                                    "padding-top": 2,
+                                    "padding-bottom": 2,
+                                },
+                            ):
+                                ed.Label(
+                                    text="Clear completed",
+                                )
+                                ed.Label(
+                                    text=str(len(todos) - items_left),
+                                    style={"font-weight": "bold", "margin-left": 3},
+                                )
                 ed.Label(
                     text="Click to edit a todo",
                     style={"color": "grey"},
@@ -256,7 +270,7 @@ def Main(self):
         else:
             qapp.setPalette(ed.palette_edifice_dark())
 
-    _, _ = ed.use_state(initializer)
+    ed.use_memo(initializer)
 
     with ed.Window(title="todos", _size_open=(520, 200)):
         TodoMVC()
