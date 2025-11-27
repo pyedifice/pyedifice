@@ -33,6 +33,7 @@ Base Hooks
    use_state
    use_effect
    use_async
+   use_async_call
 
 Derived Hooks
 -------------
@@ -46,7 +47,6 @@ These Derived Hooks are provided by Edifice.
 
    use_ref
    use_effect_final
-   use_async_call
    use_memo
    provide_context
    use_context

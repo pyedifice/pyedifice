@@ -26,6 +26,8 @@ _T_use_state = tp.TypeVar("_T_use_state")
 _T_Element = tp.TypeVar("_T_Element", bound="Element")
 _T_widget = tp.TypeVar("_T_widget", bound=QtWidgets.QWidget)
 logger = logging.getLogger("Edifice")
+_P_async = tp.ParamSpec("_P_async")
+
 
 P = tp.ParamSpec("P")
 
@@ -409,7 +411,8 @@ class Element:
         of Keys** are the same as the
         `React Rules of Keys <https://react.dev/learn/rendering-lists#rules-of-keys>`_.
 
-        - **Keys must be unique among siblings.** However, it’s okay to use the same keys for Elements of different parents.
+        - **Keys must be unique among siblings.** However, it’s okay to use the
+          same keys for Elements of different parents.
         - **Keys must not change** or that defeats their purpose! Don’t generate them while rendering.
 
         Returns the Element to allow for chaining.
@@ -879,8 +882,11 @@ class QtWidgetElement(Element, tp.Generic[_T_widget]):
             as argument.
         on_focus:
             Callback for
-            `focusOutEvent <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.focusOutEvent>`_ and
-            `focusInEvent <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.focusInEvent>`_.
+            `focusOutEvent
+            <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.focusOutEvent>`_
+            and
+            `focusInEvent
+            <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.focusInEvent>`_.
             Takes a
             `QFocusEvent <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QFocusEvent.html>`_
             as argument.
@@ -1751,18 +1757,38 @@ class _HookEffect:
 
 @dataclass
 class _HookAsync:
-    task: asyncio.Task[tp.Any] | None
+    tasks: list[asyncio.Task[tp.Any]]
     """
-    The currently executing async effect task.
-    """
-    queue: list[tp.Callable[[], Coroutine[None, None, None]]]
-    """
-    The queue of waiting async effect tasks. Max length 1.
+    The currently executing async effect tasks.
     """
     dependencies: tp.Any
     """
     The dependencies of use_async().
     """
+    tasks_cancelled: set[asyncio.Task[tp.Any]]
+    """
+    The set of tasks for which cancel() has been called.
+    """
+
+    def cancel(self):
+        """
+        Cancel all running tasks.
+        """
+        for task in self.tasks:
+            if task not in self.tasks_cancelled:
+                task.cancel()
+                self.tasks_cancelled.add(task)
+
+    def concurrency(self) -> int:
+        """
+        Return the number of currently running, uncancelled tasks.
+
+        This may not really capture what we want to know. If a task
+        has been cancelled then it is not yet done, and so
+        the task will not make any more progress but it has not
+        yet released its resources.
+        """
+        return len(self.tasks) - len(self.tasks_cancelled)
 
 
 def elements_match(a: Element, b: Element) -> bool:
@@ -1839,9 +1865,8 @@ class RenderEngine:
             return True
         hooks = self._hook_async[element]
         for hook in hooks:
-            if hook.task is not None:
-                if not hook.task.done():
-                    return False
+            if len(hook.tasks) > 0:
+                return False
         return True
 
     def _delete_component(self, component: Element, recursive: bool):
@@ -1865,22 +1890,23 @@ class RenderEngine:
             del self._hook_effect[component]
         # Clean up use_async for the component
         if component in self._hook_async:
-            for hook in self._hook_async[component]:
-                hook.queue.clear()
-                if hook.task is not None:
-                    # If there are some running tasks, wait until they are
-                    # done and then delete this HookAsync object.
-                    def done_callback(_future_object):
-                        if component in self._hook_async:
-                            if self.is_hook_async_done(component):
-                                del self._hook_async[component]
-
-                    hook.task.add_done_callback(done_callback)
-                    hook.task.cancel()
             if self.is_hook_async_done(component):
                 # If there are no running tasks, then we can delete this
                 # HookAsync object immediately.
                 del self._hook_async[component]
+            else:
+                for hook in self._hook_async[component]:
+                    if len(hook.tasks) > 0:
+                        # If there are some running tasks, wait until they are
+                        # done and then delete this HookAsync object.
+                        def done_callback(_future_object):
+                            if component in self._hook_async:
+                                if self.is_hook_async_done(component):
+                                    del self._hook_async[component]
+
+                        for task in hook.tasks:
+                            task.add_done_callback(done_callback)
+                            task.cancel()
         # Clean up use_state for the component
         if component in self._hook_state:
             del self._hook_state[component]
@@ -2378,6 +2404,7 @@ class RenderEngine:
         element: Element,
         fn_coroutine: tp.Callable[[], Coroutine[None, None, None]],
         dependencies: tp.Any,
+        max_concurrent: int | None = 1,
     ) -> Callable[[], None]:
         hooks = self._hook_async[element]
         h_index = element._hook_async_index
@@ -2386,86 +2413,120 @@ class RenderEngine:
         # When the done_callback is called,
         # this component might have already unmounted. In that case
         # this done_callback will still be holding a reference to the
-        # _HookAsync, and the _HookAsync.queue will be cleared.
+        # _HookAsync.
         # After the done_callback is called, the _HookAsync object
         # should be garbage collected.
 
         def done_callback(hook: _HookAsync, _task: asyncio.Task[tp.Any]):
-            if hook.task is not None:
-                try:
-                    # https://docs.python.org/3/library/asyncio-task.html#asyncio.Task.result
-                    # If there is an exception, retrieve the exception and throw it away.
-                    # Otherwise asyncio complains
-                    # “Task exception was never retrieved”
-                    _r = hook.task.result()
-                    # TODO Maybe we should re-raise every exception
-                    # except asyncio.CancelledError? Then if the user
-                    # raises to use_async then the loop crashes.
-                    # Maybe that is better.
-                    # But then users would start defensively try-ing
-                    # every use_async function and would forget to re-raise
-                    # CancelledError. Which would be worse.
-                except asyncio.CancelledError:
-                    pass
-                except BaseException:  # noqa: BLE001
-                    logger.debug("Non-CancelledError exception raised in use_async")
-                hook.task = None
-            if len(hook.queue) > 0:
-                # There is another async task waiting in the queue
-                hook.task = asyncio.create_task(hook.queue.pop(0)())
-                hook.task.add_done_callback(lambda t, hook=hook: done_callback(hook, t))
+            hook.tasks.remove(_task)
+            hook.tasks_cancelled.discard(_task)
+            try:
+                # https://docs.python.org/3/library/asyncio-task.html#asyncio.Task.result
+                # If there is an exception, retrieve the exception and throw it away.
+                # Otherwise asyncio complains
+                # “Task exception was never retrieved”
+                _r = _task.result()
+            except asyncio.CancelledError:
+                pass
+            # Re-raise every exception except asyncio.CancelledError
 
         if len(hooks) <= h_index:
             # then this is the first render.
             task = asyncio.create_task(fn_coroutine())
             hook = _HookAsync(
-                task=task,
+                tasks=[task],
                 dependencies=dependencies,
-                queue=[],
+                tasks_cancelled=set(),
             )
             hooks.append(hook)
 
             task.add_done_callback(lambda t: done_callback(hook, t))
 
-            def cancel():
-                task.cancel()
-
-            return cancel
+            return hook.cancel
 
         if dependencies != (hook := hooks[h_index]).dependencies:
             # then this is not the first render and deps changed
             hook.dependencies = dependencies
-            if hook.task is not None:
-                # There's already an old async effect in flight, so enqueue
-                # the new async effect and cancel the old async effect.
-                # We also want to cancel all of the other async effects
-                # in the queue, so the queue should have max len 1.
-                # Maybe queue should be type Optional instead of list? That
-                # would be weird though.
-                hook.queue.clear()
-                hook.queue.append(fn_coroutine)
-                hook.task.cancel()
 
-            else:
-                hook.task = asyncio.create_task(fn_coroutine())
+            task_surplus = hook.concurrency() - max_concurrent + 1 if max_concurrent is not None else 0
+            # task_surplus > 0 means we have too many tasks running so we must
+            # cancel some to start a new task.
+            # Cancel the oldest uncancelled tasks.
+            for task in hook.tasks:
+                if task_surplus <= 0:
+                    break
+                if task not in hook.tasks_cancelled:
+                    task.cancel()
+                    hook.tasks_cancelled.add(task)
+                    task_surplus -= 1
 
-                hook.task.add_done_callback(lambda t, hook=hook: done_callback(hook, t))
+            task = asyncio.create_task(fn_coroutine())
+            task.add_done_callback(lambda t, hook=hook: done_callback(hook, t))
+            hook.tasks.append(task)
 
-            def cancel():
-                if hook.task is not None:
-                    hook.task.cancel()
-                else:
-                    hook.queue.clear()
-
-            return cancel
+            return hook.cancel
 
         # not first render, dependencies did not change
         hook = hooks[h_index]
+        return hook.cancel
 
-        def cancel():
-            if hook.task is not None:
-                hook.task.cancel()
-            else:
-                hook.queue.clear()
+    def use_async_call(
+        self,
+        element: Element,
+        fn_coroutine: Callable[_P_async, tp.Coroutine[None, None, None]],
+        max_concurrent: int | None = 1,
+    ) -> tuple[Callable[_P_async, None], Callable[[], None]]:
+        hooks = self._hook_async[element]
+        h_index = element._hook_async_index
+        element._hook_async_index += 1
 
-        return cancel
+        # We can use the _HookAsync type for both use_async and use_async_call.
+
+        # When the done_callback is called,
+        # this component might have already unmounted. In that case
+        # this done_callback will still be holding a reference to the
+        # _HookAsync.
+        # After the done_callback is called, the _HookAsync object
+        # should be garbage collected.
+
+        def done_callback(hook: _HookAsync, _task: asyncio.Task[tp.Any]):
+            hook.tasks.remove(_task)
+            hook.tasks_cancelled.discard(_task)
+            try:
+                # https://docs.python.org/3/library/asyncio-task.html#asyncio.Task.result
+                # Otherwise asyncio complains
+                # “Task exception was never retrieved”
+                _r = _task.result()
+            except asyncio.CancelledError:
+                pass
+
+        if len(hooks) <= h_index:
+            # then this is the first render.
+            hook = _HookAsync(
+                tasks=[],
+                dependencies=None,
+                tasks_cancelled=set(),
+            )
+            assert len(hooks) == h_index
+            hooks.append(hook)
+
+        hook = hooks[h_index]
+
+        def callback(*args: _P_async.args, **kwargs: _P_async.kwargs) -> None:
+            task_surplus = hook.concurrency() - max_concurrent + 1 if max_concurrent is not None else 0
+            # task_surplus > 0 means we have too many tasks running so we must
+            # cancel some to start a new task.
+            # Cancel the oldest uncancelled tasks.
+            for task in hook.tasks:
+                if task_surplus <= 0:
+                    break
+                if task not in hook.tasks_cancelled:
+                    task.cancel()
+                    hook.tasks_cancelled.add(task)
+                    task_surplus -= 1
+
+            task = asyncio.create_task(fn_coroutine(*args, **kwargs))
+            task.add_done_callback(lambda t, hook=hook: done_callback(hook, t))
+            hook.tasks.append(task)
+
+        return callback, hook.cancel

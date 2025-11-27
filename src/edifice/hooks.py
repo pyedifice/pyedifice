@@ -1,14 +1,13 @@
 from __future__ import annotations
 
 import typing as tp
-from asyncio import get_event_loop
-from collections.abc import Awaitable, Callable, Coroutine
+from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
-from typing import Any, Generic, ParamSpec, TypeVar, cast
+from typing import Any, TypeVar, cast
 
 from typing_extensions import deprecated
 
-from edifice.engine import Reference, _T_use_state, get_render_context_maybe
+from edifice.engine import Reference, _P_async, _T_use_state, get_render_context_maybe
 from edifice.qt import QT_VERSION
 from edifice.utilities import palette_edifice_dark, palette_edifice_light, theme_is_light
 
@@ -346,6 +345,7 @@ def use_effect(
 def use_async(
     fn_coroutine: tp.Callable[[], Coroutine[None, None, None]],
     dependencies: Any = (),
+    max_concurrent: int | None = 1,
 ) -> Callable[[], None]:
     """
     Asynchronous side-effect Hook inside a :func:`@component<edifice.component>` function.
@@ -356,12 +356,20 @@ def use_async(
         dependencies:
             The :code:`fn_coroutine` Task will be started when the
             :code:`dependencies` are not :code:`__eq__` to the old :code:`dependencies`.
+        max_concurrent:
+            Maximum number of concurrent :code:`fn_coroutine` Tasks to allow
+            to run at the same time. If this limit is exceeded, then the oldest
+            :code:`fn_coroutine` Task will be cancelled to make room for the new
+            Task. Default is :code:`1`. Set to :code:`None` to allow unlimited
+            concurrency.
     Returns:
         A function which can be called to cancel the :code:`fn_coroutine` Task manually.
 
     Will create a new
     `Task <https://docs.python.org/3/library/asyncio-task.html#asyncio.Task>`_
     with the :code:`fn_coroutine` coroutine.
+    This Task will be bound to the
+    lifecycle of this :func:`@component<edifice.component>`.
 
     The :code:`fn_coroutine` will be called every time the :code:`dependencies` change.
     Only one :code:`fn_coroutine` will be allowed to run at a time.
@@ -406,15 +414,15 @@ def use_async(
     in three situations:
 
     1. If the :code:`dependencies` change before the :code:`fn_coroutine` Task completes, then
-       the :code:`fn_coroutine` Task will be cancelled. Then the new
-       :code:`fn_coroutine` Task will
-       be started after the old :code:`fn_coroutine` Task completes.
+       the :code:`fn_coroutine` Task will be cancelled if the
+       :code:`max_concurrent` limit is exceeded so that the new
+       :code:`fn_coroutine` Task can start.
     2. The :code:`use_async` Hook returns a function which can be called to
-       cancel the :code:`fn_coroutine` Task manually. In the example above,
+       cancel the :code:`fn_coroutine` Tasks manually. In the example above,
        the :code:`cancel_fetcher()` function can be called to cancel the fetcher.
     3. If this :func:`@component <edifice.component>` is unmounted before the
-       :code:`fn_coroutine` Task completes, then
-       the :code:`fn_coroutine` Task will be cancelled.
+       :code:`fn_coroutine` Tasks complete, then
+       the :code:`fn_coroutine` Tasks will be cancelled.
 
     Write your async :code:`fn_coroutine` function in such a way that it
     cleans itself up after exceptions. If you catch a
@@ -551,7 +559,7 @@ def use_async(
     context = get_render_context_maybe()
     if context is None or context.current_element is None:
         raise ValueError("use_async used outside component")
-    return context.engine.use_async(context.current_element, fn_coroutine, dependencies)
+    return context.engine.use_async(context.current_element, fn_coroutine, dependencies, max_concurrent=max_concurrent)
 
 
 def use_ref() -> Reference:
@@ -584,17 +592,9 @@ def use_callback(
     return use_memo(fn, dependencies)
 
 
-_P_async = ParamSpec("_P_async")
-
-
-class _AsyncCommand(Generic[_P_async]):
-    def __init__(self, *args: _P_async.args, **kwargs: _P_async.kwargs):
-        self.args = args
-        self.kwargs = kwargs
-
-
 def use_async_call(
-    fn_coroutine: Callable[_P_async, Awaitable[None]],
+    fn_coroutine: Callable[_P_async, Coroutine[None, None, None]],
+    max_concurrent: int | None = 1,
 ) -> tuple[Callable[_P_async, None], Callable[[], None]]:
     """
     Hook to call an async function from a non-async context.
@@ -602,13 +602,24 @@ def use_async_call(
     Args:
         fn_coroutine:
             Async Coroutine function to be run as a Task.
+        max_concurrent:
+            Maximum number of concurrent :code:`fn_coroutine` Tasks allowed
+            to run at the same time. If this limit is exceeded, then the oldest
+            :code:`fn_coroutine` Task will be cancelled to make room for the new
+            Task. Default is :code:`1`. Set to :code:`None` to allow unlimited
+            concurrency.
     Returns:
         A tuple pair of non-async functions.
             1. A non-async function with the same argument signature as the
                :code:`fn_coroutine`.
             2. A non-async cancellation function which can be called to cancel
-               the :code:`fn_coroutine` Task manually.
+               all of the :code:`fn_coroutine` Tasks manually.
 
+    Will create a new
+    `Task <https://docs.python.org/3/library/asyncio-task.html#asyncio.Task>`_
+    with the :code:`fn_coroutine` coroutine.
+    This Task will be bound to the
+    lifecycle of this :func:`@component<edifice.component>`.
     The async :code:`fn_coroutine` function can have any argument
     signature, but it must return :code:`None`. The return value is discarded.
 
@@ -617,12 +628,10 @@ def use_async_call(
 
     1. A non-async function with the same argument signature as the
        :code:`fn_coroutine`. When called, this non-async function will start a
-       new Task an the main Edifice thread event loop as a :func:`use_async`
-       Hook which calls :code:`fn_coroutine`. This non-async function is
-       safe to call from any thread.
+       new Task an the main Edifice thread event loop
+       which calls :code:`fn_coroutine`.
     2. A non-async cancellation function which can be called to cancel
-       the :code:`fn_coroutine` Task manually. This cancellation function is
-       safe to call from any thread.
+       the :code:`fn_coroutine` Task manually.
 
     .. code-block:: python
         :caption: use_async_call to delay print
@@ -633,41 +642,29 @@ def use_async_call(
 
         delay_print, cancel_print = use_async_call(delay_print_async)
 
-        delay_print("Hello World")
+        Button(
+            text="Print Hello World after 1 second",
+            on_click=lambda _: delay_print("Hello World")
+        )
+        Button(
+            text="Cancel print",
+            on_click=lambda _: cancel_print()
+        )
 
-    Some time later, if we want to manually cancel the delayed print:
-
-    .. code-block:: python
-        :caption: cancel the delayed print
-
-        cancel_print()
 
     This Hook is similar to :code:`useAsyncCallback` from
     https://www.npmjs.com/package/react-async-hook
 
     This Hook is similar to
     `create_task() <https://docs.python.org/3/library/asyncio-eventloop.html#asyncio.loop.create_task>`_ ,
-    but because it uses
-    :func:`use_async`, it will cancel the Task
-    when this :func:`@component<edifice.component>` is unmounted, or when the function is called again.
+    but it will cancel the Task
+    when this :func:`@component<edifice.component>` is unmounted, or when the
+    concurrency limit is exceeded.
     """
-
-    triggered, triggered_set = use_state(cast(_AsyncCommand[_P_async] | None, None))
-    loop = get_event_loop()
-
-    def callback(*args: _P_async.args, **kwargs: _P_async.kwargs) -> None:
-        loop.call_soon_threadsafe(triggered_set, _AsyncCommand(*args, **kwargs))
-
-    async def wrapper():
-        if triggered is not None:
-            await fn_coroutine(*triggered.args, **triggered.kwargs)
-
-    cancel = use_async(wrapper, triggered)
-
-    def cancel_threadsafe() -> None:
-        loop.call_soon_threadsafe(cancel)
-
-    return callback, cancel_threadsafe
+    context = get_render_context_maybe()
+    if context is None or context.current_element is None:
+        raise ValueError("use_async used outside component")
+    return context.engine.use_async_call(context.current_element, fn_coroutine, max_concurrent=max_concurrent)
 
 
 T = TypeVar("T")
@@ -1228,6 +1225,7 @@ def use_context_select(
 
     return local_state
 
+
 def use_palette_edifice() -> QtGui.QPalette:
     """Use the global Edifice color palette
     :func:`palette_edifice_light` or :func:`palette_edifice_dark`
@@ -1236,6 +1234,7 @@ def use_palette_edifice() -> QtGui.QPalette:
     Returns:
         `QPalette <https://doc.qt.io/qtforpython/PySide6/QtGui/QPalette.html>`_
     """
+
     def initializer():
         palette = palette_edifice_light() if theme_is_light() else palette_edifice_dark()
         tp.cast(QtWidgets.QApplication, QtWidgets.QApplication.instance()).setPalette(palette)

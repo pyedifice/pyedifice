@@ -7,6 +7,46 @@
 Release Notes
 =============
 
+.. rubric:: New Features
+
+The Hooks :func:`use_async` and :func:`use_async_call` now have an optional
+:code:`max_concurrent` argument which can allow more than one async call to run
+concurrently. The :code:`max_concurrent` argument
+defaults to :code:`1`, which is the same behavior as before.
+
+.. rubric:: Migration Guide
+
+Because the :code:`max_concurrent` argument
+defaults to :code:`1`, which is the same behavior as before, most user code
+will not be affected by this change.
+
+**Breaking Change** The :func:`use_async_call` Hook is no longer thread-safe.
+If you were relying on
+the thread-safety of :func:`use_async_call` then you should wrap it in a
+`asyncio.call_soon_threadsafe <https://docs.python.org/3/library/asyncio-eventloop.html#asyncio.loop.call_soon_threadsafe>`_
+function.
+
+.. code-block:: python
+    :caption: call_soon_threadsafe with use_async_call
+
+    import asyncio
+
+    main_loop = asyncio.get_event_loop()
+
+    async def my_function_async(arg: str):
+        print(arg)
+
+    my_function, my_function_cancel = use_async_call(my_function_async)
+
+    def thread_safe_my_function(arg: str):
+    """This function can be passed to another thread and called by that thread."""
+        main_loop.call_soon_threadsafe(my_function, arg)
+
+**Breaking Change** :func:`use_async` and :func:`use_async_call` no longer
+suppress exceptions other than :code:`CancelledError`.
+Unhandled exceptions in async functions will raise into the event loop
+as they normally would.
+
 v4.4.1
 ------
 Released: 2025-10-14
