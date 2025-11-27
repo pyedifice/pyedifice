@@ -58,27 +58,17 @@ def Main(self):
 
     checked, set_checked = ed.use_state(False)
 
-    #########
+    ######### Test max_concurrent=None
 
     a, set_a = ed.use_state(0)
     b, set_b = ed.use_state(0)
 
-    tasks = ed.use_memo(set)
-
-    def _on_change1(v: int):
-        """
-        Test regular async event handlers.
-        """
+    async def _on_change1_later(v: int):
         set_a(v)
+        await asyncio.sleep(1)
+        set_b(v)
 
-        # We want fire-and-forget tasks that won't get cancelled by Edifice
-        # when the component is unmounted or another task starts.
-        async def _on_change1_later():
-            await asyncio.sleep(1)
-            set_b(v)
-        t = asyncio.create_task(_on_change1_later())
-        tasks.add(t)
-        t.add_done_callback(tasks.remove)
+    _on_change1, _ = ed.use_async_call(_on_change1_later, max_concurrent=None)
 
     ##########
 
@@ -101,11 +91,28 @@ def Main(self):
 
     callthrow, _ = ed.use_async_call(asyncthrow)
 
-    ##########
+    ########## Test use_async_call max_concurrent
+
+    async def do_thing_async(i: int):
+        print(f"do_thing {i} started")  # noqa: T201
+        try:
+            await asyncio.sleep(1)
+        except asyncio.CancelledError:
+            print(f"do_thing {i} cancelled")  # noqa: T201
+            raise
+        print(f"do_thing {i} finished")  # noqa: T201
+
+    do_thing, _ = ed.use_async_call(do_thing_async, max_concurrent=3)
+
+    def three_things():
+        for i in range(5):
+            do_thing(i)
 
     k, set_k = ed.use_state(cast(list[tuple[int, str]], []))
 
     async def start_k_async():
+        print("start_k_async")  # noqa: T201
+
         def k_updater_new():
             def updater(k_):
                 k_u = k_[:]
@@ -138,8 +145,10 @@ def Main(self):
             await asyncio.sleep(0.1)
             set_k(k_updater_progress(100, "Finished"))
         except asyncio.CancelledError:
+            print("start_k_async cancelled")  # noqa: T201
             set_k(k_updater_cancel())
             raise
+        print("start_k_async complete")  # noqa: T201
 
     start_k, cancel_k = ed.use_async_call(start_k_async)
 
@@ -210,6 +219,16 @@ def Main(self):
                 on_trigger=lambda _ev: callthrow(),
             ):
                 ed.Label(text="Async throw ValueError after 1 sec")
+
+        with ed.VBoxView(
+            style={
+                "padding": 20,
+            },
+        ):
+            with ed.ButtonView(
+                on_trigger=lambda _ev: three_things(),
+            ):
+                ed.Label(text="Do 5 async things (max 3 concurrent)")
 
         with ed.VBoxView(
             style={

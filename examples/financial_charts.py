@@ -249,30 +249,19 @@ def App(self, plot_colors: list[str], plot_color_background: str):
         plot.x_ticker for plot in plots.values() if plot.x_ticker != "" and plot.x_ticker not in plot_data.keys()
     ]
 
-    tickers_requested, tickers_requested_set = ed.use_state(tp.cast(list[str], []))
+    tickers_fetched, tickers_fetched_set = ed.use_state(tp.cast(list[str], []))
 
     fetch_executor = ed.use_memo(ThreadPoolExecutor)
 
-    fetch_tasks: set[asyncio.Task[None]]
-    fetch_tasks = ed.use_memo(set)
-
-    def check_fetch_data():
-        # If we need some ticker data and we don't have it yet, then
+    async def check_fetch_data():
+        # If we need some ticker data and we haven't fetched it yet, then
         # fetch it.
-        for ticker in [t for t in tickers_needed if t not in tickers_requested]:
-            tickers_requested_set(lambda tr_old, ticker=ticker: [*tr_old, ticker])
+        for ticker in [t for t in tickers_needed if t not in tickers_fetched]:
+            tickers_fetched_set(lambda tr_old, ticker=ticker: [*tr_old, ticker])
+            result = await fetch_from_yahoo(fetch_executor, ticker)
+            plot_data_set(lambda pltd, ticker=ticker, result=result: pltd | {ticker: result})
 
-            async def async_fetch_data(ticker=ticker):
-                result = await fetch_from_yahoo(fetch_executor, ticker)
-                plot_data_set(lambda pltd, ticker=ticker, result=result: pltd | {ticker: result})
-
-            # We want fire-and-forget tasks that won't get cancelled by Edifice
-            # when another task starts, so we don't use the use_async hook.
-            t = asyncio.create_task(async_fetch_data(ticker))
-            fetch_tasks.add(t)
-            t.add_done_callback(fetch_tasks.remove)
-
-    ed.use_effect(check_fetch_data, tickers_needed)
+    ed.use_async(check_fetch_data, tickers_needed, max_concurrent=None)
 
     def plot_fun(plot_item: pg.PlotItem):
         """

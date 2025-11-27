@@ -3,64 +3,72 @@
 #
 
 import asyncio
+from typing import cast
 
+import edifice as ed
 from edifice import App, Button, Label, VBoxView, Window, component
-from edifice.hooks import use_async, use_state
 
 
 @component
 def MainComp(self):
-    show, set_show = use_state(False)
+    show, set_show = ed.use_state(False)
     with Window():
         if show:
             with VBoxView(style={"align": "top"}):
-                Button(title="Hide", on_click=lambda ev: set_show(False))
+                Button(title="Hide", on_click=lambda _: set_show(False))
                 TestComp()
         else:
             with VBoxView(style={"align": "top"}):
-                Button(title="Show", on_click=lambda ev: set_show(True))
+                Button(title="Show", on_click=lambda _: set_show(True))
+
+
+def result_modify(x: int, new_result: str, old_result: tuple[str, ...]) -> tuple[str, ...]:
+    result_ = list(old_result)
+    if len(result_) < x + 1:
+        result_.extend([""] * (x + 1 - len(result_)))
+    result_[x] = new_result
+    return tuple(result_)
 
 
 @component
 def TestComp(self):
-    print("TestComp instance " + str(id(self)))
+    result, result_set = ed.use_state(cast(tuple[str, ...], ()))
 
-    x, x_setter = use_state(0)
-
-    result, result_set = use_state("")
-
-    async def fetch():
-        print(f"async fetch {x}")
+    async def fetch_async(z: int):
         try:
             # https://docs.python.org/3/library/asyncio-stream.html#get-http-headers
             reader, writer = await asyncio.open_connection("www.google.com", 443, ssl=True)
-            query = "HEAD / HTTP/1.0\r\n" "Host: www.google.com\r\n" "\r\n"
+            query = "HEAD / HTTP/1.0\r\nHost: www.google.com\r\n\r\n"
+            result_set(lambda old_result, z=z, query=query: result_modify(z, query.replace("\r\n", " "), old_result))
             writer.write(query.encode("latin-1"))
             line = await reader.readline()
             writer.close()
             await writer.wait_closed()
             result_line = line.decode("latin-1").rstrip()
-            print(result)
-            result_set(result_line)
-            print(f"async fetch {x} finished")
-        except Exception as ex:
-            print(f"async fetch {x} cancelled")
-            raise ex
+            result_set(lambda old_result, z=z, result_line=result_line: result_modify(z, result_line, old_result))
+        except asyncio.CancelledError:
+            result_set(lambda old_result, z=z: result_modify(z, "cancelled", old_result))
+            raise
+        except Exception as ex:  # noqa: BLE001
+            result_set(lambda old_result, z=z, ex=ex: result_modify(z, f"exception: {ex}", old_result))
 
-    print(f"use_async(fetch, {x})")
-    use_async(fetch, x)
+    fetch, _ = ed.use_async_call(fetch_async, max_concurrent=None)
 
-    def fetch10(event):
-        for i in range(10):
-            asyncio.get_running_loop().call_later(0.1 * i, x_setter, (lambda y: y + 1))
+    async def fetch10_async():
+        for i in range(len(result), len(result) + 10):
+            await asyncio.sleep(0.1)
+            fetch(i)
+
+    fetch10, _ = ed.use_async_call(fetch10_async, max_concurrent=None)
 
     with VBoxView(style={"align": "top"}):
-        Label(text=result)
-        Button(title="State " + str(x), on_click=lambda ev: x_setter(lambda y: y + 1))
-        Button(
-            title="State + 10",
-            on_click=fetch10,
-        )
+        Button(title="Fetch 1", on_click=lambda _: fetch(len(result)))
+        Button(title="Fetch 10", on_click=lambda _: fetch10())
+        with ed.TableGridView():
+            for i, r in enumerate(result):
+                with ed.TableGridRow():
+                    Label(text=str(i), style={"width": "50px"})
+                    Label(text=r, style={"align": "left"})
 
 
 if __name__ == "__main__":
