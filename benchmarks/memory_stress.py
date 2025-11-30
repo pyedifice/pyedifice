@@ -6,14 +6,12 @@
 #     memray flamegraph --leaks memray-stress.bin
 #
 
-import sys, os
-
-# We need this sys.path line for running this example, especially in VSCode debugger.
-sys.path.insert(0, os.path.join(sys.path[0], ".."))
-import edifice as ed
 import asyncio
+import importlib.resources
+import os
 import typing as tp
 
+import edifice as ed
 from edifice.qt import QT_VERSION
 
 if QT_VERSION == "PyQt6" and not tp.TYPE_CHECKING:
@@ -40,7 +38,10 @@ def Main(self):
     with ed.Window():
         with ed.VBoxView().set_key("constant_key"):
             ed.Label(text=str(play_count))
-            ed.Icon(name="share", size=1 + play_count % 20)
+            ed.ImageSvg(
+                src=str(importlib.resources.files("edifice") / "icons/font-awesome/solid/share.svg"),
+                style={"width": 1 + play_count % 20, "height": 1 + play_count % 20},
+            )
             ed.Image(
                 src=imgpath,
                 aspect_ratio_mode=Qt.AspectRatioMode.KeepAspectRatio,
@@ -63,7 +64,10 @@ def Main(self):
                     ed.Label("FlowView " + str(i))
         with ed.VBoxView().set_key(str(play_count)):  # set_key to force unmount every render
             ed.Label(text=str(play_count))
-            ed.Icon(name="share", size=1 + play_count % 20)
+            ed.ImageSvg(
+                src=str(importlib.resources.files("edifice") / "icons/font-awesome/solid/share.svg"),
+                style={"width": 1 + play_count % 20, "height": 1 + play_count % 20},
+            )
             ed.Image(
                 src=imgpath,
                 aspect_ratio_mode=Qt.AspectRatioMode.KeepAspectRatio,

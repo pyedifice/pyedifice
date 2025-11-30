@@ -5,8 +5,6 @@ from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from typing import Any, TypeVar, cast
 
-from typing_extensions import deprecated
-
 from edifice.engine import Reference, _P_async, _T_use_state, get_render_context_maybe
 from edifice.qt import QT_VERSION
 from edifice.utilities import palette_edifice_dark, palette_edifice_light, theme_is_light
@@ -569,27 +567,6 @@ def use_ref() -> Reference:
     """
     r, _ = use_state((Reference(),))
     return r[0]
-
-
-_P_callback = tp.ParamSpec("_P_callback")
-
-
-@deprecated("Instead use use_memo")
-def use_callback(
-    fn: tp.Callable[[], tp.Callable[_P_callback, None]],
-    dependencies: tp.Any,
-) -> tp.Callable[_P_callback, None]:
-    """
-    Deprecated alias for :func:`use_memo`.
-
-    .. warning::
-
-        Deprecated
-
-    Returns:
-        The memoized **value** from calling :code:`fn`.
-    """
-    return use_memo(fn, dependencies)
 
 
 def use_async_call(

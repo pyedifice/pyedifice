@@ -47,6 +47,9 @@ suppress exceptions other than :code:`CancelledError`.
 Unhandled exceptions in async functions will raise into the event loop
 as they normally would.
 
+**Breaking Change** Deleted deprecated functions :code:`use_callback`
+:code:`Icon` :code:`IconButton` :code:`alert` :code:`file_dialog`.
+
 v4.4.1
 ------
 Released: 2025-10-14
@@ -157,8 +160,8 @@ v3.0.0
 Released: 2025-02-08
 
 - Bugfix for unmounting :ref:`Graphics Effects`.
-- Deprecated :class:`IconButton`. Instead use :class:`ButtonView`.
-- Deprecated :class:`Icon`. Instead use :class:`ImageSvg`.
+- Deprecated :code:`IconButton`. Instead use :class:`ButtonView`.
+- Deprecated :code:`Icon`. Instead use :class:`ImageSvg`.
 - Introduced internal type :code:`PropsDiff` which improves speed by reducing
   the number of Qt mutation commands issued.
 
@@ -302,7 +305,7 @@ Released: 2024-12-28
 - :ref:`Styling` :code:`style` prop :code:`"align"` can take an
   `AlignmentFlag <https://doc.qt.io/qtforpython-6/PySide6/QtCore/Qt.html#PySide6.QtCore.Qt.AlignmentFlag>`_.
 - :ref:`Styling` :code:`style` prop colors can take a `QColor <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QColor.html>`_.
-- Deprecate Hook :func:`use_callback` in favor of :func:`use_memo`.
+- Deprecate Hook :code:`use_callback` in favor of :func:`use_memo`.
 
 
 v2.8.1
@@ -355,7 +358,7 @@ v2.5.0
 ------
 Released: 2024-10-10
 
-* New Hook :func:`use_callback`.
+* New Hook :code:`use_callback`.
 * Hook :func:`use_state` **setter function** will be stable across renders.
 
 

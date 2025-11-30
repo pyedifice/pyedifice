@@ -5,6 +5,7 @@
 #
 
 import asyncio
+import importlib.resources
 import os
 import tracemalloc
 import typing as tp
@@ -44,7 +45,10 @@ def Main(self):
     with ed.Window():
         with ed.VBoxView().set_key("constant_key"):
             ed.Label(text=str(play_count))
-            ed.Icon(name="share", size=1 + play_count % 20)
+            ed.ImageSvg(
+                src=str(importlib.resources.files("edifice") / "icons/font-awesome/solid/share.svg"),
+                style={"width": 1 + play_count % 20, "height": 1 + play_count % 20},
+            )
             ed.Image(
                 src=imgpath,
                 aspect_ratio_mode=Qt.AspectRatioMode.KeepAspectRatio,
@@ -67,7 +71,10 @@ def Main(self):
                     ed.Label("FlowView " + str(i))
         with ed.VBoxView().set_key(str(play_count)):  # set_key to force unmount every render
             ed.Label(text=str(play_count))
-            ed.Icon(name="share", size=1 + play_count % 20)
+            ed.ImageSvg(
+                src=str(importlib.resources.files("edifice") / "icons/font-awesome/solid/share.svg"),
+                style={"width": 1 + play_count % 20, "height": 1 + play_count % 20},
+            )
             ed.Image(
                 src=imgpath,
                 aspect_ratio_mode=Qt.AspectRatioMode.KeepAspectRatio,

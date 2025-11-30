@@ -23,8 +23,6 @@ from edifice.base_components import (
     GroupBoxView,
     HBoxView,
     HScrollView,
-    Icon,
-    IconButton,
     Image,
     ImageSvg,
     Label,
@@ -48,7 +46,6 @@ from edifice.hooks import (
     provide_context,
     use_async,
     use_async_call,
-    use_callback,
     use_effect,
     use_effect_final,
     use_hover,
@@ -59,7 +56,7 @@ from edifice.hooks import (
     use_context_select,
     use_palette_edifice,
 )
-from edifice.utilities import alert, file_dialog, palette_edifice_dark, palette_edifice_light, set_trace, theme_is_light, run_subprocess_with_callback
+from edifice.utilities import palette_edifice_dark, palette_edifice_light, set_trace, theme_is_light, run_subprocess_with_callback
 
 __all__ = [
     "App",
@@ -77,8 +74,6 @@ __all__ = [
     "GroupBoxView",
     "HBoxView",
     "HScrollView",
-    "Icon",
-    "IconButton",
     "Image",
     "ImageSvg",
     "Label",
@@ -101,10 +96,8 @@ __all__ = [
     "VScrollView",
     "Window",
     "WindowPopView",
-    "alert",
     "child_place",
     "component",
-    "file_dialog",
     "palette_edifice_dark",
     "palette_edifice_light",
     "provide_context",
@@ -114,7 +107,6 @@ __all__ = [
     "theme_is_light",
     "use_async",
     "use_async_call",
-    "use_callback",
     "use_context",
     "use_context_select",
     "use_effect",

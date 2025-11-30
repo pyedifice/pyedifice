@@ -99,8 +99,6 @@ Content Base Elements render a single Qt Widget and mostly do not have children.
    Dropdown
    Image
    ImageSvg
-   Icon
-   IconButton
    Label
    ProgressBar
    RadioButton

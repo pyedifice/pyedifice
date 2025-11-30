@@ -2,24 +2,18 @@ from __future__ import annotations
 
 import typing as tp
 
-from typing_extensions import deprecated
-
 from .qt import QT_VERSION
 
 if QT_VERSION == "PyQt6" and not tp.TYPE_CHECKING:
-    from PyQt6 import QtWidgets
     from PyQt6.QtGui import QColor, QPalette
     from PyQt6.QtWidgets import QApplication
 else:
-    from PySide6 import QtWidgets
     from PySide6.QtGui import QColor, QPalette
     from PySide6.QtWidgets import QApplication
 
 from .run_subprocess_with_callback import run_subprocess_with_callback
 
 __all__ = [
-    "alert",
-    "file_dialog",
     "palette_dump",
     "palette_edifice_dark",
     "palette_edifice_light",
@@ -248,67 +242,6 @@ def palette_edifice_light() -> QPalette:
     palette.setColor(QPalette.ColorGroup.Disabled, QPalette.ColorRole.Accent, QColor.fromRgb(145, 145, 145, 255))
     palette.setColor(QPalette.ColorGroup.Inactive, QPalette.ColorRole.Accent, QColor.fromRgb(48, 140, 198, 255))
     return palette
-
-
-@deprecated("Instead use WindowPopView")
-def alert(message: str, choices: tp.Sequence[str] | None = None) -> int | None:
-    """
-
-    .. warning:: Deprecated
-
-    Displays a message in an alert box.
-
-    If choices is specified, the alert box contain a list of buttons showing each of the choices,
-    and this function will return the user's choice.
-
-    Args:
-        message: message to display
-        choices: optional list of choice texts, which will be displayed as buttons.
-    Returns:
-        Index of chosen option.
-    """
-    msgbox = QtWidgets.QMessageBox()
-    msgbox.setText(message)
-    buttons = []
-    if choices is not None:
-        for choice in choices:
-            buttons.append(msgbox.addButton(choice, QtWidgets.QMessageBox.ButtonRole.ActionRole))  # noqa: PERF401
-    msgbox.exec()
-    clicked_button = msgbox.clickedButton()
-    for i, button in enumerate(buttons):
-        if clicked_button == button:
-            return i
-    return None
-
-
-@deprecated("Instead use https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QFileDialog.html directly")
-def file_dialog(
-    caption: str = "",
-    directory: str = "",
-    file_filter: tp.Sequence[str] | None = None,
-) -> str | None:
-    """Displays a file choice dialog.
-
-    Args:
-        caption: the file dialog's caption
-        directory: starting directory for the file dialog
-        file_filter:
-            Sequence of allowed file extensions. For example::
-
-                "*.cpp *.cc *.C *.c++"
-                "C++ files (*.cpp *.cc *.C *.c++)"
-
-            are both valid ways of specifying a file filter.
-    Returns:
-        Path of chosen file
-    """
-    dialog = QtWidgets.QFileDialog(None, caption, directory)
-    dialog.setFileMode(QtWidgets.QFileDialog.FileMode.AnyFile)
-    if file_filter is not None:
-        dialog.setNameFilters(file_filter)
-    if dialog.exec() == QtWidgets.QDialog.DialogCode.Accepted:
-        return dialog.selectedFiles()[0]
-    return None
 
 
 # TODO deprecate? Instead what? https://github.com/microsoft/debugpy ?

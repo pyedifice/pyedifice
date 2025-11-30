@@ -3,6 +3,7 @@
 #
 
 import asyncio
+import importlib.resources
 import logging
 import random
 
@@ -33,11 +34,11 @@ stylesheet = {
         "padding": "2px",
         "align": "left",
     },
-    "play_button": {"width": "50px", "height": "25px", "left": 150, "margin-left": "5px"},
 }
 
 logger = logging.getLogger("Edifice")
 logger.setLevel(logging.INFO)
+
 
 @ed.component
 def PriceLevel(self, price, size, side, last=False):
@@ -100,16 +101,29 @@ def App(self):
 
     with ed.Window():
         with ed.VBoxView():
-            with ed.HBoxView(style={"align": "left", "margin-left": "10px"}).set_key("Controls"):
-                ed.Icon(name="chart-line", size=14).set_key("Icon")
-                ed.Label("Market Data Viewer", style={"margin-left": "5px"}).set_key("Label")
-                ed.IconButton(
-                    name="pause" if playing else "play",
-                    style=stylesheet["play_button"],
-                    size=10,
-                    on_click=play,
-                ).set_key("Play")
-            Book(book).set_key("Book")
+            with ed.HBoxView(style={"align": "left", "padding-left": "10px"}):
+                ed.ImageSvg(
+                    src=str(importlib.resources.files("edifice") / "icons/font-awesome/solid/chart-line.svg"),
+                    style={"width": 20, "height": 20},
+                )
+                ed.Label("Market Data Viewer", style={"margin-left": "5px"})
+                with ed.HBoxView(style={"align": "left", "padding-left": "10px"}):
+                    with ed.ButtonView(
+                        style={"width": "50px", "height": "25px"},
+                        on_trigger=play,
+                    ):
+                        ed.ImageSvg(
+                            src=str(
+                                importlib.resources.files("edifice")
+                                / (
+                                    "icons/font-awesome/solid/pause.svg"
+                                    if playing
+                                    else "icons/font-awesome/solid/play.svg"
+                                ),
+                            ),
+                            style={"width": 10, "height": 10},
+                        )
+            Book(book)
 
 
 if __name__ == "__main__":
