@@ -7,6 +7,10 @@
 Release Notes
 =============
 
+v5.0.0
+------
+Released: 2025-11-30
+
 .. rubric:: New Features
 
 The Hooks :func:`use_async` and :func:`use_async_call` now have an optional
@@ -39,7 +43,7 @@ function.
     my_function, my_function_cancel = use_async_call(my_function_async)
 
     def thread_safe_my_function(arg: str):
-    """This function can be passed to another thread and called by that thread."""
+        """This function can be passed to another thread and called by that thread."""
         main_loop.call_soon_threadsafe(my_function, arg)
 
 **Breaking Change** :func:`use_async` and :func:`use_async_call` no longer
