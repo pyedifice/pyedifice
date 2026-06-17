@@ -7,6 +7,13 @@
 Release Notes
 =============
 
+v5.0.1
+------
+Released: 2026-06-18
+
+- Bugfix: :class:`SpinInput` :code:`max_value` prop default value is applied to the widget as expected.
+- Bugfix: :class:`Slider` :code:`max_value` prop default value is applied to the widget as expected.
+
 v5.0.0
 ------
 Released: 2025-11-30

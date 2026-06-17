@@ -832,6 +832,10 @@ class Slider(QtWidgetElement[QtWidgets.QSlider]):
 
         self.underlying.setObjectName(str(id(self)))
         self.underlying.valueChanged.connect(self._on_change_handle)
+        # The QSlider seems to have the same issue as the QSpinInput for which the default maximum is 99.
+        # So we need to do this in order for default Slider to reach 100. However, I could not find if the 99 maximum is
+        # stated in the Qt documentation.
+        self.underlying.setMaximum(100)
 
     def _on_change_handle(self, position: int) -> None:
         if self._on_change is not None:

@@ -142,6 +142,10 @@ class SpinInput(QtWidgetElement[EdSpinBox]):
         self.underlying = EdSpinBox()
         self.underlying.setObjectName(str(id(self)))
         self.underlying.valueChanged.connect(self._on_change_handler)
+        # Qt's default max is 99. So if we do not set it, any `SpingInput` created with default
+        # max value will reach only up to 99, not 100.
+        # https://doc.qt.io/qt-6/qspinbox.html#maximum-prop
+        self.underlying.setMaximum(100)
 
     def _on_change_handler(self, value: int):
         if self.props["on_change"] is not None:
