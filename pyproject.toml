@@ -125,3 +125,6 @@ ignore = [
 [tool.pyright]
 include = ["src/edifice"]
 exclude = ["**/__pycache__"]
+
+[tool.basedpyright]
+reportUnusedCallResult = false

@@ -370,7 +370,8 @@ def use_async(
     lifecycle of this :func:`@component<edifice.component>`.
 
     The :code:`fn_coroutine` will be called every time the :code:`dependencies` change.
-    Only one :code:`fn_coroutine` will be allowed to run at a time.
+    Only the :code:`max_concurrent` number of :code:`fn_coroutine` will be
+    allowed to run at a time.
 
     Exceptions raised from the :code:`fn_coroutine` will be suppressed.
 
