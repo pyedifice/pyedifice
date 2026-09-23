@@ -14,7 +14,6 @@ interfaces.
 - Modern **declarative** UI paradigm from web development.
 - **100% Python** application development, no language inter-op.
 - A **native** Qt desktop app instead of a bundled web browser.
-- Fast iteration via **hot-reloading**.
 
 Edifice uses `PySide6 <https://doc.qt.io/qtforpython-6/>`_
 or `PyQt6 <https://www.riverbankcomputing.com/static/Docs/PyQt6/introduction.html>`_
@@ -23,8 +22,8 @@ as a backend. Edifice is like
 `Qt Widgets <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/index.html>`_
 instead of the HTML DOM.
 
-If you have React experience, you’ll find Edifice easy to learn.
 Edifice has function Components, Props, and Hooks just like React.
+If you have React experience, you’ll find Edifice easy to learn.
 
 Getting Started
 ---------------

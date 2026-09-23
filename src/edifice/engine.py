@@ -875,7 +875,6 @@ class QtWidgetElement(Element, tp.Generic[_T_widget]):
                                 dropped_files_set(proposed_files)
                                 proposed_files_set([])
 
-            Note that the handler function cannot not be a coroutine.
         on_resize:
             Callback for `resize events <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.resizeEvent>`_.
             Takes a `QResizeEvent <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QResizeEvent.html>`_

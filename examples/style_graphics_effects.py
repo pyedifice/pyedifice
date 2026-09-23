@@ -47,12 +47,7 @@ def MyComponent(self):
 
 @ed.component
 def Main(self):
-    def initializer():
-        palette = ed.palette_edifice_light() if ed.theme_is_light() else ed.palette_edifice_dark()
-        tp.cast(QApplication, QApplication.instance()).setPalette(palette)
-        return palette
-
-    ed.use_memo(initializer)
+    ed.use_palette_edifice()
     with ed.Window(_size_open=(800, 600)):
         MyComponent()
 
